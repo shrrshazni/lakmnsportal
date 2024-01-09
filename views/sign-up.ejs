@@ -1,0 +1,86 @@
+<%- include("partials/public-header.ejs") %>
+
+<div class="row vh-100 g-0">
+  <div class="col-lg-6 position-relative d-none d-lg-block">
+    <div class="bg-holder" style="background-image:url(../../../assets/img/bg/32.png);">
+    </div>
+    <!--/.bg-holder-->
+
+  </div>
+  <div class="col-lg-6">
+    <div class="row flex-center h-100 g-0 px-4 px-sm-0">
+      <div class="col col-sm-6 col-lg-7 col-xl-6"><a class="d-flex flex-center text-decoration-none mb-4" href="../../../index.html">
+          <div class="d-flex align-items-center fw-bolder fs-3 d-inline-block"><img src="../../../assets/img/icons/logo.png" alt="phoenix" width="58" />
+          </div>
+        </a>
+        <div class="text-center mb-7">
+          <h3 class="text-body-highlight">Sign Up</h3>
+          <p class="text-body-tertiary">Create your account today</p>
+        </div>
+
+        <form action="/sign-up" method="post" class="needs-validation" novalidate="novalidate">
+          <div class="mb-3 text-start">
+            <label class="form-label" for="username">Username</label>
+            <div class="input-group">
+              <span class="input-group-text" id="basic-addon1"><i class="fas fa-user"></i></span>
+              <input class="form-control" id="username" name="username" type="text" placeholder="Username" required="" />
+              <div class="valid-feedback">Looks good!</div>
+              <div class="invalid-feedback">This is required</div>
+            </div>
+          </div>
+
+          <div class="position-relative mt-4">
+            <hr class="bg-200" />
+          </div>
+
+          <div class="mb-3 text-start">
+            <label class="form-label" for="name">Full Name</label>
+            <input class="form-control" id="name" name="fullname" type="text" placeholder="Name" required="" />
+            <!-- validations -->
+            <div class="valid-feedback">Looks good!</div>
+            <div class="invalid-feedback">This is required</div>
+          </div>
+
+          <div class="mb-3 text-start">
+            <label class="form-label" for="email">Email address</label>
+            <input class="form-control" id="email" type="email" name="email" placeholder="name@example.com" required="" />
+            <div class="valid-feedback">Looks good!</div>
+            <div class="invalid-feedback">This is required</div>
+          </div>
+          <div class="row g-3 mb-3">
+            <div class="col-sm-12">
+              <label class="form-label" for="password">Password</label>
+              <input class="form-control form-icon-input" id="password" name="password" type="password" placeholder="Password" required="" />
+              <div class="valid-feedback">Looks good!</div>
+              <div class="invalid-feedback">This is required</div>
+            </div>
+          </div>
+          <div class="row g-3 mb-3">
+            <div class="col-sm-12">
+              <label class="form-label" for="phone">Phone number</label>
+              <input class="form-control form-icon-input" id="phoneNumber" name="phone" type="text" placeholder="Phone" required="" />
+              <div class="valid-feedback">Looks good!</div>
+              <div class="invalid-feedback">This is required</div>
+            </div>
+          </div>
+
+          <div class="form-check mb-3">
+            <input class="form-check-input" id="termsService" type="checkbox" name="agree" required="" />
+            <label class="form-label fs--1 text-none" for="termsService">I accept the <a href="#!">terms </a>and
+              <a href="#!">privacy policy</a></label>
+            <div class="valid-feedback">Looks good!</div>
+            <div class="invalid-feedback">This is required</div>
+          </div>
+          <button class="btn btn-primary w-100 mb-3" type="submit" name="submit">Sign up</button>
+          <div class="text-center">
+            <a class="fs--1 fw-bold" href="/">Sign in to an existing account</a>
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<%- include("partials/public-footer.ejs") %>

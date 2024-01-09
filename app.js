@@ -18,7 +18,7 @@ const nodemailer = require('nodemailer');
 const cron = require('node-cron');
 
 const mongoURI =
-    'mongodb+srv://shrrshazni:protechlakmns123@cluster0.rembern.mongodb.net/sessions';
+    'mongodb+srv://shrrshazni:protechlakmns123@cluster0.rembern.mongodb.net/portal-sessions';
 
 const app = express();
 
@@ -40,7 +40,7 @@ const store = new MongoDBSession({
 //init session
 app.use(
     session({
-        secret: 'He who remains.',
+        secret: 'Our little secrets',
         resave: true,
         saveUninitialized: false,
         store: store
@@ -64,19 +64,18 @@ async function main() {
 
 //USER
 const userSchema = new mongoose.Schema({
-    fullname: String,
-    password: String,
-    username: String,
-    email: String,
+    fullname: { type: String, required: true },
+    username: { type: String, required: true, unique: true },
+    email: { type: String, required: true, unique: true },
     phone: String,
     profile: String,
-    age: {type : Number},
+    age: { type: Number, min: 0 },
     gender: String,
     education: String,
     position: String,
     grade: String,
     role: String,
-    dateEmployed: { type: Date }
+    dateEmployed: { type: Date, default: Date.now }
 });
 
 //mongoose passport-local
@@ -85,51 +84,231 @@ userSchema.plugin(findOrCreate);
 
 const User = new mongoose.model('User', userSchema);
 
-passport.use(new LocalStrategy({
-    usernameField: 'username', // Adjust the field based on your form
-    passwordField: 'password', // Adjust the field based on your form
-}, (username, password, done) => {
-    User.findOne({ username: username }, (err, user) => {
-        if (err) { return done(err); }
-        if (!user) {
-            return done(null, false, { message: 'Incorrect username.' });
-        }
-        if (!user.validPassword(password)) { // Implement a method to check the password
-            return done(null, false, { message: 'Incorrect password.' });
-        }
-        return done(null, user);
-    });
-}));
+passport.use(User.createStrategy());
 
 passport.serializeUser(function (user, done) {
     done(null, user.id);
 });
 
-passport.deserializeUser(function (id, done) {
-    User.findById(id, (err, user) => {
-        if (err) { return done(err); }
+passport.deserializeUser(async function (id, done) {
+    try {
+        const user = await User.findById(id);
+
         if (!user) {
-            return done(null, false);
+            done(null, false);
+        } else {
+            done(null, user);
         }
-        return done(null, user);
-    });
+    } catch (err) {
+        done(err, false);
+    }
 });
 
 // CHECK AUTH USER
-// const isAuthenticated = (req, res, next) => {
-//     if (req.isAuthenticated()) {
-//         return next();
-//     }
-//     res.redirect('/landing'); // Redirect to the login page if not authenticated
-// };
+const isAuthenticated = (req, res, next) => {
+    if (req.isAuthenticated()) {
+        return next();
+    }
+    res.redirect('/landing'); // Redirect to the login page if not authenticated
+};
 
-app.get('/', async function (req, res) {
+// HOME
+app.get('/', isAuthenticated, async function (req, res) {
+    console.log(req.user.username);
     res.render('testing');
 });
 
+// LANDING PAGE
 app.get('/landing', async function (req, res) {
-    res.render('landing');
+    const numCircles = 4;
+    const circles = Array.from({ length: numCircles }, () => ({
+        x: Math.floor(Math.random() * 80) + 10,
+        y: Math.floor(Math.random() * 60) + 20,
+        size: Math.floor(Math.random() * 100) + 50, // Random size between 50 and 150 pixels
+    }));
+
+    res.render('landing-page', { circles });
 });
+
+// AUTH
+
+//SIGN UP
+app
+    .get('/sign-up', function (req, res) {
+        res.render('sign-up');
+    })
+    .post('/sign-up', function (req, res) {
+        // Check if the required fields are present in the request body
+        if (!req.body.fullname || !req.body.username || !req.body.email || !req.body.password) {
+            return res.status(400).json({ error: 'All fields are required.' });
+        }
+
+        const newUser = new User({
+            fullname: req.body.fullname,
+            username: req.body.username,
+            email: req.body.email,
+            phone: req.body.phone,
+            profile: ''
+        });
+
+        User.register(
+            newUser, req.body.password,
+            function (err, user) {
+                if (err) {
+                    console.log(err);
+                    res.redirect('/sign-up');
+                } else {
+                    passport.authenticate('local')(req, res, function () {
+                        res.redirect('/landing');
+                    });
+                }
+            }
+        );
+    });
+
+// SIGN IN
+app
+    .get('/sign-in', async function (req, res) {
+        res.render('sign-in', {
+            // validation
+            validationUsername: '',
+            validationPassword: '',
+            // input value
+            username: '',
+            password: '',
+            // toast
+            toastShow: '',
+            toastMsg: ''
+        });
+    })
+    .post('/sign-in', async function (req, res) {
+        const username = req.body.username;
+        const password = req.body.password;
+        const rememberMe = req.body.rememberMe;
+
+        // Set the session duration based on the 'rememberMe' checkbox
+        const sessionDuration = rememberMe
+            ? 7 * 24 * 60 * 60 * 1000
+            : 1 * 60 * 60 * 1000;
+
+        req.session.cookie.maxAge = sessionDuration;
+
+        var validationUsername = '';
+        var validationPassword = '';
+
+        const passwordRegex = /^(?:\d+|[a-zA-Z0-9]{4,})/;
+
+        const user = await User.findByUsername(username);
+        var checkUser = '';
+
+        if (!user) {
+            checkUser = 'Not found';
+        } else {
+            checkUser = 'Found';
+        }
+
+        // validation username
+        if (username === '' || checkUser === 'Not found') {
+            validationUsername = 'is-invalid';
+        } else {
+            validationUsername = 'is-valid';
+        }
+
+        // validation username
+        if (password === '' || passwordRegex.test(password) === 'false') {
+            validationPassword = 'is-invalid';
+        } else {
+            validationPassword = 'is-valid';
+        }
+
+        if (
+            validationUsername === 'is-valid' &&
+            validationPassword === 'is-valid'
+        ) {
+
+            try {
+                const user = await User.findOne({ username: username });
+
+                if (!user) {
+
+                    validationUsername = "is-valid";
+
+                    return res.render('sign-in', {
+                        // validation
+                        validationUsername: validationUsername,
+                        validationPassword: validationPassword,
+                        // input value
+                        username: username,
+                        password: password,
+                        toastShow: 'show',
+                        toastMsg: 'Username not found'
+                    });
+                }
+
+                // Use the authenticate method from passport-local-mongoose
+                user.authenticate(password, (err, authenticatedUser) => {
+                    if (err || !authenticatedUser) {
+
+                        validationPassword = "is-invalid";
+
+                        return res.render('sign-in', {
+                            // validation
+                            validationUsername: validationUsername,
+                            validationPassword: validationPassword,
+                            // input value
+                            username: username,
+                            password: password,
+                            toastShow: 'show',
+                            toastMsg: 'Incorrect password'
+                        });
+                    }
+
+                    // Password is correct, log in the user
+                    req.logIn(authenticatedUser, (err) => {
+                        if (err) { return next(err); }
+                        return res.redirect('/');
+                    });
+                });
+            } catch (error) {
+                console.error(error);
+                res.status(500).send('Internal Server Error');
+            }
+
+        } else {
+            res.render('sign-in', {
+                // validation
+                validationUsername: validationUsername,
+                validationPassword: validationPassword,
+                // input value
+                username: username,
+                password: password,
+                toastShow: 'show',
+                toastMsg: 'There is an error, please do check your input'
+            });
+        }
+    });
+
+// SIGN OUT
+app.get('/sign-out', async function (req, res) {
+    req.session.destroy(function (err) {
+        if (err) {
+            return next(err);
+        }
+        res.redirect('/');
+    });
+});
+
+// PROFILE
+app.get('/profile', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+
+    const user = await User.findOne({ username: username });
+
+    console.log(user);
+
+    res.render('profile');
+});
+
 
 // PORT INITIALIZATION ON CLOUD OR LOCAL (5001)
 const PORT = process.env.PORT || 5001;

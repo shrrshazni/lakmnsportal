@@ -1,2 +1,54 @@
 /* prettier-ignore */
 /*# sourceMappingURL=user.css.map */
+
+/* button loading */
+.loading {
+    cursor: not-allowed;
+    pointer-events: none;
+    position: relative;
+  }
+  
+  /* Customize the loading spinner animation */
+  .loading::after {
+    content: '';
+    border: 3.25px solid #f3f3f3; /* Light gray border */
+    border-top: 3.25px solid transparent; /* Blue border for the spinner */
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    animation: spin 0.8s linear infinite; /* Rotate the spinner */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  
+  .loading .button-text {
+    visibility: hidden;
+  }
+  
+  @keyframes spin {
+    0% {
+      transform: translate(-50%, -50%) rotate(0deg);
+    }
+    100% {
+      transform: translate(-50%, -50%) rotate(360deg);
+    }
+  }
+  
+  .noshow{
+    visibility: hidden;
+  }
+
+/* landing page */
+.gradient-circle {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #3874ff, #182848);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  position: absolute;
+}

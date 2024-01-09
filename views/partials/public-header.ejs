@@ -39,6 +39,8 @@
   <link href="/assets/css/theme.min.css" type="text/css" rel="stylesheet" id="style-default">
   <link href="/assets/css/user-rtl.min.css" type="text/css" rel="stylesheet" id="user-style-rtl">
   <link href="/assets/css/user.min.css" type="text/css" rel="stylesheet" id="user-style-default">
+  <link href="/assets/css/user.css" type="text/css" rel="stylesheet" id="user-style-default" />
+
   <script>
     var phoenixIsRTL = window.config.config.phoenixIsRTL;
     if (phoenixIsRTL) {
@@ -54,10 +56,28 @@
       userLinkRTL.setAttribute('disabled', true);
     }
   </script>
+  
   <link href="/vendors/leaflet/leaflet.css" rel="stylesheet">
   <link href="/vendors/leaflet.markercluster/MarkerCluster.css" rel="stylesheet">
   <link href="/vendors/leaflet.markercluster/MarkerCluster.Default.css" rel="stylesheet">
-
+  <!-- for file upload -->
+  <link href="/vendors/dropzone/dropzone.min.css" rel="stylesheet" />
+  <!-- for datepicker -->
+  <link href="/vendors/flatpickr/flatpickr.min.css" rel="stylesheet" />
+  <!-- for mapbox -->
+  <link href="https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.css" rel="stylesheet">
+  <script src="https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.js"></script>
+  <!-- for leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <!-- jquery -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+  <!-- three js -->
+  <script src="https://threejs.org/build/three.min.js"></script>
+  <!-- echarts -->
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5"></script>
+  <!-- moment -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
   <!-- lottie -->
   <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
 </head>

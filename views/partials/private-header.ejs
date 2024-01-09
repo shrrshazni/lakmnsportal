@@ -39,6 +39,8 @@
   <link href="/assets/css/theme.min.css" type="text/css" rel="stylesheet" id="style-default">
   <link href="/assets/css/user-rtl.min.css" type="text/css" rel="stylesheet" id="user-style-rtl">
   <link href="/assets/css/user.min.css" type="text/css" rel="stylesheet" id="user-style-default">
+  <link href="/assets/css/user.css" type="text/css" rel="stylesheet" id="user-style-default" />
+
   <script>
     var phoenixIsRTL = window.config.config.phoenixIsRTL;
     if (phoenixIsRTL) {
@@ -54,9 +56,30 @@
       userLinkRTL.setAttribute('disabled', true);
     }
   </script>
+
   <link href="/vendors/leaflet/leaflet.css" rel="stylesheet">
   <link href="/vendors/leaflet.markercluster/MarkerCluster.css" rel="stylesheet">
   <link href="/vendors/leaflet.markercluster/MarkerCluster.Default.css" rel="stylesheet">
+  <!-- for file upload -->
+  <link href="/vendors/dropzone/dropzone.min.css" rel="stylesheet" />
+  <!-- for datepicker -->
+  <link href="/vendors/flatpickr/flatpickr.min.css" rel="stylesheet" />
+  <!-- for mapbox -->
+  <link href="https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.css" rel="stylesheet">
+  <script src="https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.js"></script>
+  <!-- for leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <!-- jquery -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+  <!-- three js -->
+  <script src="https://threejs.org/build/three.min.js"></script>
+  <!-- echarts -->
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5"></script>
+  <!-- moment -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+  <!-- lottie -->
+  <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
 </head>
 
 
@@ -1977,7 +2000,7 @@
                   <li class="nav-item"><a class="nav-link px-3" href="#!"> <span class="me-2 text-body" data-feather="user-plus"></span>Add another account</a></li>
                 </ul>
                 <hr />
-                <div class="px-3"> <a class="btn btn-phoenix-secondary d-flex flex-center w-100" href="#!"> <span class="me-2" data-feather="log-out"> </span>Sign out</a></div>
+                <div class="px-3"> <a class="btn btn-phoenix-secondary d-flex flex-center w-100" href="/sign-out"> <span class="me-2" data-feather="log-out"> </span>Sign out</a></div>
                 <div class="my-2 text-center fw-bold fs-10 text-body-quaternary"><a class="text-body-quaternary me-1" href="#!">Privacy policy</a>&bull;<a class="text-body-quaternary mx-1" href="#!">Terms</a>&bull;<a class="text-body-quaternary ms-1" href="#!">Cookies</a></div>
               </div>
             </div>

@@ -43,6 +43,31 @@
 <script src="/vendors/countup/countUp.umd.js"></script>
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDbaQGvhe7Af-uOMJz68NWHnO34UjjE7Lo&callback=initMap" async></script>
 
+<!-- jquery -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+<!-- file uploader -->
+<script src="/vendors/dropzone/dropzone.js"></script>
+<!-- datepicker -->
+<script src="/assets/js/flatpickr.js"></script>
+<!-- swiper -->
+<script src="/assets/vendors/swiper/swiper-bundle.min.js"></script>
+
+<!-- javascript -->
+<script>
+  // button loading function
+  $(document).ready(function() {
+    $('.loading-button').on('click', function() {
+      $('.loading-button').addClass('loading');
+      $('.content-button').addClass('noshow');
+
+      setTimeout(function() {
+        $('.loading-button').removeClass('loading');
+        $('.content-button').removeClass('noshow');
+      }, 2500);
+    });
+  });
+</script>
+
 </body>
 
 </html>

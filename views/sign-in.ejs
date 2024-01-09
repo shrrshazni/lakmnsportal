@@ -1,0 +1,99 @@
+<%- include("partials/public-header.ejs") %>
+
+<div class="row vh-100 g-0">
+  <div class="col-lg-6 position-relative d-none d-lg-block">
+    <div class="bg-holder" style="background-image:url(../../../assets/img/bg/30.png);">
+    </div>
+    <!--/.bg-holder-->
+
+  </div>
+  <div class="col-lg-6">
+    <div class="row flex-center h-100 g-0 px-4 px-sm-0">
+      <div class="col col-sm-6 col-lg-7 col-xl-6">
+        <a class="d-flex flex-center text-decoration-none mb-5" href="/">
+          <div class="d-flex align-items-center fw-bolder fs-5 d-inline-block">
+            <img src="../../../assets/img/icons/logo.png" alt="logo" width="75" />
+          </div>
+        </a>
+        <div class="text-center mb-5">
+          <h3 class="text-1000">Sign In</h3>
+          <p class="text-700">Get access to your account</p>
+        </div>
+
+        <form action="/sign-in" method="post" class="has-validation">
+          <div class="mb-3 text-start">
+            <label class="form-label" for="username">Username</label>
+            <div class="form-icon-container">
+              <input class="form-control <%= validationUsername %> form-icon-input" id="username" type="text" name="username" value="<%= username %>" placeholder="Username" /><span class="fas fa-user text-900 fs--1 form-icon"></span>
+              <div class="valid-feedback">Looks good!</div>
+              <div class="invalid-feedback">
+                Username required
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-3 text-start">
+            <label class="form-label" for="password">Password</label>
+            <div class="form-icon-container">
+              <input class="form-control <%= validationPassword %> form-icon-input" id="password" type="password" name="password" value="<%= password %>" placeholder="Password" /><span class="fas fa-key text-900 fs--1 form-icon"></span>
+              <div class="valid-feedback">Looks good!</div>
+              <div class="invalid-feedback">
+                Required, at least 1 digit with minimum 4 character
+              </div>
+            </div>
+          </div>
+
+          <div class="row flex-between-center mb-7">
+            <div class="col-auto">
+              <div class="form-check mb-0">
+                <input class="form-check-input" id="basic-checkbox" type="checkbox" name="rememberMe" />
+                <label class="form-check-label mb-0" for="basic-checkbox">Remember me</label>
+              </div>
+            </div>
+            <div class="col-auto">
+              <a class="fs-9 fw-semibold" href="/forgot-password">Forgot Password?</a>
+            </div>
+          </div>
+
+          <button class="btn btn-primary w-100 mb-3 loading-button" type="submit" name="submit">
+            <div class="content-button">Sign In</div>
+          </button>
+        </form>
+
+        <div class="text-center d-none">
+          <a class="fs--1 fw-bold" href="/sign-up">Create an account</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- alert toast -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 5">
+  <div class="d-flex">
+    <div class="toast <%= toastShow %> align-items-center bg-primary-light border-0" role="alert" data-bs-autohide="false" aria-live="assertive" aria-atomic="true" id="alertToast">
+      <div class="d-flex justify-content-between">
+        <div class="toast-body px-0 py-3">
+          <code class="text-white"><%= toastMsg %></code>
+        </div>
+
+        <button class="btn ms-2 p-0 btn-close-white text-secondary" type="button" data-bs-dismiss="toast" aria-label="Close">
+          <span class="uil uil-times fs-5"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- theme button -->
+<div class="btn btn-phoenix-primary position-absolute top-0 end-0 m-4 shadow-lg rounded-5 d-flex px-2 py-1">
+  <p class="my-auto mx-2">Theme</p>
+  <div class="theme-control-toggle fa-icon-wait px-2">
+    <input class="form-check-input ms-0 theme-control-toggle-input" type="checkbox" data-theme-control="phoenixTheme" value="dark" id="themeControlToggle" />
+    <label class="mb-0 theme-control-toggle-label theme-control-toggle-light" for="themeControlToggle" data-bs-toggle="tooltip" data-bs-placement="left" title="Switch theme"><span class="icon" data-feather="moon"></span></label>
+    <label class="mb-0 theme-control-toggle-label theme-control-toggle-dark" for="themeControlToggle" data-bs-toggle="tooltip" data-bs-placement="left" title="Switch theme"><span class="icon" data-feather="sun"></span></label>
+  </div>
+</div>
+
+
+<%- include("partials/public-footer.ejs") %>

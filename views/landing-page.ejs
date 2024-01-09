@@ -39,7 +39,7 @@
               <label class="mb-0 theme-control-toggle-label theme-control-toggle-light" for="themeControlToggle" data-bs-toggle="tooltip" data-bs-placement="left" title="Switch theme"><span class="icon" data-feather="moon"></span></label>
               <label class="mb-0 theme-control-toggle-label theme-control-toggle-dark" for="themeControlToggle" data-bs-toggle="tooltip" data-bs-placement="left" title="Switch theme"><span class="icon" data-feather="sun"></span></label>
             </div>
-          </div><a class="text-body-tertiary text-body-emphasis-hover px-2 d-none d-lg-inline lh-sm" href="#" data-bs-toggle="modal" data-bs-target="#searchBoxModal"><span data-feather="search" style="height: 20px; width: 20px;"></span></a><a class="btn btn-link text-body order-1 order-lg-0 ps-4 me-lg-2" href="../../pages/authentication/simple/sign-in.html">Sign in</a><a class="btn btn-phoenix-primary order-0" href="../../pages/authentication/simple/sign-up.html"><span class="fw-bold">Sign Up</span></a>
+          </div><a class="text-body-tertiary text-body-emphasis-hover px-2 d-none d-lg-inline lh-sm" href="#" data-bs-toggle="modal" data-bs-target="#searchBoxModal"><span data-feather="search" style="height: 20px; width: 20px;"></span></a><a class="btn btn-link text-body order-1 order-lg-0 ps-4 me-lg-2" href="#">Other Link</a><a class="btn btn-phoenix-primary order-0" href="/sign-in"><span class="fw-bold">Sign In</span></a>
         </div>
       </div>
     </nav>
@@ -187,30 +187,38 @@
     </div>
   </div>
 
-  <section class="pb-5 overflow-hidden" id="home">
+  <!-- hero section -->
+  <section class="pb-8 overflow-hidden" id="home">
+    <% circles.forEach(circle => { %>
+    <div <% /* eslint-disable css-propertyvalueexpected */ %> class="gradient-circle" style="top: <%= circle.y %>%; left: <%= circle.x %>vw; width: <%= circle.size %>px; height: <%= circle.size %>px;">
+    </div>
+    <% }); %>
     <div class="hero-header-container-alternate position-relative">
       <div class="container-small px-lg-5 px-xxl-3">
+        <div class="gradient-circle"></div>
         <div class="row align-items-center">
           <div class="col-12 col-lg-6 pt-8 pb-6 position-relative z-5 text-center text-lg-start">
             <h1 class="fs-3 fs-md-2 fs-xl-1 fw-black mb-4"><span class="text-gradient-info me-3">Elegance</span>for<br />your web app</h1>
-            <p class="mb-5 pe-xl-10">Standard, modern and Elegant solution for your next web app so you don’t have to look further. Sign up or check the demo below.</p><a class="btn btn-lg btn-primary rounded-pill me-3" href="#!" role="button">Sign up</a><a class="btn btn-link me-2 fs-8 p-0" href="#!" role="button">Check Demo<span class="fa-solid fa-angle-right ms-2 fs-9"></span></a>
+            <p class="mb-5 pe-xl-10">Standard, modern and Elegant solution for your next web app so you don’t have to look further. Sign up or check the demo below.</p><a class="btn btn-lg btn-primary rounded-pill me-3" href="/sign-in" role="button">Sign In</a><a class="btn btn-link me-2 fs-8 p-0 d-none" href="#!" role="button">Check Demo<span class="fa-solid fa-angle-right ms-2 fs-9"></span></a>
           </div>
           <div class="col-12 col-lg-6 d-none d-lg-block">
-            <div class="lottie d-dark-none" data-options='{"path":"../../assets/img/animated-icons/rocket-1.json"}'></div>
-            <div class="lottie d-light-none" data-options='{"path":"../../assets/img/animated-icons/rocket-1.json"}'></div>
+            <div class="lottie d-dark-none" data-options='{"path":"https://lottie.host/7b3afcb8-b92c-440d-a417-7ca6fc8559a9/ldkqfvhECJ.json"}'></div>
+            <div class="lottie d-light-none" data-options='{"path":"https://lottie.host/7b3afcb8-b92c-440d-a417-7ca6fc8559a9/ldkqfvhECJ.json"}'></div>
           </div>
         </div>
       </div>
-      <div class="container-small px-md-8 mb-3 d-lg-none">
-        <div class="lottie d-dark-none" data-options='{"path":"../../assets/img/animated-icons/rotating-earth.json"}'></div>
-        <div class="lottie d-light-none" data-options='{"path":"../../assets/img/animated-icons/rotating-earth-dark.json"}'></div>
+      <div class="container-small px-md-8 mb-0 d-lg-none">
+        <div class="lottie d-dark-none" data-options='{"path":"https://lottie.host/7b3afcb8-b92c-440d-a417-7ca6fc8559a9/ldkqfvhECJ.json"}'></div>
+        <div class="lottie d-light-none" data-options='{"path":"https://lottie.host/7b3afcb8-b92c-440d-a417-7ca6fc8559a9/ldkqfvhECJ.json"}'></div>
       </div>
     </div>
   </section>
 
+
+
   <!-- ============================================-->
-  <!-- <section> begin ============================-->
-  <section class="pt-13 pb-10" id="feature">
+  <!-- features begin ============================-->
+  <section class="pt-13 pb-10 mt-n10" id="feature">
 
     <div class="container-small px-lg-7 px-xxl-3">
       <div class="text-center mb-10 mb-md-5">
@@ -219,14 +227,14 @@
         <p class="mb-0">Focus only on functionalities for your digital products with Phoenix! Leave the UIs for us.</p>
         <div class="text-center mt-5"><a class="btn btn-outline-primary" href="#!">See more<span class="fa-solid fa-angle-right ms-2"></span></a></div>
       </div>
-      <div class="row flex-between-center px-xl-11 mb-10 mb-md-9">
+      <div class="row flex-between-center px-xl-11 mb-6 mb-md-9">
         <div class="col-md-6 order-1 order-md-0 text-center text-md-start">
           <h4 class="mb-3">Recieve the signals instantly</h4>
           <p class="mb-5">Phoenix allows you to receive every signal instantly and fruitfully. No need for long waits.</p><a class="btn btn-link me-2 p-0 fs-9" href="#!" role="button">Check Demo<i class="fa-solid fa-angle-right ms-2"></i></a>
         </div>
         <div class="col-md-5 mb-5 mb-md-0 text-center"><img class="w-75 w-md-100 d-dark-none" src="../../assets/img/spot-illustrations/15.png" alt="" /><img class="w-75 w-md-100 d-light-none" src="../../assets/img/spot-illustrations/dark_15.png" alt="" /></div>
       </div>
-      <div class="row flex-between-center px-xl-11 mb-10 mb-md-9">
+      <div class="row flex-between-center px-xl-11 mb-6 mb-md-9">
         <div class="col-md-6 order-1 order-md-0 text-center text-md-start">
           <h4 class="mb-3">Make everyday a joyride</h4>
           <p class="mb-5">Phoenix helps you show reports and data in one place and make the journey a glee trip for everyone.</p><a class="btn btn-link me-2 p-0 fs-9" href="#!" role="button">Check Demo<i class="fa-solid fa-angle-right ms-2"></i></a>
@@ -244,11 +252,11 @@
     <!-- end of .container-->
 
   </section>
-  <!-- <section> close ============================-->
+  <!-- features close ============================-->
   <!-- ============================================-->
 
   <!-- ============================================-->
-  <!-- <section> begin ============================-->
+  <!-- carousel begin ============================-->
   <section class="pb-14 overflow-x-hidden">
 
     <div class="container-small px-lg-7 px-xxl-3">
@@ -260,9 +268,9 @@
         <div class="bg-holder d-none d-md-block" style="background-image:url(../../assets/img/bg/39.png);background-size:186px;background-position:top 20px right 20px;">
         </div>
         <!--/.bg-holder-->
-        <img class="position-absolute d-none d-lg-block" src="../../assets/img/bg/bg-left-22.png" width="150" alt="" style="top: -100px; left: -70px" /><img class="position-absolute d-none d-lg-block" src="../../assets/img/bg/bg-right-22.png" width="150" alt="" style="bottom: -80px; right: -80px" />
+
         <div class="carousel-inner">
-          <div class="carousel-item text-center py-8 px-5 px-xl-15 active"><span class="fa fa-star text-warning"></span><span class="fa fa-star text-warning"></span><span class="fa fa-star text-warning"></span><span class="fa fa-star text-warning"></span><span class="fa fa-star text-warning"></span>
+          <div class="carousel-item text-center py-8 px-5 px-xl-15 active">
             <h3 class="fw-semibold fst-italic mt-3 mb-8 w-xl-70 mx-auto lh-base">Amazing theme, excellent support from ThemeWagon with really fast reaction time! Thank you!</h3>
             <div class="d-flex align-items-center justify-content-center gap-3 mx-auto">
               <div class="avatar avatar-3xl ">
@@ -275,7 +283,7 @@
               </div>
             </div>
           </div>
-          <div class="carousel-item text-center py-8 px-5 px-xl-15 false"><span class="fa fa-star text-warning"></span><span class="fa fa-star text-warning"></span><span class="fa fa-star text-warning"></span><span class="fa fa-star text-warning"></span><span class="fa fa-star-half-alt star-icon text-warning"></span>
+          <div class="carousel-item text-center py-8 px-5 px-xl-15 false">
             <h3 class="fw-semibold fst-italic mt-3 mb-8 w-xl-70 mx-auto lh-base">An excellent theme with fast support team to aid the development process! Thanks team Phoenix!</h3>
             <div class="d-flex align-items-center justify-content-center gap-3 mx-auto">
               <div class="avatar avatar-3xl ">
@@ -288,7 +296,7 @@
               </div>
             </div>
           </div>
-          <div class="carousel-item text-center py-8 px-5 px-xl-15 false"><span class="fa fa-star text-warning"></span><span class="fa fa-star text-warning"></span><span class="fa fa-star text-warning"></span><span class="fa fa-star text-warning"></span><span class="fa-regular fa-star text-warning-light"></span>
+          <div class="carousel-item text-center py-8 px-5 px-xl-15 false">
             <h3 class="fw-semibold fst-italic mt-3 mb-8 w-xl-70 mx-auto lh-base">Amazing support system with quickest reply and steady communication of the concerned. Really loved working with Phoenix!</h3>
             <div class="d-flex align-items-center justify-content-center gap-3 mx-auto">
               <div class="avatar avatar-3xl ">
@@ -302,6 +310,7 @@
             </div>
           </div>
         </div>
+
         <div class="carousel-indicators">
           <button class="active" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="0" aria-current="true" aria-label="Slide 1"></button>
           <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="1" aria-label="Slide 2"></button>
@@ -312,18 +321,14 @@
     <!-- end of .container-->
 
   </section>
-  <!-- <section> close ============================-->
+  <!-- carousel close ============================-->
   <!-- ============================================-->
 
 
+  <!-- gallery -->
   <section class="gallery">
-    <div class="position-absolute left-0 w-100 gallery-overlay"></div>
-    <div class="bg-holder d-none d-xl-block" style="background-image:url(../../assets/img/bg/bg-left-26.png);background-size:auto;background-position:left 65%;">
-    </div>
     <!--/.bg-holder-->
 
-    <div class="bg-holder d-none d-xl-block" style="background-image:url(../../assets/img/bg/bg-right-26.png);background-size:auto;background-position:right 62%;">
-    </div>
     <!--/.bg-holder-->
 
     <div class="container-small position-relative px-lg-7 px-xxl-3">
@@ -359,27 +364,21 @@
   </section>
 
   <!-- ============================================-->
-  <!-- <section> begin ============================-->
+  <!-- pre-footer begin ============================-->
   <section class="bg-body dark__bg-gray-1000 pb-10 overflow-hidden">
 
     <div class="container-small px-lg-7 px-xxl-3">
-      <div class="position-absolute w-100 h-100 start-0 end-0 opacity-50" style="bottom: -350px; transform: skewY(-8deg); background: linear-gradient(102.27deg, #38ABFF 4.69%, #3874FF 106.27%)"></div>
-      <div class="bg-holder" style="background-image:url(../../assets/img/bg/bg-left-24.png);background-size:auto;background-position:left center;">
-      </div>
       <!--/.bg-holder-->
 
-      <div class="bg-holder" style="background-image:url(../../assets/img/bg/bg-right-24.png);background-size:auto;background-position:right center;">
-      </div>
       <!--/.bg-holder-->
 
       <div class="row justify-content-center">
         <div class="col-12 text-center">
-          <div class="card py-md-9 px-md-13 border-0 z-1 shadow-lg">
-            <div class="bg-holder" style="background-image:url(../../assets/img/bg/bg-38.png);background-position:center;background-size:100%;">
-            </div>
+          <div class="card py-md-5 px-md-13 border-0 z-1 shadow-lg">
             <!--/.bg-holder-->
 
-            <div class="card-body position-relative"><img class="img-fluid mb-5 d-dark-none" src="../../assets/img/spot-illustrations/37.png" width="260" alt="..." /><img class="img-fluid mb-5 d-light-none" src="../../assets/img/spot-illustrations/37_2.png" width="260" alt="..." />
+            <div class="card-body position-relative">
+              <lottie-player class="mx-auto mt-n3" src="https://lottie.host/60803a11-6e8f-4ef2-bee6-0f7b7f5a933d/ALrblUIzTT.json" background="##FFFFFF" speed="1" style="width: 450px; height: 450px" loop autoplay direction="1" mode="normal"></lottie-player>
               <p class="fw-bold">2008 Premium Icons <span class="text-primary fs-6">.</span> Included FREE with it</p>
               <h1 class="fs-6 fs-sm-4 fs-lg-2 fw-bolder lh-sm mb-3">Join<span class="gradient-text-primary mx-2">Phoenix</span><span>Today</span></h1>
               <form class="d-flex justify-content-center mb-3 px-xxl-15">
@@ -395,11 +394,11 @@
     <!-- end of .container-->
 
   </section>
-  <!-- <section> close ============================-->
+  <!-- pre-footer close ============================-->
   <!-- ============================================-->
 
   <!-- ============================================-->
-  <!-- <section> begin ============================-->
+  <!-- footer begin ============================-->
   <section class="bg-dark dark__bg-gray-1000" data-bs-theme="dark">
 
     <div class="container-small px-lg-7 px-xxl-3">
@@ -429,7 +428,7 @@
     <!-- end of .container-->
 
   </section>
-  <!-- <section> close ============================-->
+  <!-- footer close ============================-->
   <!-- ============================================-->
 </main>
 
