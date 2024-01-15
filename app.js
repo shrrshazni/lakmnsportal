@@ -62,27 +62,42 @@ async function main() {
 
 // SCHEMA INITIALIZATION
 
-//USER
+// USER
 const userSchema = new mongoose.Schema({
     fullname: { type: String, required: true },
     username: { type: String, required: true, unique: true },
     email: { type: String, required: true, unique: true },
+    ic: { type: String, required: true, unique: true },
     phone: String,
     profile: String,
     age: { type: Number, min: 0 },
+    address: String,
     gender: String,
     education: String,
+    department: String,
+    section : String,
     position: String,
     grade: String,
     role: String,
-    dateEmployed: { type: Date, default: Date.now }
+    status: String,
+    dateEmployed: { type: Date, default: Date.now },
+    birthdate: { type: Date }
 });
+
+// ACTIVITY
+const activitySchema = new mongoose.Schema({
+    date: String,
+    items: []
+});
+
+
 
 //mongoose passport-local
 userSchema.plugin(passportLocalMongoose);
 userSchema.plugin(findOrCreate);
 
 const User = new mongoose.model('User', userSchema);
+const Activity = mongoose.model('Activity', activitySchema);
 
 passport.use(User.createStrategy());
 
@@ -301,15 +316,71 @@ app.get('/sign-out', async function (req, res) {
 // PROFILE
 app.get('/profile', isAuthenticated, async function (req, res) {
     const username = req.user.username;
-
     const user = await User.findOne({ username: username });
 
-    console.log(user);
+    const date = getDateFormat2();
 
-    res.render('profile');
+    // calculate user's age
+    const age = calculateAge(user.birthdate);
+
+    const newData = {
+        age : age
+    }
+
+    const update = await User.updateOne({ username: username }, { $set: newData });
+
+    // check find user successful or not
+    if (user && update) {
+        // find activity
+        const activity = await Activity.find({
+            'items.username': user.username
+        })
+            .limit(7)
+            .sort({ date: -1 });
+
+        res.render('profile', {
+            user: user,
+            activity: activity,
+            today: date
+        });
+    }
 });
+
+// FUNCTIONS
+
+// GET DATE TODAY IN STRING
+getDateFormat2 = function () {
+    const today = moment().utcOffset('+08:00');
+    const formattedDate = today.format('D MMMM YYYY');
+
+    return formattedDate;
+};
+
+getDateFormat1 = function () {
+    const today = moment().utcOffset('+08:00');
+    const formattedDate = today.format('DD/MM/YYYY');
+
+    return formattedDate;
+}
+
+// GET CURRENT TIME IN STRING
+getCurrentTime = function () {
+    const currentTimeInUTC8 = moment().utcOffset('+08:00');
+    const formattedTime = currentTimeInUTC8.format('HH:mm A');
+
+    return formattedTime;
+};
+
+calculateAge = function (birthdate) {
+    const today = moment().utcOffset('+08:00');
+    const birthdateObj = moment(birthdate);
+
+    let age = today.diff(birthdateObj, 'years');
+
+    return age;
+}
 
 
 // PORT INITIALIZATION ON CLOUD OR LOCAL (5001)
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.PORT || 5002;
 app.listen(PORT, () => console.log(`Listening on ${PORT}`));
