@@ -73,6 +73,39 @@
       }, 2500);
     });
   });
+
+   // upload files
+   $(document).ready(function() {
+    // Function to show the toast
+    function showDropzoneFilesToast(content) {
+      $('#dropzoneAlertContent').text(content);
+
+      var toast = new bootstrap.Toast(
+        document.getElementById('alertUploadToast')
+      );
+      toast.show();
+    }
+
+    var myDropzone = Dropzone.forElement('#myDropzone');
+
+    $('#uploadButton').on('click', function() {
+      setTimeout(function() {
+        // files upload process queue
+
+        if (myDropzone.getQueuedFiles().length > 0) {
+          // If files are present, show the toast with appropriate content
+          showDropzoneFilesToast('Files has been uploaded');
+          // Process the Dropzone queue
+          myDropzone.processQueue();
+        } else {
+          // If no files are present, show the toast with different content
+          showDropzoneFilesToast('No files selected');
+        }
+
+        button.prop('type', 'submit');
+      }, 2000);
+    });
+  });
 </script>
 
 </body>

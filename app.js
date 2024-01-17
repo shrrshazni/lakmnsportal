@@ -16,6 +16,7 @@ const path = require('path');
 const fileUpload = require('express-fileupload');
 const nodemailer = require('nodemailer');
 const cron = require('node-cron');
+const { v4: uuidv4 } = require('uuid');
 
 const mongoURI =
     'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/session';
@@ -391,7 +392,8 @@ app.get('/leave/request', isAuthenticated, async function (req, res) {
 
     if (user) {
         res.render('leave-request', {
-            user: user
+            user: user,
+            id: uuidv4(),
         });
     }
 });
@@ -405,6 +407,69 @@ app.get('/leave/history', isAuthenticated, async function (req, res) {
         res.render('leave-history', {
             user: user
         });
+    }
+});
+
+// EXAMPLE 
+
+app.get('/example', async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+
+    if (user) {
+        res.render('example-profile', {
+            user: user
+        });
+    }
+});
+
+// UPLOAD FILES
+
+// FILES LEAVE
+app.post('/upload-case', async (req, res) => {
+    if (!req.files || Object.keys(req.files).length === 0) {
+        console.log('There is no files selected');
+    } else {
+        // find user full name
+        const user = req.user.username;
+        const findUser = await User.findOne({ username: user });
+
+        const id = req.body.fileReportId;
+
+        // Check if the report ID exists in the database
+        const existingFile = await File.findOne({ reportId: id });
+
+        if (!existingFile) {
+            // No file with the report ID found, proceed with file upload
+            for (const file of Object.values(req.files)) {
+                const uploadPath = __dirname + '/public/uploads/' + file.name;
+                const pathFile = 'uploads/' + file.name;
+                const todayDate = dateLocal.getDate();
+                const fileType = path.extname(file.name);
+
+                file.mv(uploadPath, err => {
+                    if (err) {
+                        console.log(err);
+                    }
+
+                    // Save file information to the MongoDB
+                    const newFile = new File({
+                        reportId: confirmRid,
+                        by: checkUser.fullname,
+                        filename: file.name,
+                        path: pathFile,
+                        date: todayDate,
+                        fileType: fileType
+                    });
+
+                    newFile.save();
+                });
+            }
+            res.redirect('/case-report/details?id=' + confirmRid);
+        } else {
+            // File with the report ID already exists
+            res.redirect('/case-report/details?id=' + confirmRid);
+        }
     }
 });
 
