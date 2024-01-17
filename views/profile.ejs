@@ -1,175 +1,201 @@
 <%- include("partials/private-header.ejs") %>
 
-<div class="content p-0">
-  <div class="pb-9">
-    <div class="card mb-5">
-      <div class="card-header hover-actions-trigger d-flex justify-content-center align-items-end position-relative mb-7 mb-xxl-0" style="min-height: 214px">
-        <div class="bg-holder rounded-top" style="
+
+<div class="pb-9">
+  <div class="card mb-5">
+    <div class="card-header hover-actions-trigger d-flex justify-content-center align-items-end position-relative mb-7 mb-xxl-0" style="min-height: 214px">
+      <div class="bg-holder rounded-top" style="
                   background-image: url(../../assets/img/generic/cover-photo.png);
                 "></div>
-        <!--/.bg-holder-->
+      <!--/.bg-holder-->
 
-        <% if(user.profile === ''){ profileImages =
+      <% if(user.profile === ''){ user.profile =
               '/assets/img/team/avatar.webp'; } %>
 
-        <div class="feed-profile" style="width: 150px; height: 150px">
-          <div class="position-relative bg-400 rounded-circle cursor-pointer d-flex flex-center mb-xxl-7">
-            <div class="avatar avatar-5xl">
-              <img class="rounded-circle rounded-circle img-thumbnail shadow-sm" src="<%= profileImages %>" />
-            </div>
-            <label class="w-100 h-100 position-absolute z-index-1" for="upload-porfile-picture"></label>
+      <div class="feed-profile" style="width: 150px; height: 150px">
+        <div class="position-relative bg-400 rounded-circle cursor-pointer d-flex flex-center mb-xxl-7">
+          <div class="avatar avatar-5xl">
+            <img class="rounded-circle rounded-circle img-thumbnail shadow-sm" src="<%= user.profile %>" />
           </div>
+          <label class="w-100 h-100 position-absolute z-index-1" for="upload-porfile-picture"></label>
         </div>
       </div>
-      <div class="card-body">
-        <div class="row justify-content-xl-between order-xxl-1 mb-3">
-          <div class="col-auto">
-            <h2 class="mb-2"><%= user.fullname %></h2>
-          </div>
-          <div class="col-auto">
-            <span class="fw-semi-bold fs-9 text-1100 badge badge-phoenix badge-phoenix-primary mt-2">
+    </div>
+    <% 
+    var section = "";
+
+    if(user.section === ''){
+        section = '';
+    }else{
+        section = "in " + user.section;
+    } %>
+    <div class="card-body">
+
+      <div class="row order-xxl-0 mb-0">
+        <div class="col-12 col-xxl-6">
+          <a href="#!" data-bs-toggle="modal" data-bs-target="#user-details" class="mb-2">
+            <h2><%= user.fullname %></h2>
+          </a>
+        </div>
+        <div class="col-12 col-xxl-6">
+          <div class="text-center text-xxl-end">
+            <span class="fw-semi-bold fs-9 text-1100 badge badge-phoenix badge-phoenix-primary mt-0 mb-3">
               <%= user.username %>
             </span>
           </div>
         </div>
-        <div class="col-auto">
-          <div class="row g-2">
-            <div class="col-auto order-xxl-1">
-              <button class="btn btn-phoenix-primary lh-1"><span class="fa-solid fa-message me-2"></span>Send Message</button>
-            </div>
-            <div class="col-auto order-xxl-0">
-              <div class="position-static dropend">
-                <button class="btn btn-phoenix-secondary lh-1" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fa-solid fa-chevron-down me-2"></span> More</button>
-                <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item d-xl-none" href="#!"><span class="fa-solid fa-user-group text-body-secondary me-2"></span><span>Followers</span></a><a class="dropdown-item d-xl-none" href="#!"><span class="fa-solid fa-users text-body-secondary me-2"></span><span>Communities</span></a><a class="dropdown-item d-xl-none" href="#!"><span class="fa-solid fa-photo-film text-body-secondary me-2"></span><span>Media Files</span></a><a class="dropdown-item d-xl-none" href="#!"><span class="fa-solid fa-calendar-days fs-8 text-body-secondary me-2"></span><span> Events</span></a><a class="dropdown-item d-xl-none" href="#!"><span class="fa-solid fa-dice text-body-secondary me-2"></span><span>Games</span></a><a class="dropdown-item d-xl-none" href="#!"><span class="fa-solid fa-user-gear text-body-secondary me-2"></span><span>Settings</span></a><a class="dropdown-item" href="#!"><span class="fa-solid fa-bell-slash text-body-secondary me-2"></span><span>Mute Conversation</span></a><a class="dropdown-item" href="#!"><span class="fa-solid fa-gear text-body-secondary me-2"></span><span>Manage Settings</span></a><a class="dropdown-item" href="#!"><span class="fa-solid fa-hand-holding-heart text-body-secondary me-2"></span><span>Get help</span></a><a class="dropdown-item" href="#!"><span class="fa-solid fa-flag text-body-secondary me-2"></span><span>Report Account</span></a><a class="dropdown-item" href="#!"><span class="fa-solid fa-ban text-body-secondary me-2"></span><span>Block Account</span></a>
-                </div>
+      </div>
+
+      <div class="col-auto order-xxl-1 mb-3">
+        <div class="mb-3 border border-300 border-xxl-0 p-3 p-xxl-0 rounded-3">
+          <div class="d-md-flex align-items-center">
+            <div class="d-flex align-items-center me-3"><span class="fa-solid fa-building-user fs-9 text-body-tertiary me-2 me-lg-1 me-xl-1 mb-1"></span><a class="text-body-emphasis" href="#!"><span class="fs-8 fw-bold text-body-tertiary text-opacity-85 text-body-emphasis-hover"><%= user.department %> <%= section %></span></a></div>
+            <div class="d-flex align-items-center me-3"><span class="fa-solid fa-user-tag fs-9 text-body-tertiary me-2 me-lg-1 me-xl-1 mb-1"></span><a class="text-body-emphasis" href="#!"><span class="fs-8 fw-bold text-body-tertiary text-opacity-85 text-body-emphasis-hover"><%= user.position %></span></a></div>
+            <div class="d-flex align-items-center me-3"><span class="fa-solid fa-medal fs-9 text-body-tertiary me-2 me-lg-1 me-xl-1 mb-1"></span><a class="text-body-emphasis" href="#!"><span class="fs-8 fw-bold text-body-tertiary text-opacity-85 text-body-emphasis-hover"><%= user.grade %></span></a></div>
+            <div class="d-flex align-items-center me-3"><span class="fa-solid fa-pen-nib fs-9 text-body-tertiary me-2 me-lg-1 me-xl-1 mb-1"></span><a class="text-body-emphasis" href="#!"><span class="fs-8 fw-bold text-body-tertiary text-opacity-85 text-body-emphasis-hover"><%= user.dateEmployed.toLocaleDateString("en-MY"); %></span></a></div>
+          </div>
+        </div>
+        <% if(info){ %>
+        <p class="fs-6 text-body-secondary mb-0 fst-italic">“<%= info.status %>”</p>
+        <% } else { %>
+        <p class="fs-6 text-body-secondary mb-0 fst-italic">“No status yet”</p>
+        <% } %>
+      </div>
+
+      <div class="col-auto order-xxl-2">
+        <div class="row g-2">
+          <div class="col-auto order-xxl-1">
+            <button class="btn btn-phoenix-primary lh-1"><span class="fa-solid fa-message me-2"></span>Send Message</button>
+          </div>
+          <div class="col-auto order-xxl-0">
+            <div class="position-static dropend">
+              <button class="btn btn-phoenix-secondary lh-1" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fa-solid fa-chevron-down me-2"></span> More</button>
+              <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item d-xl-none" href="#!"><span class="fa-solid fa-user-group text-body-secondary me-2"></span><span>Followers</span></a><a class="dropdown-item d-xl-none" href="#!"><span class="fa-solid fa-users text-body-secondary me-2"></span><span>Communities</span></a><a class="dropdown-item d-xl-none" href="#!"><span class="fa-solid fa-photo-film text-body-secondary me-2"></span><span>Media Files</span></a><a class="dropdown-item d-xl-none" href="#!"><span class="fa-solid fa-calendar-days fs-8 text-body-secondary me-2"></span><span> Events</span></a><a class="dropdown-item d-xl-none" href="#!"><span class="fa-solid fa-dice text-body-secondary me-2"></span><span>Games</span></a><a class="dropdown-item d-xl-none" href="#!"><span class="fa-solid fa-user-gear text-body-secondary me-2"></span><span>Settings</span></a><a class="dropdown-item" href="#!"><span class="fa-solid fa-bell-slash text-body-secondary me-2"></span><span>Mute Conversation</span></a><a class="dropdown-item" href="#!"><span class="fa-solid fa-gear text-body-secondary me-2"></span><span>Manage Settings</span></a><a class="dropdown-item" href="#!"><span class="fa-solid fa-hand-holding-heart text-body-secondary me-2"></span><span>Get help</span></a><a class="dropdown-item" href="#!"><span class="fa-solid fa-flag text-body-secondary me-2"></span><span>Report Account</span></a><a class="dropdown-item" href="#!"><span class="fa-solid fa-ban text-body-secondary me-2"></span><span>Block Account</span></a>
               </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-    <div class="row gy-3 gx-5 gx-xxl-6">
-      <!-- l-section  -->
-      <div class="col-12 col-xxl-4">
-        <div class="mb-5 d-none d-xxl-block">
-          <div class="row g-0">
-            <div class="col-6 border-1 border-bottom border-translucent border-end py-2"> <a class="btn btn-link ps-2 fs-8 text-body-secondary text-primary-hover fw-semibold d-flex flex-column d-xxl-inline-block" href="#!"><span class="fa-solid fa-user-group me-2 mb-2 mb-xxl-0"></span>Followers</a></div>
-            <div class="col-6 border-1 border-bottom border-translucent py-2"><a class="btn btn-link fs-8 text-body-secondary text-primary-hover fw-semibold d-flex flex-column d-xxl-inline-block" href="#!"><span class="fa-solid fa-users me-2 mb-2 mb-xxl-0"></span>Communities</a></div>
-            <div class="col-6 border-1 border-bottom border-translucent border-end py-2"><a class="btn btn-link ps-2 fs-8 text-body-secondary text-primary-hover fw-semibold d-flex flex-column d-xxl-inline-block" href="#!"><span class="fa-solid fa-photo-film me-2 mb-2 mb-xxl-0"></span>Media Files</a></div>
-            <div class="col-6 border-1 border-bottom border-translucent py-2"><a class="btn btn-link fs-8 text-body-secondary text-primary-hover fw-semibold d-flex flex-column d-xxl-inline-block" href="#!"><span class="fa-solid fa-calendar-days me-2 mb-2 mb-xxl-0"></span>Events</a></div>
-            <div class="col-6 border-1 border-end border-translucent py-2"><a class="btn btn-link ps-2 fs-8 text-body-secondary text-primary-hover fw-semibold d-flex flex-column d-xxl-inline-block" href="#!"><span class="fa-solid fa-dice me-2 mb-2 mb-xxl-0"></span>Games</a></div>
-            <div class="col-6 border-1 py-2"><a class="btn btn-link fs-8 text-body-secondary text-primary-hover fw-semibold d-flex flex-column d-xxl-inline-block" href="#!"><span class="fa-solid fa-user-gear me-2 mb-2 mb-xxl-0"></span>Settings </a></div>
-          </div>
-        </div>
-        <div class="mb-5">
-          <div class="card">
-            <div class="card-body">
-              <div class="card-title d-flex justify-content-between">
-                <h3>About</h3>
-                <a href="#!" data-bs-toggle="modal" data-bs-target="#user-details" class="fw-bold fs-9 mt-1">See details</a>
-              </div>
-              <div class="d-flex mb-0">
-                <span class="fa-solid fa-building-user me-2 mt-1"></span>
-                <p class="fw-bold">Department: <%= user.department %></p>
-                
-              </div>
-              <div class="d-flex mb-0">
-                <span class="fa-solid fa-user-tag me-2 mt-1"></span>
-                <p class="fw-bold">Position: <%= user.position %></p>
-              </div>
-              <div class="d-flex mb-0">
-                <span class="fa-solid fa-medal me-2 mt-1"></span>
-                <p class="fw-bold">Grade: <%= user.grade %></p>
-              </div>
-              <div class="d-flex mb-0">
-                <span class="fa-solid fa-pen-nib me-2 mt-1"></span>
-                <p class="fw-bold">Date of Employed (<%= user.dateEmployed.toLocaleDateString('en-MY') %>)</p>
-              </div>
-            </div>
-          </div>
+  </div>
+  <div class="row gy-3 gx-5 gx-xxl-6">
+    <!-- l-section  -->
+    <div class="col-12 col-xxl-4">
+      <div class="mb-8">
+        <div class="row g-0">
+          <div class="col-6 border-1 border-bottom border-translucent border-end py-2"> <a class="btn btn-link ps-2 fs-8 text-body-secondary text-primary-hover fw-semibold d-flex flex-column d-xxl-inline-block" href="#!"><span class="fa-solid fa-user-group me-2 mb-2 mb-xxl-0"></span>Followers</a></div>
+          <div class="col-6 border-1 border-bottom border-translucent py-2"><a class="btn btn-link fs-8 text-body-secondary text-primary-hover fw-semibold d-flex flex-column d-xxl-inline-block" href="#!"><span class="fa-solid fa-users me-2 mb-2 mb-xxl-0"></span>Communities</a></div>
+          <div class="col-6 border-1 border-bottom border-translucent border-end py-2"><a class="btn btn-link ps-2 fs-8 text-body-secondary text-primary-hover fw-semibold d-flex flex-column d-xxl-inline-block" href="#!"><span class="fa-solid fa-photo-film me-2 mb-2 mb-xxl-0"></span>Media Files</a></div>
+          <div class="col-6 border-1 border-bottom border-translucent py-2"><a class="btn btn-link fs-8 text-body-secondary text-primary-hover fw-semibold d-flex flex-column d-xxl-inline-block" href="#!"><span class="fa-solid fa-calendar-days me-2 mb-2 mb-xxl-0"></span>Events</a></div>
+          <div class="col-6 border-1 border-end border-translucent py-2"><a class="btn btn-link ps-2 fs-8 text-body-secondary text-primary-hover fw-semibold d-flex flex-column d-xxl-inline-block" href="#!"><span class="fa-solid fa-dice me-2 mb-2 mb-xxl-0"></span>Games</a></div>
+          <div class="col-6 border-1 py-2"><a class="btn btn-link fs-8 text-body-secondary text-primary-hover fw-semibold d-flex flex-column d-xxl-inline-block" href="#!"><span class="fa-solid fa-user-gear me-2 mb-2 mb-xxl-0"></span>Settings </a></div>
         </div>
       </div>
+      <div class="mb-8">
+        <div class="d-flex pb-4 align-items-end">
+          <h3 class="flex-1 mb-0">Photos</h3><a class="fw-bold fs-9 me-4" href="#!">Albums</a><a class="fw-bold fs-9" href="#!">See all</a>
+        </div>
+        <div class="row g-3">
+          <div class="col-4"><a href="../../assets/img/gallery/11.png" data-gallery="gallery-photos"><img class="w-100 rounded-3" src="../../assets/img/gallery/11.png" alt="" /></a></div>
+          <div class="col-4"><a href="../../assets/img/gallery/12.png" data-gallery="gallery-photos"><img class="w-100 rounded-3" src="../../assets/img/gallery/12.png" alt="" /></a></div>
+          <div class="col-4"><a href="../../assets/img/gallery/13.png" data-gallery="gallery-photos"><img class="w-100 rounded-3" src="../../assets/img/gallery/13.png" alt="" /></a></div>
+          <div class="col-4"><a href="../../assets/img/gallery/14.png" data-gallery="gallery-photos"><img class="w-100 rounded-3" src="../../assets/img/gallery/14.png" alt="" /></a></div>
+          <div class="col-4"><a href="../../assets/img/gallery/15.png" data-gallery="gallery-photos"><img class="w-100 rounded-3" src="../../assets/img/gallery/15.png" alt="" /></a></div>
+          <div class="col-4"><a href="../../assets/img/gallery/16.png" data-gallery="gallery-photos"><img class="w-100 rounded-3" src="../../assets/img/gallery/16.png" alt="" /></a></div>
+        </div>
+      </div>
+      <div class="d-flex pb-4 align-items-end border-bottom border-translucent border-dashed">
+        <h3 class="flex-1 mb-0">You and Erza</h3><a class="fw-bold fs-9" href="#!">See details</a>
+      </div>
+      <div class="row g-0 mb-5 mb-lg-0">
+        <div class="col-12 border-1 border-bottom border-translucent py-2"><a class="btn btn-link ps-2 fs-8 text-body-secondary text-primary-hover fw-semibold d-flex" href="#!"><span class="fa-solid fa-user-group me-2 mb-2 mb-xxl-0"></span>432 Common Followers</a></div>
+        <div class="col-12 border-1 border-bottom border-translucent py-2"><a class="btn btn-link ps-2 fs-8 text-body-secondary text-primary-hover fw-semibold d-flex" href="#!"><span class="fa-solid fa-users me-2 mb-2 mb-xxl-0"></span>21 Communities</a></div>
+        <div class="col-12 border-1 border-bottom border-translucent py-2"><a class="btn btn-link ps-2 fs-8 text-body-secondary text-primary-hover fw-semibold d-flex" href="#!"><span class="fa-solid fa-tags me-2 mb-2 mb-xxl-0"></span>12 Tagged Images</a></div>
+        <div class="col-12 border-1 border-bottom border-translucent py-2"><a class="btn btn-link ps-2 fs-8 text-body-secondary text-primary-hover fw-semibold d-flex" href="#!"><span class="fa-solid fa-calendar-days me-2 mb-2 mb-xxl-0"></span>3 Common Events</a></div>
+        <div class="col-12 border-1 border-bottom border-translucent py-2"><a class="btn btn-link ps-2 fs-8 text-body-secondary text-primary-hover fw-semibold d-flex" href="#!"><span class="fa-solid fa-location-dot me-2 mb-2 mb-xxl-0"></span>45 Common Check-ins</a></div>
+      </div>
+    </div>
 
-      <!-- r-section -->
-      <div class="col-12 col-xxl-8 position-sticky">
-        <div class="row gx-xl-8 gx-xxl-11">
-          <h3 class="mb-4 text-center">Activity Timeline</h3>
+    <!-- r-section -->
+    <div class="col-12 col-xxl-8 position-sticky">
+      <div class="row gx-xl-8 gx-xxl-11">
+        <h3 class="mb-4 text-center">Activity Timeline</h3>
 
-          <div class="col-xl-12 overflow-auto scrollbar-overlay min-vh-50">
-            <% if (Array.isArray(activity) && activity.length > 0) { %> <%
+        <div class="col-xl-12 overflow-auto scrollbar-overlay min-vh-50">
+          <% if (Array.isArray(activity) && activity.length > 0) { %> <%
               activity.forEach((activity, activityIndex) => { %> <% if (date
               === activity.date) { %>
-            <h4 class="py-3 border-y border-300 mb-5 ms-8">Today</h4>
-            <% } else { %>
-            <h4 class="py-3 border-y border-300 mb-5 ms-8">
-              <%= activity.date %>
-            </h4>
+          <h4 class="py-3 border-y border-300 mb-5 ms-8">Today</h4>
+          <% } else { %>
+          <h4 class="py-3 border-y border-300 mb-5 ms-8">
+            <%= activity.date %>
+          </h4>
 
-            <% } %> <% const lastItemIndex = activity.items.length - 1; %> <%
+          <% } %> <% const lastItemIndex = activity.items.length - 1; %> <%
               const filteredItems = Array.isArray(activity.items) ?
               activity.items.filter(itemArray => itemArray.username === user.username)
               : [] %> <% if (filteredItems.length > 0) { %>
-            <div class="timeline-basic mb-9">
-              <% filteredItems.forEach((itemArray, itemIndex) => { %>
-              <div class="timeline-item">
-                <div class="row g-3">
-                  <div class="col-auto">
-                    <div class="timeline-item-bar position-relative">
-                      <div class="icon-item icon-item-md rounded-7 border">
-                        <% if(itemArray.type === 'User') {%>
-                        <span class="fa-solid fa-clipboard text-success fs-9"></span>
-                        <% } else {%>
-                        <span class="fa-solid fa-rocket text-danger fs-9"></span>
-                        <% } %>
-                      </div>
-                      <% if ( lastItemIndex >= 0 ) {
+          <div class="timeline-basic mb-9">
+            <% filteredItems.forEach((itemArray, itemIndex) => { %>
+            <div class="timeline-item">
+              <div class="row g-3">
+                <div class="col-auto">
+                  <div class="timeline-item-bar position-relative">
+                    <div class="icon-item icon-item-md rounded-7 border">
+                      <% if(itemArray.type === 'User') {%>
+                      <span class="fa-solid fa-clipboard text-success fs-9"></span>
+                      <% } else {%>
+                      <span class="fa-solid fa-rocket text-danger fs-9"></span>
+                      <% } %>
+                    </div>
+                    <% if ( lastItemIndex >= 0 ) {
                         %> <% if (itemIndex === activity.items[lastItemIndex].username.length) { %>
-                      <span class=""></span>
-                      <% } else { %>
-                      <span class="timeline-bar border-end border-dashed border-300"></span>
-                      <% } %> <% } %>
-                    </div>
-                  </div>
-                  <div class="col">
-                    <div class="d-flex justify-content-between">
-                      <div class="d-flex mb-2">
-                        <h6 class="lh-sm mb-0 me-2 text-800 timeline-item-title">
-                          <%= itemArray.title %>
-                        </h6>
-                      </div>
-                      <p class="text-500 fs--1 mb-0 text-nowrap timeline-time">
-                        <span class="fa-regular fa-clock me-1"></span><%=
-                          itemArray.time %>
-                      </p>
-                    </div>
-                    <h6 class="fs--2 fw-normal mb-3">
-                      by <a class="fw-semi-bold" href="#!"><%= itemArray.user %></a>
-                    </h6>
-                    <p class="fs--1 text-800 w-sm-60 mb-3">
-                      <%= itemArray.about %>
-                    </p>
+                    <span class=""></span>
+                    <% } else { %>
+                    <span class="timeline-bar border-end border-dashed border-300"></span>
+                    <% } %> <% } %>
                   </div>
                 </div>
+                <div class="col">
+                  <div class="d-flex justify-content-between">
+                    <div class="d-flex mb-2">
+                      <h6 class="lh-sm mb-0 me-2 text-800 timeline-item-title">
+                        <%= itemArray.title %>
+                      </h6>
+                    </div>
+                    <p class="text-500 fs--1 mb-0 text-nowrap timeline-time">
+                      <span class="fa-regular fa-clock me-1"></span><%=
+                          itemArray.time %>
+                    </p>
+                  </div>
+                  <h6 class="fs--2 fw-normal mb-3">
+                    by <a class="fw-semi-bold" href="#!"><%= itemArray.user %></a>
+                  </h6>
+                  <p class="fs--1 text-800 w-sm-60 mb-3">
+                    <%= itemArray.about %>
+                  </p>
+                </div>
               </div>
-              <% }); %>
             </div>
-            <% } else { %>
-            <p>There is no activity for this date</p>
-            <% } %> <% }); %> <% } else { %>
-            <div class="ms-xxl-3 d-none d-xl-block position-sticky" style="top: 30%"><img class="d-dark-none img-fluid" src="../assets/img/spot-illustrations/timeline.png" alt="" /><img class="d-light-none img-fluid" src="../assets/img/spot-illustrations/timeline-dark.png" alt="" /></div>
-            <% } %>
+            <% }); %>
           </div>
+          <% } else { %>
+          <p>There is no activity for this date</p>
+          <% } %> <% }); %> <% } else { %>
+          <div class="ms-xxl-3 d-none d-xl-block position-sticky" style="top: 30%"><img class="d-dark-none img-fluid" src="../assets/img/spot-illustrations/timeline.png" alt="" /><img class="d-light-none img-fluid" src="../assets/img/spot-illustrations/timeline-dark.png" alt="" /></div>
+          <% } %>
         </div>
       </div>
     </div>
   </div>
 </div>
 
+
 <div class="modal fade" id="user-details" tabindex="-1" aria-labelledby="user-details" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content">
-      <div class="modal-header p-6">
-        <h1 class="modal-title fs-5" id="user-details-title">Details</h1>
+      <div class="modal-header p-4 py-3">
+        <h1 class="modal-title fs-5" id="user-details-title">Biography</h1>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body p-6">
@@ -178,7 +204,7 @@
             <span class="fa-regular fa-id-card me-2 mt-1"></span>
             <p class="fw-bold">NRIC</p>
           </div>
-          <p class="mt-n2"><%= user.ic  %></p>
+          <p class="mt-n2"><%= user.nric  %></p>
         </div>
 
         <div class="mb-0">

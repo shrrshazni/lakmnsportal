@@ -108,11 +108,43 @@
             <li class="nav-item">
               <!-- parent pages-->
               <div class="nav-item-wrapper"><a class="nav-link label-1" href="/" role="button" data-bs-toggle="" aria-expanded="false">
-                  <div class="d-flex align-items-center"><span class="nav-link-icon"><span data-feather="home"></span></span><span class="nav-link-text-wrapper"><span class="nav-link-text">Home</span></span>
+                  <div class="d-flex align-items-center"><span class="nav-link-icon"><span class="mb-1" data-feather="home"></span></span><span class="nav-link-text-wrapper"><span class="nav-link-text">Home</span></span>
                   </div>
                 </a>
               </div>
             </li>
+
+            <!-- leave -->
+            <div class="nav-item-wrapper"><a class="nav-link dropdown-indicator label-1" href="#nv-tables" role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-tables">
+                <div class="d-flex align-items-center">
+                  <div class="dropdown-indicator-icon"><span class="fas fa-caret-right"></span></div><span class="nav-link-icon"><span data-feather="calendar"></span></span><span class="nav-link-text">Leave</span>
+                </div>
+              </a>
+              <div class="parent-wrapper label-1">
+                <ul class="nav collapse parent" data-bs-parent="#navbarVerticalCollapse" id="nv-tables">
+                  <li class="collapsed-nav-item-title d-none">Leave
+                  </li>
+                  <li class="nav-item"><a class="nav-link" href="/leave/calendar" data-bs-toggle="" aria-expanded="false">
+                      <div class="d-flex align-items-center"><span class="nav-link-text">Calendar</span>
+                      </div>
+                    </a>
+                    <!-- more inner pages-->
+                  </li>
+                  <li class="nav-item"><a class="nav-link" href="/leave/request" data-bs-toggle="" aria-expanded="false">
+                      <div class="d-flex align-items-center"><span class="nav-link-text">Request </span>
+                      </div>
+                    </a>
+                    <!-- more inner pages-->
+                  </li>
+                  <li class="nav-item"><a class="nav-link" href="/leave/history" data-bs-toggle="" aria-expanded="false">
+                      <div class="d-flex align-items-center"><span class="nav-link-text">History</span>
+                      </div>
+                    </a>
+                    <!-- more inner pages-->
+                  </li>
+                </ul>
+              </div>
+            </div>
 
             <!-- Examples -->
             <li class="nav-item">
@@ -508,7 +540,7 @@
                 </div>
                 <div class="mb-3 mx-3">
                   <form action="/status-update" method="post">
-                    <input class="form-control form-control-sm" id="statusUpdateInput" type="text" placeholder="Update your status" />
+                    <input class="form-control form-control-sm" id="statusUpdateInput" name="status" type="text" placeholder="Update your status" />
                   </form>
                 </div>
               </div>
@@ -537,23 +569,14 @@
 
             // Use the Fetch API to send data to the server
             fetch('/status-update', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json', // Set the content type based on your server's expectations
-                },
-                body: JSON.stringify({
-                  status: inputValue
-                }),
-              })
-              .then(response => response.json())
-              .then(data => {
-                // Handle the response from the server
-                console.log('Server response:', data);
-              })
-              .catch(error => {
-                // Handle any errors that occurred during the fetch
-                console.error('Fetch error:', error);
-              });
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json', // Set the content type based on your server's expectations
+              },
+              body: JSON.stringify({
+                status: inputValue
+              }),
+            });
 
             // Reset the form or perform any additional actions if needed
             statusUpdateInput.value = '';

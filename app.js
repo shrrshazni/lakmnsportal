@@ -18,7 +18,7 @@ const nodemailer = require('nodemailer');
 const cron = require('node-cron');
 
 const mongoURI =
-    'mongodb+srv://shrrshazni:protechlakmns123@cluster0.rembern.mongodb.net/portal-sessions';
+    'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/session';
 
 const app = express();
 
@@ -51,23 +51,21 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
-//init mongoose
-main().catch(err => console.log(err));
+// DATABASE INITIALIZATION
 
-async function main() {
-    await mongoose.connect(
-        'mongodb+srv://shrrshazni:protechlakmns123@cluster0.rembern.mongodb.net/portal'
-    );
-}
+// Users Database
+const userDatabase = mongoose.createConnection('mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/user');
 
 // SCHEMA INITIALIZATION
+
+// FOR USER DATABASE
 
 // USER
 const userSchema = new mongoose.Schema({
     fullname: { type: String, required: true },
     username: { type: String, required: true, unique: true },
     email: { type: String, required: true, unique: true },
-    ic: { type: String, required: true, unique: true },
+    nric: { type: String, required: true, unique: true },
     phone: String,
     profile: String,
     age: { type: Number, min: 0 },
@@ -75,7 +73,7 @@ const userSchema = new mongoose.Schema({
     gender: String,
     education: String,
     department: String,
-    section : String,
+    section: String,
     position: String,
     grade: String,
     role: String,
@@ -90,14 +88,19 @@ const activitySchema = new mongoose.Schema({
     items: []
 });
 
-
+// USER'S INFORMATION
+const infoSchema = new mongoose.Schema({
+    username: String,
+    status: String,
+});
 
 //mongoose passport-local
 userSchema.plugin(passportLocalMongoose);
 userSchema.plugin(findOrCreate);
 
-const User = new mongoose.model('User', userSchema);
-const Activity = mongoose.model('Activity', activitySchema);
+const User = userDatabase.model('User', userSchema);
+const Activity = userDatabase.model('Activity', activitySchema);
+const Info = userDatabase.model('Info', infoSchema);
 
 passport.use(User.createStrategy());
 
@@ -127,13 +130,21 @@ const isAuthenticated = (req, res, next) => {
     res.redirect('/landing'); // Redirect to the login page if not authenticated
 };
 
+// BASIC USER PART
+
 // HOME
 app.get('/', isAuthenticated, async function (req, res) {
-    console.log(req.user.username);
-    res.render('testing');
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+
+    if (user) {
+        res.render('home', {
+            user: user
+        });
+    }
 });
 
-// LANDING PAGE
+// LANDINGPAGE
 app.get('/landing', async function (req, res) {
     const numCircles = 4;
     const circles = Array.from({ length: numCircles }, () => ({
@@ -147,7 +158,7 @@ app.get('/landing', async function (req, res) {
 
 // AUTH
 
-//SIGN UP
+//SIGNUP
 app
     .get('/sign-up', function (req, res) {
         res.render('sign-up');
@@ -162,6 +173,7 @@ app
             fullname: req.body.fullname,
             username: req.body.username,
             email: req.body.email,
+            nric: req.body.nric,
             phone: req.body.phone,
             profile: ''
         });
@@ -181,7 +193,7 @@ app
         );
     });
 
-// SIGN IN
+// SIGNIN
 app
     .get('/sign-in', async function (req, res) {
         res.render('sign-in', {
@@ -303,7 +315,7 @@ app
         }
     });
 
-// SIGN OUT
+// SIGNOUT
 app.get('/sign-out', async function (req, res) {
     req.session.destroy(function (err) {
         if (err) {
@@ -324,9 +336,10 @@ app.get('/profile', isAuthenticated, async function (req, res) {
     const age = calculateAge(user.birthdate);
 
     const newData = {
-        age : age
+        age: age
     }
 
+    // update age
     const update = await User.updateOne({ username: username }, { $set: newData });
 
     // check find user successful or not
@@ -338,11 +351,80 @@ app.get('/profile', isAuthenticated, async function (req, res) {
             .limit(7)
             .sort({ date: -1 });
 
+        // find info
+        const info = await Info.findOne({ username: user.username });
+
         res.render('profile', {
             user: user,
             activity: activity,
+            info: info,
             today: date
         });
+    } else {
+        res.render('profile', {
+            user: '',
+            activity: '',
+            info: '',
+            today: date
+        });
+    }
+});
+
+// LEAVE
+
+// CALENDAR
+app.get('/leave/calendar', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+
+    if (user) {
+        res.render('leave-calendar', {
+            user: user
+        });
+    }
+});
+
+// REQUEST
+app.get('/leave/request', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+
+    if (user) {
+        res.render('leave-request', {
+            user: user
+        });
+    }
+});
+
+// HISTORY
+app.get('/leave/history', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+
+    if (user) {
+        res.render('leave-history', {
+            user: user
+        });
+    }
+});
+
+// FECTH API    
+
+app.post('/status-update', isAuthenticated, async (req, res) => {
+    const user = req.user.username;
+    const status = req.body.status;
+
+    const update = await Info.findOneAndUpdate(
+        { username: user },
+        { $set: { status: status } },
+        { upsert: true, new: true, useFindAndModify: false });
+
+    if (update) {
+        console.log("Status update accomplished! ");
+        res.redirect('/');
+    } else {
+        console.log("Status update failed!");
+        res.redirect('/');
     }
 });
 
