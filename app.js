@@ -57,6 +57,12 @@ app.use(passport.session());
 // Users Database
 const userDatabase = mongoose.createConnection('mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/user');
 
+// Leave Database
+const leaveDatabase = mongoose.createConnection('mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/leave');
+
+// Leave Database
+const fileDatabase = mongoose.createConnection('mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/file');
+
 // SCHEMA INITIALIZATION
 
 // FOR USER DATABASE
@@ -95,6 +101,36 @@ const infoSchema = new mongoose.Schema({
     status: String,
 });
 
+// LEAVE
+
+const leaveDate = {
+    start: { type: Date },
+    return: { type: Date },
+}
+
+const leaveSchema = new mongoose.Schema({
+    id: { type: String, required: true, unique: true },
+    username: { type: String, required: true },
+    grade: { type: String, required: true },
+    fullname: String,
+    department: String,
+    section: String,
+    type: String,
+    date: leaveDate,
+    purpose: String,
+    fileId: String
+});
+
+// FILE
+const FileSchema = new mongoose.Schema({
+    id: { type: String, required: true, unique: true },
+    name: String,
+    path: String,
+    date: { type: Date },
+    type: String
+});
+
+
 //mongoose passport-local
 userSchema.plugin(passportLocalMongoose);
 userSchema.plugin(findOrCreate);
@@ -102,6 +138,8 @@ userSchema.plugin(findOrCreate);
 const User = userDatabase.model('User', userSchema);
 const Activity = userDatabase.model('Activity', activitySchema);
 const Info = userDatabase.model('Info', infoSchema);
+const Leave = leaveDatabase.model('Leave', leaveSchema);
+const File = fileDatabase.model('File', FileSchema);
 
 passport.use(User.createStrategy());
 
@@ -396,6 +434,59 @@ app.get('/leave/request', isAuthenticated, async function (req, res) {
             id: uuidv4(),
         });
     }
+}).post('/leave/request/:id', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+
+    if (user) {
+        const id = req.params.id;
+        console.log(id);
+    }
+});
+
+// FILES LEAVE
+app.post('/upload-files',isAuthenticated, async (reqFiles, resFiles) => {
+    if (!reqFiles.files || Object.keys(reqFiles.files).length === 0) {
+        console.log('There is no files selected');
+    } else {
+        console.log("There are files try to be uploaded");
+
+        const id = reqFiles.body.id;
+
+        // Check if the report ID exists in the database
+        const existingFile = await File.findOne({ id: id });
+
+        if (!existingFile) {
+            // No file with the report ID found, proceed with file upload
+            for (const file of Object.values(reqFiles.files)) {
+                const upload = __dirname + '/public/uploads/' + file.name;
+                const pathUpload = 'uploads/' + file.name;
+                const today = new Date();
+                const type = path.extname(file.name);
+
+                file.mv(upload, err => {
+                    if (err) {
+                        console.log(err);
+                    }
+
+                    // Save file information to the MongoDB
+                    const newFile = new File({
+                        id: id,
+                        filename: file.name,
+                        path: pathUpload,
+                        date: today,
+                        type: type
+                    });
+
+                    newFile.save();
+                });
+            }
+
+            console.log("Done upload files!");
+        } else {
+            console.log("There is existing file!");
+        }
+    }
 });
 
 // HISTORY
@@ -420,56 +511,6 @@ app.get('/example', async function (req, res) {
         res.render('example-profile', {
             user: user
         });
-    }
-});
-
-// UPLOAD FILES
-
-// FILES LEAVE
-app.post('/upload-case', async (req, res) => {
-    if (!req.files || Object.keys(req.files).length === 0) {
-        console.log('There is no files selected');
-    } else {
-        // find user full name
-        const user = req.user.username;
-        const findUser = await User.findOne({ username: user });
-
-        const id = req.body.fileReportId;
-
-        // Check if the report ID exists in the database
-        const existingFile = await File.findOne({ reportId: id });
-
-        if (!existingFile) {
-            // No file with the report ID found, proceed with file upload
-            for (const file of Object.values(req.files)) {
-                const uploadPath = __dirname + '/public/uploads/' + file.name;
-                const pathFile = 'uploads/' + file.name;
-                const todayDate = dateLocal.getDate();
-                const fileType = path.extname(file.name);
-
-                file.mv(uploadPath, err => {
-                    if (err) {
-                        console.log(err);
-                    }
-
-                    // Save file information to the MongoDB
-                    const newFile = new File({
-                        reportId: confirmRid,
-                        by: checkUser.fullname,
-                        filename: file.name,
-                        path: pathFile,
-                        date: todayDate,
-                        fileType: fileType
-                    });
-
-                    newFile.save();
-                });
-            }
-            res.redirect('/case-report/details?id=' + confirmRid);
-        } else {
-            // File with the report ID already exists
-            res.redirect('/case-report/details?id=' + confirmRid);
-        }
     }
 });
 
