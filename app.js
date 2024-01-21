@@ -377,7 +377,7 @@ app.get('/profile', isAuthenticated, async function (req, res) {
     const newData = {
         age: age
     }
-
+    
     // update age
     const update = await User.updateOne({ username: username }, { $set: newData });
 
