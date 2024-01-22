@@ -101,13 +101,13 @@
 <div class="mb-6">
   <div class="scrollbar">
     <ul class="nav nav-underline fs-9 flex-nowrap mb-3 pb-1" id="myTab" role="tablist">
-      <li class="nav-item me-3"><a class="nav-link text-nowrap active" id="orders-tab" data-bs-toggle="tab" href="#tab-orders" role="tab" aria-controls="tab-orders" aria-selected="true"><span class="fa-solid fa-clock me-2"></span>Activity<span class="text-body-tertiary fw-normal"> (35)</span></a></li>
-      <li class="nav-item me-3"><a class="nav-link text-nowrap" id="reviews-tab" data-bs-toggle="tab" href="#tab-reviews" role="tab" aria-controls="tab-orders" aria-selected="true"><span class="fa-solid fa-calendar me-2"></span>Leave<span class="text-body-tertiary fw-normal"></span></a></li>
-      <li class="nav-item me-3"><a class="nav-link text-nowrap" id="wishlist-tab" data-bs-toggle="tab" href="#tab-wishlist" role="tab" aria-controls="tab-orders" aria-selected="true"><span class="fa-solid fa-user me-2"></span>Personal</a></li>
+      <li class="nav-item me-3"><a class="nav-link text-nowrap active" id="orders-tab" data-bs-toggle="tab" href="#tab-activity" role="tab" aria-controls="tab-orders" aria-selected="true"><span class="fa-solid fa-clock me-2"></span>Activity<span class="text-body-tertiary fw-normal"> (35)</span></a></li>
+      <li class="nav-item me-3"><a class="nav-link text-nowrap" id="reviews-tab" data-bs-toggle="tab" href="#tab-leave" role="tab" aria-controls="tab-orders" aria-selected="true"><span class="fa-solid fa-calendar me-2"></span>Leave<span class="text-body-tertiary fw-normal"></span></a></li>
+      <li class="nav-item me-3"><a class="nav-link text-nowrap" id="wishlist-tab" data-bs-toggle="tab" href="#tab-personal" role="tab" aria-controls="tab-orders" aria-selected="true"><span class="fa-solid fa-user me-2"></span>Personal</a></li>
     </ul>
   </div>
   <div class="tab-content" id="profileTabContent">
-    <div class="tab-pane fade show active" id="tab-orders" role="tabpanel" aria-labelledby="orders-tab">
+    <div class="tab-pane fade show active" id="tab-activity" role="tabpanel" aria-labelledby="orders-tab">
       <div class="border-top border-bottom border-translucent" id="profileOrdersTable" data-list='{"valueNames":["date","status","type","detail"],"page":6,"pagination":true}'>
         <div class="table-responsive scrollbar">
           <table class="table fs-9 mb-0">
@@ -151,7 +151,7 @@
       </div>
     </div>
 
-    <div class="tab-pane fade" id="tab-reviews" role="tabpanel" aria-labelledby="reviews-tab">
+    <div class="tab-pane fade" id="tab-leave" role="tabpanel" aria-labelledby="reviews-tab">
       <div class="row g-3 mb-6">
         <div class="col-12 col-xxl-3 order-0 order-xxl-1 mb-3">
           <div class="card">
@@ -212,13 +212,73 @@
       </div>
 
     </div>
-    <div class="tab-pane fade" id="tab-wishlist" role="tabpanel" aria-labelledby="wishlist-tab">
-      <div class="border-y border-translucent" id="productWishlistTable" data-list='{"valueNames":["products","color","size","price","quantity","total"],"page":5,"pagination":true}'>
-        <div class="table-responsive scrollbar">
-          
+
+    <div class="tab-pane fade" id="tab-personal" role="tabpanel" aria-labelledby="wishlist-tab">
+      <div class="row g-3 mb-6">
+
+        <div class="col-md-6">
+          <div class="input-group">
+            <span class="input-group-text"><i class="fa-solid fa-id-card-clip"></i></span>
+            <div class="form-floating">
+              <input type="text" class="form-control" id="floatingInputGroup1" placeholder="" value="<%= user.nric %>" disabled>
+              <label for="floatingInputGroup1">NRIC</label>
+            </div>
+          </div>
         </div>
+
+        <div class="col-md-6">
+          <div class="input-group">
+            <span class="input-group-text"><i class="fa-solid fa-cake-candles"></i></span>
+            <div class="form-floating">
+              <input type="text" class="form-control" id="floatingInputGroup1" placeholder="" value="<%= user.birthday %>" disabled>
+              <label for="floatingInputGroup1">Birthday</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="input-group">
+            <span class="input-group-text"><i class="fa-solid fa-venus-mars"></i></span>
+            <div class="form-floating">
+              <input type="text" class="form-control" id="floatingInputGroup1" placeholder="" value="<%= user.gender %>" disabled>
+              <label for="floatingInputGroup1">Gender</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="input-group">
+            <span class="input-group-text"><i class="fa-brands fa-pagelines"></i></span>
+            <div class="form-floating">
+              <input type="text" class="form-control" id="floatingInputGroup1" placeholder="" value="<%= user.age %>" disabled>
+              <label for="floatingInputGroup1">Age</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="input-group">
+            <span class="input-group-text"><i class="fa-solid fa-user-graduate"></i></span>
+            <div class="form-floating">
+              <input type="text" class="form-control" id="floatingInputGroup1" placeholder="" value="<%= user.education %>" disabled>
+              <label for="floatingInputGroup1">Education</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <div class="input-group">
+            <span class="input-group-text"><i class="fa-solid fa-map-pin"></i></span>
+            <div class="form-floating">
+              <textarea style="height: 100px; width: 100%;" class="form-control" disabled><%= user.address %></textarea>
+              <label for="floatingInputGroup1">Address</label>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
+
   </div>
 </div>
 <!-- end of .container-->

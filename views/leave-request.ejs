@@ -15,10 +15,10 @@
   <div class="col-auto">
     <div class="row g-2 g-sm-3">
       <div class="col-auto">
-        <button class="btn btn-phoenix-danger"><span class="fas fa-trash-alt me-2"></span>Delete customer</button>
+
       </div>
       <div class="col-auto">
-        <button class="btn btn-phoenix-secondary"><span class="fas fa-key me-2"></span>Reset password</button>
+
       </div>
     </div>
   </div>
@@ -27,6 +27,24 @@
 <div class="row">
 
   <div class="col-12 col-lg-9 order-1 order-lg-0">
+
+    <div class="mb-3 d-none">
+      <div class="row g-3">
+
+        <div class="col-md-3">
+          <div class="card position-relative">
+            <button class="btn p-2 position-absolute end-0 top-0 z-5" type="button" aria-label="Close">
+              <a href="/delete-files"><span class="uil uil-times fs-6 text-white"></span></a>
+            </button>
+            <img src="/assets/img/team/2.webp" class="card-img-top" alt="Image Preview">
+            <div class="card-body">
+              <p class="card-text">Image Description or Details</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
 
     <div class="mb-3 border border-300 rounded-3">
       <form class="dropzone dropzone-multiple p-3 mb-4 bg-subtle" id="myDropzone" data-dropzone="data-dropzone" action="/upload-files" data-options='{"url":"/upload-files","paramName": "file","autoProcessQueue": true}'>
@@ -60,17 +78,22 @@
             </div>
           </div>
         </div>
-        <input class="d-none" type="text" name="id" value="<%= id %>">
+        <input class="d-none" type="text" name="uuid" value="<%= uuid %>">
       </form>
     </div>
 
     <!-- leave form -->
-    <form class="row g-3 mb-6" action="/leave/request/<%= id %>" method="post">
+    <form class="row g-3 mb-6 has-validation" action="/leave/request/<%= uuid %>" method="post">
 
+      <% 
+        if(type === ''){
+            type = 'Select leave type';
+        }
+      %>
       <div class="col-sm-6 col-md-8">
         <div class="form-floating">
-          <select class="form-select" id="floatingSelectTask" name="type">
-            <option selected="selected">Select leave type</option>
+          <select class="form-select <%= validationType %>" id="floatingSelectTask" name="type">
+            <option selected="selected" value="<%= type %>"><%= type %></option>
             <option value="Annual Leave">Annual Leave</option>
             <option value="Sick Leave">Sick Leave</option>
             <option value="Study Leave">Study Leave</option>
@@ -78,38 +101,56 @@
             <option value="Unpaid Leave">Study Leave</option>
             <option value="Emergency Leave">Study Leave</option>
           </select>
+          <div class="valid-feedback">Looks good!</div>
+          <div class="invalid-feedback">
+            Please select a leave type.
+          </div>
           <label for="floatingSelectTask">Leave Type</label>
         </div>
       </div>
 
       <div class="col-sm-6 col-md-4">
         <div class="form-floating">
-          <input class="form-control" id="floatingInputGrid" type="text" name="username" placeholder="Username" />
+          <input class="form-control" id="floatingInputGrid" type="text" name="username" placeholder="" value="<%= user.username %>" disabled />
           <label for="floatingInputGrid">Username</label>
         </div>
       </div>
 
       <div class="col-sm-6 col-md-6">
-        <div class="flatpickr-input-container">
-          <div class="form-floating">
-            <input class="form-control datetimepicker" id="floatingInputStartDate" type="text" name="startDate" placeholder="start" data-options='{"disableMobile":true}' />
-            <label class="ps-6" for="floatingInputStartDate">Start date</label><span class="uil uil-calendar-alt flatpickr-icon text-body-tertiary"></span>
+        <div class="input-group has-validation">
+          <span class="input-group-text"><i class="fa-regular fa-calendar-xmark"></i></span>
+          <div class="form-floating <%= validationStartDate %>">
+            <input type="text" class="form-control <%= validationStartDate %>" id="floatingInputStartDate" placeholder="" name="startDate" value="<%= startDate %>">
+            <label for="floatingInputStartDate">Start date</label>
+          </div>
+          <div class="valid-feedback">Looks good!</div>
+          <div class="invalid-feedback">
+            Please select a start date.
           </div>
         </div>
       </div>
 
       <div class="col-sm-6 col-md-6">
-        <div class="flatpickr-input-container">
-          <div class="form-floating">
-            <input class="form-control datetimepicker" id="floatingInputReturn" type="text" name="returnDate" placeholder="return" data-options='{"disableMobile":true}' />
-            <label class="ps-6" for="floatingInputReturn">Return date</label><span class="uil uil-calendar-alt flatpickr-icon text-body-tertiary"></span>
+        <div class="input-group has-validation">
+          <span class="input-group-text"><i class="fa-regular fa-calendar-check"></i></span>
+          <div class="form-floating <%= validationReturnDate %>">
+            <input type="text" class="form-control <%= validationReturnDate %>" id="floatingInputReturnDate" placeholder="" name="returnDate" value="<%= returnDate %>">
+            <label for="floatingInputReturnDate">Return date</label>
+          </div>
+          <div class="valid-feedback">Looks good!</div>
+          <div class="invalid-feedback">
+            Please select a start date.
           </div>
         </div>
       </div>
 
       <div class="col-12 gy-6">
         <div class="form-floating">
-          <textarea class="form-control scrollbar" id="floatingProjectOverview" name="purpose" placeholder="State your purpose here" style="height: 125px"></textarea>
+          <textarea class="form-control <%= validationPurpose %> scrollbar" id="floatingProjectOverview" name="purpose" placeholder="State your purpose here" style="height: 125px"><%= purpose %></textarea>
+          <div class="valid-feedback">Looks good!</div>
+          <div class="invalid-feedback">
+            Please state the purpose of leave.
+          </div>
           <label for="floatingProjectOverview">Purpose of leave</label>
         </div>
       </div>
@@ -120,7 +161,7 @@
             <button class="btn btn-phoenix-primary px-5">Cancel</button>
           </div>
           <div class="col-auto">
-            <button class="btn btn-primary w-100 mb-3 loading-button" type="submit" name="submit" id="uploadButton">
+            <button class="btn btn-primary w-100 mb-3 loading-button" type="submit" name="submit">
               <div class="content-button">Submit Leave</div>
             </button>
           </div>
@@ -128,7 +169,6 @@
       </div>
 
     </form>
-
 
     <script>
 
@@ -148,14 +188,14 @@
 <!-- alert toast upload -->
 <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 5">
   <div class="d-flex">
-    <div class="toast align-items-center text-white bg-primary border-0" role="alert" data-bs-autohide="false" aria-live="assertive" aria-atomic="true" id="alertUploadToast">
+    <div class="toast align-items-center text-white border-0" role="alert" data-bs-autohide="false" aria-live="assertive" aria-atomic="true" id="alertUploadToast">
       <div class="d-flex justify-content-between">
         <div class="toast-body px-0 py-3">
-          <code id="dropzoneAlertContent" class="text-white"></code>
+          <code id="dropzoneAlertContent" class="text-primary"></code>
         </div>
 
         <button class="btn ms-2 p-0" type="button" data-bs-dismiss="toast" aria-label="Close">
-          <span class="uil uil-times fs-1"></span>
+          <span class="uil uil-times fs-7"></span>
         </button>
       </div>
     </div>
