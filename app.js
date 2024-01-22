@@ -19,7 +19,7 @@ const cron = require('node-cron');
 const { v4: uuidv4 } = require('uuid');
 
 const mongoURI =
-    'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/session';
+  'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/session';
 
 const app = express();
 
@@ -31,24 +31,24 @@ app.use(express.static('public'));
 
 // mongoose session option
 const store = new MongoDBSession({
-    uri: mongoURI,
-    collection: 'sessions',
-    stringify: false,
-    autoRemove: 'interval',
-    autoRemoveInterval: 1
+  uri: mongoURI,
+  collection: 'sessions',
+  stringify: false,
+  autoRemove: 'interval',
+  autoRemoveInterval: 1
 });
 
 //init session
 app.use(
-    session({
-        secret: 'Our little secrets',
-        resave: true,
-        saveUninitialized: false,
-        store: store,
-        cookie: {
-            maxAge: 1 * 60 * 60 * 1000 // Default session duration, will be updated below
-        }
-    })
+  session({
+    secret: 'Our little secrets',
+    resave: true,
+    saveUninitialized: false,
+    store: store,
+    cookie: {
+      maxAge: 1 * 60 * 60 * 1000 // Default session duration, will be updated below
+    }
+  })
 );
 
 //init passport
@@ -59,17 +59,17 @@ app.use(passport.session());
 
 // Users Database
 const userDatabase = mongoose.createConnection(
-    'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/user'
+  'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/user'
 );
 
 // Leave Database
 const leaveDatabase = mongoose.createConnection(
-    'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/leave'
+  'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/leave'
 );
 
 // Leave Database
 const fileDatabase = mongoose.createConnection(
-    'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/file'
+  'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/file'
 );
 
 // SCHEMA INITIALIZATION
@@ -78,67 +78,66 @@ const fileDatabase = mongoose.createConnection(
 
 // USER
 const userSchema = new mongoose.Schema({
-    fullname: { type: String, required: true },
-    username: { type: String, required: true, unique: true },
-    email: { type: String, required: true, unique: true },
-    nric: { type: String, required: true, unique: true },
-    phone: String,
-    profile: String,
-    age: { type: Number, min: 0 },
-    address: String,
-    gender: String,
-    education: String,
-    department: String,
-    section: String,
-    position: String,
-    grade: String,
-    role: String,
-    status: String,
-    dateEmployed: { type: Date, default: Date.now },
-    birthdate: { type: Date }
+  fullname: { type: String, required: true },
+  username: { type: String, required: true, unique: true },
+  email: { type: String, required: true, unique: true },
+  nric: { type: String, required: true, unique: true },
+  phone: String,
+  profile: String,
+  age: { type: Number, min: 0 },
+  address: String,
+  gender: String,
+  education: String,
+  department: String,
+  section: String,
+  position: String,
+  grade: String,
+  role: String,
+  status: String,
+  dateEmployed: { type: Date, default: Date.now },
+  birthdate: { type: Date }
 });
 
 // ACTIVITY
 const activitySchema = new mongoose.Schema({
-    date: String,
-    items: []
+  date: String,
+  items: []
 });
 
 // USER'S INFORMATION
 const infoSchema = new mongoose.Schema({
-    username: String,
-    status: String
+  username: String,
+  status: String
 });
 
 // LEAVE
 
 const leaveDate = {
-    start: { type: Date },
-    return: { type: Date }
+  start: { type: Date },
+  return: { type: Date }
 };
 
 const leaveSchema = new mongoose.Schema({
-    uuid: { type: String, required: true, unique: true },
-    username: { type: String, required: true },
-    grade: { type: String, required: true },
-    fullname: String,
-    department: String,
-    section: String,
-    type: String,
-    date: leaveDate,
-    purpose: String,
-    status: String,
-    fileId: String,
-    comment: String
+  uuid: { type: String, required: true, unique: true },
+  username: { type: String, required: true },
+  grade: { type: String, required: true },
+  fullname: String,
+  department: String,
+  section: String,
+  type: String,
+  date: leaveDate,
+  purpose: String,
+  status: String,
+  comment: String
 });
 
 // FILE
 const FileSchema = new mongoose.Schema({
-    uuid: { type: String },
-    name: String,
-    path: String,
-    date: { type: Date },
-    type: String
+  uuid: String,
+  name: String,
+  path: String,
+  date: { type: Date },
+  type: String
 });
 
 //mongoose passport-local
@@ -154,526 +153,602 @@ const File = fileDatabase.model('File', FileSchema);
 passport.use(User.createStrategy());
 
 passport.serializeUser(function (user, done) {
-    done(null, user.id);
+  done(null, user.id);
 });
 
 passport.deserializeUser(async function (id, done) {
-    try {
-        const user = await User.findById(id);
+  try {
+    const user = await User.findById(id);
 
-        if (!user) {
-            done(null, false);
-        } else {
-            done(null, user);
-        }
-    } catch (err) {
-        done(err, false);
+    if (!user) {
+      done(null, false);
+    } else {
+      done(null, user);
     }
+  } catch (err) {
+    done(err, false);
+  }
 });
 
 // CHECK AUTH USER
 const isAuthenticated = (req, res, next) => {
-    if (req.isAuthenticated()) {
-        return next();
-    }
-    res.redirect('/landing'); // Redirect to the login page if not authenticated
+  if (req.isAuthenticated()) {
+    return next();
+  }
+  res.redirect('/landing'); // Redirect to the login page if not authenticated
 };
 
 // BASIC USER PART
 
 // HOME
 app.get('/', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
+  const username = req.user.username;
+  const user = await User.findOne({ username: username });
 
-    if (user) {
-        res.render('home', {
-            user: user
-        });
-    }
+  if (user) {
+    res.render('home', {
+      user: user
+    });
+  }
 });
 
 // LANDINGPAGE
 app.get('/landing', async function (req, res) {
-    const numCircles = 4;
-    const circles = Array.from({ length: numCircles }, () => ({
-        x: Math.floor(Math.random() * 80) + 10,
-        y: Math.floor(Math.random() * 60) + 20,
-        size: Math.floor(Math.random() * 100) + 50 // Random size between 50 and 150 pixels
-    }));
+  const numCircles = 4;
+  const circles = Array.from({ length: numCircles }, () => ({
+    x: Math.floor(Math.random() * 80) + 10,
+    y: Math.floor(Math.random() * 60) + 20,
+    size: Math.floor(Math.random() * 100) + 50 // Random size between 50 and 150 pixels
+  }));
 
-    res.render('landing-page', { circles });
+  res.render('landing-page', { circles });
 });
 
 // AUTH
 
 //SIGNUP
 app
-    .get('/sign-up', function (req, res) {
-        res.render('sign-up');
-    })
-    .post('/sign-up', function (req, res) {
-        // Check if the required fields are present in the request body
-        if (
-            !req.body.fullname ||
-            !req.body.username ||
-            !req.body.email ||
-            !req.body.password
-        ) {
-            return res.status(400).json({ error: 'All fields are required.' });
-        }
+  .get('/sign-up', function (req, res) {
+    res.render('sign-up');
+  })
+  .post('/sign-up', function (req, res) {
+    // Check if the required fields are present in the request body
+    if (
+      !req.body.fullname ||
+      !req.body.username ||
+      !req.body.email ||
+      !req.body.password
+    ) {
+      return res.status(400).json({ error: 'All fields are required.' });
+    }
 
-        const newUser = new User({
-            fullname: req.body.fullname,
-            username: req.body.username,
-            email: req.body.email,
-            nric: req.body.nric,
-            phone: req.body.phone,
-            profile: ''
-        });
-
-        User.register(newUser, req.body.password, function (err, user) {
-            if (err) {
-                console.log(err);
-                res.redirect('/sign-up');
-            } else {
-                passport.authenticate('local')(req, res, function () {
-                    res.redirect('/landing');
-                });
-            }
-        });
+    const newUser = new User({
+      fullname: req.body.fullname,
+      username: req.body.username,
+      email: req.body.email,
+      nric: req.body.nric,
+      phone: req.body.phone,
+      profile: ''
     });
+
+    User.register(newUser, req.body.password, function (err, user) {
+      if (err) {
+        console.log(err);
+        res.redirect('/sign-up');
+      } else {
+        passport.authenticate('local')(req, res, function () {
+          res.redirect('/landing');
+        });
+      }
+    });
+  });
 
 // SIGNIN
 app
-    .get('/sign-in', async function (req, res) {
-        res.render('sign-in', {
-            // validation
-            validationUsername: '',
-            validationPassword: '',
-            // input value
-            username: '',
-            password: '',
-            // toast
-            toastShow: '',
-            toastMsg: ''
-        });
-    })
-    .post('/sign-in', async function (req, res) {
-        const username = req.body.username;
-        const password = req.body.password;
-        const rememberMe = req.body.rememberMe;
+  .get('/sign-in', async function (req, res) {
+    res.render('sign-in', {
+      // validation
+      validationUsername: '',
+      validationPassword: '',
+      // input value
+      username: '',
+      password: '',
+      // toast
+      toastShow: '',
+      toastMsg: ''
+    });
+  })
+  .post('/sign-in', async function (req, res) {
+    const username = req.body.username;
+    const password = req.body.password;
+    const rememberMe = req.body.rememberMe;
 
-        // Set the session duration based on the 'rememberMe' checkbox
-        const sessionDuration = rememberMe
-            ? 7 * 24 * 60 * 60 * 1000
-            : 1 * 60 * 60 * 1000;
+    // Set the session duration based on the 'rememberMe' checkbox
+    const sessionDuration = rememberMe
+      ? 7 * 24 * 60 * 60 * 1000
+      : 1 * 60 * 60 * 1000;
 
-        req.session.cookie.maxAge = sessionDuration;
+    req.session.cookie.maxAge = sessionDuration;
 
-        console.log(`Current Session maxAge: ${req.session.cookie.maxAge} milliseconds`);
+    console.log(
+      `Current Session maxAge: ${req.session.cookie.maxAge} milliseconds`
+    );
 
-        var validationUsername = '';
-        var validationPassword = '';
+    var validationUsername = '';
+    var validationPassword = '';
 
-        const passwordRegex = /^(?:\d+|[a-zA-Z0-9]{4,})/;
+    const passwordRegex = /^(?:\d+|[a-zA-Z0-9]{4,})/;
 
-        const user = await User.findByUsername(username);
-        var checkUser = '';
+    const user = await User.findByUsername(username);
+    var checkUser = '';
+
+    if (!user) {
+      checkUser = 'Not found';
+    } else {
+      checkUser = 'Found';
+    }
+
+    // validation username
+    if (username === '' || checkUser === 'Not found') {
+      validationUsername = 'is-invalid';
+    } else {
+      validationUsername = 'is-valid';
+    }
+
+    // validation username
+    if (password === '' || passwordRegex.test(password) === 'false') {
+      validationPassword = 'is-invalid';
+    } else {
+      validationPassword = 'is-valid';
+    }
+
+    if (
+      validationUsername === 'is-valid' &&
+      validationPassword === 'is-valid'
+    ) {
+      try {
+        const user = await User.findOne({ username: username });
 
         if (!user) {
-            checkUser = 'Not found';
-        } else {
-            checkUser = 'Found';
+          validationUsername = 'is-valid';
+
+          return res.render('sign-in', {
+            // validation
+            validationUsername: validationUsername,
+            validationPassword: validationPassword,
+            // input value
+            username: username,
+            password: password,
+            toastShow: 'show',
+            toastMsg: 'Username not found'
+          });
         }
 
-        // validation username
-        if (username === '' || checkUser === 'Not found') {
-            validationUsername = 'is-invalid';
-        } else {
-            validationUsername = 'is-valid';
-        }
-
-        // validation username
-        if (password === '' || passwordRegex.test(password) === 'false') {
+        // Use the authenticate method from passport-local-mongoose
+        user.authenticate(password, (err, authenticatedUser) => {
+          if (err || !authenticatedUser) {
             validationPassword = 'is-invalid';
-        } else {
-            validationPassword = 'is-valid';
-        }
 
-        if (
-            validationUsername === 'is-valid' &&
-            validationPassword === 'is-valid'
-        ) {
-            try {
-                const user = await User.findOne({ username: username });
-
-                if (!user) {
-                    validationUsername = 'is-valid';
-
-                    return res.render('sign-in', {
-                        // validation
-                        validationUsername: validationUsername,
-                        validationPassword: validationPassword,
-                        // input value
-                        username: username,
-                        password: password,
-                        toastShow: 'show',
-                        toastMsg: 'Username not found'
-                    });
-                }
-
-                // Use the authenticate method from passport-local-mongoose
-                user.authenticate(password, (err, authenticatedUser) => {
-                    if (err || !authenticatedUser) {
-                        validationPassword = 'is-invalid';
-
-                        return res.render('sign-in', {
-                            // validation
-                            validationUsername: validationUsername,
-                            validationPassword: validationPassword,
-                            // input value
-                            username: username,
-                            password: password,
-                            toastShow: 'show',
-                            toastMsg: 'Incorrect password'
-                        });
-                    }
-
-                    // Password is correct, log in the user
-                    req.logIn(authenticatedUser, err => {
-                        if (err) {
-                            return next(err);
-                        }
-                        return res.redirect('/');
-                    });
-                });
-            } catch (error) {
-                console.error(error);
-                res.status(500).send('Internal Server Error');
-            }
-        } else {
-            res.render('sign-in', {
-                // validation
-                validationUsername: validationUsername,
-                validationPassword: validationPassword,
-                // input value
-                username: username,
-                password: password,
-                toastShow: 'show',
-                toastMsg: 'There is an error, please do check your input'
+            return res.render('sign-in', {
+              // validation
+              validationUsername: validationUsername,
+              validationPassword: validationPassword,
+              // input value
+              username: username,
+              password: password,
+              toastShow: 'show',
+              toastMsg: 'Incorrect password'
             });
-        }
-    });
+          }
+
+          // Password is correct, log in the user
+          req.logIn(authenticatedUser, err => {
+            if (err) {
+              return next(err);
+            }
+            return res.redirect('/');
+          });
+        });
+      } catch (error) {
+        console.error(error);
+        res.status(500).send('Internal Server Error');
+      }
+    } else {
+      res.render('sign-in', {
+        // validation
+        validationUsername: validationUsername,
+        validationPassword: validationPassword,
+        // input value
+        username: username,
+        password: password,
+        toastShow: 'show',
+        toastMsg: 'There is an error, please do check your input'
+      });
+    }
+  });
 
 // SIGNOUT
 app.get('/sign-out', async function (req, res) {
-    req.session.destroy(function (err) {
-        if (err) {
-            return next(err);
-        }
-        res.redirect('/');
-    });
+  req.session.destroy(function (err) {
+    if (err) {
+      return next(err);
+    }
+    res.redirect('/');
+  });
 });
 
 // PROFILE
 app.get('/profile', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
+  const username = req.user.username;
+  const user = await User.findOne({ username: username });
 
-    const date = getDateFormat2();
+  const date = getDateFormat2();
 
-    // calculate user's age
-    const age = calculateAge(user.birthdate);
+  // calculate user's age
+  const age = calculateAge(user.birthdate);
 
-    const newData = {
-        age: age
-    };
+  const newData = {
+    age: age
+  };
 
-    // update age
-    const update = await User.updateOne(
-        { username: username },
-        { $set: newData }
-    );
+  // update age
+  const update = await User.updateOne(
+    { username: username },
+    { $set: newData }
+  );
 
-    // check find user successful or not
-    if (user && update) {
-        // find activity
-        const activity = await Activity.find({
-            'items.username': user.username
-        })
-            .limit(7)
-            .sort({ date: -1 });
+  // check find user successful or not
+  if (user && update) {
+    // find activity
+    const activity = await Activity.find({
+      'items.username': user.username
+    })
+      .limit(7)
+      .sort({ date: -1 });
 
-        // find info
-        const info = await Info.findOne({ username: user.username });
+    // find info
+    const info = await Info.findOne({ username: user.username });
 
-        res.render('profile', {
-            user: user,
-            activity: activity,
-            info: info,
-            today: date
-        });
-    } else {
-        res.render('profile', {
-            user: '',
-            activity: '',
-            info: '',
-            today: date
-        });
-    }
+    res.render('profile', {
+      user: user,
+      activity: activity,
+      info: info,
+      today: date
+    });
+  } else {
+    res.render('profile', {
+      user: '',
+      activity: '',
+      info: '',
+      today: date
+    });
+  }
 });
 
 // LEAVE
 
 // CALENDAR
 app.get('/leave/calendar', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
+  const username = req.user.username;
+  const user = await User.findOne({ username: username });
 
-    if (user) {
-        res.render('leave-calendar', {
-            user: user
-        });
-    }
+  if (user) {
+    res.render('leave-calendar', {
+      user: user
+    });
+  }
 });
 
 // REQUEST
 app
-    .get('/leave/request', isAuthenticated, async function (req, res) {
-        const username = req.user.username;
-        const user = await User.findOne({ username: username });
-
-        if (user) {
-            res.render('leave-request', {
-                user: user,
-                uuid: uuidv4(),
-                type: '',
-                startDate: '',
-                returnDate: '',
-                purpose: '',
-                // validation
-                validationType: '',
-                validationStartDate: '',
-                validationReturnDate: '',
-                validationPurpose: ''
-            });
-        }
-    })
-    .post('/leave/request/:uuid', isAuthenticated, async function (req, res) {
-        const username = req.user.username;
-        const user = await User.findOne({ username: username });
-
-        if (user) {
-            const uuid = req.params.uuid;
-            const type = req.body.type;
-            const startDate = req.body.startDate;
-            const returnDate = req.body.returnDate;
-            const purpose = req.body.purpose;
-
-            var validationType = '';
-            var validationStartDate = '';
-            var validationReturnDate = '';
-            var validationPurpose = '';
-
-            if (!type || type === '' || type === 'Select leave type') {
-                validationType = 'is-invalid';
-            } else {
-                validationType = 'is-valid';
-            }
-
-            if (!startDate || startDate === '') {
-                validationStartDate = 'is-invalid';
-            } else {
-                validationStartDate = 'is-valid';
-            }
-
-            if (!returnDate || returnDate === '') {
-                validationReturnDate = 'is-invalid';
-            } else {
-                validationReturnDate = 'is-valid';
-            }
-
-            if (!purpose || purpose === '') {
-                validationPurpose = 'is-invalid';
-            } else {
-                validationPurpose = 'is-valid';
-            }
-
-            if (validationType === 'is-valid' && validationStartDate === 'is-valid' && validationReturnDate === 'is-valid' && validationPurpose === 'is-valid') {
-                const existing = await Leave.findOne({ id: id });
-
-                if (!existing) {
-                    const newDate = {
-                        start: new Date(startDate),
-                        return: new Date(returnDate)
-                    }
-
-                    const leave = new Leave({
-                        uuid: uuid,
-                        username: user.username,
-                        fullname: user.fullname,
-                        department: user.department,
-                        section: user.section,
-                        grade: user.grade,
-                        type: type,
-                        date: newDate,
-                        status: "In process",
-                        purpose: purpose
-                    });
-
-                    Leave.create(leave);
-
-                    console.log("Leave submission has been completed");
-
-                    res.redirect('/');
-                }
-            } else {
-                res.render('leave-request', {
-                    user: user,
-                    uuid: uuid,
-                    type: type,
-                    startDate: startDate,
-                    returnDate: returnDate,
-                    purpose: purpose,
-                    // validation
-                    validationType: validationType,
-                    validationStartDate: validationStartDate,
-                    validationReturnDate: validationReturnDate,
-                    validationPurpose: validationPurpose
-                });
-            }
-        }
-    });
-
-// FILES LEAVE
-app.post('/upload-files', isAuthenticated, async (reqFiles, resFiles) => {
-    if (!reqFiles.files || Object.keys(reqFiles.files).length === 0) {
-        console.log('There is no files selected');
-    } else {
-        console.log('There are files try to be uploaded');
-
-        const uuid = reqFiles.body.uuid;
-
-        console.log(uuid);
-
-        const existingFile = await File.findOne({ uuid: uuid });
-
-        if (!existingFile) {
-            // No file with the report ID found, proceed with file upload
-            for (const file of Object.values(reqFiles.files)) {
-                const upload = __dirname + '/public/uploads/' + file.name;
-                const pathUpload = 'uploads/' + file.name;
-                const today = new Date();
-                const type = path.extname(file.name);
-
-                file.mv(upload, err => {
-                    if (err) {
-                        console.log(err);
-                    }
-
-                    // Save file information to the MongoDB
-                    const newFile = new File({
-                        uuid: uuid,
-                        filename: file.name,
-                        path: pathUpload,
-                        date: today,
-                        type: type
-                    });
-
-                    newFile.save();
-                });
-            }
-
-            console.log('Done upload files!');
-        } else {
-            // File with the same ID exists, handle it based on your application logic
-            console.log('File with the same ID already exists. Handle accordingly.');
-            // You can update the existing document or handle it in a different way
-        }
-    }
-});
-
-app.post('')
-
-// HISTORY
-app.get('/leave/history', isAuthenticated, async function (req, res) {
+  .get('/leave/request', isAuthenticated, async function (req, res) {
     const username = req.user.username;
     const user = await User.findOne({ username: username });
 
     if (user) {
-        res.render('leave-history', {
-            user: user
-        });
+      //   const deleteFileRoute = '/delete-file/:id';
+
+      //   const existingDeleteRoute = app._router.stack.find(
+      //     layer => layer.route && layer.route.path === deleteFileRoute
+      //   );
+
+      //   if (existingDeleteRoute) {
+      //     app.get('/delete/files/:id', async function (reqDel, resDel) {
+      //       const _id = req.params.id;
+
+      //       const deleted = await File.findOneAndDelete({ _id: _id });
+
+      //       if (deleted) {
+      //         console.log('File selected has been deleted!');
+      //         const files = await
+      //         res.render('leave-request', {
+      //           user: user,
+      //           uuid: uuidv4(),
+      //           files: '',
+      //           type: '',
+      //           startDate: '',
+      //           returnDate: '',
+      //           purpose: '',
+      //           // validation
+      //           validationType: '',
+      //           validationStartDate: '',
+      //           validationReturnDate: '',
+      //           validationPurpose: ''
+      //         });
+      //       } else {
+      //         console.log('There must be something wrong in deleting the files!');
+      //       }
+      //     });
+      //   } else {
+      //     console.log(`No existing route found for ${deleteFileRoute}`);
+      //   }
+
+      res.render('leave-request', {
+        user: user,
+        uuid: uuidv4(),
+        files: '',
+        type: '',
+        startDate: '',
+        returnDate: '',
+        purpose: '',
+        // validation
+        validationType: '',
+        validationStartDate: '',
+        validationReturnDate: '',
+        validationPurpose: ''
+      });
     }
+  })
+  .post('/leave/request/:uuid', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+
+    if (user) {
+      const uuid = req.params.uuid;
+      const type = req.body.type;
+      const startDate = req.body.startDate;
+      const returnDate = req.body.returnDate;
+      const purpose = req.body.purpose;
+
+      var validationType = '';
+      var validationStartDate = '';
+      var validationReturnDate = '';
+      var validationPurpose = '';
+
+      if (!type || type === '' || type === 'Select leave type') {
+        validationType = 'is-invalid';
+      } else {
+        validationType = 'is-valid';
+      }
+
+      if (!startDate || startDate === '') {
+        validationStartDate = 'is-invalid';
+      } else {
+        validationStartDate = 'is-valid';
+      }
+
+      if (!returnDate || returnDate === '') {
+        validationReturnDate = 'is-invalid';
+      } else {
+        validationReturnDate = 'is-valid';
+      }
+
+      if (!purpose || purpose === '') {
+        validationPurpose = 'is-invalid';
+      } else {
+        validationPurpose = 'is-valid';
+      }
+
+      if (
+        validationType === 'is-valid' &&
+        validationStartDate === 'is-valid' &&
+        validationReturnDate === 'is-valid' &&
+        validationPurpose === 'is-valid'
+      ) {
+        const existing = await Leave.findOne({ uuid: uuid });
+
+        if (!existing) {
+          const newDate = {
+            start: new Date(startDate),
+            return: new Date(returnDate)
+          };
+
+          const leave = new Leave({
+            uuid: uuid,
+            username: user.username,
+            fullname: user.fullname,
+            department: user.department,
+            section: user.section,
+            grade: user.grade,
+            type: type,
+            date: newDate,
+            status: 'In process',
+            purpose: purpose
+          });
+
+          Leave.create(leave);
+
+          console.log('Leave submission has been completed');
+
+          res.redirect('/');
+        }
+      } else {
+        const deleteFileRoute = '/delete/files/:id';
+
+        const existingDeleteRoute = app._router.stack.find(
+          layer => layer.route && layer.route.path === deleteFileRoute
+        );
+
+        if (existingDeleteRoute) {
+          app.get('/delete/files/:id', async function (reqDel, resDel) {
+            const _id = reqDel.params.id;
+
+            const deleted = await File.findOneAndDelete({ _id: _id });
+
+            if (deleted) {
+              console.log(
+                'File selected is deleted!'
+              );
+              const files = await File.find({ uuid: uuid });
+
+              res.render('leave-request', {
+                user: user,
+                uuid: uuid,
+                files: files,
+                type: type,
+                startDate: startDate,
+                returnDate: returnDate,
+                purpose: purpose,
+                // validation
+                validationType: validationType,
+                validationStartDate: validationStartDate,
+                validationReturnDate: validationReturnDate,
+                validationPurpose: validationPurpose
+              });
+            } else {
+              console.log(
+                'There must be something wrong in deleting the files!'
+              );
+            }
+          });
+        } else {
+          const files = await File.find({ uuid: uuid });
+
+          res.render('leave-request', {
+            user: user,
+            uuid: uuid,
+            files: files,
+            type: type,
+            startDate: startDate,
+            returnDate: returnDate,
+            purpose: purpose,
+            // validation
+            validationType: validationType,
+            validationStartDate: validationStartDate,
+            validationReturnDate: validationReturnDate,
+            validationPurpose: validationPurpose
+          });
+        }
+      }
+    }
+  });
+
+// FILES LEAVE
+app.post('/upload-files', isAuthenticated, async (reqFiles, resFiles) => {
+  if (!reqFiles.files || Object.keys(reqFiles.files).length === 0) {
+    console.log('There is no files selected');
+  } else {
+    console.log('There are files try to be uploaded');
+
+    const uuid = reqFiles.body.uuid;
+
+    // No file with the report ID found, proceed with file upload
+    for (const file of Object.values(reqFiles.files)) {
+      const upload = __dirname + '/public/uploads/' + file.name;
+      const pathUpload = '/uploads/' + file.name;
+      const today = new Date();
+      const type = path.extname(file.name);
+
+      file.mv(upload, err => {
+        if (err) {
+          console.log(err);
+        }
+
+        // Save file information to the MongoDB
+        const newFile = new File({
+          uuid: uuid,
+          name: file.name,
+          path: pathUpload,
+          date: today,
+          type: type
+        });
+
+        newFile.save();
+      });
+    }
+
+    console.log('Done upload files!');
+  }
+});
+
+// HISTORY
+app.get('/leave/history', isAuthenticated, async function (req, res) {
+  const username = req.user.username;
+  const user = await User.findOne({ username: username });
+
+  if (user) {
+    res.render('leave-history', {
+      user: user
+    });
+  }
 });
 
 // EXAMPLE
 
 app.get('/example', async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
+  const username = req.user.username;
+  const user = await User.findOne({ username: username });
 
-    if (user) {
-        res.render('example-profile', {
-            user: user
-        });
-    }
+  if (user) {
+    res.render('example-profile', {
+      user: user
+    });
+  }
 });
 
 // FECTH API
 
 app.post('/status-update', isAuthenticated, async (req, res) => {
-    const user = req.user.username;
-    const status = req.body.status;
+  const user = req.user.username;
+  const status = req.body.status;
 
-    const update = await Info.findOneAndUpdate(
-        { username: user },
-        { $set: { status: status } },
-        { upsert: true, new: true, useFindAndModify: false }
-    );
+  const update = await Info.findOneAndUpdate(
+    { username: user },
+    { $set: { status: status } },
+    { upsert: true, new: true, useFindAndModify: false }
+  );
 
-    if (update) {
-        console.log('Status update accomplished! ');
-        res.redirect('/');
-    } else {
-        console.log('Status update failed!');
-        res.redirect('/');
-    }
+  if (update) {
+    console.log('Status update accomplished! ');
+    res.redirect('/');
+  } else {
+    console.log('Status update failed!');
+    res.redirect('/');
+  }
 });
 
 // FUNCTIONS
 
 // GET DATE TODAY IN STRING
 getDateFormat2 = function () {
-    const today = moment().utcOffset('+08:00');
-    const formattedDate = today.format('D MMMM YYYY');
+  const today = moment().utcOffset('+08:00');
+  const formattedDate = today.format('D MMMM YYYY');
 
-    return formattedDate;
+  return formattedDate;
 };
 
 getDateFormat1 = function () {
-    const today = moment().utcOffset('+08:00');
-    const formattedDate = today.format('DD/MM/YYYY');
+  const today = moment().utcOffset('+08:00');
+  const formattedDate = today.format('DD/MM/YYYY');
 
-    return formattedDate;
+  return formattedDate;
 };
 
 // GET CURRENT TIME IN STRING
 getCurrentTime = function () {
-    const currentTimeInUTC8 = moment().utcOffset('+08:00');
-    const formattedTime = currentTimeInUTC8.format('HH:mm A');
+  const currentTimeInUTC8 = moment().utcOffset('+08:00');
+  const formattedTime = currentTimeInUTC8.format('HH:mm A');
 
-    return formattedTime;
+  return formattedTime;
 };
 
 calculateAge = function (birthdate) {
-    const today = moment().utcOffset('+08:00');
-    const birthdateObj = moment(birthdate);
+  const today = moment().utcOffset('+08:00');
+  const birthdateObj = moment(birthdate);
 
-    let age = today.diff(birthdateObj, 'years');
+  let age = today.diff(birthdateObj, 'years');
 
-    return age;
+  return age;
 };
 
 // PORT INITIALIZATION ON CLOUD OR LOCAL (5001)
