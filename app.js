@@ -192,13 +192,22 @@ const isAuthenticated = (req, res, next) => {
     res.redirect('/landing'); // Redirect to the login page if not authenticated
 };
 
+// EMAIL TRANSPORTER
+let transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: 'shrrshazni@gmail.com',
+        pass: 'hzjlhfyspfyynndw'
+    }
+});
+
 // BASIC USER PART
 
 // HOME
 app.get('/', isAuthenticated, async function (req, res) {
     const username = req.user.username;
     const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({ sender: user._id, read: false }).populate('sender');
+    const notifications = await Notification.find({ recipient: user._id, read: false }).populate('sender');
 
     if (user) {
         res.render('home', {
@@ -400,7 +409,7 @@ app.get('/sign-out', async function (req, res) {
 app.get('/profile', isAuthenticated, async function (req, res) {
     const username = req.user.username;
     const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({ s: user._id, read: false }).populate('sender');
+    const notifications = await Notification.find({ recipient: user._id, read: false }).populate('sender');
 
     const date = getDateFormat2();
 
@@ -447,7 +456,7 @@ app
     .get('/leave/request', isAuthenticated, async function (req, res) {
         const username = req.user.username;
         const user = await User.findOne({ username: username });
-        const notifications = await Notification.find({ sender: user._id, read: false }).populate('sender');
+        const notifications = await Notification.find({ recipient: user._id, read: false }).populate('sender');
 
         console.log(notifications);
 
@@ -475,7 +484,7 @@ app
     .post('/leave/request/:uuid', isAuthenticated, async function (req, res) {
         const username = req.user.username;
         const user = await User.findOne({ username: username });
-        const notifications = await Notification.find({ sender: user._id, read: false }).populate('sender');
+        const notifications = await Notification.find({ recipient: user._id, read: false }).populate('sender');
 
         if (user) {
             const uuid = req.params.uuid;
@@ -543,6 +552,7 @@ app
                     Leave.create(leave);
                     console.log('Leave submission has been completed');
 
+                    // add notifications from leave request
                     const departmentHeads = await User.find({ department: 'Finance', isHeadOfDepartment: true });
                     console.log(departmentHeads);
 
@@ -559,6 +569,45 @@ app
 
                         newNotification.save();
                     }
+
+                    // send email to the recipient
+                    const emailRecipients = departmentHeads.map(head => head.email);
+                    let mailOptions = {
+                        from: 'shrrshazni@gmail.com',
+                        to: emailRecipients,
+                        subject: 'lakmnsportal - Approval Leave Request',
+                        html: `
+                          <html>
+                            <head>
+                              <style>
+                                body {
+                                  font-family: 'Arial', sans-serif;
+                                  background-color: #f4f4f4;
+                                  color: #333;
+                                }
+                                p {
+                                  margin-bottom: 20px;
+                                }
+                                a {
+                                  color: #3498db;
+                                }
+                              </style>
+                            </head>
+                            <body>
+                              <h1>Leave Request</h1>
+                              <p>${user.fullname} has requested ${type} from, ${startDate} until ${returnDate}</p>
+                              <p>Please do check your notification at <a href="http://localhost:5002/">lakmnsportal</a></p>
+                            </body>
+                          </html>
+                        `
+                    };
+
+                    transporter.sendMail(mailOptions, (error, info) => {
+                        if (error) {
+                            return console.log(error);
+                        }
+                        console.log('Message %s sent: %s', info.messageId, info.response);
+                    });
 
                     res.render('home', {
                         user: user,
@@ -619,7 +668,7 @@ app.get('/markAsRead/:id', isAuthenticated, async function (req, res) {
     } else {
         const username = req.user.username;
         const user = await User.findOne({ username: username });
-        const notifications = await Notification.find({ sender: user._id, read: false }).populate('sender');
+        const notifications = await Notification.find({ recipient: user._id, read: false }).populate('sender');
         res.render('home', {
             user: user,
             notifications: notifications,
@@ -633,7 +682,7 @@ app.get('/markAsRead/:id', isAuthenticated, async function (req, res) {
 app.get('/markAllAsRead', isAuthenticated, async function (req, res) {
     const username = req.user.username;
     const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({ sender: user._id, read: false }).populate('sender');
+    const notifications = await Notification.find({ recipient: user._id, read: false }).populate('sender');
 
     const update = await Notification.updateMany({ recipient: user._id }, { read: true }, { new: true });
 
