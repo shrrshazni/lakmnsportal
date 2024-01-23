@@ -74,8 +74,8 @@
     });
   });
 
-   // upload files
-   $(document).ready(function() {
+  // upload files
+  $(document).ready(function() {
     // Function to show the toast
     function showDropzoneFilesToast(content) {
       $('#dropzoneAlertContent').text(content);
@@ -86,9 +86,9 @@
       toast.show();
     }
 
-    var myDropzone = Dropzone.forElement('#myDropzone');
+    var myDropzone = Dropzone.forElement('#dropzone');
 
-    $('#uploadButton').on('click', function() {
+    $('#uploadFiles').on('click', function() {
       setTimeout(function() {
         // files upload process queue
 
@@ -97,6 +97,8 @@
           showDropzoneFilesToast('Files has been uploaded');
           // Process the Dropzone queue
           myDropzone.processQueue();
+
+          $('#addFiles').modal('hide');
         } else {
           // If no files are present, show the toast with different content
           showDropzoneFilesToast('No files selected');

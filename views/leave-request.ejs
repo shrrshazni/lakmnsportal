@@ -26,78 +26,13 @@
 
 <div class="row">
 
-  <div class="col-12 col-lg-9 order-1 order-lg-0">
-    <% if (files && files.length > 0) { %>
-    <div class="mb-3">
-      <div class="row g-3">
-        <% files.forEach(file => { %>
-        <div class="col-md-2">
-          <div class="card position-relative">
-            <button class="btn p-2 position-absolute end-0 top-0 z-5" type="button" aria-label="Close">
-              <a href="/delete/files/<%= file._id %>"><span class="uil uil-times fs-6 text-white"></span></a>
-            </button>
-            <%
-             if(file.type === '.jpg' || file.type === '.png' || file.type === '.webp' || file.type === '.jpeg' || file.type === '.bmp' || file.type === '.svg') {
-            %>
-            <img src="<%= file.path %>" class="card-img-top vh-25" alt="Images Preview">
-            <% }else{ %>
-            <div class="card-body vh-25">
-              <p class="card-text"><%= file.name %></p>
-            </div>
-            <% } %>
-          </div>
+  <div class="col-12 col-lg-9">
+
+    <div class="mb-6">
+      <div class="card">
+        <div class="card-body">
         </div>
-        <% }); %>
       </div>
-    </div>
-    <% } else { %>
-    <div class="mb-3 d-none"></div>
-    <% } %>
-
-
-    <%
-    var display = '';
-    if(!files){
-        display = 'd-block';
-    }else{
-        display = 'd-none';
-    }
-    %>
-
-    <div class="mb-3 border border-300 rounded-3 <%= display %>">
-      <form class="dropzone dropzone-multiple p-3 mb-4 bg-subtle" id="myDropzone" data-dropzone="data-dropzone" action="/upload-files" data-options='{"url":"/upload-files","paramName": "file","autoProcessQueue": true}'>
-        <div class="dz-message" data-dz-message="data-dz-message">
-          <img class="me-2" src="../../../assets/img/icons/cloud-upload.svg" width="25" alt="" />Drop your files here
-        </div>
-        <div class="dz-preview dz-preview-multiple m-0 d-flex flex-column">
-          <div class="d-flex mb-3 pb-3 border-bottom media">
-            <div class="border border-300 p-1 rounded-2 me-2">
-              <img class="rounded-2 dz-image" src="../../../assets/img/icons/file.png" alt="..." data-dz-thumbnail="data-dz-thumbnail" />
-            </div>
-            <div class="flex-1 d-flex flex-between-center">
-              <div>
-                <h6 data-dz-name="data-dz-name"></h6>
-                <div class="d-flex align-items-center">
-                  <p class="mb-0 fs-9 text-400 lh-1" data-dz-size="data-dz-size"></p>
-                  <div class="dz-progress ms-n1" style="margin-top: 0.1rem;">
-                    <span class="dz-upload" data-dz-uploadprogress=""></span>
-                  </div>
-                </div>
-                <span class="fs-9 text-danger" data-dz-errormessage="data-dz-errormessage"></span>
-              </div>
-              <div class="dropdown font-sans-serif">
-                <button class="btn btn-link text-600 btn-sm dropdown-toggle btn-reveal dropdown-caret-none" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                  <span class="fas fa-ellipsis-h"></span>
-                </button>
-                <div class="dropdown-menu dropdown-menu-end border py-2">
-                  <a class="dropdown-item" href="#!" data-dz-remove="data-dz-remove">Remove File</a>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <input class="d-none" type="text" name="uuid" value="<%= uuid %>">
-      </form>
     </div>
 
     <!-- leave form -->
@@ -138,7 +73,7 @@
         <div class="input-group has-validation">
           <span class="input-group-text"><i class="fa-regular fa-calendar-xmark"></i></span>
           <div class="form-floating <%= validationStartDate %>">
-            <input type="text" class="form-control <%= validationStartDate %>" id="floatingInputStartDate" placeholder="" name="startDate" value="<%= startDate %>">
+            <input type="text" class="form-control <%= validationStartDate %> datetimepicker flatpickr-input" id="floatingInputStartDate" placeholder="" name="startDate" value="<%= startDate %>" data-options='{"disableMobile":true,"allowInput":true}'>
             <label for="floatingInputStartDate">Start date</label>
           </div>
           <div class="valid-feedback">Looks good!</div>
@@ -152,7 +87,7 @@
         <div class="input-group has-validation">
           <span class="input-group-text"><i class="fa-regular fa-calendar-check"></i></span>
           <div class="form-floating <%= validationReturnDate %>">
-            <input type="text" class="form-control <%= validationReturnDate %>" id="floatingInputReturnDate" placeholder="" name="returnDate" value="<%= returnDate %>">
+            <input type="text" class="form-control <%= validationReturnDate %> datetimepicker flatpickr-input" id="floatingInputReturnDate" placeholder="" name="returnDate" value="<%= returnDate %>" data-options='{"disableMobile":true,"allowInput":true}'>
             <label for="floatingInputReturnDate">Return date</label>
           </div>
           <div class="valid-feedback">Looks good!</div>
@@ -176,7 +111,7 @@
       <div class="col-12 gy-6">
         <div class="row g-3 justify-content-end">
           <div class="col-auto">
-            <button class="btn btn-phoenix-primary px-5">Cancel</button>
+            <a role="button" class="btn btn-phoenix-primary bg-transparent border border-0 mx-2" data-bs-toggle="modal" data-bs-target="#addFiles">Add files +</a>
           </div>
           <div class="col-auto">
             <button class="btn btn-primary w-100 mb-3 loading-button" type="submit" name="submit">
@@ -187,21 +122,95 @@
       </div>
 
     </form>
-
-    <script>
-
-    </script>
-
   </div>
 
-  <div class="col-12 col-lg-3 mb-6 order-0 order-lg-1">
-    <div class="card">
-      <div class="card-body min-vh-50">
-      </div>
-    </div>
+  <div class="col-12 col-lg-3 mb-6">
+
   </div>
 
 </div>
+
+<!-- Modal -->
+<div class="modal fade" id="addFiles" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-md">
+    <div class="modal-content">
+      <div class="modal-header border border-0">
+        <h5 class="modal-title" id="filesUpload">
+          Upload Files
+        </h5>
+        <button class="btn p-1" type="button" data-bs-dismiss="modal" aria-label="Close">
+          <span class="fas fa-times fs-9"></span>
+        </button>
+      </div>
+
+      <div class="modal-body p-3">
+        <form class="dropzone dropzone-multiple p-3 mb-4 bg-subtle" id="dropzone" data-dropzone="data-dropzone" action="/upload-files" data-options='{"url":"/upload-files","paramName": "file"}'>
+          <div class="dz-message" data-dz-message="data-dz-message">
+            <img class="me-2" src="../../../assets/img/icons/cloud-upload.svg" width="25" alt="" />Drop your files here
+          </div>
+          <div class="dz-preview dz-preview-multiple m-0 d-flex flex-column">
+            <div class="d-flex mb-3 pb-3 border-bottom media">
+              <div class="border border-300 p-1 rounded-2 me-2">
+                <img class="rounded-2 dz-image" src="../../../assets/img/icons/file.png" alt="..." data-dz-thumbnail="data-dz-thumbnail" />
+              </div>
+              <div class="flex-1 d-flex flex-between-center">
+                <div>
+                  <h6 data-dz-name="data-dz-name"></h6>
+                  <div class="d-flex align-items-center">
+                    <p class="mb-0 fs-9 text-400 lh-1" data-dz-size="data-dz-size"></p>
+                    <div class="dz-progress ms-n1" style="margin-top: 0.1rem;">
+                      <span class="dz-upload" data-dz-uploadprogress=""></span>
+                    </div>
+                  </div>
+                  <span class="fs-9 text-danger" data-dz-errormessage="data-dz-errormessage"></span>
+                </div>
+                <div class="dropdown font-sans-serif">
+                  <button class="btn btn-link text-600 btn-sm dropdown-toggle btn-reveal dropdown-caret-none" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <span class="fas fa-ellipsis-h"></span>
+                  </button>
+                  <div class="dropdown-menu dropdown-menu-end border py-2">
+                    <a class="dropdown-item" href="#!" data-dz-remove="data-dz-remove">Remove File</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <input class="d-none" type="text" name="uuid" value="<%= uuid %>">
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-primary loading-button type=" submit" id="uploadFiles">
+          <div class="content-button">
+            <span><i class="fa fa-upload me-2" aria-hidden="true"></i>Upload</span>
+          </div>
+        </button>
+        <button class="btn btn-outline-primary" type="button" data-bs-dismiss="modal">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- toast alert submission -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 5">
+  <div class="d-flex">
+    <div class="toast <%= show %> align-items-center text-white border-0" role="alert" data-bs-autohide="false" aria-live="assertive" aria-atomic="true">
+      <div class="d-flex justify-content-between">
+        <div class="toast-body px-0 py-3">
+          <code class="text-primary"><%= alert %></code>
+        </div>
+
+        <button class="btn ms-2 p-0" type="button" data-bs-dismiss="toast" aria-label="Close">
+          <span class="uil uil-times fs-7"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 
 <!-- alert toast upload -->
 <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 5">
