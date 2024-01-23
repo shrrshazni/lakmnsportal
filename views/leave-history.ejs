@@ -1,17 +1,139 @@
 <%- include('partials/private-header.ejs') %>
 
-<div class="px-3">
-  <div class="row min-vh-100 flex-center p-5">
-    <div class="col-12 col-xl-10 col-xxl-8">
-      <div class="row justify-content-center align-items-center g-5">
-        <div class="col-12 col-lg-6 text-center order-lg-1"><img class="img-fluid w-lg-100 d-dark-none" src="../../assets/img/spot-illustrations/404-illustration.png" alt="" width="400" /><img class="img-fluid w-md-50 w-lg-100 d-light-none" src="../../assets/img/spot-illustrations/dark_404-illustration.png" alt="" width="540" /></div>
-        <div class="col-12 col-lg-6 text-center text-lg-start"><img class="img-fluid mb-6 w-50 w-lg-75 d-dark-none" src="../../assets/img/spot-illustrations/404.png" alt="" /><img class="img-fluid mb-6 w-50 w-lg-75 d-light-none" src="../../assets/img/spot-illustrations/dark_404.png" alt="" />
-          <h2 class="text-body-secondary fw-bolder mb-3">Page Missing!</h2>
-          <p class="text-body mb-5">But no worries! Our ostrich is looking everywhere <br class="d-none d-sm-block" />while you wait safely. </p><a class="btn btn-lg btn-primary" href="/">Go Home</a>
-        </div>
+<!-- function for EJS -->
+<% 
+function formatDate(inputDate) {
+  const day = String(inputDate.getDate()).padStart(2, '0');
+  const month = String(inputDate.getMonth() + 1).padStart(2, '0');
+  const year = inputDate.getFullYear();
+
+  return `${day}/${month}/${year}`;
+}
+%>
+
+<nav class="mb-2" aria-label="breadcrumb">
+  <ol class="breadcrumb mb-0">
+    <li class="breadcrumb-item"><a href="#!">Leave</a></li>
+    <li class="breadcrumb-item active" aria-current="page">History</li>
+  </ol>
+</nav>
+
+<div class="row align-items-center justify-content-between g-3 mb-4">
+  <div class="col-auto">
+    <h2 class="mb-0">Leave History</h2>
+  </div>
+  <div class="col-auto">
+    <div class="row g-2 g-sm-3">
+      <div class="col-auto">
+
+      </div>
+      <div class="col-auto">
+
       </div>
     </div>
   </div>
 </div>
 
-<%- include('partials/private-footer.ejs') %>
+<div class="row">
+  <div class="col-12 col-lg-9">
+
+    <div class="mb-6">
+      <div class="card">
+        <div class="card-body" style="height: 25vh;">
+
+        </div>
+      </div>
+    </div>
+
+    <div class="mb-6">
+      <div id="leaveHistory" data-list='{"valueNames":["type","startdate","returndate","status"],"page":6,"pagination":true}'>
+        <div class="row g-3 justify-content-between align-items-end mb-4">
+          <div class="col-12 col-sm-auto">
+            <div class="d-flex align-items-center">
+              <div class="search-box me-0">
+                <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
+                  <input class="form-control search-input search" type="search" placeholder="Search" aria-label="Search" />
+                  <span class="fas fa-search search-box-icon"></span>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="table-responsive scrollbar">
+          <table class="table fs--1 mb-0 border-top border-200">
+            <thead>
+              <tr>
+                <th class="sort white-space-nowrap align-middle ps-0" scope="col" data-sort="type" style="width: 15%">
+                  TYPE
+                </th>
+                <th class="sort align-middle ps-3" scope="col" data-sort="startdate" style="width: 15%">
+                  START DATE
+                </th>
+                <th class="sort align-middle ps-3" scope="col" data-sort="returndate" style="width: 15%">
+                  RETURN DATE
+                </th>
+                <th class="sort align-middle text-end" scope="col" data-sort="status" style="width: 10%">
+                  STATUS
+                </th>
+                <th class="sort align-middle text-end" scope="col" style="width: 10%"></th>
+              </tr>
+            </thead>
+
+            <!-- table content -->
+            <tbody class="list" id="project-list-table-body">
+              <% if (leave && Array.isArray(leave)) { %>
+              <!-- table item -->
+              <% leave.forEach(function(leaves) { %>
+              <tr class="position-static">
+                <td class="align-middle time white-space-nowrap ps-0 type py-4">
+                  <a class="fw-bold fs-0" href="/leave/details/<%= leaves.uuid %>"><%= leaves.type %></a>
+                </td>
+                <td class="align-middle white-space-nowrap startdate ps-3 py-4">
+                  <p class="mb-0 fs--1 text-900"><%= formatDate(leaves.date.start) %></p>
+                </td>
+                <td class="align-middle white-space-nowrap returndate ps-3 py-4">
+                  <p class="mb-0 fs--1 text-900"><%= formatDate(leaves.date.return) %></p>
+                </td>
+                <td class="align-middle white-space-nowrap text-end status">
+                  <span class="badge badge-phoenix fs--2 badge-phoenix-success"><%= leaves.status %></span>
+                </td>
+                <td class="align-middle text-end white-space-nowrap pe-0 action">
+                  <div class="font-sans-serif btn-reveal-trigger position-static">
+                    <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs--2" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
+                      <span class="fas fa-ellipsis-h fs--2"></span>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end py-2">
+                      <a class="dropdown-item" href="/leave/details/<%= leaves.uuid %>">View</a>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+              <%  }); %> <% } else { %>
+              <tr>
+                <td colspan="7">No leaves submitted.</td>
+              </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+        <div class="d-flex flex-wrap align-items-center justify-content-between py-3 pe-0 fs--1 border-bottom border-200">
+          <div class="d-flex">
+            <p class="mb-0 d-none d-sm-block me-3 fw-semi-bold text-900" data-list-info="data-list-info"></p>
+            <a class="fw-semi-bold" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semi-bold d-none" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
+          </div>
+          <div class="d-flex">
+            <button class="page-link" data-list-pagination="prev">
+              <span class="fas fa-chevron-left"></span>
+            </button>
+            <ul class="mb-0 pagination"></ul>
+            <button class="page-link pe-0" data-list-pagination="next">
+              <span class="fas fa-chevron-right"></span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+  <%- include('partials/private-footer.ejs') %>
