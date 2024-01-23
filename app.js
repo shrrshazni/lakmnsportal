@@ -72,11 +72,6 @@ const fileDatabase = mongoose.createConnection(
     'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/file'
 );
 
-// // Notification Database
-// const notificationDatabase = mongoose.createConnection(
-//     'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/notification'
-// );
-
 // SCHEMA INITIALIZATION
 
 // FOR USER DATABASE
@@ -153,6 +148,7 @@ const notificationSchema = new mongoose.Schema({
     recipient: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     message: { type: String, required: true },
     type: { type: String },
+    url: { type: String },
     timestamp: { type: Date, default: Date.now },
     read: { type: Boolean, default: false },
 });
@@ -202,12 +198,15 @@ const isAuthenticated = (req, res, next) => {
 app.get('/', isAuthenticated, async function (req, res) {
     const username = req.user.username;
     const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({ sender: user._id }).populate('sender');
+    const notifications = await Notification.find({ sender: user._id, read: false }).populate('sender');
 
     if (user) {
         res.render('home', {
             user: user,
-            notifications: notifications
+            notifications: notifications,
+            // toast
+            show: '',
+            alert: ''
         });
     }
 });
@@ -401,7 +400,7 @@ app.get('/sign-out', async function (req, res) {
 app.get('/profile', isAuthenticated, async function (req, res) {
     const username = req.user.username;
     const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({ sender: user._id }).populate('sender');
+    const notifications = await Notification.find({ s: user._id, read: false }).populate('sender');
 
     const date = getDateFormat2();
 
@@ -448,7 +447,7 @@ app
     .get('/leave/request', isAuthenticated, async function (req, res) {
         const username = req.user.username;
         const user = await User.findOne({ username: username });
-        const notifications = await Notification.find({ sender: user._id }).populate('sender');
+        const notifications = await Notification.find({ sender: user._id, read: false }).populate('sender');
 
         console.log(notifications);
 
@@ -476,7 +475,7 @@ app
     .post('/leave/request/:uuid', isAuthenticated, async function (req, res) {
         const username = req.user.username;
         const user = await User.findOne({ username: username });
-        const notifications = await Notification.find({ sender: user._id }).populate('sender');
+        const notifications = await Notification.find({ sender: user._id, read: false }).populate('sender');
 
         if (user) {
             const uuid = req.params.uuid;
@@ -561,7 +560,14 @@ app
                         newNotification.save();
                     }
 
-                    res.redirect('/');
+                    res.render('home', {
+                        user: user,
+                        notifications: notifications,
+                        // toast
+                        show: 'show',
+                        alert: 'Successfully a submit leave request'
+                    });
+
                 }
             } else {
                 const files = await File.find({ uuid: uuid });
@@ -597,6 +603,49 @@ app.get('/leave/history', isAuthenticated, async function (req, res) {
     if (user) {
         res.render('leave-history', {
             user: user
+        });
+    }
+});
+
+// NOTIFICATIONS
+app.get('/markAsRead/:id', isAuthenticated, async function (req, res) {
+    const id = req.params.id;
+    console.log(id);
+
+    const update = await Notification.findByIdAndUpdate({ _id: id }, { read: true }, { new: true });
+
+    if (update) {
+        res.redirect(update.url);
+    } else {
+        const username = req.user.username;
+        const user = await User.findOne({ username: username });
+        const notifications = await Notification.find({ sender: user._id, read: false }).populate('sender');
+        res.render('home', {
+            user: user,
+            notifications: notifications,
+            // toast
+            show: 'show',
+            alert: 'Failed to mark the notifications'
+        });
+    }
+});
+
+app.get('/markAllAsRead', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({ sender: user._id, read: false }).populate('sender');
+
+    const update = await Notification.updateMany({ recipient: user._id }, { read: true }, { new: true });
+
+    if (update) {
+        res.redirect('/');
+    } else {
+        res.render('home', {
+            user: user,
+            notifications: notifications,
+            // toast
+            show: 'show',
+            alert: 'Failed to mark the notifications'
         });
     }
 });

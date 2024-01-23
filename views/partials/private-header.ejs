@@ -354,26 +354,37 @@
         <!-- search -->
         <!-- <li class="nav-item"> <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#searchBoxModal"><span data-feather="search" style="height:12px;width:12px;"></span></a></li> -->
 
-        <% 
+        <%
+        var display = '';
+        if(notifications.length>0){
+            display = 'd-block';
+        }else{
+            display = 'd-none';
+        }
+
         function timeAgo(timestamp) {
-            const now = new Date();
-            const notificationDate = new Date(timestamp);
-            const secondsAgo = Math.floor((now - notificationDate) / 1000);
+           const now = new Date();
+           const notificationDate = new Date(timestamp);
+           const secondsAgo = Math.floor((now - notificationDate) / 1000);
 
-            const interval = Math.floor(secondsAgo / 31536000);
+           const intervals = [
+            { label: 'y', seconds: 31536000 },
+            { label: 'mon', seconds: 2592000 },
+            { label: 'd', seconds: 86400 },
+            { label: 'h', seconds: 3600 },
+            { label: 'm', seconds: 60 },
+            { label: 's', seconds: 1 }
+           ];
 
-            if (interval > 1) {
-                return interval + ' y';
+           for (const interval of intervals) {
+            const intervalValue = Math.floor(secondsAgo / interval.seconds);
+
+            if (intervalValue >= 1) {
+                return intervalValue + (intervalValue === 1 ? interval.label : interval.label);
             }
-            if (interval === 1) {
-                return interval + ' y';
-            }
-    
-            const minutesAgo = Math.floor(secondsAgo / 60);
-            if (minutesAgo > 1) {
-                return minutesAgo + ' m';
-            }
-            return 'Just now';
+           }
+
+        return 'Just now';
         }
 
         function formatTime(timestamp) {
@@ -384,14 +395,15 @@
         %>
         <!-- notifications -->
         <li class="nav-item dropdown">
-          <a class="nav-link" id="navbarDropdownNotification" href="#" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false"><span data-feather="bell" style="height:12px;width:12px;"></span></a>
+          <a class="nav-link" id="navbarDropdownNotification" href="#" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false"><span data-feather="bell" style="height:12px;width:12px;">
+            </span><span class="fa-solid fa-circle ms-n1 <%= display %>" style="font-size: 6px;color: red;"></span></a>
 
           <div class="dropdown-menu dropdown-menu-end notification-dropdown-menu py-0 shadow border navbar-dropdown-caret" id="navbarDropdownNotfication" aria-labelledby="navbarDropdownNotfication">
             <div class="card position-relative border-0">
               <div class="card-header p-2">
                 <div class="d-flex justify-content-between">
                   <h5 class="text-body-emphasis mb-0">Notifications</h5>
-                  <button class="btn btn-link p-0 fs-9 fw-normal" type="button">Mark all as read</button>
+                  <a class="btn btn-link p-0 fs-9 fw-normal" role="button" href="/markAllAsRead">Mark all as read</a>
                 </div>
               </div>
               <div class="card-body p-0">
@@ -403,12 +415,12 @@
                       <div class="d-flex">
                         <div class="avatar avatar-m status-online me-3">
                           <!-- Use the actual image source from your notification -->
-                          <img class="rounded-circle" src="<%= notification.sender.profile %>" alt="" />
+                          <img class="rounded-circle border border-primary" src="<%= notification.sender.profile %>" alt="" />
                         </div>
                         <div class="flex-1 me-sm-3">
                           <h4 class="fs-9 text-body-emphasis"><%= notification.sender.fullname %></h4>
                           <p class="fs-9 text-body-highlight mb-2 mb-sm-3 fw-normal">
-                            <span class='me-1 mt-1 fs-10'>💬</span><%= notification.message %> 
+                            <span class='me-1 mt-1 fs-10'>💬</span><%= notification.message %>
                             <span class="text-body-quaternary text-opacity-75 fw-bold fs-10">&nbsp;<%= timeAgo(notification.timestamp) %></span>
                           </p>
                           <p class="text-body-secondary fs-9 mb-0">
@@ -422,11 +434,32 @@
                           <span class="fas fa-ellipsis-h fs-10 text-body"></span>
                         </button>
                         <div class="dropdown-menu dropdown-menu-end py-2">
-                          <a class="dropdown-item" href="#!">Mark as unread</a>
+                          <a class="dropdown-item" href="/markAsRead/<%= notification._id %>">Mark as unread</a>
                         </div>
                       </div>
                     </div>
                   </div>
+
+                  <script>
+                    fetch('/markAsRead/<%= notification._id %>', {
+                        method: 'POST'
+                      })
+                      .then(response => {
+                        if (response.ok) {
+                          // Optionally, you can update the UI to reflect the read status
+                          const notificationElement = document.getElementById(`notification-${notificationId}`);
+                          notificationElement.classList.add('read'); // Add a CSS class to style as read
+
+                          console.log('Notification marked as read successfully.');
+                        } else {
+                          console.error('Failed to mark notification as read.');
+                        }
+                      })
+                      .catch(error => {
+                        console.error('Error marking notification as read:', error);
+                      });
+                  </script>
+
                   <% }); %>
                   <% } else { %>
                   <div class="px-2 px-sm-3 py-3">
