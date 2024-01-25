@@ -24,6 +24,21 @@
 
     return `${month} ${day}, ${year}, ${hours}:${minutes}${ampm}`;
   }
+
+  var showApproval = '';
+
+  if (approvals && approvals.length > 0) {
+    const userApprovalExists = approvals.some(approval => approval.recipient.equals(user._id));
+    const isUserLeaveOwner = user.username === leave.username;
+
+    if (userApprovalExists && !isUserLeaveOwner) {
+        showApproval = '';
+    } else if (isUserLeaveOwner) {
+        showApproval = 'd-none';
+    } else {
+        showApproval = 'd-none';
+    }
+  }
 %>
 
 <nav class="mb-2" aria-label="breadcrumb">
@@ -34,117 +49,128 @@
   </ol>
 </nav>
 
-<div class="d-flex flex-wrap justify-content-between align-items-end mb-5">
-  <div>
-    <h2>Request #<%= user.username %> Status</h2>
-    <p class="text-body-secondary mb-0">Leave request on <br class="d-sm-none"><span class="ms-sm-1"><%= formatCustomDate(leave.timestamp) %></span></p>
+<div class="row d-flex flex-wrap justify-content-between align-items-end mb-3">
+  <div class="col-auto">
+    <h2>Request #<%= user.username %></h2>
+    <p class="text-body-secondary mb-0">Leave request on <br class="d-sm-none"><span class="ms-sm-1"><%= formatCustomDate(leave.timestamp) %></span> <span class="badge badge-phoenix badge-phoenix-primary fs-10"><%= leave.status %></span></p>
+  </div>
+
+  <div class="col-auto">
+    <div class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#leaveApproval">Approve</div>
   </div>
 </div>
 
 <div class="row gy-9 gx-5">
   <div class="col-12 col-lg-6">
-    <div class="border rounded-3 overflow-hidden h-100">
-      <div class="h-100 min-vh-50 p-3">
+    <div class="border rounded-3 overflow-hidden">
+      <div class="min-vh-50 p-3">
       </div>
     </div>
   </div>
   <div class="col-12 col-lg-6">
     <div class="timeline-vertical">
+      <% if (approvals && approvals.length > 0) { %>
+      <% const length = approvals.length %>
+      <% approvals.forEach((approval, index) => { %>
+
+      <% 
+      var date = '';
+      var time = '';
+      var icon = '';
+      var colour = '';
+      var border = '';
+      var display = ''
+
+      if(approval.estimated === null){
+        date = new Date(approval.timestamp).toLocaleDateString('en-UK', { 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric', 
+          timeZone: 'Asia/Kuala_Lumpur' 
+        });
+
+        time = new Date(approval.timestamp).toLocaleTimeString('en-UK', {
+            hour: 'numeric',
+            minute: 'numeric',
+            hour12: true,
+            timeZone: 'Asia/Kuala_Lumpur'
+        });
+      }else{
+        date = 'Estimated';
+        time = new Date(approval.estimated).toLocaleDateString('en-UK', { 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric', 
+          timeZone: 'Asia/Kuala_Lumpur' 
+        });
+
+       }
+
+        if(approval.status === 'submitted' || approval.status === 'approved'){
+            colour = 'success';
+            border = 'success';
+            icon = 'fa-solid fa-check';
+        }else if( approval.status === 'denied'){
+            colour = 'danger';
+            border = 'danger';
+            icon = 'fa-solid fa-xmark';
+        }else if(approval.status === 'pending'){
+            colour = 'warning';
+            border = 'dashed';
+            icon = 'fa-regular fa-hourglass-half';
+        }
+
+        if(length === index + 1){
+            display = 'd-none'
+        } else {
+            display = '';
+        }
+      %>
       <div class="timeline-item">
         <div class="row g-md-3 align-items-center mb-8 mb-lg-10">
           <div class="col-12 col-md-auto d-flex">
             <div class="timeline-item-date text-end order-1 order-md-0 me-md-4">
-              <p class="fs-10 fw-semibold text-body-tertiary mb-0">23 August, 2023<br class="d-none d-md-block"> 10:30 AM</p>
+              <p class="fs-10 fw-semibold text-body-tertiary mb-0"><%= date %><br class="d-none d-md-block"> <%= time %></p>
             </div>
             <div class="timeline-item-bar position-relative me-3 me-md-0">
-              <div class="icon-item icon-item-sm bg-success" data-bs-theme="light"><span class="fa-solid fa-check text-white fs-10"></span></div><span class="timeline-bar border-end border-success"></span>
+              <div class="icon-item icon-item-sm bg-<%= colour %>" data-bs-theme="light"><span class="<%= icon %> text-white fs-10"></span></div><span class="timeline-bar border-end border-<%= border %> <%= display %>"></span>
             </div>
           </div>
           <div class="col">
             <div class="timeline-item-content ps-6 ps-md-3">
-              <h4>Order is processing</h4>
-              <p class="fs-9 text-body-secondary mb-0">Your package is ready for the seller to prepare.</p>
+              <h4><%= approval.role %></h4>
+              <p class="fs-9 text-body-secondary mb-0"><%= approval.comment %></p>
             </div>
           </div>
         </div>
       </div>
-      <div class="timeline-item">
-        <div class="row g-md-3 align-items-center mb-8 mb-lg-10">
-          <div class="col-12 col-md-auto d-flex">
-            <div class="timeline-item-date text-end order-1 order-md-0 me-md-4">
-              <p class="fs-10 fw-semibold text-body-tertiary mb-0">25 August, 2023<br class="d-none d-md-block"> 11:30 AM</p>
-            </div>
-            <div class="timeline-item-bar position-relative me-3 me-md-0">
-              <div class="icon-item icon-item-sm bg-success" data-bs-theme="light"><span class="fa-solid fa-check text-white fs-10"></span></div><span class="timeline-bar border-end border-warning"></span>
-            </div>
-          </div>
-          <div class="col">
-            <div class="timeline-item-content ps-6 ps-md-3">
-              <h4>Picked Up</h4>
-              <p class="fs-9 text-body-secondary mb-0">Your package has been picked up from the seller.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="timeline-item">
-        <div class="row g-md-3 align-items-center mb-8 mb-lg-10">
-          <div class="col-12 col-md-auto d-flex">
-            <div class="timeline-item-date text-end order-1 order-md-0 me-md-4">
-              <p class="fs-10 fw-semibold text-body-tertiary mb-0">27 August, 2023<br class="d-none d-md-block"> 6:30 AM</p>
-            </div>
-            <div class="timeline-item-bar position-relative me-3 me-md-0">
-              <div class="icon-item icon-item-sm bg-warning" data-bs-theme="light"><span class="fa-solid fa-truck-ramp-box text-white fs-10"></span></div><span class="timeline-bar border-end border-dashed"></span>
-            </div>
-          </div>
-          <div class="col">
-            <div class="timeline-item-content ps-6 ps-md-3">
-              <h4>Ready to Ship</h4>
-              <p class="fs-9 text-body-secondary mb-0">Your package is now ready to be shipped.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="timeline-item">
-        <div class="row g-md-3 align-items-center mb-8 mb-lg-10">
-          <div class="col-12 col-md-auto d-flex">
-            <div class="timeline-item-date text-end order-1 order-md-0 me-md-4">
-              <p class="fs-10 fw-semibold text-body-tertiary mb-0">Estimated time<br class="d-none d-md-block"> 29 August, 2023</p>
-            </div>
-            <div class="timeline-item-bar position-relative me-3 me-md-0">
-              <div class="icon-item icon-item-sm bg-body-quaternary" data-bs-theme="light"><span class="fa-solid fa-truck text-white fs-10"></span></div><span class="timeline-bar border-end border-dashed"></span>
-            </div>
-          </div>
-          <div class="col">
-            <div class="timeline-item-content ps-6 ps-md-3">
-              <h4>Shipped</h4>
-              <p class="fs-9 text-body-secondary mb-0">Pending</p>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="timeline-item">
-        <div class="row g-md-3 align-items-center">
-          <div class="col-12 col-md-auto d-flex">
-            <div class="timeline-item-date text-end order-1 order-md-0 me-md-4">
-              <p class="fs-10 fw-semibold text-body-tertiary mb-0">Estimated time<br class="d-none d-md-block"> 30 August, 2023</p>
-            </div>
-            <div class="timeline-item-bar position-relative me-3 me-md-0">
-              <div class="icon-item icon-item-sm bg-body-quaternary" data-bs-theme="light"><span class="fa-solid fa-truck-fast text-white fs-10"></span></div>
-            </div>
-          </div>
-          <div class="col">
-            <div class="timeline-item-content ps-6 ps-md-3">
-              <h4>Delivered</h4>
-              <p class="fs-9 text-body-secondary mb-0">Pending</p>
-            </div>
-          </div>
-        </div>
-      </div>
+      <% }); %>
+      <% } else { %>
+      <p>No approvals available</p>
+      <% } %>
     </div>
   </div>
 </div>
 
 <div class="mb-6">
 
+</div>
+
+
+<div class="modal fade" id="leaveApproval" tabindex="-1" aria-labelledby="leaveApproval" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-md">
+    <div class="modal-content">
+      <div class="modal-header border-bottom-0">
+        <h1 class="modal-title fs-6" id="leaveApproval">Leave Approval</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+      </div>
+      <div class="modal-footer border-top-0">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary">Save changes</button>
+      </div>
+    </div>
+  </div>
 </div>
 <%- include('partials/private-footer.ejs') %>

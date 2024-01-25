@@ -17,6 +17,7 @@ const fileUpload = require('express-fileupload');
 const nodemailer = require('nodemailer');
 const cron = require('node-cron');
 const { v4: uuidv4 } = require('uuid');
+const { send } = require('process');
 
 const mongoURI =
     'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/session';
@@ -98,6 +99,8 @@ const userSchema = new mongoose.Schema({
     isDeputyChiefExec: { type: Boolean, default: false },
     isHeadOfDepartment: { type: Boolean, default: false },
     isHeadOfSection: { type: Boolean, default: false },
+    isAdmin: { type: Boolean, default: false },
+    isOfficer: { type: Boolean, default: false },
     dateEmployed: { type: Date },
     birthdate: { type: Date }
 });
@@ -156,9 +159,10 @@ const leaveDate = {
 
 const approvalSchema = new mongoose.Schema({
     recipient: { type: mongoose.Schema.Types.ObjectId, required: true },
+    role: { type: String },
     status: { type: String, enum: ['pending', 'approved', 'denied', 'submitted'], default: 'pending' },
     comment: String,
-    timestamp: { type: Date, default: Date.now },
+    timestamp: { type: Date },
     estimated: { type: Date }
 });
 
@@ -309,7 +313,8 @@ app
             isChiefExec: false,
             isDeputyChiefExec: false,
             isHeadOfDepartment: false,
-            isHeadOfSection: false
+            isHeadOfSection: false,
+            isAdmin: false
         });
 
         User.register(newUser, req.body.password, function (err, user) {
@@ -606,10 +611,21 @@ app
                 const existing = await Leave.findOne({ uuid: uuid });
 
                 if (!existing) {
+                    var leaveBalance = '';
                     var approvals = '';
+                    var sendNoti = [];
+                    var sendEmail = [];
+                    const chiefExec = await User.findOne({ isChiefExec: true });
+                    const depChiefExec = await User.findOne({ isDeputyChiefExec: true });
                     const headOfSection = await User.findOne({ isHeadOfSection: true, section: user.section });
                     const headOfDepartment = await User.findOne({ isHeadOfDepartment: true, department: user.department });
+                    const adminHR = await User.findOne({ isAdmin: true, department: 'Human Resource' });
                     const userLeave = await UserLeave.findOne({ user: user._id });
+                    const userGrade = user.grade;
+                    // check amount days taken
+                    const millisecondsPerDay = 24 * 60 * 60 * 1000;
+                    const numberOfDays = Math.ceil((new Date(returnDate) - new Date(startDate)) / millisecondsPerDay);
+
 
                     const newDate = {
                         start: new Date(startDate),
@@ -617,36 +633,1908 @@ app
                     };
 
                     if (type === "Annual Leave") {
-                        const millisecondsPerDay = 24 * 60 * 60 * 1000;
-                        const numberOfDays = Math.ceil((new Date(returnDate) - new Date(startDate)) / millisecondsPerDay);
-                        const approvedAnnualLeaveBalance = userLeave.annual.approved;
-                        const userGrade = user.grade;
+                        leaveBalance = userLeave.annual.approved;
 
-                        // Check if the approved annual leave balance is sufficient and grade is above 30
-                        if (approvedAnnualLeaveBalance >= numberOfDays && userGrade > 30) {
+                        if (leaveBalance >= numberOfDays) {
                             console.log(numberOfDays);
-                            console.log('Sufficient annual leave balance and grade is above 30 for the requested duration');
+                            console.log('Sufficient annual leave balance for the requested duration');
+
+                            if (user.isOfficer === true) {
+                                if (headOfSection) {
+                                    approvals = [
+                                        {
+                                            recipient: user._id,
+                                            role: 'Staff',
+                                            status: 'submitted',
+                                            comment: 'Submitted leave request',
+                                            timestamp: new Date(),
+                                            estimated: ''
+                                        },
+                                        {
+                                            recipient: headOfSection._id,
+                                            role: 'Head of Section',
+                                            status: 'pending',
+                                            comment: 'Leave request needs approval',
+                                            estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                        {
+                                            recipient: headOfDepartment._id,
+                                            role: 'Head of Department',
+                                            status: 'pending',
+                                            comment: 'Leave request needs approval',
+                                            estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                        {
+                                            recipient: depChiefExec._id,
+                                            role: 'Deputy Chief Executive Officer',
+                                            status: 'pending',
+                                            comment: 'Leave request needs approval',
+                                            estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                        {
+                                            recipient: chiefExec._id,
+                                            role: 'Chief Executive Officer',
+                                            status: 'pending',
+                                            comment: 'Leave request needs approval',
+                                            estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                        {
+                                            recipient: adminHR._id,
+                                            role: 'Human Resource',
+                                            status: 'pending',
+                                            comment: 'Leave request needs to be reviewed',
+                                            estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                    ]
+                                } else {
+                                    approvals = [
+                                        {
+                                            recipient: user._id,
+                                            role: 'Staff',
+                                            status: 'submitted',
+                                            comment: 'Submitted leave request',
+                                            timestamp: new Date(),
+                                            estimated: ''
+                                        },
+                                        {
+                                            recipient: headOfDepartment._id,
+                                            role: 'Head of Department',
+                                            status: 'pending',
+                                            comment: 'Leave request needs approval',
+                                            estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                        {
+                                            recipient: depChiefExec._id,
+                                            role: 'Deputy Chief Executive Officer',
+                                            status: 'pending',
+                                            comment: 'Leave request needs approval',
+                                            estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                        {
+                                            recipient: chiefExec._id,
+                                            role: 'Chief Executive Officer',
+                                            status: 'pending',
+                                            comment: 'Leave request needs approval',
+                                            estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                        {
+                                            recipient: adminHR._id,
+                                            role: 'Human Resource',
+                                            status: 'pending',
+                                            comment: 'Leave request needs to be reviewed',
+                                            estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                    ]
+                                }
+                            } else if (user.isHeadOfSection === true) {
+                                approvals = [
+                                    {
+                                        recipient: user._id,
+                                        role: 'Staff',
+                                        status: 'submitted',
+                                        comment: 'Submitted leave request',
+                                        timestamp: new Date(),
+                                        estimated: ''
+                                    },
+                                    {
+                                        recipient: headOfDepartment._id,
+                                        role: 'Head of Department',
+                                        status: 'pending',
+                                        comment: 'Leave request needs approval',
+                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                                        timestamp: ''
+                                    },
+                                    {
+                                        recipient: depChiefExec._id,
+                                        role: 'Deputy Chief Executive Officer',
+                                        status: 'pending',
+                                        comment: 'Leave request needs approval',
+                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                        timestamp: ''
+                                    },
+                                    {
+                                        recipient: chiefExec._id,
+                                        role: 'Chief Executive Officer',
+                                        status: 'pending',
+                                        comment: 'Leave request needs approval',
+                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                        timestamp: ''
+                                    },
+                                    {
+                                        recipient: adminHR._id,
+                                        role: 'Human Resource',
+                                        status: 'pending',
+                                        comment: 'Leave request needs to be reviewed',
+                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                        timestamp: ''
+                                    },
+                                ]
+
+                            } else if (user.isHeadOfDepartment === true) {
+                                approvals = [
+                                    {
+                                        recipient: user._id,
+                                        role: 'Staff',
+                                        status: 'submitted',
+                                        comment: 'Submitted leave request',
+                                        timestamp: new Date(),
+                                        estimated: ''
+                                    },
+                                    {
+                                        recipient: depChiefExec._id,
+                                        role: 'Deputy Chief Executive Officer',
+                                        status: 'pending',
+                                        comment: 'Leave request needs approval',
+                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                        timestamp: ''
+                                    },
+                                    {
+                                        recipient: chiefExec._id,
+                                        role: 'Chief Executive Officer',
+                                        status: 'pending',
+                                        comment: 'Leave request needs approval',
+                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                        timestamp: ''
+                                    },
+                                    {
+                                        recipient: adminHR._id,
+                                        role: 'Human Resource',
+                                        status: 'pending',
+                                        comment: 'Leave request needs to be reviewed',
+                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                        timestamp: ''
+                                    },
+                                ]
+                            } else {
+
+                                if (headOfSection) {
+                                    approvals = [
+                                        {
+                                            recipient: user._id,
+                                            role: 'Staff',
+                                            status: 'submitted',
+                                            comment: 'Submitted leave request',
+                                            timestamp: new Date(),
+                                            estimated: ''
+                                        },
+                                        {
+                                            recipient: headOfSection._id,
+                                            role: 'Head of Section',
+                                            status: 'pending',
+                                            comment: 'Leave request needs approval',
+                                            estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                        {
+                                            recipient: headOfDepartment._id,
+                                            role: 'Head of Department',
+                                            status: 'pending',
+                                            comment: 'Leave request needs approval',
+                                            estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                        {
+                                            recipient: adminHR._id,
+                                            role: 'Human Resource',
+                                            status: 'pending',
+                                            comment: 'Leave request needs to be reviewed',
+                                            estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                    ]
+                                } else {
+                                    approvals = [
+                                        {
+                                            recipient: user._id,
+                                            role: 'Staff',
+                                            status: 'submitted',
+                                            comment: 'Submitted leave request',
+                                            timestamp: new Date(),
+                                            estimated: ''
+                                        },
+                                        {
+                                            recipient: headOfDepartment._id,
+                                            role: 'Head of Department',
+                                            status: 'pending',
+                                            comment: 'Leave request needs approval',
+                                            estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                        {
+                                            recipient: adminHR._id,
+                                            role: 'Human Resource',
+                                            status: 'pending',
+                                            comment: 'Leave request needs to be reviewed',
+                                            estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                    ]
+                                }
+                            }
+
                         } else {
-                            // Either insufficient annual leave balance or grade is not above 30
-                            console.log('Insufficient annual leave balance or grade is not above 30 for the requested duration');
-                            // You might want to handle this case accordingly, for example, show an error to the user.
+                            console.log('Insufficient annual leave balance for the requested duration');
+
+                            res.render('home', {
+                                user: user,
+                                notifications: notifications,
+                                // toast
+                                show: 'show',
+                                alert: 'Insufficient annual leave balance for the requested duration'
+                            });
+                        }
+
+                    } else if (type === "Sick Leave") {
+                        leaveBalance = userLeave.sick;
+
+                        if (leaveBalance >= numberOfDays) {
+                            console.log(numberOfDays);
+                            console.log('Sufficient leave balance and grade is above 30 for the requested duration');
+
+                            if (user.isOfficer === true) {
+                                if (headOfSection) {
+                                    approvals = [
+                                        {
+                                            recipient: user._id,
+                                            role: 'Staff',
+                                            status: 'submitted',
+                                            comment: 'Submitted leave request',
+                                            timestamp: new Date(),
+                                            estimated: ''
+                                        },
+                                        {
+                                            recipient: headOfSection._id,
+                                            role: 'Head of Section',
+                                            status: 'pending',
+                                            comment: 'Leave request needs approval',
+                                            estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                        {
+                                            recipient: headOfDepartment._id,
+                                            role: 'Head of Department',
+                                            status: 'pending',
+                                            comment: 'Leave request needs approval',
+                                            estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                        {
+                                            recipient: adminHR._id,
+                                            role: 'Human Resource',
+                                            status: 'pending',
+                                            comment: 'Leave request needs to be reviewed',
+                                            estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                    ]
+                                } else {
+                                    approvals = [
+                                        {
+                                            recipient: user._id,
+                                            role: 'Staff',
+                                            status: 'submitted',
+                                            comment: 'Submitted leave request',
+                                            timestamp: new Date(),
+                                            estimated: ''
+                                        },
+                                        {
+                                            recipient: headOfDepartment._id,
+                                            role: 'Head of Department',
+                                            status: 'pending',
+                                            comment: 'Leave request needs approval',
+                                            estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                        {
+                                            recipient: adminHR._id,
+                                            role: 'Human Resource',
+                                            status: 'pending',
+                                            comment: 'Leave request needs to be reviewed',
+                                            estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                    ]
+                                }
+                            } else if (user.isHeadOfSection === true) {
+                                approvals = [
+                                    {
+                                        recipient: user._id,
+                                        role: 'Staff',
+                                        status: 'submitted',
+                                        comment: 'Submitted leave request',
+                                        timestamp: new Date(),
+                                        estimated: ''
+                                    },
+                                    {
+                                        recipient: headOfDepartment._id,
+                                        role: 'Head of Department',
+                                        status: 'pending',
+                                        comment: 'Leave request needs approval',
+                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                                        timestamp: ''
+                                    },
+                                    {
+                                        recipient: adminHR._id,
+                                        role: 'Human Resource',
+                                        status: 'pending',
+                                        comment: 'Leave request needs to be reviewed',
+                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                        timestamp: ''
+                                    },
+                                ]
+
+                            } else if (user.isHeadOfDepartment === true) {
+                                approvals = [
+                                    approvals = [
+                                        {
+                                            recipient: user._id,
+                                            role: 'Staff',
+                                            status: 'submitted',
+                                            comment: 'Submitted leave request',
+                                            timestamp: new Date(),
+                                            estimated: ''
+                                        },
+                                        {
+                                            recipient: adminHR._id,
+                                            role: 'Human Resource',
+                                            status: 'pending',
+                                            comment: 'Leave request needs to be reviewed',
+                                            estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                    ]
+                                ]
+                            } else {
+
+                                if (headOfSection) {
+                                    approvals = [
+                                        {
+                                            recipient: user._id,
+                                            role: 'Staff',
+                                            status: 'submitted',
+                                            comment: 'Submitted leave request',
+                                            timestamp: new Date(),
+                                            estimated: ''
+                                        },
+                                        {
+                                            recipient: headOfSection._id,
+                                            role: 'Head of Section',
+                                            status: 'pending',
+                                            comment: 'Leave request needs approval',
+                                            estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                        {
+                                            recipient: headOfDepartment._id,
+                                            role: 'Head of Department',
+                                            status: 'pending',
+                                            comment: 'Leave request needs approval',
+                                            estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                        {
+                                            recipient: adminHR._id,
+                                            role: 'Human Resource',
+                                            status: 'pending',
+                                            comment: 'Leave request needs to be reviewed',
+                                            estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                    ]
+                                } else {
+                                    approvals = [
+                                        {
+                                            recipient: user._id,
+                                            role: 'Staff',
+                                            status: 'submitted',
+                                            comment: 'Submitted leave request',
+                                            timestamp: new Date(),
+                                            estimated: ''
+                                        },
+                                        {
+                                            recipient: headOfDepartment._id,
+                                            role: 'Head of Department',
+                                            status: 'pending',
+                                            comment: 'Leave request needs approval',
+                                            estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                        {
+                                            recipient: adminHR._id,
+                                            role: 'Human Resource',
+                                            status: 'pending',
+                                            comment: 'Leave request needs to be reviewed',
+                                            estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                    ]
+                                }
+                            }
+
+                        } else {
+                            console.log('Insufficient leave balance or grade is not above 30 for the requested duration');
+
+                            res.render('home', {
+                                user: user,
+                                notifications: notifications,
+                                // toast
+                                show: 'show',
+                                alert: 'Insufficient annual leave balance or grade is not above 30 for the requested duration'
+                            });
+                        }
+                    } else if (type === "Emergency Leave") {
+                        if (user.isOfficer === true) {
+                            if (headOfSection) {
+                                approvals = [
+                                    {
+                                        recipient: user._id,
+                                        role: 'Staff',
+                                        status: 'submitted',
+                                        comment: 'Submitted leave request',
+                                        timestamp: new Date(),
+                                        estimated: ''
+                                    },
+                                    {
+                                        recipient: headOfSection._id,
+                                        role: 'Head of Section',
+                                        status: 'pending',
+                                        comment: 'Leave request needs approval',
+                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                                        timestamp: ''
+                                    },
+                                    {
+                                        recipient: headOfDepartment._id,
+                                        role: 'Head of Department',
+                                        status: 'pending',
+                                        comment: 'Leave request needs approval',
+                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                                        timestamp: ''
+                                    },
+                                    {
+                                        recipient: adminHR._id,
+                                        role: 'Human Resource',
+                                        status: 'pending',
+                                        comment: 'Leave request needs to be reviewed',
+                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                        timestamp: ''
+                                    },
+                                ]
+                            } else {
+                                approvals = [
+                                    {
+                                        recipient: user._id,
+                                        role: 'Staff',
+                                        status: 'submitted',
+                                        comment: 'Submitted leave request',
+                                        timestamp: new Date(),
+                                        estimated: ''
+                                    },
+                                    {
+                                        recipient: headOfDepartment._id,
+                                        role: 'Head of Department',
+                                        status: 'pending',
+                                        comment: 'Leave request needs approval',
+                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                                        timestamp: ''
+                                    },
+                                    {
+                                        recipient: adminHR._id,
+                                        role: 'Human Resource',
+                                        status: 'pending',
+                                        comment: 'Leave request needs to be reviewed',
+                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                        timestamp: ''
+                                    },
+                                ]
+                            }
+                        } else if (user.isHeadOfSection === true) {
+                            approvals = [
+                                {
+                                    recipient: user._id,
+                                    role: 'Staff',
+                                    status: 'submitted',
+                                    comment: 'Submitted leave request',
+                                    timestamp: new Date(),
+                                    estimated: ''
+                                },
+                                {
+                                    recipient: headOfDepartment._id,
+                                    role: 'Head of Department',
+                                    status: 'pending',
+                                    comment: 'Leave request needs approval',
+                                    estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                                    timestamp: ''
+                                },
+                                {
+                                    recipient: adminHR._id,
+                                    role: 'Human Resource',
+                                    status: 'pending',
+                                    comment: 'Leave request needs to be reviewed',
+                                    estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                    timestamp: ''
+                                },
+                            ]
+
+                        } else if (user.isHeadOfDepartment === true) {
+                            approvals = [
+                                approvals = [
+                                    {
+                                        recipient: user._id,
+                                        role: 'Staff',
+                                        status: 'submitted',
+                                        comment: 'Submitted leave request',
+                                        timestamp: new Date(),
+                                        estimated: ''
+                                    },
+                                    {
+                                        recipient: adminHR._id,
+                                        role: 'Human Resource',
+                                        status: 'pending',
+                                        comment: 'Leave request needs to be reviewed',
+                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                        timestamp: ''
+                                    },
+                                ]
+                            ]
+                        } else {
+
+                            if (headOfSection) {
+                                approvals = [
+                                    {
+                                        recipient: user._id,
+                                        role: 'Staff',
+                                        status: 'submitted',
+                                        comment: 'Submitted leave request',
+                                        timestamp: new Date(),
+                                        estimated: ''
+                                    },
+                                    {
+                                        recipient: headOfSection._id,
+                                        role: 'Head of Section',
+                                        status: 'pending',
+                                        comment: 'Leave request needs approval',
+                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                                        timestamp: ''
+                                    },
+                                    {
+                                        recipient: headOfDepartment._id,
+                                        role: 'Head of Department',
+                                        status: 'pending',
+                                        comment: 'Leave request needs approval',
+                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                                        timestamp: ''
+                                    },
+                                    {
+                                        recipient: adminHR._id,
+                                        role: 'Human Resource',
+                                        status: 'pending',
+                                        comment: 'Leave request needs to be reviewed',
+                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                        timestamp: ''
+                                    },
+                                ]
+                            } else {
+                                approvals = [
+                                    {
+                                        recipient: user._id,
+                                        role: 'Staff',
+                                        status: 'submitted',
+                                        comment: 'Submitted leave request',
+                                        timestamp: new Date(),
+                                        estimated: ''
+                                    },
+                                    {
+                                        recipient: headOfDepartment._id,
+                                        role: 'Head of Department',
+                                        status: 'pending',
+                                        comment: 'Leave request needs approval',
+                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                                        timestamp: ''
+                                    },
+                                    {
+                                        recipient: adminHR._id,
+                                        role: 'Human Resource',
+                                        status: 'pending',
+                                        comment: 'Leave request needs to be reviewed',
+                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                        timestamp: ''
+                                    },
+                                ]
+                            }
+                        }
+                    } else if (type === "Bereavement Leave" || type === "Marriage Leave") {
+                        leaveBalance = 3;
+
+                        if (leaveBalance >= numberOfDays) {
+                            console.log(numberOfDays);
+                            console.log('Sufficient leave balance for the requested duration');
+
+                            if (user.isOfficer === true) {
+                                if (headOfSection) {
+                                    approvals = [
+                                        {
+                                            recipient: user._id,
+                                            role: 'Staff',
+                                            status: 'submitted',
+                                            comment: 'Submitted leave request',
+                                            timestamp: new Date(),
+                                            estimated: ''
+                                        },
+                                        {
+                                            recipient: headOfSection._id,
+                                            role: 'Head of Section',
+                                            status: 'pending',
+                                            comment: 'Leave request needs approval',
+                                            estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                        {
+                                            recipient: headOfDepartment._id,
+                                            role: 'Head of Department',
+                                            status: 'pending',
+                                            comment: 'Leave request needs approval',
+                                            estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                        {
+                                            recipient: depChiefExec._id,
+                                            role: 'Deputy Chief Executive Officer',
+                                            status: 'pending',
+                                            comment: 'Leave request needs approval',
+                                            estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                        {
+                                            recipient: chiefExec._id,
+                                            role: 'Chief Executive Officer',
+                                            status: 'pending',
+                                            comment: 'Leave request needs approval',
+                                            estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                        {
+                                            recipient: adminHR._id,
+                                            role: 'Human Resource',
+                                            status: 'pending',
+                                            comment: 'Leave request needs to be reviewed',
+                                            estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                    ]
+                                } else {
+                                    approvals = [
+                                        {
+                                            recipient: user._id,
+                                            role: 'Staff',
+                                            status: 'submitted',
+                                            comment: 'Submitted leave request',
+                                            timestamp: new Date(),
+                                            estimated: ''
+                                        },
+                                        {
+                                            recipient: headOfDepartment._id,
+                                            role: 'Head of Department',
+                                            status: 'pending',
+                                            comment: 'Leave request needs approval',
+                                            estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                        {
+                                            recipient: depChiefExec._id,
+                                            role: 'Deputy Chief Executive Officer',
+                                            status: 'pending',
+                                            comment: 'Leave request needs approval',
+                                            estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                        {
+                                            recipient: chiefExec._id,
+                                            role: 'Chief Executive Officer',
+                                            status: 'pending',
+                                            comment: 'Leave request needs approval',
+                                            estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                        {
+                                            recipient: adminHR._id,
+                                            role: 'Human Resource',
+                                            status: 'pending',
+                                            comment: 'Leave request needs to be reviewed',
+                                            estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                    ]
+                                }
+                            } else if (user.isHeadOfSection === true) {
+                                approvals = [
+                                    {
+                                        recipient: user._id,
+                                        role: 'Staff',
+                                        status: 'submitted',
+                                        comment: 'Submitted leave request',
+                                        timestamp: new Date(),
+                                        estimated: ''
+                                    },
+                                    {
+                                        recipient: headOfDepartment._id,
+                                        role: 'Head of Department',
+                                        status: 'pending',
+                                        comment: 'Leave request needs approval',
+                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                                        timestamp: ''
+                                    },
+                                    {
+                                        recipient: depChiefExec._id,
+                                        role: 'Deputy Chief Executive Officer',
+                                        status: 'pending',
+                                        comment: 'Leave request needs approval',
+                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                        timestamp: ''
+                                    },
+                                    {
+                                        recipient: chiefExec._id,
+                                        role: 'Chief Executive Officer',
+                                        status: 'pending',
+                                        comment: 'Leave request needs approval',
+                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                        timestamp: ''
+                                    },
+                                    {
+                                        recipient: adminHR._id,
+                                        role: 'Human Resource',
+                                        status: 'pending',
+                                        comment: 'Leave request needs to be reviewed',
+                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                        timestamp: ''
+                                    },
+                                ]
+
+                            } else if (user.isHeadOfDepartment === true) {
+                                approvals = [
+                                    {
+                                        recipient: user._id,
+                                        role: 'Staff',
+                                        status: 'submitted',
+                                        comment: 'Submitted leave request',
+                                        timestamp: new Date(),
+                                        estimated: ''
+                                    },
+                                    {
+                                        recipient: depChiefExec._id,
+                                        role: 'Deputy Chief Executive Officer',
+                                        status: 'pending',
+                                        comment: 'Leave request needs approval',
+                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                        timestamp: ''
+                                    },
+                                    {
+                                        recipient: chiefExec._id,
+                                        role: 'Chief Executive Officer',
+                                        status: 'pending',
+                                        comment: 'Leave request needs approval',
+                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                        timestamp: ''
+                                    },
+                                    {
+                                        recipient: adminHR._id,
+                                        role: 'Human Resource',
+                                        status: 'pending',
+                                        comment: 'Leave request needs to be reviewed',
+                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                        timestamp: ''
+                                    },
+                                ]
+                            } else {
+
+                                if (headOfSection) {
+                                    approvals = [
+                                        {
+                                            recipient: user._id,
+                                            role: 'Staff',
+                                            status: 'submitted',
+                                            comment: 'Submitted leave request',
+                                            timestamp: new Date(),
+                                            estimated: ''
+                                        },
+                                        {
+                                            recipient: headOfSection._id,
+                                            role: 'Head of Section',
+                                            status: 'pending',
+                                            comment: 'Leave request needs approval',
+                                            estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                        {
+                                            recipient: headOfDepartment._id,
+                                            role: 'Head of Department',
+                                            status: 'pending',
+                                            comment: 'Leave request needs approval',
+                                            estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                        {
+                                            recipient: adminHR._id,
+                                            role: 'Human Resource',
+                                            status: 'pending',
+                                            comment: 'Leave request needs to be reviewed',
+                                            estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                    ]
+                                } else {
+                                    approvals = [
+                                        {
+                                            recipient: user._id,
+                                            role: 'Staff',
+                                            status: 'submitted',
+                                            comment: 'Submitted leave request',
+                                            timestamp: new Date(),
+                                            estimated: ''
+                                        },
+                                        {
+                                            recipient: headOfDepartment._id,
+                                            role: 'Head of Department',
+                                            status: 'pending',
+                                            comment: 'Leave request needs approval',
+                                            estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                        {
+                                            recipient: adminHR._id,
+                                            role: 'Human Resource',
+                                            status: 'pending',
+                                            comment: 'Leave request needs to be reviewed',
+                                            estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                    ]
+                                }
+                            }
+
+                        } else {
+                            console.log('Insufficient leave balance or grade is not above 30 for the requested duration');
+
+                            res.render('home', {
+                                user: user,
+                                notifications: notifications,
+                                // toast
+                                show: 'show',
+                                alert: 'Insufficient leave balance or grade is not above 30 for the requested duration'
+                            });
+                        }
+
+                    } else if (type === "Study Leave") {
+                        leaveBalance = 5;
+
+                        if (leaveBalance >= numberOfDays) {
+                            console.log(numberOfDays);
+                            console.log('Sufficient study leave balance for the requested duration');
+
+                            if (user.isOfficer === true) {
+                                if (headOfSection) {
+                                    approvals = [
+                                        {
+                                            recipient: user._id,
+                                            role: 'Staff',
+                                            status: 'submitted',
+                                            comment: 'Submitted leave request',
+                                            timestamp: new Date(),
+                                            estimated: ''
+                                        },
+                                        {
+                                            recipient: headOfSection._id,
+                                            role: 'Head of Section',
+                                            status: 'pending',
+                                            comment: 'Leave request needs approval',
+                                            estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                        {
+                                            recipient: headOfDepartment._id,
+                                            role: 'Head of Department',
+                                            status: 'pending',
+                                            comment: 'Leave request needs approval',
+                                            estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                        {
+                                            recipient: depChiefExec._id,
+                                            role: 'Deputy Chief Executive Officer',
+                                            status: 'pending',
+                                            comment: 'Leave request needs approval',
+                                            estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                        {
+                                            recipient: chiefExec._id,
+                                            role: 'Chief Executive Officer',
+                                            status: 'pending',
+                                            comment: 'Leave request needs approval',
+                                            estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                        {
+                                            recipient: adminHR._id,
+                                            role: 'Human Resource',
+                                            status: 'pending',
+                                            comment: 'Leave request needs to be reviewed',
+                                            estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                    ]
+                                } else {
+                                    approvals = [
+                                        {
+                                            recipient: user._id,
+                                            role: 'Staff',
+                                            status: 'submitted',
+                                            comment: 'Submitted leave request',
+                                            timestamp: new Date(),
+                                            estimated: ''
+                                        },
+                                        {
+                                            recipient: headOfDepartment._id,
+                                            role: 'Head of Department',
+                                            status: 'pending',
+                                            comment: 'Leave request needs approval',
+                                            estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                        {
+                                            recipient: depChiefExec._id,
+                                            role: 'Deputy Chief Executive Officer',
+                                            status: 'pending',
+                                            comment: 'Leave request needs approval',
+                                            estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                        {
+                                            recipient: chiefExec._id,
+                                            role: 'Chief Executive Officer',
+                                            status: 'pending',
+                                            comment: 'Leave request needs approval',
+                                            estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                        {
+                                            recipient: adminHR._id,
+                                            role: 'Human Resource',
+                                            status: 'pending',
+                                            comment: 'Leave request needs to be reviewed',
+                                            estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                    ]
+                                }
+                            } else if (user.isHeadOfSection === true) {
+                                approvals = [
+                                    {
+                                        recipient: user._id,
+                                        role: 'Staff',
+                                        status: 'submitted',
+                                        comment: 'Submitted leave request',
+                                        timestamp: new Date(),
+                                        estimated: ''
+                                    },
+                                    {
+                                        recipient: headOfDepartment._id,
+                                        role: 'Head of Department',
+                                        status: 'pending',
+                                        comment: 'Leave request needs approval',
+                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                                        timestamp: ''
+                                    },
+                                    {
+                                        recipient: depChiefExec._id,
+                                        role: 'Deputy Chief Executive Officer',
+                                        status: 'pending',
+                                        comment: 'Leave request needs approval',
+                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                        timestamp: ''
+                                    },
+                                    {
+                                        recipient: chiefExec._id,
+                                        role: 'Chief Executive Officer',
+                                        status: 'pending',
+                                        comment: 'Leave request needs approval',
+                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                        timestamp: ''
+                                    },
+                                    {
+                                        recipient: adminHR._id,
+                                        role: 'Human Resource',
+                                        status: 'pending',
+                                        comment: 'Leave request needs to be reviewed',
+                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                        timestamp: ''
+                                    },
+                                ]
+
+                            } else if (user.isHeadOfDepartment === true) {
+                                approvals = [
+                                    {
+                                        recipient: user._id,
+                                        role: 'Staff',
+                                        status: 'submitted',
+                                        comment: 'Submitted leave request',
+                                        timestamp: new Date(),
+                                        estimated: ''
+                                    },
+                                    {
+                                        recipient: depChiefExec._id,
+                                        role: 'Deputy Chief Executive Officer',
+                                        status: 'pending',
+                                        comment: 'Leave request needs approval',
+                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                        timestamp: ''
+                                    },
+                                    {
+                                        recipient: chiefExec._id,
+                                        role: 'Chief Executive Officer',
+                                        status: 'pending',
+                                        comment: 'Leave request needs approval',
+                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                        timestamp: ''
+                                    },
+                                    {
+                                        recipient: adminHR._id,
+                                        role: 'Human Resource',
+                                        status: 'pending',
+                                        comment: 'Leave request needs to be reviewed',
+                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                        timestamp: ''
+                                    },
+                                ]
+                            } else {
+
+                                if (headOfSection) {
+                                    approvals = [
+                                        {
+                                            recipient: user._id,
+                                            role: 'Staff',
+                                            status: 'submitted',
+                                            comment: 'Submitted leave request',
+                                            timestamp: new Date(),
+                                            estimated: ''
+                                        },
+                                        {
+                                            recipient: headOfSection._id,
+                                            role: 'Head of Section',
+                                            status: 'pending',
+                                            comment: 'Leave request needs approval',
+                                            estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                        {
+                                            recipient: headOfDepartment._id,
+                                            role: 'Head of Department',
+                                            status: 'pending',
+                                            comment: 'Leave request needs approval',
+                                            estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                        {
+                                            recipient: adminHR._id,
+                                            role: 'Human Resource',
+                                            status: 'pending',
+                                            comment: 'Leave request needs to be reviewed',
+                                            estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                    ]
+                                } else {
+                                    approvals = [
+                                        {
+                                            recipient: user._id,
+                                            role: 'Staff',
+                                            status: 'submitted',
+                                            comment: 'Submitted leave request',
+                                            timestamp: new Date(),
+                                            estimated: ''
+                                        },
+                                        {
+                                            recipient: headOfDepartment._id,
+                                            role: 'Head of Department',
+                                            status: 'pending',
+                                            comment: 'Leave request needs approval',
+                                            estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                        {
+                                            recipient: adminHR._id,
+                                            role: 'Human Resource',
+                                            status: 'pending',
+                                            comment: 'Leave request needs to be reviewed',
+                                            estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                    ]
+                                }
+                            }
+
+                        } else {
+                            console.log('Insufficient study leave balance for the requested duration');
+
+                            res.render('home', {
+                                user: user,
+                                notifications: notifications,
+                                // toast
+                                show: 'show',
+                                alert: 'Insufficient study leave balance for the requested duration'
+                            });
+                        }
+
+                    } else if (type === "Hajj Leave") {
+                        leaveBalance = userLeave.hajj;
+
+                        if (leaveBalance >= numberOfDays) {
+                            console.log(numberOfDays);
+                            console.log('Sufficient hajj leave balance for the requested duration');
+
+                            if (user.isOfficer === true) {
+                                if (headOfSection) {
+                                    approvals = [
+                                        {
+                                            recipient: user._id,
+                                            role: 'Staff',
+                                            status: 'submitted',
+                                            comment: 'Submitted leave request',
+                                            timestamp: new Date(),
+                                            estimated: ''
+                                        },
+                                        {
+                                            recipient: headOfSection._id,
+                                            role: 'Head of Section',
+                                            status: 'pending',
+                                            comment: 'Leave request needs approval',
+                                            estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                        {
+                                            recipient: headOfDepartment._id,
+                                            role: 'Head of Department',
+                                            status: 'pending',
+                                            comment: 'Leave request needs approval',
+                                            estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                        {
+                                            recipient: depChiefExec._id,
+                                            role: 'Deputy Chief Executive Officer',
+                                            status: 'pending',
+                                            comment: 'Leave request needs approval',
+                                            estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                        {
+                                            recipient: chiefExec._id,
+                                            role: 'Chief Executive Officer',
+                                            status: 'pending',
+                                            comment: 'Leave request needs approval',
+                                            estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                        {
+                                            recipient: adminHR._id,
+                                            role: 'Human Resource',
+                                            status: 'pending',
+                                            comment: 'Leave request needs to be reviewed',
+                                            estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                    ]
+                                } else {
+                                    approvals = [
+                                        {
+                                            recipient: user._id,
+                                            role: 'Staff',
+                                            status: 'submitted',
+                                            comment: 'Submitted leave request',
+                                            timestamp: new Date(),
+                                            estimated: ''
+                                        },
+                                        {
+                                            recipient: headOfDepartment._id,
+                                            role: 'Head of Department',
+                                            status: 'pending',
+                                            comment: 'Leave request needs approval',
+                                            estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                        {
+                                            recipient: depChiefExec._id,
+                                            role: 'Deputy Chief Executive Officer',
+                                            status: 'pending',
+                                            comment: 'Leave request needs approval',
+                                            estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                        {
+                                            recipient: chiefExec._id,
+                                            role: 'Chief Executive Officer',
+                                            status: 'pending',
+                                            comment: 'Leave request needs approval',
+                                            estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                        {
+                                            recipient: adminHR._id,
+                                            role: 'Human Resource',
+                                            status: 'pending',
+                                            comment: 'Leave request needs to be reviewed',
+                                            estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                    ]
+                                }
+                            } else if (user.isHeadOfSection === true) {
+                                approvals = [
+                                    {
+                                        recipient: user._id,
+                                        role: 'Staff',
+                                        status: 'submitted',
+                                        comment: 'Submitted leave request',
+                                        timestamp: new Date(),
+                                        estimated: ''
+                                    },
+                                    {
+                                        recipient: headOfDepartment._id,
+                                        role: 'Head of Department',
+                                        status: 'pending',
+                                        comment: 'Leave request needs approval',
+                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                                        timestamp: ''
+                                    },
+                                    {
+                                        recipient: depChiefExec._id,
+                                        role: 'Deputy Chief Executive Officer',
+                                        status: 'pending',
+                                        comment: 'Leave request needs approval',
+                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                        timestamp: ''
+                                    },
+                                    {
+                                        recipient: chiefExec._id,
+                                        role: 'Chief Executive Officer',
+                                        status: 'pending',
+                                        comment: 'Leave request needs approval',
+                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                        timestamp: ''
+                                    },
+                                    {
+                                        recipient: adminHR._id,
+                                        role: 'Human Resource',
+                                        status: 'pending',
+                                        comment: 'Leave request needs to be reviewed',
+                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                        timestamp: ''
+                                    },
+                                ]
+
+                            } else if (user.isHeadOfDepartment === true) {
+                                approvals = [
+                                    {
+                                        recipient: user._id,
+                                        role: 'Staff',
+                                        status: 'submitted',
+                                        comment: 'Submitted leave request',
+                                        timestamp: new Date(),
+                                        estimated: ''
+                                    },
+                                    {
+                                        recipient: depChiefExec._id,
+                                        role: 'Deputy Chief Executive Officer',
+                                        status: 'pending',
+                                        comment: 'Leave request needs approval',
+                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                        timestamp: ''
+                                    },
+                                    {
+                                        recipient: chiefExec._id,
+                                        role: 'Chief Executive Officer',
+                                        status: 'pending',
+                                        comment: 'Leave request needs approval',
+                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                        timestamp: ''
+                                    },
+                                    {
+                                        recipient: adminHR._id,
+                                        role: 'Human Resource',
+                                        status: 'pending',
+                                        comment: 'Leave request needs to be reviewed',
+                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                        timestamp: ''
+                                    },
+                                ]
+                            } else {
+
+                                if (headOfSection) {
+                                    approvals = [
+                                        {
+                                            recipient: user._id,
+                                            role: 'Staff',
+                                            status: 'submitted',
+                                            comment: 'Submitted leave request',
+                                            timestamp: new Date(),
+                                            estimated: ''
+                                        },
+                                        {
+                                            recipient: headOfSection._id,
+                                            role: 'Head of Section',
+                                            status: 'pending',
+                                            comment: 'Leave request needs approval',
+                                            estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                        {
+                                            recipient: headOfDepartment._id,
+                                            role: 'Head of Department',
+                                            status: 'pending',
+                                            comment: 'Leave request needs approval',
+                                            estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                        {
+                                            recipient: adminHR._id,
+                                            role: 'Human Resource',
+                                            status: 'pending',
+                                            comment: 'Leave request needs to be reviewed',
+                                            estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                    ]
+                                } else {
+                                    approvals = [
+                                        {
+                                            recipient: user._id,
+                                            role: 'Staff',
+                                            status: 'submitted',
+                                            comment: 'Submitted leave request',
+                                            timestamp: new Date(),
+                                            estimated: ''
+                                        },
+                                        {
+                                            recipient: headOfDepartment._id,
+                                            role: 'Head of Department',
+                                            status: 'pending',
+                                            comment: 'Leave request needs approval',
+                                            estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                        {
+                                            recipient: adminHR._id,
+                                            role: 'Human Resource',
+                                            status: 'pending',
+                                            comment: 'Leave request needs to be reviewed',
+                                            estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                            timestamp: ''
+                                        },
+                                    ]
+                                }
+                            }
+
+                        } else {
+                            console.log('Insufficient hajj leave balance for the requested duration');
+
+                            res.render('home', {
+                                user: user,
+                                notifications: notifications,
+                                // toast
+                                show: 'show',
+                                alert: 'Insufficient annual leave balance for the requested duration'
+                            });
+                        }
+
+                    } else if (type === "Special Leave") {
+                        if (user.isOfficer === true) {
+                            if (headOfSection) {
+                                approvals = [
+                                    {
+                                        recipient: user._id,
+                                        role: 'Staff',
+                                        status: 'submitted',
+                                        comment: 'Submitted leave request',
+                                        timestamp: new Date(),
+                                    },
+                                    {
+                                        recipient: headOfSection._id,
+                                        role: 'Head of Section',
+                                        status: 'pending',
+                                        comment: 'Leave request needs approval',
+                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000)
+                                    },
+                                    {
+                                        recipient: headOfDepartment._id,
+                                        role: 'Head of Department',
+                                        status: 'pending',
+                                        comment: 'Leave request needs approval',
+                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000)
+                                    },
+                                    {
+                                        recipient: depChiefExec._id,
+                                        role: 'Deputy Chief Executive Officer',
+                                        status: 'pending',
+                                        comment: 'Leave request needs approval',
+                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000)
+                                    },
+                                    {
+                                        recipient: chiefExec._id,
+                                        role: 'Chief Executive Officer',
+                                        status: 'pending',
+                                        comment: 'Leave request needs approval',
+                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000)
+                                    },
+                                    {
+                                        recipient: adminHR._id,
+                                        role: 'Human Resource',
+                                        status: 'pending',
+                                        comment: 'Leave request needs to be reviewed',
+                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000)
+                                    },
+                                ]
+                            } else {
+                                approvals = [
+                                    {
+                                        recipient: user._id,
+                                        role: 'Staff',
+                                        status: 'submitted',
+                                        comment: 'Submitted leave request',
+                                        timestamp: new Date(),
+                                    },
+                                    {
+                                        recipient: headOfDepartment._id,
+                                        role: 'Head of Department',
+                                        status: 'pending',
+                                        comment: 'Leave request needs approval',
+                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000)
+                                    },
+                                    {
+                                        recipient: depChiefExec._id,
+                                        role: 'Deputy Chief Executive Officer',
+                                        status: 'pending',
+                                        comment: 'Leave request needs approval',
+                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000)
+                                    },
+                                    {
+                                        recipient: chiefExec._id,
+                                        role: 'Chief Executive Officer',
+                                        status: 'pending',
+                                        comment: 'Leave request needs approval',
+                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000)
+                                    },
+                                    {
+                                        recipient: adminHR._id,
+                                        role: 'Human Resource',
+                                        status: 'pending',
+                                        comment: 'Leave request needs to be reviewed',
+                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000)
+                                    },
+                                ]
+                            }
+                        } else if (user.isHeadOfSection === true) {
+                            approvals = [
+                                {
+                                    recipient: user._id,
+                                    role: 'Staff',
+                                    status: 'submitted',
+                                    comment: 'Submitted leave request',
+                                    timestamp: new Date(),
+                                },
+                                {
+                                    recipient: headOfDepartment._id,
+                                    role: 'Head of Department',
+                                    status: 'pending',
+                                    comment: 'Leave request needs approval',
+                                    estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000)
+                                },
+                                {
+                                    recipient: depChiefExec._id,
+                                    role: 'Deputy Chief Executive Officer',
+                                    status: 'pending',
+                                    comment: 'Leave request needs approval',
+                                    estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000)
+                                },
+                                {
+                                    recipient: chiefExec._id,
+                                    role: 'Chief Executive Officer',
+                                    status: 'pending',
+                                    comment: 'Leave request needs approval',
+                                    estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000)
+                                },
+                                {
+                                    recipient: adminHR._id,
+                                    role: 'Human Resource',
+                                    status: 'pending',
+                                    comment: 'Leave request needs to be reviewed',
+                                    estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000)
+                                },
+                            ]
+
+                        } else if (user.isHeadOfDepartment === true) {
+                            approvals = [
+                                {
+                                    recipient: user._id,
+                                    role: 'Staff',
+                                    status: 'submitted',
+                                    comment: 'Submitted leave request',
+                                    timestamp: new Date(),
+                                },
+                                {
+                                    recipient: depChiefExec._id,
+                                    role: 'Deputy Chief Executive Officer',
+                                    status: 'pending',
+                                    comment: 'Leave request needs approval',
+                                    estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000)
+                                },
+                                {
+                                    recipient: chiefExec._id,
+                                    role: 'Chief Executive Officer',
+                                    status: 'pending',
+                                    comment: 'Leave request needs approval',
+                                    estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000)
+                                },
+                                {
+                                    recipient: adminHR._id,
+                                    role: 'Human Resource',
+                                    status: 'pending',
+                                    comment: 'Leave request needs to be reviewed',
+                                    estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000)
+                                },
+                            ]
+                        } else {
+
+                            if (headOfSection) {
+                                approvals = [
+                                    {
+                                        recipient: user._id,
+                                        role: 'Staff',
+                                        status: 'submitted',
+                                        comment: 'Submitted leave request',
+                                        timestamp: new Date(),
+                                    },
+                                    {
+                                        recipient: headOfSection._id,
+                                        role: 'Head of Section',
+                                        status: 'pending',
+                                        comment: 'Leave request needs approval',
+                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000)
+                                    },
+                                    {
+                                        recipient: headOfDepartment._id,
+                                        role: 'Head of Department',
+                                        status: 'pending',
+                                        comment: 'Leave request needs approval',
+                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000)
+                                    },
+                                    {
+                                        recipient: adminHR._id,
+                                        role: 'Human Resource',
+                                        status: 'pending',
+                                        comment: 'Leave request needs to be reviewed',
+                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000)
+                                    },
+                                ]
+                            } else {
+                                approvals = [
+                                    {
+                                        recipient: user._id,
+                                        role: 'Staff',
+                                        status: 'submitted',
+                                        comment: 'Submitted leave request',
+                                        timestamp: new Date(),
+                                    },
+                                    {
+                                        recipient: headOfDepartment._id,
+                                        role: 'Head of Department',
+                                        status: 'pending',
+                                        comment: 'Leave request needs approval',
+                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000)
+                                    },
+                                    {
+                                        recipient: adminHR._id,
+                                        role: 'Human Resource',
+                                        status: 'pending',
+                                        comment: 'Leave request needs to be reviewed',
+                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000)
+                                    },
+                                ]
+                            }
+                        }
+                    } else if (type === "Unpaid Leave") {
+                        if (user.isOfficer === true) {
+                            if (headOfSection) {
+                                approvals = [
+                                    {
+                                        recipient: user._id,
+                                        role: 'Staff',
+                                        status: 'submitted',
+                                        comment: 'Submitted leave request',
+                                        timestamp: new Date(),
+                                        estimated: ''
+                                    },
+                                    {
+                                        recipient: headOfSection._id,
+                                        role: 'Head of Section',
+                                        status: 'pending',
+                                        comment: 'Leave request needs approval',
+                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                                        timestamp: ''
+                                    },
+                                    {
+                                        recipient: headOfDepartment._id,
+                                        role: 'Head of Department',
+                                        status: 'pending',
+                                        comment: 'Leave request needs approval',
+                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                                        timestamp: ''
+                                    },
+                                    {
+                                        recipient: depChiefExec._id,
+                                        role: 'Deputy Chief Executive Officer',
+                                        status: 'pending',
+                                        comment: 'Leave request needs approval',
+                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                        timestamp: ''
+                                    },
+                                    {
+                                        recipient: chiefExec._id,
+                                        role: 'Chief Executive Officer',
+                                        status: 'pending',
+                                        comment: 'Leave request needs approval',
+                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                        timestamp: ''
+                                    },
+                                    {
+                                        recipient: adminHR._id,
+                                        role: 'Human Resource',
+                                        status: 'pending',
+                                        comment: 'Leave request needs to be reviewed',
+                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                        timestamp: ''
+                                    },
+                                ]
+                            } else {
+                                approvals = [
+                                    {
+                                        recipient: user._id,
+                                        role: 'Staff',
+                                        status: 'submitted',
+                                        comment: 'Submitted leave request',
+                                        timestamp: new Date(),
+                                        estimated: ''
+                                    },
+                                    {
+                                        recipient: headOfDepartment._id,
+                                        role: 'Head of Department',
+                                        status: 'pending',
+                                        comment: 'Leave request needs approval',
+                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                                        timestamp: ''
+                                    },
+                                    {
+                                        recipient: depChiefExec._id,
+                                        role: 'Deputy Chief Executive Officer',
+                                        status: 'pending',
+                                        comment: 'Leave request needs approval',
+                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                        timestamp: ''
+                                    },
+                                    {
+                                        recipient: chiefExec._id,
+                                        role: 'Chief Executive Officer',
+                                        status: 'pending',
+                                        comment: 'Leave request needs approval',
+                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                        timestamp: ''
+                                    },
+                                    {
+                                        recipient: adminHR._id,
+                                        role: 'Human Resource',
+                                        status: 'pending',
+                                        comment: 'Leave request needs to be reviewed',
+                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                        timestamp: ''
+                                    },
+                                ]
+                            }
+                        } else if (user.isHeadOfSection === true) {
+                            approvals = [
+                                {
+                                    recipient: user._id,
+                                    role: 'Staff',
+                                    status: 'submitted',
+                                    comment: 'Submitted leave request',
+                                    timestamp: new Date(),
+                                    estimated: ''
+                                },
+                                {
+                                    recipient: headOfDepartment._id,
+                                    role: 'Head of Department',
+                                    status: 'pending',
+                                    comment: 'Leave request needs approval',
+                                    estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                                    timestamp: ''
+                                },
+                                {
+                                    recipient: depChiefExec._id,
+                                    role: 'Deputy Chief Executive Officer',
+                                    status: 'pending',
+                                    comment: 'Leave request needs approval',
+                                    estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                    timestamp: ''
+                                },
+                                {
+                                    recipient: chiefExec._id,
+                                    role: 'Chief Executive Officer',
+                                    status: 'pending',
+                                    comment: 'Leave request needs approval',
+                                    estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                    timestamp: ''
+                                },
+                                {
+                                    recipient: adminHR._id,
+                                    role: 'Human Resource',
+                                    status: 'pending',
+                                    comment: 'Leave request needs to be reviewed',
+                                    estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                    timestamp: ''
+                                },
+                            ]
+
+                        } else if (user.isHeadOfDepartment === true) {
+                            approvals = [
+                                {
+                                    recipient: user._id,
+                                    role: 'Staff',
+                                    status: 'submitted',
+                                    comment: 'Submitted leave request',
+                                    timestamp: new Date(),
+                                    estimated: ''
+                                },
+                                {
+                                    recipient: depChiefExec._id,
+                                    role: 'Deputy Chief Executive Officer',
+                                    status: 'pending',
+                                    comment: 'Leave request needs approval',
+                                    estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                    timestamp: ''
+                                },
+                                {
+                                    recipient: chiefExec._id,
+                                    role: 'Chief Executive Officer',
+                                    status: 'pending',
+                                    comment: 'Leave request needs approval',
+                                    estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                    timestamp: ''
+                                },
+                                {
+                                    recipient: adminHR._id,
+                                    role: 'Human Resource',
+                                    status: 'pending',
+                                    comment: 'Leave request needs to be reviewed',
+                                    estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                    timestamp: ''
+                                },
+                            ]
+                        } else {
+
+                            if (headOfSection) {
+                                approvals = [
+                                    {
+                                        recipient: user._id,
+                                        role: 'Staff',
+                                        status: 'submitted',
+                                        comment: 'Submitted leave request',
+                                        timestamp: new Date(),
+                                        estimated: ''
+                                    },
+                                    {
+                                        recipient: headOfSection._id,
+                                        role: 'Head of Section',
+                                        status: 'pending',
+                                        comment: 'Leave request needs approval',
+                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                                        timestamp: ''
+                                    },
+                                    {
+                                        recipient: headOfDepartment._id,
+                                        role: 'Head of Department',
+                                        status: 'pending',
+                                        comment: 'Leave request needs approval',
+                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                                        timestamp: ''
+                                    },
+                                    {
+                                        recipient: adminHR._id,
+                                        role: 'Human Resource',
+                                        status: 'pending',
+                                        comment: 'Leave request needs to be reviewed',
+                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                        timestamp: ''
+                                    },
+                                ]
+                            } else {
+                                approvals = [
+                                    {
+                                        recipient: user._id,
+                                        role: 'Staff',
+                                        status: 'submitted',
+                                        comment: 'Submitted leave request',
+                                        timestamp: new Date(),
+                                        estimated: ''
+                                    },
+                                    {
+                                        recipient: headOfDepartment._id,
+                                        role: 'Head of Department',
+                                        status: 'pending',
+                                        comment: 'Leave request needs approval',
+                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                                        timestamp: ''
+                                    },
+                                    {
+                                        recipient: adminHR._id,
+                                        role: 'Human Resource',
+                                        status: 'pending',
+                                        comment: 'Leave request needs to be reviewed',
+                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                                        timestamp: ''
+                                    },
+                                ]
+                            }
                         }
                     }
 
-                    approvals = [
-                        {
-                            recipient: user._id,
-                            status: 'submitted',
-                            comment: 'Submitted leave request',
-                            timestamp: new Date()
-                        },
-                        {
-                            recipient: headOfDepartment._id,
-                            status: 'pending',
-                            comment: 'Leave request needs approval',
-                            estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000)
-                        },
-                    ]
+                    if (approvals === '') {
+                        console.log("Leave balance not sufficient!");
+                    } else {
+                        // set user id to be send
+                        for (const approval of approvals) {
+                            const recipientId = approval.recipient;
+
+                            // Add the recipientId to the sendNoti array if not already present
+                            if (!sendNoti.includes(recipientId)) {
+                                sendNoti.push(recipientId);
+                            }
+
+                            // Fetch the user by recipient ID
+                            const email = await User.findById(recipientId);
+
+                            // Check if the user is found and has an email
+                            if (email && user.email) {
+                                // Add the user's email to sendEmail
+                                sendEmail.push(email.email);
+                            }
+                        }
+                    }
 
                     const leave = new Leave({
                         uuid: uuid,
@@ -665,64 +2553,61 @@ app
                     Leave.create(leave);
                     console.log('Leave submission has been completed');
 
-                    // add notifications from leave request
-                    const departmentHeads = await User.find({
-                        department: user.department,
-                        isHeadOfDepartment: true
-                    });
+                    // notifications save has been turn off
+                    if (sendNoti.length > 0) {
+                        for (const recipientId of sendNoti) {
+                            const newNotification = new Notification({
+                                sender: user._id,
+                                recipient: new mongoose.Types.ObjectId(recipientId),
+                                type: 'Leave',
+                                url: '/leave/details/' + uuid,
+                                message: 'Leave request needs approval.'
+                            });
 
-                    if (departmentHeads.length > 0) {
-                        const recipients = departmentHeads.map(head => head._id);
+                            // newNotification.save();
+                        }
 
-                        const newNotification = new Notification({
-                            sender: user._id,
-                            recipient: recipients,
-                            type: 'Leave',
-                            url: '/',
-                            message: 'Leave request needs approval.'
-                        });
-
-                        newNotification.save();
+                        console.log("Done send notifications!");
                     }
 
+                    // turn off the email notications
                     // send email to the recipient
-                    const emailRecipients = departmentHeads.map(head => head.email);
-                    let mailOptions = {
-                        from: 'shrrshazni@gmail.com',
-                        to: emailRecipients,
-                        subject: 'lakmnsportal - Approval Leave Request',
-                        html: `
-                          <html>
-                            <head>
-                              <style>
-                                body {
-                                  font-family: 'Arial', sans-serif;
-                                  background-color: #f4f4f4;
-                                  color: #333;
-                                }
-                                p {
-                                  margin-bottom: 20px;
-                                }
-                                a {
-                                  color: #3498db;
-                                }
-                              </style>
-                            </head>
-                            <body>
-                              <h1>Leave Request</h1>
-                              <p>${user.fullname} has requested ${type} from, ${startDate} until ${returnDate}</p>
-                              <p>Please do check your notification at <a href="http://localhost:5002/">lakmnsportal</a></p>
-                            </body>
-                          </html>
-                        `
-                    };
+                    // let mailOptions = {
+                    //     from: 'shrrshazni@gmail.com',
+                    //     to: sendEmail,
+                    //     subject: 'lakmnsportal - Approval Leave Request',
+                    //     html: `
+                    //       <html>
+                    //         <head>
+                    //           <style>
+                    //             body {
+                    //               font-family: 'Arial', sans-serif;
+                    //               background-color: #f4f4f4;
+                    //               color: #333;
+                    //             }
+                    //             p {
+                    //               margin-bottom: 20px;
+                    //             }
+                    //             a {
+                    //               color: #3498db;
+                    //             }
+                    //           </style>
+                    //         </head>
+                    //         <body>
+                    //           <h1>Leave Request</h1>
+                    //           <p>${user.fullname} has requested ${type} from, ${startDate} until ${returnDate}</p>
+                    //           <p>Please do check your notification at <a href="http://localhost:5002/">lakmnsportal</a></p>
+                    //         </body>
+                    //       </html>
+                    //     `
+                    // };
 
-                    transporter.sendMail(mailOptions, (error, info) => {
-                        if (error) {
-                            return console.log(error);
-                        }
-                        console.log('Message %s sent: %s', info.messageId, info.response);
-                    });
+                    // transporter.sendMail(mailOptions, (error, info) => {
+                    //     if (error) {
+                    //         return console.log(error);
+                    //     }
+                    //     console.log('Message %s sent: %s', info.messageId, info.response);
+                    // });
 
                     res.render('home', {
                         user: user,
@@ -789,11 +2674,13 @@ app.get('/leave/details/:uuid', async function (req, res) {
 
     if (user) {
         const leave = await Leave.findOne({ uuid: uuid });
+        const approvals = leave.approvals;
 
         res.render('leave-details', {
             user: user,
             notifications: notifications,
-            leave: leave
+            leave: leave,
+            approvals: approvals
         });
     }
 });
