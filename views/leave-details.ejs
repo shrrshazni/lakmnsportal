@@ -49,20 +49,21 @@
   </ol>
 </nav>
 
-<div class="row d-flex flex-wrap justify-content-between align-items-end mb-3">
+<div class="row d-flex flex-wrap justify-content-between align-items-end mb-2">
   <div class="col-auto">
-    <h2>Request #<%= user.username %></h2>
-    <p class="text-body-secondary mb-0">Leave request on <br class="d-sm-none"><span class="ms-sm-1"><%= formatCustomDate(leave.timestamp) %></span> <span class="badge badge-phoenix badge-phoenix-primary fs-10"><%= leave.status %></span></p>
+    <h2>Request #<%= user.username %> Status (<span><%= leave.status %></span>)</h2>
+    <p class="text-body-secondary mb-0">Leave request on <br class="d-sm-none"><span class="ms-sm-1"><%= formatCustomDate(leave.timestamp) %></span></p>
   </div>
 
   <div class="col-auto">
-    <div class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#leaveApproval">Approve</div>
+    <div class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#leaveApproval">Approve</div>
+    <div class="btn btn-outline-danger me-2" data-bs-toggle="modal" data-bs-target="#leaveApproval">Deny</div>
   </div>
 </div>
 
-<div class="row gy-9 gx-5">
+<div class="row gy-5 gx-5 mb-3">
   <div class="col-12 col-lg-6">
-    <div class="border rounded-3 overflow-hidden">
+    <div class="border rounded-3 overflow-hidden h-100">
       <div class="min-vh-50 p-3">
       </div>
     </div>
@@ -127,12 +128,12 @@
         }
       %>
       <div class="timeline-item">
-        <div class="row g-md-3 align-items-center mb-8 mb-lg-10">
+        <div class="row g-md-3 align-items-center mb-3 mb-lg-10">
           <div class="col-12 col-md-auto d-flex">
-            <div class="timeline-item-date text-end order-1 order-md-0 me-md-4">
+            <div class="timeline-item-date text-end order-1 order-md-0 me-md-4 mt-md-0 mt-1">
               <p class="fs-10 fw-semibold text-body-tertiary mb-0"><%= date %><br class="d-none d-md-block"> <%= time %></p>
             </div>
-            <div class="timeline-item-bar position-relative me-3 me-md-0">
+            <div class="timeline-item-bar position-relative me-3 me-md-0 mb-md-0 mb-md-3 mb-3">
               <div class="icon-item icon-item-sm bg-<%= colour %>" data-bs-theme="light"><span class="<%= icon %> text-white fs-10"></span></div><span class="timeline-bar border-end border-<%= border %> <%= display %>"></span>
             </div>
           </div>
@@ -152,8 +153,39 @@
   </div>
 </div>
 
-<div class="mb-6">
+<%
+function formatDate(timestamp) {
+  const dateObject = new Date(timestamp);
+  return dateObject.toLocaleDateString('en-UK', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    timeZone: 'Asia/Kuala_Lumpur' 
+  });
+}
+%>
 
+<div class="row mb-6 min-vh-50 bg-dark-subtle">
+
+  <div class="col-12 col-lg-6 p-5">
+    <div class="container border-start-0 border-bottom border-top-0 border-end-0 border-end-md border-md-0 border-dashed h-100 overflow-y-auto scrollbar-overlay">
+      <h3 class="mb-3">Upcoming Leaves</h3>
+
+      <% upcomingLeaves.forEach(upcomingLeave => { %>
+      <p><strong><%= upcomingLeave.fullname %></strong>: <%= formatDate(upcomingLeave.date.start) %> until <%= formatDate(upcomingLeave.date.return) %>, <%= upcomingLeave.status  %> </p>
+      <% }); %>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-6 p-5">
+    <div class="container h-100">
+      <h3 class="mb-3">Colleague Leaves</h3>
+
+      <% colleagueLeaves.forEach(colleagueLeave => { %>
+      <p><strong><%= colleagueLeave.fullname %></strong>: <%= formatDate(colleagueLeave.date.start) %> until <%= formatDate(colleagueLeave.date.return) %>, <%= colleagueLeave.status %> </p>
+      <% }); %>
+    </div>
+  </div>
 </div>
 
 
