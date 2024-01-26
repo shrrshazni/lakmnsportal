@@ -559,8 +559,6 @@ app
             read: false
         }).populate('sender');
 
-        console.log(notifications);
-
         if (user) {
             res.render('leave-request', {
                 user: user,
@@ -2726,8 +2724,6 @@ app.get('/leave/details/:uuid', isAuthenticated, async function (req, res) {
             'date.start': { $gte: currentDate }
         });
 
-        console.log(colleagueLeaves);
-
         res.render('leave-details', {
             user: user,
             notifications: notifications,
@@ -2748,134 +2744,229 @@ app.get('/leave/:approval/:uuid', async function (req, res) {
 
     if (user) {
         const checkLeave = await Leave.findOne({ uuid: uuid });
-        const currentDate = new Date();
-        const estimatedDate = new Date(checkLeave.estimated);
-        const timeDifference = estimatedDate.getTime() - currentDate.getTime();
-        const daysDifference = Math.ceil(timeDifference / (1000 * 3600 * 24));
+        // const currentDate = new Date();
+        // const estimatedDate = new Date(checkLeave.estimated);
+        // const timeDifference = estimatedDate.getTime() - currentDate.getTime();
+        // const daysDifference = Math.ceil(timeDifference / (1000 * 3600 * 24));
         const indexOfRecipient = checkLeave.approvals.findIndex(approval => approval.recipient.equals(user._id));
 
-        if (daysDifference <= 3) {
-            if (approval === 'approved') {
-                const leave = await Leave.findOneAndUpdate(
-                    {
-                        uuid: uuid,
-                        'approvals.recipient': user._id,
-                    },
-                    {
-                        $set: {
-                            'approvals.$.status': 'approved',
-                            'approvals.$.comment': 'The request have been approved',
-                            'approvals.$.timestamp': new Date()
-                        }
-                    },
-                    { new: true }
-                );
-
-                if (leave) {
-                    const nextIndex = indexOfRecipient + 1;
-                    const nextApprovalRecipientId = checkLeave.approvals[nextIndex].recipient;
-
-                    // send noti
-                    const newNotification = new Notification({
-                        sender: user._id,
-                        recipient: new mongoose.Types.ObjectId(nextApprovalRecipientId),
-                        type: 'Leave',
-                        url: '/leave/details/' + uuid,
-                        message: 'Previous approval has been submitted, please do check the leave request'
-                    });
-
-                    // newNotification.save();
-
-                    const nextApprovalRecipientEmail = await User.findOne({ _id: nextApprovalRecipientId });
-
-                    // turn off the email notications
-                    // send email to the recipient
-                    // let mailOptions = {
-                    //     from: 'shrrshazni@gmail.com',
-                    //     to: nextApprovalRecipientEmail,
-                    //     subject: 'lakmnsportal - Approval Leave Follow up',
-                    //     html: `
-                    //       <html>
-                    //         <head>
-                    //           <style>
-                    //             body {
-                    //               font-family: 'Arial', sans-serif;
-                    //               background-color: #f4f4f4;
-                    //               color: #333;
-                    //             }
-                    //             p {
-                    //               margin-bottom: 20px;
-                    //             }
-                    //             a {
-                    //               color: #3498db;
-                    //             }
-                    //           </style>
-                    //         </head>
-                    //         <body>
-                    //           <h1>Leave Request</h1>
-                    //           <p>${user.fullname} has take action of ${type} from, ${startDate} until ${returnDate}.</p>
-                    //           <p>Please do check the leave approval at <a href="http://localhost:5002/">lakmnsportal</a></p>
-                    //         </body>
-                    //       </html>
-                    //     `
-                    // };
-
-                    // transporter.sendMail(mailOptions, (error, info) => {
-                    //     if (error) {
-                    //         return console.log(error);
-                    //     }
-                    //     console.log('Message %s sent: %s', info.messageId, info.response);
-                    // });
-
-                    res.redirect('/leave/details/' + uuid);
-                }
-            } else if (approval === 'deny') {
-
-                const leave = await Leave.findOneAndUpdate(
-                    {
-                        uuid: uuid,
-                        'approvals.recipient': user._id,
-                    },
-                    {
-                        $set: {
-                            status: 'denied',
-                            'approvals.$.status': 'denied',
-                            'approvals.$.comment': 'The request have been denied',
-                            'approvals.$.timestamp': new Date()
-                        }
-                    },
-                    { new: true }
-                );
-
-                if (leave) {
-                    var sendNoti = [];
-                    var sendEmail = [];
-
-                    const recipientIds = checkLeave.approvals.map(approval => approval.recipient);
-                    sendNoti = recipientIds.filter(recipientId => !recipientId.equals(user._id));
-
-                    // notifications save has been turn off
-                    if (sendNoti.length > 0) {
-                        for (const recipientId of sendNoti) {
-                            const newNotification = new Notification({
-                                sender: user._id,
-                                recipient: new mongoose.Types.ObjectId(recipientId),
-                                type: 'Leave',
-                                url: '/leave/details/' + uuid,
-                                message: 'Leave request needs approval.'
-                            });
-
-                            // newNotification.save();
-                        }
-
-                        console.log('Done send notifications!');
+        if (approval === 'approved') {
+            const leave = await Leave.findOneAndUpdate(
+                {
+                    uuid: uuid,
+                    'approvals.recipient': user._id,
+                },
+                {
+                    $set: {
+                        'approvals.$.status': 'approved',
+                        'approvals.$.comment': 'The request have been approved',
+                        'approvals.$.timestamp': new Date()
                     }
-                }
-            }
-        } else {
+                },
+                { new: true }
+            );
 
+            if(user.isAdmin === true){
+
+            }
+
+            if (leave) {
+                const nextIndex = indexOfRecipient + 1;
+                const nextApprovalRecipientId = checkLeave.approvals[nextIndex].recipient;
+
+                // send noti
+                const newNotification = new Notification({
+                    sender: user._id,
+                    recipient: new mongoose.Types.ObjectId(nextApprovalRecipientId),
+                    type: 'Leave',
+                    url: '/leave/details/' + uuid,
+                    message: 'Previous approval has been submitted, please do check the leave request'
+                });
+
+                // newNotification.save();
+
+                const nextApprovalRecipientEmail = await User.findOne({ _id: nextApprovalRecipientId });
+
+                // turn off the email notications
+                // send email to the recipient
+                // let mailOptions = {
+                //     from: 'shrrshazni@gmail.com',
+                //     to: nextApprovalRecipientEmail,
+                //     subject: 'lakmnsportal - Approval Leave Follow up',
+                //     html: `
+                //       <html>
+                //         <head>
+                //           <style>
+                //             body {
+                //               font-family: 'Arial', sans-serif;
+                //               background-color: #f4f4f4;
+                //               color: #333;
+                //             }
+                //             p {
+                //               margin-bottom: 20px;
+                //             }
+                //             a {
+                //               color: #3498db;
+                //             }
+                //           </style>
+                //         </head>
+                //         <body>
+                //           <h1>Leave Request</h1>
+                //           <p>${user.fullname} has take action of ${type} from, ${startDate} until ${returnDate}.</p>
+                //           <p>Please do check the leave approval at <a href="http://localhost:5002/">lakmnsportal</a></p>
+                //         </body>
+                //       </html>
+                //     `
+                // };
+
+                // transporter.sendMail(mailOptions, (error, info) => {
+                //     if (error) {
+                //         return console.log(error);
+                //     }
+                //     console.log('Message %s sent: %s', info.messageId, info.response);
+                // });
+
+                res.redirect('/leave/details/' + uuid);
+            }
+        } else if (approval === 'denied') {
+
+            const leave = await Leave.findOneAndUpdate(
+                {
+                    uuid: uuid,
+                    'approvals.recipient': user._id,
+                },
+                {
+                    $set: {
+                        status: 'denied',
+                        'approvals.$.status': 'denied',
+                        'approvals.$.comment': 'The request have been denied',
+                        'approvals.$.timestamp': new Date()
+                    }
+                },
+                { new: true }
+            );
+
+            if (leave) {
+                var sendNoti = [];
+                var sendEmail = [];
+
+                const recipientIds = checkLeave.approvals.map(approval => approval.recipient);
+                sendNoti = recipientIds.filter(recipientId => !recipientId.equals(user._id));
+
+                // // notifications save has been turn off
+                // if (sendNoti.length > 0) {
+                //     for (const recipientId of sendNoti) {
+                //         const newNotification = new Notification({
+                //             sender: user._id,
+                //             recipient: new mongoose.Types.ObjectId(recipientId),
+                //             type: 'Leave',
+                //             url: '/leave/details/' + uuid,
+                //             message: 'Leave request needs approval.'
+                //         });
+
+                //         // newNotification.save();
+                //     }
+
+                //     console.log('Done send notifications!');
+                // }
+
+                const users = await User.find({ _id: { $in: sendNoti } });
+                sendEmail = users.map(user => user.email);
+                console.log(sendEmail);
+
+                // turn off the email notications
+                // send email to the recipient
+                // let mailOptions = {
+                //     from: 'shrrshazni@gmail.com',
+                //     to: sendEmail,
+                //     subject: 'lakmnsportal - Approval Leave Request',
+                //     html: `
+                //       <html>
+                //         <head>
+                //           <style>
+                //             body {
+                //               font-family: 'Arial', sans-serif;
+                //               background-color: #f4f4f4;
+                //               color: #333;
+                //             }
+                //             p {
+                //               margin-bottom: 20px;
+                //             }
+                //             a {
+                //               color: #3498db;
+                //             }
+                //           </style>
+                //         </head>
+                //         <body>
+                //           <h1>Leave Request</h1>
+                //           <p>${user.fullname} has requested ${type} from, ${startDate} until ${returnDate}</p>
+                //           <p>Please do check your notification at <a href="http://localhost:5002/">lakmnsportal</a></p>
+                //         </body>
+                //       </html>
+                //     `
+                // };
+
+                // transporter.sendMail(mailOptions, (error, info) => {
+                //     if (error) {
+                //         return console.log(error);
+                //     }
+                //     console.log('Message %s sent: %s', info.messageId, info.response);
+                // });
+            }
         }
     }
+});
+
+// SCHEDULER
+cron.schedule('0 0 * * *', async () => {
+    // Find leave records with date.start timestamp less than or equal to 3 days from now
+    const currentDate = new Date();
+    const invalidLeaves = await Leave.find({
+        estimated: { $gte: currentDate.setDate(currentDate.getDate() + 3) },
+        $or: [{ status: 'pending' }, { status: 'submitted' }]
+    });
+
+    const adminHR = await User.findOne({ isAdmin: true });
+    const depChiefExec = await User.findOne({ isDeputyChiefExec: true });
+
+    // Update the status of invalid leaves
+    for (const leave of invalidLeaves) {
+        leave.status = 'invalid';
+        leave.approvals = leave.approvals.filter(approval => approval.role === 'Staff');
+
+        leave.approvals.push({
+            recipient: depChiefExec._id,
+            role: 'Deputy Chief Executive Officer',
+            status: 'pending',
+            comment: 'Leave request needs approval',
+            estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+            timestamp: ''
+        }, {
+            recipient: adminHR._id,
+            role: 'Human Resource',
+            status: 'pending',
+            comment: 'Leave request needs approval',
+            estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+            timestamp: ''
+        });
+
+        await leave.save();
+    }
+
+    const pendingLeaves = await Leave.find({
+        estimated: { $lte: currentDate.setDate(currentDate.getDate() + 3) }, status: 'submitted'
+    });
+
+    // Update the status of pending leaves
+    for (const pending of pendingLeaves) {
+        pending.status = 'invalid';
+        await pending.save();
+    }
+
+    console.log('Invalid leaves updated:', invalidLeaves.length);
+}, {
+    scheduled: true,
+    timezone: 'Asia/Kuala_Lumpur' // Adjust timezone accordingly
 });
 
 // NOTIFICATIONS

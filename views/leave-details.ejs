@@ -57,7 +57,7 @@
 
   <div class="col-auto">
     <a class="btn btn-primary me-2" role="button" href="/leave/approved/<%= leave.uuid %>">Approve</a>
-    <div class="btn btn-outline-danger me-2" data-bs-toggle="modal" data-bs-target="#leaveApproval">Deny</div>
+    <a class="btn btn-outline-danger me-2" role="button" href="/leave/denied/<%= leave.uuid %>">Deny</a>
   </div>
 </div>
 
