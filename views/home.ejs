@@ -1,18 +1,1835 @@
 <%- include('partials/private-header.ejs') %>
 
-<div class="px-3">
-  <div class="row min-vh-100 flex-center p-5">
-    <div class="col-12 col-xl-10 col-xxl-8">
-      <div class="row justify-content-center align-items-center g-5">
-        <div class="col-12 col-lg-6 text-center order-lg-1"><img class="img-fluid w-lg-100 d-dark-none" src="../../assets/img/spot-illustrations/404-illustration.png" alt="" width="400" /><img class="img-fluid w-md-50 w-lg-100 d-light-none" src="../../assets/img/spot-illustrations/dark_404-illustration.png" alt="" width="540" /></div>
-        <div class="col-12 col-lg-6 text-center text-lg-start"><img class="img-fluid mb-6 w-50 w-lg-75 d-dark-none" src="../../assets/img/spot-illustrations/404.png" alt="" /><img class="img-fluid mb-6 w-50 w-lg-75 d-light-none" src="../../assets/img/spot-illustrations/dark_404.png" alt="" />
-          <h2 class="text-body-secondary fw-bolder mb-3">Page Missing!</h2>
-          <p class="text-body mb-5">But no worries! Our ostrich is looking everywhere <br class="d-none d-sm-block" />while you wait safely. </p><a class="btn btn-lg btn-primary" href="/">Go Home</a>
+<% 
+//  if(allUser.length = 0 ){
+//     var allUser = '';
+//  }
+
+//  if(allUserLeave.length = 0 ){
+//     var allUserLeave = '';
+//  }
+
+//  if(allLeave.length = 0 ){
+//     var allLeave = '';
+//  }
+
+%>
+
+<div class="mb-3">
+  <div class="card px-2 py-1" id="closableCard">
+    <div class="card-header d-flex justify-content-between border-bottom-0">
+      <h3 class="mb-0">Announcements</h3>
+      <button type="button" class="btn-close" aria-label="Close" onclick="closeCard()"></button>
+    </div>
+
+    <hr class="mt-n1">
+
+    <style>
+      #typing-container {
+        overflow: hidden;
+        position: relative;
+      }
+
+      .card-text {
+        display: inline-block;
+      }
+
+      #cursor {
+        display: inline-block;
+        margin-left: 3px;
+        /* Adjust the cursor position */
+      }
+
+      .blink {
+        animation: blink-animation 1s steps(1, start) infinite;
+      }
+
+      @keyframes blink-animation {
+        to {
+          visibility: hidden;
+        }
+      }
+    </style>
+
+    <div class="card-body text-center" id="typing-container">
+      <p class="card-text fs-7 fw-semibold" id="typing-text"></p><span id="cursor" class="fs-7">|</span>
+    </div>
+  </div>
+
+  <script>
+    function closeCard() {
+      const closableCard = document.getElementById('closableCard');
+      closableCard.style.display = 'none';
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+      const textElement = document.getElementById("typing-text");
+      const cursorElement = document.getElementById("cursor");
+      const text = "Upcoming lakmnsportal app launches are imminent, with anticipated releases scheduled in the near future, bringing exciting new features and experiences.";
+
+      let charIndex = 0;
+
+      function type() {
+        if (charIndex <= text.length) {
+          textElement.innerHTML = text.substring(0, charIndex);
+          charIndex++;
+          setTimeout(type, 60); // Adjust the typing speed here
+        }
+      }
+
+      function blinkCursor() {
+        cursorElement.classList.toggle("blink");
+        setTimeout(blinkCursor, 500); // Adjust the blinking speed here
+      }
+
+      type();
+      blinkCursor();
+    });
+  </script>
+</div>
+
+<div class="mb-6">
+  <div class="row g-4">
+    <div class="mb-0">
+      <h2 class="mb-2">Dashboard</h2>
+      <h5 class="text-body-tertiary fw-semibold">Here’s what’s going on at your portal right now</h5>
+    </div>
+  </div>
+</div>
+
+<div class="row mb-3 gy-6 mb-6">
+  <div class="col-12 col-xxl-2">
+    <div class="row align-items-center g-3 g-xxl-0 h-100 align-content-between">
+      <div class="col-12 col-sm-6 col-md-3 col-lg-6 col-xl-3 col-xxl-12">
+        <div class="d-flex align-items-center"><span class="fs-4 lh-1 uil uil-books text-primary-dark"></span>
+          <div class="ms-2">
+            <div class="d-flex align-items-end">
+              <h2 class="mb-0 me-2">18</h2><span class="fs-7 fw-semibold text-body">Submitted</span>
+            </div>
+            <p class="text-body-secondary fs-9 mb-0">Soon to be cleared</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-sm-6 col-md-3 col-lg-6 col-xl-3 col-xxl-12">
+        <div class="d-flex align-items-center"><span class="fs-4 lh-1 uil uil-users-alt text-success-dark"></span>
+          <div class="ms-2">
+            <div class="d-flex align-items-end">
+              <h2 class="mb-0 me-2">7</h2><span class="fs-7 fw-semibold text-body">Approved</span>
+            </div>
+            <p class="text-body-secondary fs-9 mb-0">Awaiting return</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-sm-6 col-md-3 col-lg-6 col-xl-3 col-xxl-12">
+        <div class="d-flex align-items-center"><span class="fs-4 lh-1 uil uil-invoice text-warning-dark"></span>
+          <div class="ms-2">
+            <div class="d-flex align-items-end">
+              <h2 class="mb-0 me-2">8</h2><span class="fs-7 fw-semibold text-body">Denied</span>
+            </div>
+            <p class="text-body-secondary fs-9 mb-0">Working hard</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-sm-6 col-md-3 col-lg-6 col-xl-3 col-xxl-12">
+        <div class="d-flex align-items-center"><span class="fs-4 lh-1 uil uil-refresh text-danger-dark"></span>
+          <div class="ms-2">
+            <div class="d-flex align-items-end">
+              <h2 class="mb-0 me-2">3</h2><span class="fs-7 fw-semibold text-body">Pending</span>
+            </div>
+            <p class="text-body-secondary fs-9 mb-0">Awating processing</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-xl-6 col-xxl-5">
+    <div class="mx-xxl-0">
+      <h3>Leave Balances</h3>
+      <p class="text-body-tertiary">Remaining available days off</p>
+      <div class="">
+        <div class="row g-2 flex-between-center mb-0">
+          <div class="col-12 col-sm-12">
+            <% if (userLeave) { %>
+            <ul class="list-group">
+              <% const leaveTypes = ['annual', 'sick', 'emergency', 'paternity', 'marriage', 'bereavement', 'hajj']; %>
+              <% leaveTypes.forEach(type => { %>
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                <%= type.charAt(0).toUpperCase() + type.slice(1) %>
+                <span class="badge bg-secondary"><%= userLeave[type] %></span>
+              </li>
+              <% }); %>
+            </ul>
+            <% }%>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-xl-6 col-xxl-5">
+    <div class="card border h-100 w-100 overflow-hidden">
+      <div class="bg-holder d-block bg-card" style="background-image:url(../assets/img/spot-illustrations/32.png);background-position: top right;">
+      </div>
+      <!--/.bg-holder-->
+
+      <div class="d-dark-none">
+        <div class="bg-holder d-none d-sm-block d-xl-none d-xxl-block bg-card" style="background-image:url(../assets/img/spot-illustrations/21.png);background-position: bottom right; background-size: auto;">
+        </div>
+        <!--/.bg-holder-->
+
+      </div>
+      <div class="d-light-none">
+        <div class="bg-holder d-none d-sm-block d-xl-none d-xxl-block bg-card" style="background-image:url(../assets/img/spot-illustrations/dark_21.png);background-position: bottom right; background-size: auto;">
+        </div>
+        <!--/.bg-holder-->
+
+      </div>
+      <div class="card-body px-5 position-relative">
+        <div class="badge badge-phoenix fs-10 badge-phoenix-warning mb-4"><span class="fw-bold">Coming soon</span><span class="fa-solid fa-award ms-1"></span></div>
+        <h3 class="mb-5">Feathered friends and their tales!</h3>
+        <p class="text-body-tertiary fw-semibold">LAKMNS PORTAL is coming <br class="d-none d-sm-block" />soon for fulfilling your every <br class="d-none d-sm-block" />needs. </p>
+      </div>
+      <div class="card-footer border-0 py-0 px-5 z-1">
+        <p class="text-body-tertiary fw-semibold">Follow <a href="https://lakmns.org.com/">LAKMNS </a>at <br class="d-none d-xxl-block" />for any updates from us.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis pt-7 pb-3 border-y mb-6">
+  <div class="row">
+    <div class="col-12 col-xl-7 col-xxl-6 mb-6">
+      <div id="leaveHistory" data-list='{"valueNames":["type","startdate","returndate","status"],"page":6,"pagination":true}'>
+        <div class="row g-3 justify-content-between align-items-end mb-4">
+          <div class="col-auto">
+            <h3>Current Leaves</h3>
+            <p class="text-body-tertiary lh-sm mb-0">Presently approved time off granted</p>
+          </div>
+          <div class="col-12 col-sm-auto">
+            <div class="d-flex align-items-center">
+              <div class="search-box me-0">
+                <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
+                  <input class="form-control search-input search" type="search" placeholder="Search" aria-label="Search" />
+                  <span class="fas fa-search search-box-icon"></span>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="table-responsive scrollbar">
+          <table class="table fs--1 mb-0 border-top border-200">
+            <thead>
+              <tr>
+                <th class="sort white-space-nowrap align-middle ps-0" scope="col" data-sort="type" style="width: 15%">
+                  TYPE
+                </th>
+                <th class="sort align-middle ps-3" scope="col" data-sort="startdate" style="width: 15%">
+                  START DATE
+                </th>
+                <th class="sort align-middle ps-3" scope="col" data-sort="returndate" style="width: 15%">
+                  RETURN DATE
+                </th>
+                <th class="sort align-middle text-end" scope="col" data-sort="status" style="width: 10%">
+                  STATUS
+                </th>
+                <th class="sort align-middle text-end" scope="col" style="width: 10%"></th>
+              </tr>
+            </thead>
+
+            <% 
+                  function formatDate(inputDate) {
+                    const day = String(inputDate.getDate()).padStart(2, '0');
+                    const month = String(inputDate.getMonth() + 1).padStart(2, '0');
+                    const year = inputDate.getFullYear();
+                  
+                    return `${day}/${month}/${year}`;
+                  }
+                  %>
+
+            <!-- table content -->
+            <tbody class="list" id="project-list-table-body">
+              <% if (leave && Array.isArray(leave)) { %>
+              <!-- table item -->
+              <% leave.forEach(function(leaves) { %>
+              <tr class="position-static">
+                <td class="align-middle time white-space-nowrap ps-0 type py-4">
+                  <a class="fw-bold fs-0" href="/leave/details/<%= leaves.uuid %>"><%= leaves.type %></a>
+                </td>
+                <td class="align-middle white-space-nowrap startdate ps-3 py-4">
+                  <p class="mb-0 fs--1 text-900"><%= formatDate(leaves.date.start) %></p>
+                </td>
+                <td class="align-middle white-space-nowrap returndate ps-3 py-4">
+                  <p class="mb-0 fs--1 text-900"><%= formatDate(leaves.date.return) %></p>
+                </td>
+                <td class="align-middle white-space-nowrap text-end status">
+                  <span class="badge badge-phoenix fs--2 badge-phoenix-success"><%= leaves.status %></span>
+                </td>
+                <td class="align-middle text-end white-space-nowrap pe-0 action">
+                  <div class="font-sans-serif btn-reveal-trigger position-static">
+                    <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs--2" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
+                      <span class="fas fa-ellipsis-h fs--2"></span>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end py-2">
+                      <a class="dropdown-item" href="/leave/details/<%= leaves.uuid %>">View</a>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+              <%  }); %> <% } else { %>
+              <tr>
+                <td colspan="7">No leaves submitted.</td>
+              </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+        <div class="d-flex flex-wrap align-items-center justify-content-between py-3 pe-0 fs--1 border-bottom border-200">
+          <div class="d-flex">
+            <p class="mb-0 d-none d-sm-block me-3 fw-semi-bold text-900" data-list-info="data-list-info"></p>
+            <a class="fw-semi-bold" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semi-bold d-none" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
+          </div>
+          <div class="d-flex">
+            <button class="page-link" data-list-pagination="prev">
+              <span class="fas fa-chevron-left"></span>
+            </button>
+            <ul class="mb-0 pagination"></ul>
+            <button class="page-link pe-0" data-list-pagination="next">
+              <span class="fas fa-chevron-right"></span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-xl-5 col-xxl-6">
+      <div class="h-100 mb-3">
+        <div class="mb-1">
+          <h3 class="text-body-emphasis">Activity</h3>
+        </div>
+        <p class="text-body-tertiary mb-4">Department's recent leave activity</p>
+        <div class="timeline-vertical timeline-with-details">
+          <div class="timeline-item position-relative">
+            <div class="row g-md-3">
+              <div class="col-12 col-md-auto d-flex">
+                <div class="timeline-item-date order-1 order-md-0 me-md-4">
+                  <p class="fs-10 fw-semibold text-body-tertiary text-opacity-85 text-end">01 DEC, 2023<br class="d-none d-md-block" /> 10:30 AM</p>
+                </div>
+                <div class="timeline-item-bar position-md-relative me-3 me-md-0">
+                  <div class="icon-item icon-item-sm rounded-7 shadow-none bg-primary-subtle"><span class="fa-solid fa-chess text-primary-dark fs-10"></span></div><span class="timeline-bar border-end border-dashed"></span>
+                </div>
+              </div>
+              <div class="col">
+                <div class="timeline-item-content ps-6 ps-md-3">
+                  <h5 class="fs-9 lh-sm">Annual Leave</h5>
+                  <p class="fs-9">by <a class="fw-semibold" href="#!">Shantinon Mekalan</a></p>
+                  <p class="fs-9 text-body-secondary mb-5">The user requested leave, specifying the duration and reason, which was subsequently reviewed and approved, marking an authorized absence period.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="timeline-item position-relative">
+            <div class="row g-md-3">
+              <div class="col-12 col-md-auto d-flex">
+                <div class="timeline-item-date order-1 order-md-0 me-md-4">
+                  <p class="fs-10 fw-semibold text-body-tertiary text-opacity-85 text-end">03 JAN, 2023<br class="d-none d-md-block" /> 12:45 PM</p>
+                </div>
+                <div class="timeline-item-bar position-md-relative me-3 me-md-0">
+                  <div class="icon-item icon-item-sm rounded-7 shadow-none bg-primary-subtle"><span class="fa-solid fa-dove text-primary-dark fs-10"></span></div><span class="timeline-bar border-end border-dashed"></span>
+                </div>
+              </div>
+              <div class="col">
+                <div class="timeline-item-content ps-6 ps-md-3">
+                  <h5 class="fs-9 lh-sm">Sick Leave</h5>
+                  <p class="fs-9">by <a class="fw-semibold" href="#!">Bookworm22</a></p>
+                  <p class="fs-9 text-body-secondary mb-5">Employee submitted sick leave request, providing details on illness. After review, the leave was approved, allowing time off for recovery</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="timeline-item position-relative">
+            <div class="row g-md-3">
+              <div class="col-12 col-md-auto d-flex">
+                <div class="timeline-item-date order-1 order-md-0 me-md-4">
+                  <p class="fs-10 fw-semibold text-body-tertiary text-opacity-85 text-end">15 DEC, 2023<br class="d-none d-md-block" /> 2:30 AM</p>
+                </div>
+                <div class="timeline-item-bar position-md-relative me-3 me-md-0">
+                  <div class="icon-item icon-item-sm rounded-7 shadow-none bg-primary-subtle"><span class="fa-solid fa-dungeon text-primary-dark fs-10"></span></div>
+                </div>
+              </div>
+              <div class="col">
+                <div class="timeline-item-content ps-6 ps-md-3">
+                  <h5 class="fs-9 lh-sm">Hajj Leave</h5>
+                  <p class="fs-9">by <a class="fw-semibold" href="#!">Sharuka Nijibum</a></p>
+                  <p class="fs-9 text-body-secondary mb-0">Employee requested Hajj leave for 40 days, citing religious pilgrimage. The request was reviewed and approved, allowing dedicated time off</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </div>
+
+<!-- <div class="mx-lg-n4 mt-3">
+  <div class="row g-3">
+    <div class="col-12 col-xl-6 col-xxl-7">
+      <div class="card todo-list h-100">
+        <div class="card-header border-bottom-0 pb-0">
+          <div class="row justify-content-between align-items-center mb-4">
+            <div class="col-auto">
+              <h3 class="text-body-emphasis">To do</h3>
+              <p class="mb-0 text-body-tertiary">Task assigned to me</p>
+            </div>
+            <div class="col-auto w-100 w-md-auto">
+              <div class="row align-items-center g-0 justify-content-between">
+                <div class="col-12 col-sm-auto">
+                  <div class="search-box w-100 mb-2 mb-sm-0" style="max-width:30rem;">
+                    <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
+                      <input class="form-control search-input search" type="search" placeholder="Search tasks" aria-label="Search" />
+                      <span class="fas fa-search search-box-icon"></span>
+
+                    </form>
+                  </div>
+                </div>
+                <div class="col-auto d-flex">
+                  <p class="mb-0 ms-sm-3 fs-9 text-body-tertiary fw-bold"><span class="fas fa-filter me-1 fw-extra-bold fs-10"></span>23 tasks</p>
+                  <button class="btn btn-link p-0 ms-3 fs-9 text-primary fw-bold"><span class="fas fa-sort me-1 fw-extra-bold fs-10"></span>Sorting</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-body py-0 scrollbar to-do-list-body">
+          <div class="d-flex hover-actions-trigger py-3 border-top">
+            <input class="form-check-input form-check-input-todolist flex-shrink-0 my-1 me-2 form-check-input-undefined" type="checkbox" id="checkbox-todo-0" data-event-propagation-prevent="data-event-propagation-prevent" />
+            <div class="row justify-content-between align-items-md-center btn-reveal-trigger border-translucent gx-0 flex-1 cursor-pointer" data-bs-toggle="modal" data-bs-target="#exampleModal">
+              <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
+                <div class="mb-1 mb-md-0 d-flex align-items-center lh-1">
+                  <label class="form-check-label mb-1 mb-md-0 mb-xl-1 mb-xxl-0 fs-8 me-2 line-clamp-1 text-body cursor-pointer">Designing the dungeon</label><span class="badge badge-phoenix ms-auto fs-10 badge-phoenix-primary">DRAFT</span>
+                </div>
+              </div>
+              <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
+                <div class="d-flex lh-1 align-items-center"><a class="text-body-tertiary fw-bold fs-10 me-2" href="#!"><span class="fas fa-paperclip me-1"></span>2</a>
+                  <p class="text-body-tertiary fs-10 mb-md-0 me-2 me-md-3 me-xl-2 me-xxl-3 mb-0">12 Nov, 2021</p>
+                  <div class="hover-md-hide hover-xl-show hover-xxl-hide">
+                    <p class="text-body-tertiary fs-10 fw-bold mb-md-0 mb-0 ps-md-3 ps-xl-0 ps-xxl-3 border-start-md border-xl-0 border-start-xxl">12:00 PM</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="d-none d-md-block d-xl-none d-xxl-block end-0 position-absolute" style="top: 23%;" data-event-propagation-prevent="data-event-propagation-prevent">
+              <div class="hover-actions end-0" data-event-propagation-prevent="data-event-propagation-prevent">
+                <button class="btn btn-phoenix-secondary btn-icon me-1 fs-10 text-body px-0 me-1" data-event-propagation-prevent="data-event-propagation-prevent"><span class="fas fa-edit"></span></button>
+                <button class="btn btn-phoenix-secondary btn-icon fs-10 text-danger px-0" data-event-propagation-prevent="data-event-propagation-prevent"><span class="fas fa-trash"></span></button>
+              </div>
+            </div>
+          </div>
+          <div class="d-flex hover-actions-trigger py-3 border-top">
+            <input class="form-check-input form-check-input-todolist flex-shrink-0 my-1 me-2 form-check-input-undefined" type="checkbox" id="checkbox-todo-1" data-event-propagation-prevent="data-event-propagation-prevent" />
+            <div class="row justify-content-between align-items-md-center btn-reveal-trigger border-translucent gx-0 flex-1 cursor-pointer" data-bs-toggle="modal" data-bs-target="#exampleModal">
+              <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
+                <div class="mb-1 mb-md-0 d-flex align-items-center lh-1">
+                  <label class="form-check-label mb-1 mb-md-0 mb-xl-1 mb-xxl-0 fs-8 me-2 line-clamp-1 text-body cursor-pointer">Hiring a motion graphic designer</label><span class="badge badge-phoenix ms-auto fs-10 badge-phoenix-warning">URGENT</span>
+                </div>
+              </div>
+              <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
+                <div class="d-flex lh-1 align-items-center"><a class="text-body-tertiary fw-bold fs-10 me-2" href="#!"><span class="fas fa-paperclip me-1"></span>2</a><a class="text-warning fw-bold fs-10 me-2" href="#!"><span class="fas fa-tasks me-1"></span>3</a>
+                  <p class="text-body-tertiary fs-10 mb-md-0 me-2 me-md-3 me-xl-2 me-xxl-3 mb-0">12 Nov, 2021</p>
+                  <div class="hover-md-hide hover-xl-show hover-xxl-hide">
+                    <p class="text-body-tertiary fs-10 fw-bold mb-md-0 mb-0 ps-md-3 ps-xl-0 ps-xxl-3 border-start-md border-xl-0 border-start-xxl">12:00 PM</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="d-none d-md-block d-xl-none d-xxl-block end-0 position-absolute" style="top: 23%;" data-event-propagation-prevent="data-event-propagation-prevent">
+              <div class="hover-actions end-0" data-event-propagation-prevent="data-event-propagation-prevent">
+                <button class="btn btn-phoenix-secondary btn-icon me-1 fs-10 text-body px-0 me-1" data-event-propagation-prevent="data-event-propagation-prevent"><span class="fas fa-edit"></span></button>
+                <button class="btn btn-phoenix-secondary btn-icon fs-10 text-danger px-0" data-event-propagation-prevent="data-event-propagation-prevent"><span class="fas fa-trash"></span></button>
+              </div>
+            </div>
+          </div>
+          <div class="d-flex hover-actions-trigger py-3 border-top">
+            <input class="form-check-input form-check-input-todolist flex-shrink-0 my-1 me-2 form-check-input-undefined" type="checkbox" id="checkbox-todo-2" data-event-propagation-prevent="data-event-propagation-prevent" />
+            <div class="row justify-content-between align-items-md-center btn-reveal-trigger border-translucent gx-0 flex-1 cursor-pointer" data-bs-toggle="modal" data-bs-target="#exampleModal">
+              <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
+                <div class="mb-1 mb-md-0 d-flex align-items-center lh-1">
+                  <label class="form-check-label mb-1 mb-md-0 mb-xl-1 mb-xxl-0 fs-8 me-2 line-clamp-1 text-body cursor-pointer">Daily Meetings Purpose, participants</label><span class="badge badge-phoenix ms-auto fs-10 badge-phoenix-info">ON PROCESS</span>
+                </div>
+              </div>
+              <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
+                <div class="d-flex lh-1 align-items-center"><a class="text-body-tertiary fw-bold fs-10 me-2" href="#!"><span class="fas fa-paperclip me-1"></span>4</a>
+                  <p class="text-body-tertiary fs-10 mb-md-0 me-2 me-md-3 me-xl-2 me-xxl-3 mb-0">12 Dec, 2021</p>
+                  <div class="hover-md-hide hover-xl-show hover-xxl-hide">
+                    <p class="text-body-tertiary fs-10 fw-bold mb-md-0 mb-0 ps-md-3 ps-xl-0 ps-xxl-3 border-start-md border-xl-0 border-start-xxl">05:00 AM</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="d-none d-md-block d-xl-none d-xxl-block end-0 position-absolute" style="top: 23%;" data-event-propagation-prevent="data-event-propagation-prevent">
+              <div class="hover-actions end-0" data-event-propagation-prevent="data-event-propagation-prevent">
+                <button class="btn btn-phoenix-secondary btn-icon me-1 fs-10 text-body px-0 me-1" data-event-propagation-prevent="data-event-propagation-prevent"><span class="fas fa-edit"></span></button>
+                <button class="btn btn-phoenix-secondary btn-icon fs-10 text-danger px-0" data-event-propagation-prevent="data-event-propagation-prevent"><span class="fas fa-trash"></span></button>
+              </div>
+            </div>
+          </div>
+          <div class="d-flex hover-actions-trigger py-3 border-top">
+            <input class="form-check-input form-check-input-todolist flex-shrink-0 my-1 me-2 form-check-input-undefined" type="checkbox" id="checkbox-todo-3" data-event-propagation-prevent="data-event-propagation-prevent" />
+            <div class="row justify-content-between align-items-md-center btn-reveal-trigger border-translucent gx-0 flex-1 cursor-pointer" data-bs-toggle="modal" data-bs-target="#exampleModal">
+              <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
+                <div class="mb-1 mb-md-0 d-flex align-items-center lh-1">
+                  <label class="form-check-label mb-1 mb-md-0 mb-xl-1 mb-xxl-0 fs-8 me-2 line-clamp-1 text-body cursor-pointer">Finalizing the geometric shapes</label>
+                </div>
+              </div>
+              <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
+                <div class="d-flex lh-1 align-items-center"><a class="text-body-tertiary fw-bold fs-10 me-2" href="#!"><span class="fas fa-paperclip me-1"></span>3</a>
+                  <p class="text-body-tertiary fs-10 mb-md-0 me-2 me-md-3 me-xl-2 me-xxl-3 mb-0">12 Nov, 2021</p>
+                  <div class="hover-md-hide hover-xl-show hover-xxl-hide">
+                    <p class="text-body-tertiary fs-10 fw-bold mb-md-0 mb-0 ps-md-3 ps-xl-0 ps-xxl-3 border-start-md border-xl-0 border-start-xxl">12:00 PM</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="d-none d-md-block d-xl-none d-xxl-block end-0 position-absolute" style="top: 23%;" data-event-propagation-prevent="data-event-propagation-prevent">
+              <div class="hover-actions end-0" data-event-propagation-prevent="data-event-propagation-prevent">
+                <button class="btn btn-phoenix-secondary btn-icon me-1 fs-10 text-body px-0 me-1" data-event-propagation-prevent="data-event-propagation-prevent"><span class="fas fa-edit"></span></button>
+                <button class="btn btn-phoenix-secondary btn-icon fs-10 text-danger px-0" data-event-propagation-prevent="data-event-propagation-prevent"><span class="fas fa-trash"></span></button>
+              </div>
+            </div>
+          </div>
+          <div class="d-flex hover-actions-trigger py-3 border-top">
+            <input class="form-check-input form-check-input-todolist flex-shrink-0 my-1 me-2 form-check-input-undefined" type="checkbox" id="checkbox-todo-4" data-event-propagation-prevent="data-event-propagation-prevent" />
+            <div class="row justify-content-between align-items-md-center btn-reveal-trigger border-translucent gx-0 flex-1 cursor-pointer" data-bs-toggle="modal" data-bs-target="#exampleModal">
+              <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
+                <div class="mb-1 mb-md-0 d-flex align-items-center lh-1">
+                  <label class="form-check-label mb-1 mb-md-0 mb-xl-1 mb-xxl-0 fs-8 me-2 line-clamp-1 text-body cursor-pointer">Daily meeting with team members</label>
+                </div>
+              </div>
+              <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
+                <div class="d-flex lh-1 align-items-center">
+                  <p class="text-body-tertiary fs-10 mb-md-0 me-2 me-md-3 me-xl-2 me-xxl-3 mb-0">1 Nov, 2021</p>
+                  <div class="hover-md-hide hover-xl-show hover-xxl-hide">
+                    <p class="text-body-tertiary fs-10 fw-bold mb-md-0 mb-0 ps-md-3 ps-xl-0 ps-xxl-3 border-start-md border-xl-0 border-start-xxl">12:00 PM</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="d-none d-md-block d-xl-none d-xxl-block end-0 position-absolute" style="top: 23%;" data-event-propagation-prevent="data-event-propagation-prevent">
+              <div class="hover-actions end-0" data-event-propagation-prevent="data-event-propagation-prevent">
+                <button class="btn btn-phoenix-secondary btn-icon me-1 fs-10 text-body px-0 me-1" data-event-propagation-prevent="data-event-propagation-prevent"><span class="fas fa-edit"></span></button>
+                <button class="btn btn-phoenix-secondary btn-icon fs-10 text-danger px-0" data-event-propagation-prevent="data-event-propagation-prevent"><span class="fas fa-trash"></span></button>
+              </div>
+            </div>
+          </div>
+          <div class="d-flex hover-actions-trigger py-3 border-top">
+            <input class="form-check-input form-check-input-todolist flex-shrink-0 my-1 me-2 form-check-input-undefined" type="checkbox" id="checkbox-todo-5" data-event-propagation-prevent="data-event-propagation-prevent" />
+            <div class="row justify-content-between align-items-md-center btn-reveal-trigger border-translucent gx-0 flex-1 cursor-pointer" data-bs-toggle="modal" data-bs-target="#exampleModal">
+              <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
+                <div class="mb-1 mb-md-0 d-flex align-items-center lh-1">
+                  <label class="form-check-label mb-1 mb-md-0 mb-xl-1 mb-xxl-0 fs-8 me-2 line-clamp-1 text-body cursor-pointer">Daily Standup Meetings</label>
+                </div>
+              </div>
+              <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
+                <div class="d-flex lh-1 align-items-center"><a class="text-warning fw-bold fs-10 me-2" href="#!"><span class="fas fa-tasks me-1"></span>4</a>
+                  <p class="text-body-tertiary fs-10 mb-md-0 me-2 me-md-3 me-xl-2 me-xxl-3 mb-0">13 Nov, 2021</p>
+                  <div class="hover-md-hide hover-xl-show hover-xxl-hide">
+                    <p class="text-body-tertiary fs-10 fw-bold mb-md-0 mb-0 ps-md-3 ps-xl-0 ps-xxl-3 border-start-md border-xl-0 border-start-xxl">10:00 PM</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="d-none d-md-block d-xl-none d-xxl-block end-0 position-absolute" style="top: 23%;" data-event-propagation-prevent="data-event-propagation-prevent">
+              <div class="hover-actions end-0" data-event-propagation-prevent="data-event-propagation-prevent">
+                <button class="btn btn-phoenix-secondary btn-icon me-1 fs-10 text-body px-0 me-1" data-event-propagation-prevent="data-event-propagation-prevent"><span class="fas fa-edit"></span></button>
+                <button class="btn btn-phoenix-secondary btn-icon fs-10 text-danger px-0" data-event-propagation-prevent="data-event-propagation-prevent"><span class="fas fa-trash"></span></button>
+              </div>
+            </div>
+          </div>
+          <div class="d-flex hover-actions-trigger py-3 border-top">
+            <input class="form-check-input form-check-input-todolist flex-shrink-0 my-1 me-2 form-check-input-undefined" type="checkbox" id="checkbox-todo-6" data-event-propagation-prevent="data-event-propagation-prevent" />
+            <div class="row justify-content-between align-items-md-center btn-reveal-trigger border-translucent gx-0 flex-1 cursor-pointer" data-bs-toggle="modal" data-bs-target="#exampleModal">
+              <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
+                <div class="mb-1 mb-md-0 d-flex align-items-center lh-1">
+                  <label class="form-check-label mb-1 mb-md-0 mb-xl-1 mb-xxl-0 fs-8 me-2 line-clamp-1 text-body cursor-pointer">Procrastinate for a month</label><span class="badge badge-phoenix ms-auto fs-10 badge-phoenix-info">ON PROCESS</span>
+                </div>
+              </div>
+              <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
+                <div class="d-flex lh-1 align-items-center"><a class="text-body-tertiary fw-bold fs-10 me-2" href="#!"><span class="fas fa-paperclip me-1"></span>3</a>
+                  <p class="text-body-tertiary fs-10 mb-md-0 me-2 me-md-3 me-xl-2 me-xxl-3 mb-0">12 Nov, 2021</p>
+                  <div class="hover-md-hide hover-xl-show hover-xxl-hide">
+                    <p class="text-body-tertiary fs-10 fw-bold mb-md-0 mb-0 ps-md-3 ps-xl-0 ps-xxl-3 border-start-md border-xl-0 border-start-xxl">12:00 PM</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="d-none d-md-block d-xl-none d-xxl-block end-0 position-absolute" style="top: 23%;" data-event-propagation-prevent="data-event-propagation-prevent">
+              <div class="hover-actions end-0" data-event-propagation-prevent="data-event-propagation-prevent">
+                <button class="btn btn-phoenix-secondary btn-icon me-1 fs-10 text-body px-0 me-1" data-event-propagation-prevent="data-event-propagation-prevent"><span class="fas fa-edit"></span></button>
+                <button class="btn btn-phoenix-secondary btn-icon fs-10 text-danger px-0" data-event-propagation-prevent="data-event-propagation-prevent"><span class="fas fa-trash"></span></button>
+              </div>
+            </div>
+          </div>
+          <div class="d-flex hover-actions-trigger py-3 border-top">
+            <input class="form-check-input form-check-input-todolist flex-shrink-0 my-1 me-2 form-check-input-undefined" type="checkbox" id="checkbox-todo-7" data-event-propagation-prevent="data-event-propagation-prevent" />
+            <div class="row justify-content-between align-items-md-center btn-reveal-trigger border-translucent gx-0 flex-1 cursor-pointer" data-bs-toggle="modal" data-bs-target="#exampleModal">
+              <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
+                <div class="mb-1 mb-md-0 d-flex align-items-center lh-1">
+                  <label class="form-check-label mb-1 mb-md-0 mb-xl-1 mb-xxl-0 fs-8 me-2 line-clamp-1 text-body cursor-pointer">warming up</label><span class="badge badge-phoenix ms-auto fs-10 badge-phoenix-secondary">CLOSE</span>
+                </div>
+              </div>
+              <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
+                <div class="d-flex lh-1 align-items-center"><a class="text-body-tertiary fw-bold fs-10 me-2" href="#!"><span class="fas fa-paperclip me-1"></span>3</a>
+                  <p class="text-body-tertiary fs-10 mb-md-0 me-2 me-md-3 me-xl-2 me-xxl-3 mb-0">12 Nov, 2021</p>
+                  <div class="hover-md-hide hover-xl-show hover-xxl-hide">
+                    <p class="text-body-tertiary fs-10 fw-bold mb-md-0 mb-0 ps-md-3 ps-xl-0 ps-xxl-3 border-start-md border-xl-0 border-start-xxl">12:00 PM</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="d-none d-md-block d-xl-none d-xxl-block end-0 position-absolute" style="top: 23%;" data-event-propagation-prevent="data-event-propagation-prevent">
+              <div class="hover-actions end-0" data-event-propagation-prevent="data-event-propagation-prevent">
+                <button class="btn btn-phoenix-secondary btn-icon me-1 fs-10 text-body px-0 me-1" data-event-propagation-prevent="data-event-propagation-prevent"><span class="fas fa-edit"></span></button>
+                <button class="btn btn-phoenix-secondary btn-icon fs-10 text-danger px-0" data-event-propagation-prevent="data-event-propagation-prevent"><span class="fas fa-trash"></span></button>
+              </div>
+            </div>
+          </div>
+          <div class="d-flex hover-actions-trigger py-3 border-top">
+            <input class="form-check-input form-check-input-todolist flex-shrink-0 my-1 me-2 form-check-input-undefined" type="checkbox" id="checkbox-todo-8" data-event-propagation-prevent="data-event-propagation-prevent" />
+            <div class="row justify-content-between align-items-md-center btn-reveal-trigger border-translucent gx-0 flex-1 cursor-pointer" data-bs-toggle="modal" data-bs-target="#exampleModal">
+              <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
+                <div class="mb-1 mb-md-0 d-flex align-items-center lh-1">
+                  <label class="form-check-label mb-1 mb-md-0 mb-xl-1 mb-xxl-0 fs-8 me-2 line-clamp-1 text-body cursor-pointer">Make ready for release</label>
+                </div>
+              </div>
+              <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
+                <div class="d-flex lh-1 align-items-center"><a class="text-body-tertiary fw-bold fs-10 me-2" href="#!"><span class="fas fa-paperclip me-1"></span>2</a><a class="text-warning fw-bold fs-10 me-2" href="#!"><span class="fas fa-tasks me-1"></span>2</a>
+                  <p class="text-body-tertiary fs-10 mb-md-0 me-2 me-md-3 me-xl-2 me-xxl-3 mb-0">2o Nov, 2021</p>
+                  <div class="hover-md-hide hover-xl-show hover-xxl-hide">
+                    <p class="text-body-tertiary fs-10 fw-bold mb-md-0 mb-0 ps-md-3 ps-xl-0 ps-xxl-3 border-start-md border-xl-0 border-start-xxl">1:00 AM</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="d-none d-md-block d-xl-none d-xxl-block end-0 position-absolute" style="top: 23%;" data-event-propagation-prevent="data-event-propagation-prevent">
+              <div class="hover-actions end-0" data-event-propagation-prevent="data-event-propagation-prevent">
+                <button class="btn btn-phoenix-secondary btn-icon me-1 fs-10 text-body px-0 me-1" data-event-propagation-prevent="data-event-propagation-prevent"><span class="fas fa-edit"></span></button>
+                <button class="btn btn-phoenix-secondary btn-icon fs-10 text-danger px-0" data-event-propagation-prevent="data-event-propagation-prevent"><span class="fas fa-trash"></span></button>
+              </div>
+            </div>
+          </div>
+          <div class="d-flex hover-actions-trigger py-3 border-top">
+            <input class="form-check-input form-check-input-todolist flex-shrink-0 my-1 me-2 form-check-input-undefined" type="checkbox" id="checkbox-todo-9" data-event-propagation-prevent="data-event-propagation-prevent" />
+            <div class="row justify-content-between align-items-md-center btn-reveal-trigger border-translucent gx-0 flex-1 cursor-pointer" data-bs-toggle="modal" data-bs-target="#exampleModal">
+              <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
+                <div class="mb-1 mb-md-0 d-flex align-items-center lh-1">
+                  <label class="form-check-label mb-1 mb-md-0 mb-xl-1 mb-xxl-0 fs-8 me-2 line-clamp-1 text-body cursor-pointer">Modify the component</label>
+                </div>
+              </div>
+              <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
+                <div class="d-flex lh-1 align-items-center"><a class="text-body-tertiary fw-bold fs-10 me-2" href="#!"><span class="fas fa-paperclip me-1"></span>4</a>
+                  <p class="text-body-tertiary fs-10 mb-md-0 me-2 me-md-3 me-xl-2 me-xxl-3 mb-0">22 Nov, 2021</p>
+                  <div class="hover-md-hide hover-xl-show hover-xxl-hide">
+                    <p class="text-body-tertiary fs-10 fw-bold mb-md-0 mb-0 ps-md-3 ps-xl-0 ps-xxl-3 border-start-md border-xl-0 border-start-xxl">1:00 AM</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="d-none d-md-block d-xl-none d-xxl-block end-0 position-absolute" style="top: 23%;" data-event-propagation-prevent="data-event-propagation-prevent">
+              <div class="hover-actions end-0" data-event-propagation-prevent="data-event-propagation-prevent">
+                <button class="btn btn-phoenix-secondary btn-icon me-1 fs-10 text-body px-0 me-1" data-event-propagation-prevent="data-event-propagation-prevent"><span class="fas fa-edit"></span></button>
+                <button class="btn btn-phoenix-secondary btn-icon fs-10 text-danger px-0" data-event-propagation-prevent="data-event-propagation-prevent"><span class="fas fa-trash"></span></button>
+              </div>
+            </div>
+          </div>
+          <div class="d-flex hover-actions-trigger py-3 border-top border-bottom">
+            <input class="form-check-input form-check-input-todolist flex-shrink-0 my-1 me-2 form-check-input-undefined" type="checkbox" id="checkbox-todo-10" data-event-propagation-prevent="data-event-propagation-prevent" />
+            <div class="row justify-content-between align-items-md-center btn-reveal-trigger border-translucent gx-0 flex-1 cursor-pointer" data-bs-toggle="modal" data-bs-target="#exampleModal">
+              <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
+                <div class="mb-1 mb-md-0 d-flex align-items-center lh-1">
+                  <label class="form-check-label mb-1 mb-md-0 mb-xl-1 mb-xxl-0 fs-8 me-2 line-clamp-1 text-body cursor-pointer">Delete overlapping tasks and articles</label><span class="badge badge-phoenix ms-auto fs-10 badge-phoenix-secondary">CLOSE</span>
+                </div>
+              </div>
+              <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
+                <div class="d-flex lh-1 align-items-center"><a class="text-body-tertiary fw-bold fs-10 me-2" href="#!"><span class="fas fa-paperclip me-1"></span>2</a>
+                  <p class="text-body-tertiary fs-10 mb-md-0 me-2 me-md-3 me-xl-2 me-xxl-3 mb-0">25 Nov, 2021</p>
+                  <div class="hover-md-hide hover-xl-show hover-xxl-hide">
+                    <p class="text-body-tertiary fs-10 fw-bold mb-md-0 mb-0 ps-md-3 ps-xl-0 ps-xxl-3 border-start-md border-xl-0 border-start-xxl">1:00 AM</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="d-none d-md-block d-xl-none d-xxl-block end-0 position-absolute" style="top: 23%;" data-event-propagation-prevent="data-event-propagation-prevent">
+              <div class="hover-actions end-0" data-event-propagation-prevent="data-event-propagation-prevent">
+                <button class="btn btn-phoenix-secondary btn-icon me-1 fs-10 text-body px-0 me-1" data-event-propagation-prevent="data-event-propagation-prevent"><span class="fas fa-edit"></span></button>
+                <button class="btn btn-phoenix-secondary btn-icon fs-10 text-danger px-0" data-event-propagation-prevent="data-event-propagation-prevent"><span class="fas fa-trash"></span></button>
+              </div>
+            </div>
+          </div>
+          <div class="modal fade" id="exampleModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-xl">
+              <div class="modal-content bg-body overflow-hidden">
+                <div class="modal-header px-6 py-5 pe-sm-5 px-md-6 dark__bg-gray-1100">
+                  <h3 class="text-body-highlight fw-bolder mb-0">Designing the Dungeon Blueprint</h3>
+                  <button class="btn btn-phoenix-secondary btn-icon btn-icon-xl flex-shrink-0" type="button" data-bs-dismiss="modal" aria-label="Close"><span class="fa-solid fa-xmark"></span></button>
+                </div>
+                <div class="modal-body bg-body-highlight px-6 py-0">
+                  <div class="row gx-14">
+                    <div class="col-12 col-lg-7 border-end-lg">
+                      <div class="py-6">
+                        <div class="mb-7">
+                          <div class="d-flex align-items-center mb-3">
+                            <h4 class="text-body me-3">Description</h4><a class="btn btn-link text-decoration-none p-0" href="#!"><span class="fa-solid fa-pen"></span></a>
+                          </div>
+                          <p class="text-body-highlight mb-0">The female circus horse-rider is a recurring subject in Chagall’s work. In 1926 the art dealer Ambroise Vollard invited Chagall to make a project based on the circus. They visited Paris’s historic Cirque d’Hiver Bouglione together; Vollard lent Chagall his private box seats. Chagall completed 19 gouaches Chagall’s work. In 1926 the art dealer Ambroise Vollard invited Chagall to make a project based on the circus.</p>
+                        </div>
+                        <div class="mb-7">
+                          <h4 class="mb-3">Subtasks</h4>
+                          <div class="d-flex flex-between-center hover-actions-trigger py-3 border-top">
+                            <div class="form-check mb-1 mb-md-0 d-flex align-items-center lh-1 min-h-auto">
+                              <input class="subtask-checkbox form-check-input form-check-line-through mt-0 me-3" type="checkbox" id="subtaskundefined1" />
+                              <label class="form-check-label mb-0 fs-8" for="subtaskundefined1">Study Dragons</label>
+                            </div>
+                            <div class="hover-actions end-0">
+                              <button class="btn btn-sm me-1 fs-10 text-body-tertiary px-0 me-3"><span class="fa-solid fa-pencil"></span></button>
+                              <button class="btn btn-sm text-body-tertiary px-0"><span class="fa-solid fa-xmark fs-8"></span></button>
+                            </div>
+                          </div>
+                          <div class="d-flex flex-between-center hover-actions-trigger py-3 border-top">
+                            <div class="form-check mb-1 mb-md-0 d-flex align-items-center lh-1 min-h-auto">
+                              <input class="subtask-checkbox form-check-input form-check-line-through mt-0 me-3" type="checkbox" id="subtaskundefined2" />
+                              <label class="form-check-label mb-0 fs-8" for="subtaskundefined2">Procrastinate a bit</label>
+                            </div>
+                            <div class="hover-actions end-0">
+                              <button class="btn btn-sm me-1 fs-10 text-body-tertiary px-0 me-3"><span class="fa-solid fa-pencil"></span></button>
+                              <button class="btn btn-sm text-body-tertiary px-0"><span class="fa-solid fa-xmark fs-8"></span></button>
+                            </div>
+                          </div>
+                          <div class="d-flex flex-between-center hover-actions-trigger py-3 border-top border-bottom mb-3">
+                            <div class="form-check mb-1 mb-md-0 d-flex align-items-center lh-1 min-h-auto">
+                              <input class="subtask-checkbox form-check-input form-check-line-through mt-0 me-3" type="checkbox" id="subtaskundefined3" />
+                              <label class="form-check-label mb-0 fs-8" for="subtaskundefined3">Staring at the notebook for 5 mins</label>
+                            </div>
+                            <div class="hover-actions end-0">
+                              <button class="btn btn-sm me-1 fs-10 text-body-tertiary px-0 me-3"><span class="fa-solid fa-pencil"></span></button>
+                              <button class="btn btn-sm text-body-tertiary px-0"><span class="fa-solid fa-xmark fs-8"></span></button>
+                            </div>
+                          </div><a class="fw-bold fs-9" href="#!"><span class="fas fa-plus me-1"></span>Add subtask</a>
+                        </div>
+                        <div class="mb-3">
+                          <div>
+                            <h4 class="mb-3">Files</h4>
+                          </div>
+                          <div class="border-top px-0 pt-4 pb-3">
+                            <div class="me-n3">
+                              <div class="d-flex flex-between-center">
+                                <div class="d-flex mb-1"><span class="fa-solid fa-image me-2 text-body-tertiary fs-9"></span>
+                                  <p class="text-body-highlight mb-0 lh-1">Silly_sight_1.png</p>
+                                </div>
+                                <div class="btn-reveal-trigger">
+                                  <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fas fa-ellipsis-h"></span></button>
+                                  <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item" href="#!">Edit</a><a class="dropdown-item text-danger" href="#!">Delete</a><a class="dropdown-item" href="#!">Download</a><a class="dropdown-item" href="#!">Report abuse</a></div>
+                                </div>
+                              </div>
+                              <div class="d-flex fs-9 text-body-tertiary mb-2 flex-wrap"><span>768 kb</span><span class="text-body-quaternary mx-1">| </span><a href="#!">Shantinan Mekalan </a><span class="text-body-quaternary mx-1">| </span><span class="text-nowrap">21st Dec, 12:56 PM</span></div><img class="rounded-2" src="../assets/img/generic/40.png" alt="" style="max-width:230px" />
+                            </div>
+                          </div>
+                          <div class="border-top px-0 pt-4 pb-3">
+                            <div class="me-n3">
+                              <div class="d-flex flex-between-center">
+                                <div>
+                                  <div class="d-flex align-items-center mb-1"><span class="fa-solid fa-image me-2 fs-9 text-body-tertiary"></span>
+                                    <p class="text-body-highlight mb-0 lh-1">All_images.zip</p>
+                                  </div>
+                                  <div class="d-flex fs-9 text-body-tertiary mb-0 flex-wrap"><span>12.8 mb</span><span class="text-body-quaternary mx-1">| </span><a href="#!">Yves Tanguy </a><span class="text-body-quaternary mx-1">| </span><span class="text-nowrap">19th Dec, 08:56 PM</span></div>
+                                </div>
+                                <div class="btn-reveal-trigger">
+                                  <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fas fa-ellipsis-h"></span></button>
+                                  <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item" href="#!">Edit</a><a class="dropdown-item text-danger" href="#!">Delete</a><a class="dropdown-item" href="#!">Download</a><a class="dropdown-item" href="#!">Report abuse</a></div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="border-top border-bottom px-0 pt-4 pb-3">
+                            <div class="me-n3">
+                              <div class="d-flex flex-between-center">
+                                <div>
+                                  <div class="d-flex align-items-center mb-1 flex-wrap"><span class="fa-solid fa-file-lines me-2 fs-9 text-body-tertiary"></span>
+                                    <p class="text-body-highlight mb-0 lh-1">Project.txt</p>
+                                  </div>
+                                  <div class="d-flex fs-9 text-body-tertiary mb-0 flex-wrap"><span>123 kb</span><span class="text-body-quaternary mx-1">| </span><a href="#!">Shantinan Mekalan </a><span class="text-body-quaternary mx-1">| </span><span class="text-nowrap">12th Dec, 12:56 PM</span></div>
+                                </div>
+                                <div class="btn-reveal-trigger">
+                                  <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fas fa-ellipsis-h"></span></button>
+                                  <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item" href="#!">Edit</a><a class="dropdown-item text-danger" href="#!">Delete</a><a class="dropdown-item" href="#!">Download</a><a class="dropdown-item" href="#!">Report abuse</a></div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div><a class="fw-bold fs-9" href="#!"><span class="fas fa-plus me-1"></span>Add file(s)</a>
+                      </div>
+                    </div>
+                    <div class="col-12 col-lg-5">
+                      <div class="py-6">
+                        <h4 class="mb-4 text-body-emphasis">Others Information</h4>
+                        <h5 class="text-body-highlight mb-2">Status</h5>
+                        <select class="form-select mb-4" aria-label="Default select example">
+                          <option selected="">Select</option>
+                          <option value="1">One</option>
+                          <option value="2">Two</option>
+                          <option value="3">Three</option>
+                        </select>
+                        <h5 class="text-body-highlight mb-2">Due Date</h5>
+                        <div class="flatpickr-input-container mb-4">
+                          <input class="form-control datetimepicker ps-6" type="text" placeholder="Set the due date" data-options='{"disableMobile":true}' /><span class="uil uil-calendar-alt flatpickr-icon text-body-tertiary"></span>
+                        </div>
+                        <h5 class="text-body-highlight mb-2">Reminder</h5>
+                        <div class="flatpickr-input-container mb-4">
+                          <input class="form-control datetimepicker ps-6" type="text" placeholder="Reminder" data-options='{"enableTime":true,"noCalendar":true,"dateFormat":"H:i","disableMobile":true,"static":true}' /><span class="uil uil-bell-school flatpickr-icon text-body-tertiary"></span>
+                        </div>
+                        <h5 class="text-body-highlight mb-2">Tag</h5>
+                        <div class="choices-select-container mb-6">
+                          <select class="form-select" data-choices="data-choices" multiple="multiple" data-options='{"removeItemButton":true,"placeholder":true}'>
+                            <option value="">Select organizer...</option>
+                            <option>Massachusetts Institute of Technology</option>
+                            <option>University of Chicago</option>
+                            <option>GSAS Open Labs At Harvard</option>
+                            <option>California Institute of Technology</option>
+                          </select><span class="uil uil-tag-alt choices-icon text-body-tertiary" style="top: 26%;"></span>
+                        </div>
+                        <div class="text-end mb-9">
+                          <button class="btn btn-phoenix-danger">Delete Task</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer border-0"><a class="fw-bold fs-9 mt-4" href="#!"><span class="fas fa-plus me-1"></span>Add new task</a></div>
+      </div>
+    </div>
+    <div class="col-12 col-xl-6 col-xxl-5">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="card-title mb-1">
+            <h3 class="text-body-emphasis">Activity</h3>
+          </div>
+          <p class="text-body-tertiary mb-4">Recent activity across all projects</p>
+          <div class="timeline-vertical timeline-with-details">
+            <div class="timeline-item position-relative">
+              <div class="row g-md-3">
+                <div class="col-12 col-md-auto d-flex">
+                  <div class="timeline-item-date order-1 order-md-0 me-md-4">
+                    <p class="fs-10 fw-semibold text-body-tertiary text-opacity-85 text-end">01 DEC, 2023<br class="d-none d-md-block" /> 10:30 AM</p>
+                  </div>
+                  <div class="timeline-item-bar position-md-relative me-3 me-md-0">
+                    <div class="icon-item icon-item-sm rounded-7 shadow-none bg-primary-subtle"><span class="fa-solid fa-chess text-primary-dark fs-10"></span></div><span class="timeline-bar border-end border-dashed"></span>
+                  </div>
+                </div>
+                <div class="col">
+                  <div class="timeline-item-content ps-6 ps-md-3">
+                    <h5 class="fs-9 lh-sm">Phoenix Template: Unleashing Creative Possibilities</h5>
+                    <p class="fs-9">by <a class="fw-semibold" href="#!">Shantinon Mekalan</a></p>
+                    <p class="fs-9 text-body-secondary mb-5">Discover limitless creativity with the Phoenix template! Our latest update offers an array of innovative features and design options.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="timeline-item position-relative">
+              <div class="row g-md-3">
+                <div class="col-12 col-md-auto d-flex">
+                  <div class="timeline-item-date order-1 order-md-0 me-md-4">
+                    <p class="fs-10 fw-semibold text-body-tertiary text-opacity-85 text-end">05 DEC, 2023<br class="d-none d-md-block" /> 12:30 AM</p>
+                  </div>
+                  <div class="timeline-item-bar position-md-relative me-3 me-md-0">
+                    <div class="icon-item icon-item-sm rounded-7 shadow-none bg-primary-subtle"><span class="fa-solid fa-dove text-primary-dark fs-10"></span></div><span class="timeline-bar border-end border-dashed"></span>
+                  </div>
+                </div>
+                <div class="col">
+                  <div class="timeline-item-content ps-6 ps-md-3">
+                    <h5 class="fs-9 lh-sm">Empower Your Digital Presence: The Phoenix Template Unveiled</h5>
+                    <p class="fs-9">by <a class="fw-semibold" href="#!">Bookworm22</a></p>
+                    <p class="fs-9 text-body-secondary mb-5">Unveiling the Phoenix template, a game-changer for your digital presence. With its powerful features and sleek design,</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="timeline-item position-relative">
+              <div class="row g-md-3">
+                <div class="col-12 col-md-auto d-flex">
+                  <div class="timeline-item-date order-1 order-md-0 me-md-4">
+                    <p class="fs-10 fw-semibold text-body-tertiary text-opacity-85 text-end">15 DEC, 2023<br class="d-none d-md-block" /> 2:30 AM</p>
+                  </div>
+                  <div class="timeline-item-bar position-md-relative me-3 me-md-0">
+                    <div class="icon-item icon-item-sm rounded-7 shadow-none bg-primary-subtle"><span class="fa-solid fa-dungeon text-primary-dark fs-10"></span></div>
+                  </div>
+                </div>
+                <div class="col">
+                  <div class="timeline-item-content ps-6 ps-md-3">
+                    <h5 class="fs-9 lh-sm">Phoenix Template: Simplified Design, Maximum Impact</h5>
+                    <p class="fs-9">by <a class="fw-semibold" href="#!">Sharuka Nijibum</a></p>
+                    <p class="fs-9 text-body-secondary mb-0">Introducing the Phoenix template, where simplified design meets maximum impact. Elevate your digital presence with its sleek and intuitive features.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div> -->
+
+<% if (user.isAdmin === true || user.isChiefExec === true || user.isDeputyChiefExec === true) { %>
+<%
+    const submittedLeaves = allLeave.filter(leave => leave.status === 'submitted');
+    const deniedLeaves = allLeave.filter(leave => leave.status === 'denied');
+    const pendingLeaves = allLeave.filter(leave => leave.status === 'pending');
+    const invalidLeaves = allLeave.filter(leave => leave.status === 'invalid');  
+%>
+<div class="pb-5">
+  <div class="row g-4">
+    <div class="col-12 col-xxl-6">
+      <div class="mb-8">
+        <h2 class="mb-2">Leave</h2>
+        <h5 class="text-body-tertiary fw-semibold">Temporary absence for personal reasons</h5>
+      </div>
+      <div class="row align-items-center g-4">
+        <div class="col-12 col-md-3">
+          <div class="d-flex align-items-center"><span class="fa-stack" style="min-height: 46px;min-width: 46px;"><span class="fa-solid fa-square fa-stack-2x dark__text-opacity-50 text-success-light" data-fa-transform="down-4 rotate--10 left-4"></span><span class="fa-solid fa-circle fa-stack-2x stack-circle text-stats-circle-success" data-fa-transform="up-4 right-3 grow-2"></span><span class="fa-stack-1x fa-solid fa-star text-success " data-fa-transform="shrink-2 up-8 right-6"></span></span>
+            <div class="ms-3">
+              <h4 class="mb-0"><%= submittedLeaves.length %> Submit</h4>
+              <p class="text-body-secondary fs-9 mb-0">Proceed Request</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-md-3">
+          <div class="d-flex align-items-center"><span class="fa-stack" style="min-height: 46px;min-width: 46px;"><span class="fa-solid fa-square fa-stack-2x dark__text-opacity-50 text-danger-light" data-fa-transform="down-4 rotate--10 left-4"></span><span class="fa-solid fa-circle fa-stack-2x stack-circle text-stats-circle-danger" data-fa-transform="up-4 right-3 grow-2"></span><span class="fa-stack-1x fa-solid fa-xmark text-danger " data-fa-transform="shrink-2 up-8 right-6"></span></span>
+            <div class="ms-3">
+              <h4 class="mb-0"><%= deniedLeaves.length %> Denied</h4>
+              <p class="text-body-secondary fs-9 mb-0">Rejected Request</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-md-3">
+          <div class="d-flex align-items-center"><span class="fa-stack" style="min-height: 46px;min-width: 46px;"><span class="fa-solid fa-square fa-stack-2x dark__text-opacity-50 text-info-light" data-fa-transform="down-4 rotate--10 left-4"></span><span class="fa-solid fa-circle fa-stack-2x stack-circle text-stats-circle-info" data-fa-transform="up-4 right-3 grow-2"></span><span class="fa-stack-1x fa-solid fa-pause text-info " data-fa-transform="shrink-2 up-8 right-6"></span></span>
+            <div class="ms-3">
+              <h4 class="mb-0"><%= pendingLeaves.length %> Pending</h4>
+              <p class="text-body-secondary fs-9 mb-0">Under Review</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-md-3">
+          <div class="d-flex align-items-center"><span class="fa-stack" style="min-height: 46px;min-width: 46px;"><span class="fa-solid fa-square fa-stack-2x dark__text-opacity-50 text-warning-light" data-fa-transform="down-4 rotate--10 left-4"></span><span class="fa-solid fa-circle fa-stack-2x stack-circle text-stats-circle-warning" data-fa-transform="up-4 right-3 grow-2"></span><span class="fa-stack-1x fa-solid fa-stopwatch text-warning " data-fa-transform="shrink-2 up-8 right-6"></span></span>
+            <div class="ms-3">
+              <h4 class="mb-0"><%= invalidLeaves.length %> Invalid</h4>
+              <p class="text-body-secondary fs-9 mb-0">Request Due</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <hr class="bg-body-secondary mb-6 mt-4" />
+      <div class="row flex-between-center mb-4 g-3">
+        <div class="col-auto">
+          <h3>Total leaves</h3>
+          <p class="text-body-tertiary lh-sm mb-0">Leaves across all of department in one calendar</p>
+        </div>
+        <div class="col-8 col-sm-4">
+          <select class="form-select form-select-sm" id="select-month">
+            <option>January</option>
+            <option>February</option>
+            <option>March</option>
+            <option>April</option>
+            <option>May</option>
+            <option>June</option>
+            <option>July</option>
+            <option>August</option>
+            <option>September</option>
+            <option>October</option>
+            <option>November</option>
+            <option>December</option>
+          </select>
+        </div>
+      </div>
+      <div id="total-leave-chart" style="min-height:320px;width:100%"></div>
+
+      <script>
+        document.addEventListener('DOMContentLoaded', function() {
+          // Initialize ECharts chart
+          var leaveChart = echarts.init(document.getElementById('total-leave-chart'));
+          var leaveChart = echarts.init(document.getElementById('total-leave-chart'), null, {
+            devicePixelRatio: window.devicePixelRatio > 1 ? 10 : 1,
+            renderer: 'canvas', // Use the 'canvas' renderer
+            width: 'auto', // Automatically adjust width
+            height: 'auto' // Automatically adjust height
+          });
+
+          // Sample data for testing
+          var data = {
+            'January': {
+              approved: Array.from({
+                length: 31
+              }, (_, i) => Math.floor(Math.random() * 20) + 1),
+              denied: Array.from({
+                length: 31
+              }, (_, i) => Math.floor(Math.random() * 5) + 1)
+            },
+            'February': {
+              approved: Array.from({
+                length: 28
+              }, (_, i) => Math.floor(Math.random() * 20) + 1),
+              denied: Array.from({
+                length: 28
+              }, (_, i) => Math.floor(Math.random() * 5) + 1)
+            },
+            'March': {
+              approved: Array.from({
+                length: 31
+              }, (_, i) => Math.floor(Math.random() * 20) + 1),
+              denied: Array.from({
+                length: 31
+              }, (_, i) => Math.floor(Math.random() * 5) + 1)
+            },
+            // ... Repeat for other months
+          };
+
+          // Function to update chart based on selected month
+          function updateChart(selectedMonth) {
+            var leaveData = data[selectedMonth];
+
+            if (leaveData) {
+              var daysInMonth = new Date(new Date().getFullYear(), new Date(selectedMonth + " 1, 2000").getMonth() + 1, 0).getDate();;
+              var xAxisData = Array.from({
+                length: daysInMonth
+              }, (_, i) => i + 1);
+
+              var option = {
+                responsive: true,
+                color: ['#3874ff', '#0097eb'],
+                tooltip: {
+                  trigger: 'axis',
+                  padding: 10,
+                  backgroundColor: '#eff2f6',
+                  borderColor: '#cbd0dd',
+                  textStyle: {
+                    color: '#141824'
+                  },
+                  borderWidth: 1,
+                  transitionDuration: 0,
+                  axisPointer: {
+                    type: 'none'
+                  }
+                },
+                xAxis: [{
+                    type: 'category',
+                    data: xAxisData,
+                    axisLabel: {
+                      formatter: function(value) {
+                        return `Day ${value}`;
+                      },
+                      interval: 13,
+                      showMinLabel: true,
+                      showMaxLabel: false,
+                      color: '#3e465b',
+                      align: 'left',
+                      fontFamily: 'Nunito Sans',
+                      fontWeight: 600,
+                      fontSize: 12.8
+                    },
+                    axisLine: {
+                      show: true,
+                      lineStyle: {
+                        color: '#525b75',
+                        opacity: 0.5
+                      }
+                    },
+                    axisTick: {
+                      show: false
+                    },
+                    splitLine: {
+                      show: true,
+                      interval: 0,
+                      lineStyle: {
+                        color: '#525b75',
+                        opacity: 0.3
+                      }
+                    },
+                    boundaryGap: false
+                  },
+                  {
+                    type: 'category',
+                    position: 'bottom',
+                    data: xAxisData,
+                    axisLabel: {
+                      formatter: function(value) {
+                        return `Day ${value}`;
+                      },
+                      interval: 130,
+                      showMaxLabel: true,
+                      showMinLabel: false,
+                      color: '#3e465b',
+                      align: 'right',
+                      fontFamily: 'Nunito Sans',
+                      fontWeight: 600,
+                      fontSize: 12.8
+                    },
+                    axisLine: {
+                      show: false
+                    },
+                    axisTick: {
+                      show: false
+                    },
+                    splitLine: {
+                      show: false
+                    },
+                    boundaryGap: false
+                  }
+                ],
+                yAxis: {
+                  position: 'right',
+                  axisPointer: {
+                    type: 'none'
+                  },
+                  axisTick: 'none',
+                  splitLine: {
+                    show: false
+                  },
+                  axisLine: {
+                    show: false
+                  },
+                  axisLabel: {
+                    show: false
+                  }
+                },
+                series: [{
+                    name: 'Approved',
+                    type: 'line',
+                    data: leaveData.approved,
+                    showSymbol: false,
+                    symbol: 'circle'
+                  },
+                  {
+                    name: 'Denied',
+                    type: 'line',
+                    data: leaveData.denied,
+                    lineStyle: {
+                      type: 'dashed',
+                      width: 1,
+                      color: '#0097eb',
+                      opacity: 0.5
+                    },
+                    showSymbol: false,
+                    symbol: 'circle',
+                  }
+                ],
+                grid: {
+                  right: 2,
+                  left: 5,
+                  bottom: '20px',
+                  top: '2%',
+                  containLabel: false
+                }
+              };
+
+              // Set chart option and render
+              leaveChart.setOption(option);
+            }
+          }
+
+          // Initial update based on default selected month
+          updateChart('January');
+
+          // Event listener for select change
+          document.getElementById('select-month').addEventListener('change', function() {
+            var selectedMonth = this.value;
+            updateChart(selectedMonth);
+          });
+        });
+      </script>
+
+    </div>
+    <div class="col-12 col-xxl-6">
+      <div class="row g-3">
+        <div class="col-12 col-md-6">
+          <div class="card h-100">
+            <div class="card-body">
+              <div class="d-flex justify-content-between">
+                <div>
+                  <h5 class="mb-1">Total approved<span class="badge badge-phoenix badge-phoenix-success rounded-pill fs-9 ms-2"><span class="badge-label">+6.8%</span></span></h5>
+                  <h6 class="text-body-tertiary">Last 7 days</h6>
+                </div>
+                <h4>12</h4>
+              </div>
+              <div class="d-flex justify-content-center px-4 py-6">
+                <div id="leave-status-chart" style="height:85px;width:115px"></div>
+              </div>
+
+              <!-- JavaScript code for ECharts -->
+              <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                  // Initialize ECharts chart
+                  var leaveStatusChart = echarts.init(document.getElementById('leave-status-chart'));
+
+                  // Sample data for the last 7 days
+                  var data = [{
+                      date: '2022-01-17',
+                      pending: 5,
+                      invalid: 2
+                    },
+                    {
+                      date: '2022-01-18',
+                      pending: 8,
+                      invalid: 3
+                    },
+                    {
+                      date: '2022-01-19',
+                      pending: 10,
+                      invalid: 1
+                    },
+                    {
+                      date: '2022-01-20',
+                      pending: 6,
+                      invalid: 4
+                    },
+                    {
+                      date: '2022-01-21',
+                      pending: 12,
+                      invalid: 2
+                    },
+                    {
+                      date: '2022-01-22',
+                      pending: 7,
+                      invalid: 3
+                    },
+                    {
+                      date: '2022-01-23',
+                      pending: 9,
+                      invalid: 1
+                    }
+                  ];
+
+                  // Extract x-axis labels and series data
+                  var xAxisData = data.map(function(entry) {
+                    return entry.date;
+                  });
+
+                  var pendingData = data.map(function(entry) {
+                    return entry.pending;
+                  });
+
+                  var invalidData = data.map(function(entry) {
+                    return entry.invalid;
+                  });
+
+                  // Chart options
+                  var option = {
+                    color: '#3874ff',
+                    tooltip: {
+                      trigger: 'item',
+                      padding: [7, 10],
+                      backgroundColor: '#eff2f6',
+                      borderColor: '#373e53',
+                      textStyle: {
+                        color: '#141824'
+                      },
+                    },
+                    xAxis: {
+                      type: 'category',
+                      data: xAxisData,
+                      show: true,
+                      boundaryGap: false,
+                      axisLine: {
+                        show: true,
+                        lineStyle: {
+                          color: '#e3e6ed'
+                        }
+                      },
+                      axisTick: {
+                        show: false
+                      },
+                      axisLabel: {
+                        interval: 6,
+                        showMinLabel: true,
+                        showMaxLabel: true,
+                        color: '#949db5'
+                      }
+                    },
+                    yAxis: {
+                      show: false,
+                      type: 'value',
+                      boundaryGap: false
+                    },
+                    series: [{
+                      type: 'bar',
+                      barWidth: '5px',
+                      data: [120, 200, 150, 80, 70, 110, 120],
+                      showBackground: true,
+                      symbol: 'none',
+                      itemStyle: {
+                        borderRadius: 10
+                      },
+                      backgroundStyle: {
+                        borderRadius: 10,
+                        color: '#525b75',
+                        opacity: 0.2
+                      }
+                    }],
+                    grid: {
+                      right: 10,
+                      left: 10,
+                      bottom: 0,
+                      top: 0
+                    }
+                  };
+
+                  // Set chart option and render
+                  leaveStatusChart.setOption(option);
+                });
+              </script>
+
+              <div class="mt-2">
+                <div class="d-flex align-items-center mb-2">
+                  <div class="bullet-item me-2" style="background-color: #3874ff;"></div>
+                  <h6 class="text-body fw-semibold flex-1 mb-0">Approved</h6>
+                  <h6 class="text-body fw-semibold mb-0">52%</h6>
+                </div>
+                <div class="d-flex align-items-center">
+                  <div class="bullet-item bg-primary-subtle me-2"></div>
+                  <h6 class="text-body fw-semibold flex-1 mb-0">Denied</h6>
+                  <h6 class="text-body fw-semibold mb-0">48%</h6>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-md-6">
+          <div class="card h-100">
+            <div class="card-body">
+              <div class="d-flex justify-content-between">
+                <div>
+                  <h5 class="mb-1">New submission<span class="badge badge-phoenix badge-phoenix-success rounded-pill fs-9 ms-2"> <span class="badge-label">+26.5%</span></span></h5>
+                  <h6 class="text-body-tertiary">Last 7 days</h6>
+                </div>
+                <h4>56</h4>
+              </div>
+              <div class="pb-0 pt-4">
+                <div id="line-chart" style="height:180px;width:100%;"></div>
+              </div>
+
+              <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                  // Initialize ECharts chart
+                  var lineChart = echarts.init(document.getElementById('line-chart'));
+
+                  // Sample data for testing
+                  var data = {
+                    'Last Month': [10, 15, 8, 12, 20, 18, 14],
+                    'This Month': [5, 10, 6, 8, 15, 12, 10]
+                  };
+
+                  // X-axis data for seven days
+                  var days = ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7'];
+
+                  var option = {
+                    tooltip: {
+                      trigger: 'axis',
+                      padding: 10,
+                      backgroundColor: '#eff2f6',
+                      borderColor: '#cbd0dd,',
+                      textStyle: {
+                        color: '#141824'
+                      },
+                      borderWidth: 1,
+                      transitionDuration: 0,
+                      axisPointer: {
+                        type: 'none'
+                      }
+                    },
+                    xAxis: [{
+                        type: 'category',
+                        data: days,
+                        show: true,
+                        boundaryGap: false,
+                        axisLine: {
+                          show: true,
+                          lineStyle: {
+                            color: '#525b75',
+                            opacity: 0.5
+                          }
+                        },
+                        axisTick: {
+                          show: false
+                        },
+                        axisLabel: {
+                          showMinLabel: true,
+                          showMaxLabel: false,
+                          color: '#525b75',
+                          opacity: 0.75,
+                          align: 'left',
+                          interval: 5,
+                          fontFamily: 'Nunito Sans',
+                          fontWeight: 600,
+                          fontSize: 12.8
+                        }
+                      },
+                      {
+                        type: 'category',
+                        position: 'bottom',
+                        show: true,
+                        data: days,
+                        axisLabel: {
+                          interval: 130,
+                          showMaxLabel: true,
+                          showMinLabel: false,
+                          color: '#525b75',
+                          opacity: 0.75,
+                          align: 'right',
+                          fontFamily: 'Nunito Sans',
+                          fontWeight: 600,
+                          fontSize: 12.8
+                        },
+                        axisLine: {
+                          show: false
+                        },
+                        axisTick: {
+                          show: false
+                        },
+                        splitLine: {
+                          show: false
+                        },
+                        boundaryGap: false
+                      }
+                    ],
+                    yAxis: {
+                      show: false,
+                      type: 'value',
+                      boundaryGap: false
+                    },
+                    series: [{
+                        name: 'Last Month',
+                        type: 'line',
+                        data: data['Last Month'],
+                        showSymbol: false,
+                        symbol: 'circle',
+                        lineStyle: {
+                          width: 2,
+                          color: '#525b75',
+                          opacity: 0.15,
+                        },
+                        emphasis: {
+                          lineStyle: {
+                            color: '#525b75'
+                          }
+                        }
+                      },
+                      {
+                        name: 'This Month',
+                        type: 'line',
+                        data: data['This Month'],
+                        lineStyle: {
+                          width: 2,
+                          color: '#3874ff',
+                        },
+                        showSymbol: false,
+                        symbol: 'circle'
+                      }
+                    ],
+                    grid: {
+                      left: 0,
+                      right: 0,
+                      top: 5,
+                      bottom: 20
+                    }
+                  };
+
+                  // Set chart option and render
+                  lineChart.setOption(option);
+                });
+              </script>
+
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-md-6">
+          <div class="card h-100">
+            <div class="card-body">
+              <div class="d-flex justify-content-between">
+                <div>
+                  <h5 class="mb-2">Total status</h5>
+                  <h6 class="text-body-tertiary">Last 7 days</h6>
+                </div>
+              </div>
+              <div class="pb-4 pt-3">
+                <div id="pie-chart" style="height:130px;width:100%;"></div>
+              </div>
+
+              <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                  // Initialize ECharts chart
+                  var lineChart = echarts.init(document.getElementById('pie-chart'));
+
+                  var option = {
+                    color: [
+                      '#3874ff',
+                      '#adc5ff',
+                      '#0080c7'
+                    ],
+
+                    tooltip: {
+                      trigger: 'item',
+                      padding: [7, 10],
+                      backgroundColor: '#eff2f6',
+                      borderColor: '#cbd0dd',
+                      textStyle: {
+                        color: '#141824'
+                      },
+                      borderWidth: 1,
+                      transitionDuration: 0,
+                      position(pos, params, el, elRect, size) {
+                        const obj = {
+                          top: pos[1] - 35
+                        }; // set tooltip position over 35px from pointer
+                        if (window.innerWidth > 540) {
+                          if (pos[0] <= size.viewSize[0] / 2) {
+                            obj.left = pos[0] + 20; // 'move in right';
+                          } else {
+                            obj.left = pos[0] - size.contentSize[0] - 20;
+                          }
+                        } else {
+                          obj[pos[0] < size.viewSize[0] / 2 ? 'left' : 'right'] = 0;
+                        }
+                        return obj;
+                      },
+                      formatter: params => {
+                        return `<strong>${params.data.name}:</strong> ${params.percent}%`;
+                      }
+                    },
+                    legend: {
+                      show: false
+                    },
+                    series: [{
+                      name: '72%',
+                      type: 'pie',
+                      radius: ['99%', '87%'],
+                      avoidLabelOverlap: false,
+                      emphasis: {
+                        scale: false,
+                        itemStyle: {
+                          color: 'inherit'
+                        }
+                      },
+                      itemStyle: {
+                        borderWidth: 1,
+                        borderColor: '#e3e6ed',
+                      },
+                      label: {
+                        show: true,
+                        position: 'center',
+                        formatter: '{a}',
+                        fontSize: 23,
+                        color: '#3e465b'
+                      },
+                      data: [{
+                          value: 7200000,
+                          name: 'Approved/Denied'
+                        },
+                        {
+                          value: 1800000,
+                          name: 'Pending'
+                        },
+                        {
+                          value: 1000000,
+                          name: 'Invalid'
+                        }
+                      ]
+                    }],
+                    grid: {
+                      containLabel: true
+                    }
+                  };
+
+                  // Set chart option and render
+                  lineChart.setOption(option);
+                });
+              </script>
+
+              <div>
+                <div class="d-flex align-items-center mb-2">
+                  <div class="bullet-item me-2" style="background-color: #3874ff;"></div>
+                  <h6 class="text-body fw-semibold flex-1 mb-0">Approved/Denied</h6>
+                  <h6 class="text-body fw-semibold mb-0">72%</h6>
+                </div>
+                <div class="d-flex align-items-center mb-2">
+                  <div class="bullet-item me-2" style="background-color: #adc5ff;"></div>
+                  <h6 class="text-body fw-semibold flex-1 mb-0">Pending</h6>
+                  <h6 class="text-body fw-semibold mb-0">18%</h6>
+                </div>
+                <div class="d-flex align-items-center">
+                  <div class="bullet-item me-2" style="background-color: #0080c7;"></div>
+                  <h6 class="text-body fw-semibold flex-1 mb-0">Invalid</h6>
+                  <h6 class="text-body fw-semibold mb-0">10%</h6>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-md-6">
+          <div class="card h-100">
+            <div class="card-body d-flex flex-column">
+              <div class="d-flex justify-content-between">
+                <div>
+                  <h5 class="mb-2">Pending vs Invalid</h5>
+                  <h6 class="text-body-tertiary">Last 7 days</h6>
+                </div>
+              </div>
+              <div class="d-flex justify-content-center pt-3 flex-1">
+                <div id="gauge-chart" style="height:100%;width:100%;"></div>
+              </div>
+
+              <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                  // Initialize ECharts chart
+                  var gaugeChart = echarts.init(document.getElementById('gauge-chart'));
+
+                  var option = {
+                    tooltip: {
+                      trigger: 'item',
+                      padding: [7, 10],
+                      backgroundColor: '#eff2f6',
+                      borderColor: '#cbd0dd',
+                      textStyle: {
+                        color: '#333'
+                      },
+                      borderWidth: 1,
+                      formatter: function(params) {
+                        return `<strong>${params.seriesName}:</strong> ${params.value}%<br>`;
+                      }
+                    },
+                    legend: {
+                      show: false
+                    },
+                    series: [{
+                      type: 'gauge',
+                      center: ['50%', '60%'],
+                      name: 'Pending', // Sample series name
+                      startAngle: 180,
+                      endAngle: 0,
+                      min: 0,
+                      max: 100,
+                      splitNumber: 12,
+                      itemStyle: {
+                        color: '#3874ff'
+                      },
+                      progress: {
+                        show: true,
+                        roundCap: true,
+                        width: 12,
+                        itemStyle: {
+                          shadowBlur: 0,
+                          shadowColor: '#0000'
+                        }
+                      },
+                      pointer: {
+                        show: false
+                      },
+                      axisLine: {
+                        roundCap: true,
+                        lineStyle: {
+                          width: 12,
+                          color: [
+                            [1, 'rgba(159, 166, 188, 0.2)'],
+                          ]
+                        }
+                      },
+                      axisTick: {
+                        show: false
+                      },
+                      splitLine: {
+                        show: false
+                      },
+                      axisLabel: {
+                        show: false
+                      },
+                      title: {
+                        show: false
+                      },
+                      detail: {
+                        show: false
+                      },
+                      data: [{
+                        value: 30
+                      }]
+                    }]
+                  };
+
+                  // Set chart option and render
+                  gaugeChart.setOption(option);
+                });
+              </script>
+
+              <div class="mt-3">
+                <div class="d-flex align-items-center mb-2">
+                  <div class="bullet-item me-2" style="background-color: #3874ff;"></div>
+                  <h6 class="text-body fw-semibold flex-1 mb-0">Pending</h6>
+                  <h6 class="text-body fw-semibold mb-0">30%</h6>
+                </div>
+                <div class="d-flex align-items-center">
+                  <div class="bullet-item bg-primary-subtle me-2"></div>
+                  <h6 class="text-body fw-semibold flex-1 mb-0">Invalid</h6>
+                  <h6 class="text-body fw-semibold mb-0">70%</h6>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- table for all leave -->
+<div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis pt-7 border-y">
+  <div data-list='{"valueNames":["type","user","approval","status","datetime"],"page":6}'>
+    <div class="row align-items-end justify-content-between pb-5 g-3">
+      <div class="col-auto">
+        <h3>User Leave</h3>
+        <p class="text-body-tertiary lh-sm mb-0">User initiates leave request for personal or professional absence temporarily</p>
+      </div>
+      <div class="col-12 col-md-auto">
+        <div class="row g-2 gy-3">
+          <div class="col-auto flex-1">
+            <div class="search-box">
+              <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
+                <input class="form-control search-input search form-control-sm" type="search" placeholder="Search" aria-label="Search" />
+                <span class="fas fa-search search-box-icon"></span>
+
+              </form>
+            </div>
+          </div>
+          <div class="col-auto">
+            <button class="btn btn-sm btn-phoenix-secondary bg-body-emphasis bg-body-hover me-2" type="button">All leave</button>
+            <button class="btn btn-sm btn-phoenix-secondary bg-body-emphasis bg-body-hover action-btn" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fas fa-ellipsis-h" data-fa-transform="shrink-2"></span></button>
+            <ul class="dropdown-menu dropdown-menu-end d-none">
+              <li><a class="dropdown-item" href="#">Action</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="table-responsive mx-n1 px-1 scrollbar">
+      <table class="table fs-9 mb-0 border-top border-translucent">
+        <thead>
+          <tr>
+            <th class="white-space-nowrap fs-9 ps-0 align-middle">
+              <div class="form-check mb-0 fs-8">
+                <input class="form-check-input" id="checkbox-select" type="checkbox" data-bulk-select='{"body":"table-user-leave"}' />
+              </div>
+            </th>
+            <th class="sort white-space-nowrap align-middle" scope="col" style="min-width:200px;" data-sort="type">TYPE</th>
+            <th class="sort align-middle" scope="col" data-sort="user" style="min-width:250px;">USER</th>
+            <th class="sort align-middle" scope="col" style="max-width:300px;" data-sort="approval">APPROVALS</th>
+            <th class="sort text-start ps-5 align-middle" scope="col" style="min-width:200px;" data-sort="status">STATUS</th>
+            <th class="sort text-end align-middle" scope="col" style="min-width:200px;" data-sort="datetime">DATE TIME</th>
+            <th class="sort text-end pe-0 align-middle" scope="col"></th>
+          </tr>
+        </thead>
+        <tbody class="list" id="table-user-leave">
+          <%
+            function formatDate(timestamp) {
+                const options = { day: 'numeric', month: 'long', year: 'numeric' };
+                const formattedDate = new Date(timestamp).toLocaleDateString('en-US', options);
+    
+                // Split the formatted date to get day, month, and year separately
+                const [month, day, year] = formattedDate.split(' ');
+
+                // Get today's date components
+                const today = new Date();
+                const todayOptions = { day: 'numeric', month: 'long', year: 'numeric' };
+                const todayFormatted = today.toLocaleDateString('en-US', todayOptions);
+
+                // Check if the timestamp is from today
+                if (formattedDate === todayFormatted) {
+                  return 'Just today';
+                } else {
+                  // Format the date as 'day Month year'
+                  const formattedDateCustom = `${day} ${month} ${year}`;
+                  return formattedDateCustom;
+                }
+            }
+          %>
+          <% if(allLeave.length > 0 && allLeave){ %>
+          <% allLeave.forEach((leave) => { %>
+          <tr class="hover-actions-trigger btn-reveal-trigger position-static">
+            <td class="fs-9 align-middle ps-0">
+              <div class="form-check mb-0 fs-8">
+                <input class="form-check-input" type="checkbox" data-bulk-select-row='{"":""}' />
+              </div>
+            </td>
+
+            <td class="align-middle type white-space-nowrap"><a class="fw-bold fs-8" href="/leave/details/<%= leave.uuid %>"><%= leave.type %></a></td>
+            <td class="align-middle user white-space-nowrap">
+              <% const correspondingUser = allUser.find(user => user._id.toString() === leave.user.toString()); %>
+              <% if (correspondingUser) { %>
+              <!-- Populate user information (example: name and avatar) -->
+              <a class="d-flex align-items-center text-body" href="#">
+                <div class="avatar avatar-l">
+                  <div class="avatar-name rounded-circle"><span><%= correspondingUser.fullname.charAt(0) %></span></div>
+                </div>
+                <h6 class="mb-0 ms-3 text-body"><%= correspondingUser.fullname %></h6>
+              </a>
+              <% } else { %>
+              <!-- Handle the case where the user is not found -->
+              <p>User not found</p>
+              <% } %>
+            </td>
+            <td class="align-middle approval white-space-nowrap">
+              <% if (leave.approvals && leave.approvals.length > 0) { %>
+              <% const latestApproval = leave.approvals.reduce((latest, approval) => approval.timestamp > latest.timestamp ? approval : latest, leave.approvals[0]); %>
+              <p class="fs-9 fw-semibold text-body-highlight mb-0"><%= latestApproval.role %> has <%= latestApproval.comment %> at <%= formatDate(latestApproval.timestamp) %></p>
+              <% }%>
+            </td>
+            <td class="align-middle text-start ps-5 status"><span class="badge badge-phoenix fs-10 badge-phoenix-success"><span class="badge-label"><%= leave.status %></span><span class="ms-1" data-feather="check" style="height:12.8px;width:12.8px;"></span></span></td>
+            <td class="align-middle text-end datetime white-space-nowrap">
+              <div class="hover-hide">
+                <h6 class="text-body-highlight mb-0"><%= formatDate(leave.timestamp) %></h6>
+              </div>
+            </td>
+            <td class="align-middle white-space-nowrap text-end pe-0">
+              <div class="position-relative">
+                <div class="hover-actions">
+                  <button class="btn btn-sm btn-phoenix-secondary fs-10"><span class="fas fa-trash"></span></button>
+                </div>
+              </div>
+              <div class="btn-reveal-trigger position-static">
+                <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs-10" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fas fa-ellipsis-h fs-10"></span></button>
+                <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item" href="#!">View</a><a class="dropdown-item" href="#!">Export</a>
+                  <div class="dropdown-divider"></div><a class="dropdown-item text-danger" href="#!">Remove</a>
+                </div>
+              </div>
+            </td>
+          </tr>
+          <% }); %>
+          <% } else { %>
+          <p>There is single leave here</p>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+    <div class="row align-items-center py-1">
+      <div class="pagination d-none"></div>
+      <div class="col d-flex fs-9">
+        <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p><a class="fw-semibold" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semibold d-none" href="#!" data-list-view="less">View Less</a>
+      </div>
+      <div class="col-auto d-flex">
+
+        <button class="btn btn-link px-1 me-1" type="button" title="Previous" data-list-pagination="prev"><span class="fas fa-chevron-left me-2"></span>Previous</button>
+        <button class="btn btn-link px-1 ms-1" type="button" title="Next" data-list-pagination="next">Next<span class="fas fa-chevron-right ms-2"></span></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<% } %>
 
 <!-- toast alert submission -->
 <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 5">

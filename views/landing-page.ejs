@@ -4,8 +4,8 @@
   <!-- landing page nav  -->
   <div class="bg-body-emphasis sticky-top landing-navbar" data-navbar-shadow-on-scroll="data-navbar-shadow-on-scroll">
     <nav class="navbar navbar-expand-lg container-small px-3 px-lg-7 px-xxl-3"><a class="navbar-brand flex-1 flex-lg-grow-0" href="../../index.html">
-        <div class="d-flex align-items-center"><img src="../../assets/img/icons/logo.png" alt="phoenix" width="27" />
-          <p class="logo-text ms-2">phoenix</p>
+        <div class="d-flex align-items-center"><img src="../../assets/img/icons/logo.png" alt="" width="27" />
+          <p class="logo-text ms-2">lakmnsportal</p>
         </div>
       </a>
       <div class="d-lg-none">
@@ -28,9 +28,7 @@
         </div>
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
           <li class="nav-item border-bottom border-translucent border-bottom-lg-0"><a class="nav-link lh-1 py-0 fs-9 fw-bold py-3" aria-current="page" href="#">Home</a></li>
-          <li class="nav-item border-bottom border-translucent border-bottom-lg-0"><a class="nav-link lh-1 py-0 fs-9 fw-bold py-3" href="#feature">Features</a></li>
-          <li class="nav-item border-bottom border-translucent border-bottom-lg-0"><a class="nav-link lh-1 py-0 fs-9 fw-bold py-3" href="#blog">Blog</a></li>
-          <li class="nav-item"><a class="nav-link lh-1 py-0 fs-9 fw-bold py-3" href="#team">Team</a></li>
+          <li class="nav-item border-bottom border-translucent border-bottom-lg-0"><a class="nav-link lh-1 py-0 fs-9 fw-bold py-3" href="#gallery">Gallery</a></li>
         </ul>
         <div class="d-grid d-lg-flex align-items-center">
           <div class="nav-item d-flex align-items-center d-none d-lg-block pe-2">
@@ -39,7 +37,7 @@
               <label class="mb-0 theme-control-toggle-label theme-control-toggle-light" for="themeControlToggle" data-bs-toggle="tooltip" data-bs-placement="left" title="Switch theme"><span class="icon" data-feather="moon"></span></label>
               <label class="mb-0 theme-control-toggle-label theme-control-toggle-dark" for="themeControlToggle" data-bs-toggle="tooltip" data-bs-placement="left" title="Switch theme"><span class="icon" data-feather="sun"></span></label>
             </div>
-          </div><a class="text-body-tertiary text-body-emphasis-hover px-2 d-none d-lg-inline lh-sm" href="#" data-bs-toggle="modal" data-bs-target="#searchBoxModal"><span data-feather="search" style="height: 20px; width: 20px;"></span></a><a class="btn btn-link text-body order-1 order-lg-0 ps-4 me-lg-2" href="/sign-up">Other Link</a><a class="btn btn-phoenix-primary order-0" href="/sign-in"><span class="fw-bold">Sign In</span></a>
+          </div><a class="text-body-tertiary text-body-emphasis-hover px-2 d-none d-lg-inline lh-sm" href="#" data-bs-toggle="modal" data-bs-target="#searchBoxModal"><span data-feather="search" style="height: 20px; width: 20px;"></span></a><a class="btn btn-link text-body order-1 order-lg-0 ps-4 me-lg-2" href="/sign-up">Sign Up</a><a class="btn btn-phoenix-primary order-0" href="/sign-in"><span class="fw-bold">Sign In</span></a>
         </div>
       </div>
     </nav>
@@ -188,28 +186,23 @@
   </div>
 
   <!-- hero section -->
-  <section class="pb-8 overflow-hidden" id="home">
-    <% circles.forEach(circle => { %>
-    <div <% /* eslint-disable css-propertyvalueexpected */ %> class="gradient-circle" style="top: <%= circle.y %>%; left: <%= circle.x %>vw; width: <%= circle.size %>px; height: <%= circle.size %>px;">
-    </div>
-    <% }); %>
+  <section class="pb-2 overflow-hidden" id="home">
     <div class="hero-header-container-alternate position-relative">
       <div class="container-small px-lg-5 px-xxl-3">
-        <div class="gradient-circle"></div>
         <div class="row align-items-center">
           <div class="col-12 col-lg-6 pt-8 pb-6 position-relative z-5 text-center text-lg-start">
-            <h1 class="fs-3 fs-md-2 fs-xl-1 fw-black mb-4"><span class="text-gradient-info me-3">Elegance</span>for<br />your web app</h1>
-            <p class="mb-5 pe-xl-10">Standard, modern and Elegant solution for your next web app so you don’t have to look further. Sign up or check the demo below.</p><a class="btn btn-lg btn-primary rounded-pill me-3" href="/sign-in" role="button">Sign In</a><a class="btn btn-link me-2 fs-8 p-0 d-none" href="#!" role="button">Check Demo<span class="fa-solid fa-angle-right ms-2 fs-9"></span></a>
+            <h1 class="fs-3 fs-md-2 fs-xl-1 fw-black mb-4"><span class="text-gradient-info me-3">Portal</span>for<br />our workplace</h1>
+            <p class="mb-5 pe-xl-10">Digital gateway, the portal facilitates access, interaction, and exchange of information, services, or resources within a specific platform</p><a class="btn btn-lg btn-primary rounded-pill me-3" href="/sign-in" role="button">Sign In</a><a class="btn btn-link me-2 fs-8 p-0 d-none" href="#!" role="button">Check Demo<span class="fa-solid fa-angle-right ms-2 fs-9"></span></a>
           </div>
-          <div class="col-12 col-lg-6 d-none d-lg-block">
-            <div class="lottie d-dark-none" data-options='{"path":"https://lottie.host/7b3afcb8-b92c-440d-a417-7ca6fc8559a9/ldkqfvhECJ.json"}'></div>
-            <div class="lottie d-light-none" data-options='{"path":"https://lottie.host/7b3afcb8-b92c-440d-a417-7ca6fc8559a9/ldkqfvhECJ.json"}'></div>
+          <div class="col-12 col-lg-6 d-none d-lg-block mb-3">
+            <lottie-player class="mx-auto mt-n3" src="https://lottie.host/82a7b999-62f0-4f54-9329-acc83233ebb4/CYoNwqBvXW.json" background="##FFFFFF" speed="1" style="width: 650px; height: 650px" loop autoplay direction="1" mode="normal"></lottie-player>
+            <!-- <div class="lottie d-light-none" data-options='{"path":"https://lottie.host/82a7b999-62f0-4f54-9329-acc83233ebb4/CYoNwqBvXW.json"}' style="width: 450px; height: 550px"></div> -->
           </div>
         </div>
       </div>
       <div class="container-small px-md-8 mb-0 d-lg-none">
-        <div class="lottie d-dark-none" data-options='{"path":"https://lottie.host/7b3afcb8-b92c-440d-a417-7ca6fc8559a9/ldkqfvhECJ.json"}'></div>
-        <div class="lottie d-light-none" data-options='{"path":"https://lottie.host/7b3afcb8-b92c-440d-a417-7ca6fc8559a9/ldkqfvhECJ.json"}'></div>
+        <div class="lottie d-dark-none" data-options='{"path":"https://lottie.host/82a7b999-62f0-4f54-9329-acc83233ebb4/CYoNwqBvXW.json"}' style="width: 450px; height: 450px"></div>
+        <div class="lottie d-light-none" data-options='{"path":"https://lottie.host/7b3afcb8-b92c-440d-a417-7ca6fc8559a9/ldkqfvhECJ.json"}' style="width: 450px; height: 450px"></div>
       </div>
     </div>
   </section>
@@ -218,7 +211,7 @@
 
   <!-- ============================================-->
   <!-- features begin ============================-->
-  <section class="pt-13 pb-10 mt-n10" id="feature">
+  <!-- <section class="pt-13 pb-10 mt-n10" id="feature">
 
     <div class="container-small px-lg-7 px-xxl-3">
       <div class="text-center mb-10 mb-md-5">
@@ -249,15 +242,14 @@
         <div class="col-md-5 mb-5 mb-md-0 text-center"><img class="w-75 w-md-100 d-dark-none" src="../../assets/img/spot-illustrations/36.png" alt="" /><img class="w-75 w-md-100 d-light-none" src="../../assets/img/spot-illustrations/36_2.png" alt="" /></div>
       </div>
     </div>
-    <!-- end of .container-->
 
-  </section>
+  </section> -->
   <!-- features close ============================-->
   <!-- ============================================-->
 
   <!-- ============================================-->
   <!-- carousel begin ============================-->
-  <section class="pb-14 overflow-x-hidden">
+  <!-- <section class="pb-14 overflow-x-hidden">
 
     <div class="container-small px-lg-7 px-xxl-3">
       <div class="text-center mb-5 position-relative">
@@ -267,7 +259,6 @@
       <div class="carousel testimonial-carousel slide position-relative dark__bg-gray-1100" id="carouselExampleIndicators" data-bs-ride="carousel">
         <div class="bg-holder d-none d-md-block" style="background-image:url(../../assets/img/bg/39.png);background-size:186px;background-position:top 20px right 20px;">
         </div>
-        <!--/.bg-holder-->
 
         <div class="carousel-inner">
           <div class="carousel-item text-center py-8 px-5 px-xl-15 active">
@@ -318,20 +309,16 @@
         </div>
       </div>
     </div>
-    <!-- end of .container-->
 
-  </section>
+  </section> -->
   <!-- carousel close ============================-->
   <!-- ============================================-->
 
 
   <!-- gallery -->
-  <section class="gallery">
-    <!--/.bg-holder-->
+  <!-- <section class="gallery mt-10" id="gallery">
 
-    <!--/.bg-holder-->
-
-    <div class="container-small position-relative px-lg-7 px-xxl-3">
+    <div class="container-small position-relative px-lg-7 px-xxl-3 mt-n10">
       <div class="text-center mb-7">
         <h5 class="text-info mb-3">Gallery</h5>
         <h2 class="mb-2">Our best works</h2>
@@ -361,7 +348,7 @@
         </div>
       </div>
     </div>
-  </section>
+  </section> -->
 
   <!-- ============================================-->
   <!-- pre-footer begin ============================-->
@@ -378,14 +365,14 @@
             <!--/.bg-holder-->
 
             <div class="card-body position-relative">
-              <lottie-player class="mx-auto mt-n3" src="https://lottie.host/60803a11-6e8f-4ef2-bee6-0f7b7f5a933d/ALrblUIzTT.json" background="##FFFFFF" speed="1" style="width: 450px; height: 450px" loop autoplay direction="1" mode="normal"></lottie-player>
-              <p class="fw-bold">2008 Premium Icons <span class="text-primary fs-6">.</span> Included FREE with it</p>
-              <h1 class="fs-6 fs-sm-4 fs-lg-2 fw-bolder lh-sm mb-3">Join<span class="gradient-text-primary mx-2">Phoenix</span><span>Today</span></h1>
-              <form class="d-flex justify-content-center mb-3 px-xxl-15">
+              <lottie-player class="mx-auto mt-n3" src="https://lottie.host/7847ef99-588c-41b1-8b2a-8ac84a876009/nVO8M8nzJj.json" background="##FFFFFF" speed="1" style="width: 450px; height: 450px" loop autoplay direction="1" mode="normal"></lottie-player>
+              <!-- <p class="fw-bold"><span class="text-primary fs-6"></span></p> -->
+              <h1 class="fs-6 fs-sm-4 fs-lg-2 fw-bolder lh-sm mb-3">Join<span class="gradient-text-primary mx-2">lakmnsportal</span><span>today</span></h1>
+              <!-- <form class="d-flex justify-content-center mb-3 px-xxl-15">
                 <div class="d-grid d-sm-block"></div>
                 <input class="form-control me-3" id="ctaEmail1" type="email" placeholder="Email" aria-describedby="ctaEmail1" />
                 <button class="btn btn-primary" type="submit">Subscribe</button>
-              </form>
+              </form> -->
             </div>
           </div>
         </div>
@@ -403,7 +390,7 @@
 
     <div class="container-small px-lg-7 px-xxl-3">
       <div class="row gx-xxl-8 gy-5 align-items-center mb-5">
-        <div class="col-xl-auto text-center"><a href="#"><img src="../../assets/img/icons/logo-white.png" height="48" alt="" /></a></div>
+        <div class="col-xl-auto text-center"><a href="#"><img src="../../assets/img/icons/logo.png" height="48" alt="" /></a></div>
         <div class="col-xl-auto flex-1">
           <ul class="list-unstyled d-flex justify-content-center flex-wrap mb-0 border-end-xl border-dashed gap-3 gap-xl-8 pe-xl-5 pe-xxl-8 w-75 w-md-100 mx-auto">
             <li><a class="text-light text-opacity-75" href="">Contact us</a></li>
@@ -421,8 +408,8 @@
       </div>
       <hr class="border-top" />
       <div class="d-sm-flex flex-between-center text-center">
-        <p class="text-body-tertiary mb-0">Copyright © Company Name</p>
-        <p class="text-body-tertiary mb-0">Made with love by <a href="https://themewagon.com">ThemeWagon</a></p>
+        <p class="text-body-tertiary mb-0">Copyright © LAKMNS</p>
+        <p class="text-body-tertiary mb-0">Made by <a href="#">LAKMNS PROTECH</a></p>
       </div>
     </div>
     <!-- end of .container-->

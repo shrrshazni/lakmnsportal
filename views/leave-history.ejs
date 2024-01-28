@@ -35,19 +35,36 @@ function formatDate(inputDate) {
 </div>
 
 <div class="row">
+
   <div class="col-12 col-lg-9">
 
     <div class="mb-6">
-      <div class="card">
-        <div class="card-body" style="height: 25vh;">
-
+      <div class="card mb-3">
+        <div class="card-body">
+          <h5 class="mb-3">User Leave Balance</h5>
+          <% if (userLeave) { %>
+          <ul class="list-group">
+            <% const leaveTypes = ['annual', 'sick', 'emergency', 'paternity', 'marriage', 'bereavement', 'hajj']; %>
+            <% leaveTypes.forEach(type => { %>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <%= type.charAt(0).toUpperCase() + type.slice(1) %>
+              <span class="badge bg-secondary"><%= userLeave[type] %></span>
+            </li>
+            <% }); %>
+          </ul>
+          <% }%>
         </div>
       </div>
     </div>
 
-    <div class="mb-6">
+    <!-- current leaves -->
+    <div class="bg-body-emphasis min-vh-50 mb-6 p-4">
       <div id="leaveHistory" data-list='{"valueNames":["type","startdate","returndate","status"],"page":6,"pagination":true}'>
         <div class="row g-3 justify-content-between align-items-end mb-4">
+          <div class="col-auto">
+            <h3>Current Leaves</h3>
+            <p class="text-body-tertiary lh-sm mb-0">Presently approved time off granted</p>
+          </div>
           <div class="col-12 col-sm-auto">
             <div class="d-flex align-items-center">
               <div class="search-box me-0">
@@ -78,6 +95,16 @@ function formatDate(inputDate) {
                 <th class="sort align-middle text-end" scope="col" style="width: 10%"></th>
               </tr>
             </thead>
+
+            <% 
+              function formatDate(inputDate) {
+                const day = String(inputDate.getDate()).padStart(2, '0');
+                const month = String(inputDate.getMonth() + 1).padStart(2, '0');
+                const year = inputDate.getFullYear();
+              
+                return `${day}/${month}/${year}`;
+              }
+              %>
 
             <!-- table content -->
             <tbody class="list" id="project-list-table-body">
@@ -134,5 +161,78 @@ function formatDate(inputDate) {
       </div>
     </div>
   </div>
+
+  <div class="col-12 col-lg-3 mb-6">
+
+    <div class="card h-100 scrollbar-overlay overflow-y-auto">
+      <div class="card-body">
+        <div class="card-title mb-1">
+          <h3 class="text-body-emphasis">Activity</h3>
+        </div>
+        <p class="text-body-tertiary mb-4">Department's recent leave activity</p>
+        <div class="timeline-vertical timeline-with-details">
+          <div class="timeline-item position-relative">
+            <div class="row g-md-3">
+              <div class="col-12 col-md-auto d-flex">
+                <div class="timeline-item-date order-1 order-md-0 me-md-4">
+                  <p class="fs-10 fw-semibold text-body-tertiary text-opacity-85 text-end">01 DEC, 2023<br class="d-none d-md-block" /> 10:30 AM</p>
+                </div>
+                <div class="timeline-item-bar position-md-relative me-3 me-md-0">
+                  <div class="icon-item icon-item-sm rounded-7 shadow-none bg-primary-subtle"><span class="fa-solid fa-chess text-primary-dark fs-10"></span></div><span class="timeline-bar border-end border-dashed"></span>
+                </div>
+              </div>
+              <div class="col">
+                <div class="timeline-item-content ps-6 ps-md-3">
+                  <h5 class="fs-9 lh-sm">Annual Leave</h5>
+                  <p class="fs-9">by <a class="fw-semibold" href="#!">Shantinon Mekalan</a></p>
+                  <p class="fs-9 text-body-secondary mb-5">The user requested leave, specifying the duration and reason, which was subsequently reviewed and approved, marking an authorized absence period.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="timeline-item position-relative">
+            <div class="row g-md-3">
+              <div class="col-12 col-md-auto d-flex">
+                <div class="timeline-item-date order-1 order-md-0 me-md-4">
+                  <p class="fs-10 fw-semibold text-body-tertiary text-opacity-85 text-end">03 JAN, 2023<br class="d-none d-md-block" /> 12:45 PM</p>
+                </div>
+                <div class="timeline-item-bar position-md-relative me-3 me-md-0">
+                  <div class="icon-item icon-item-sm rounded-7 shadow-none bg-primary-subtle"><span class="fa-solid fa-dove text-primary-dark fs-10"></span></div><span class="timeline-bar border-end border-dashed"></span>
+                </div>
+              </div>
+              <div class="col">
+                <div class="timeline-item-content ps-6 ps-md-3">
+                  <h5 class="fs-9 lh-sm">Sick Leave</h5>
+                  <p class="fs-9">by <a class="fw-semibold" href="#!">Bookworm22</a></p>
+                  <p class="fs-9 text-body-secondary mb-5">Employee submitted sick leave request, providing details on illness. After review, the leave was approved, allowing time off for recovery</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="timeline-item position-relative">
+            <div class="row g-md-3">
+              <div class="col-12 col-md-auto d-flex">
+                <div class="timeline-item-date order-1 order-md-0 me-md-4">
+                  <p class="fs-10 fw-semibold text-body-tertiary text-opacity-85 text-end">15 DEC, 2023<br class="d-none d-md-block" /> 2:30 AM</p>
+                </div>
+                <div class="timeline-item-bar position-md-relative me-3 me-md-0">
+                  <div class="icon-item icon-item-sm rounded-7 shadow-none bg-primary-subtle"><span class="fa-solid fa-dungeon text-primary-dark fs-10"></span></div>
+                </div>
+              </div>
+              <div class="col">
+                <div class="timeline-item-content ps-6 ps-md-3">
+                  <h5 class="fs-9 lh-sm">Hajj Leave</h5>
+                  <p class="fs-9">by <a class="fw-semibold" href="#!">Sharuka Nijibum</a></p>
+                  <p class="fs-9 text-body-secondary mb-0">Employee requested Hajj leave for 40 days, citing religious pilgrimage. The request was reviewed and approved, allowing dedicated time off</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+  </div>
+
 </div>
-  <%- include('partials/private-footer.ejs') %>
+<%- include('partials/private-footer.ejs') %>

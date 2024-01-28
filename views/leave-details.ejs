@@ -25,20 +25,23 @@
     return `${month} ${day}, ${year}, ${hours}:${minutes}${ampm}`;
   }
 
-  var showApproval = '';
-
+  var showApproval = 'd-none';
   if (approvals && approvals.length > 0) {
-    const userApprovalExists = approvals.some(approval => approval.recipient.equals(user._id));
-    const isUserLeaveOwner = user.username === leave.username;
+        const userApprovalExists = approvals.some(approval => approval.recipient.equals(user._id));
+        const isUserLeaveOwner = user.username === leave.username;
 
-    if (userApprovalExists && !isUserLeaveOwner) {
-        showApproval = '';
-    } else if (isUserLeaveOwner) {
-        showApproval = 'd-none';
-    } else {
-        showApproval = 'd-none';
+        if (!isUserLeaveOwner && leave.status !== 'approved' && leave.status !== 'denied') {
+            if (userApprovalExists) {
+                const userApprovalIndex = approvals.findIndex(approval => approval.recipient.equals(user._id));
+                if (userApprovalIndex > 0) {
+                    const previousApprovalStatus = approvals[userApprovalIndex - 1].status;
+                    if (previousApprovalStatus === 'approved' || previousApprovalStatus === 'submitted') {
+                        showApproval = ''; // Show approval
+                    }
+                }
+            }
+        }
     }
-  }
 %>
 
 <nav class="mb-2" aria-label="breadcrumb">
@@ -51,11 +54,11 @@
 
 <div class="row d-flex flex-wrap justify-content-between align-items-end mb-2">
   <div class="col-auto">
-    <h2>Request #<%= user.username %> Status (<span><%= leave.status %></span>)</h2>
+    <h2>Leave Request #<%= user.fullname %></span></h2>
     <p class="text-body-secondary mb-0">Leave request on <br class="d-sm-none"><span class="ms-sm-1"><%= formatCustomDate(leave.timestamp) %></span></p>
   </div>
 
-  <div class="col-auto">
+  <div class="col-auto <%= showApproval %>">
     <a class="btn btn-primary me-2" role="button" href="/leave/approved/<%= leave.uuid %>">Approve</a>
     <a class="btn btn-outline-danger me-2" role="button" href="/leave/denied/<%= leave.uuid %>">Deny</a>
   </div>
@@ -65,6 +68,55 @@
   <div class="col-12 col-lg-6">
     <div class="border rounded-3 overflow-hidden h-100">
       <div class="min-vh-50 p-3">
+
+        <div class="row g-3 d-flex justify-content-between mb-0 p-3">
+          <div class="col-auto">
+            <h3><%= leave.type %></h3>
+          </div>
+
+          <div class="col-auto">
+            <p class="badge badge-phoenix badge-phoenix-primary fs-9"><%= leave.status %></p>
+          </div>
+        </div>
+
+        <div class="container mt-n5 px-4 py-4">
+          <div class="card">
+            <div class="card-header">
+              <h5 class="mb-0">User Information</h5>
+            </div>
+            <div class="card-body">
+              <p class="card-text mb-1"><strong>Full Name:</strong> <%= user.fullname %></p>
+              <p class="card-text mb-1"><strong>Username:</strong> <%= user.username %></p>
+              <p class="card-text mb-1"><strong>Grade:</strong> <%= user.grade %></p>
+              <p class="card-text mb-1"><strong>Department:</strong> <%= user.department %></p>
+            </div>
+          </div>
+
+          <div class="card mt-3">
+            <div class="card-header">
+              <h5 class="mb-0">Leave Information</h5>
+            </div>
+            <div class="card-body">
+              <p class="card-text mb-1"><strong>Start Date:</strong> <%= formatCustomDate(leave.date.start) %></p>
+              <p class="card-text mb-1"><strong>Return Date:</strong> <%= formatCustomDate(leave.date.return) %></p>
+            </div>
+          </div>
+
+          <div class="card mt-3">
+            <div class="card-header">
+              <h5 class="mb-0">User Leave Information</h5>
+            </div>
+            <div class="card-body">
+              <p class="card-text mb-1"><strong>Annual Leave:</strong> <%= userLeave.annual %></p>
+              <p class="card-text mb-1"><strong>Sick Leave:</strong> <%= userLeave.sick %></p>
+              <p class="card-text mb-1"><strong>Marriage Leave:</strong> <%= userLeave.marriage %></p>
+              <p class="card-text mb-1"><strong>Bereavement Leave:</strong> <%= userLeave.bereavement %></p>
+              <p class="card-text mb-1"><strong>Paternity Leave:</strong> <%= userLeave.paternity %></p>
+              <p class="card-text mb-1"><strong>Hajj Leave:</strong> <%= userLeave.hajj %></p>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
@@ -152,42 +204,6 @@
     </div>
   </div>
 </div>
-
-<%
-function formatDate(timestamp) {
-  const dateObject = new Date(timestamp);
-  return dateObject.toLocaleDateString('en-UK', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    timeZone: 'Asia/Kuala_Lumpur' 
-  });
-}
-%>
-
-<div class="row mb-6 min-vh-50 bg-dark-subtle">
-
-  <div class="col-12 col-lg-6 p-5">
-    <div class="container border-start-0 border-bottom border-top-0 border-end-0 border-end-md border-md-0 border-dashed h-100 overflow-y-auto scrollbar-overlay">
-      <h3 class="mb-3">Upcoming Leaves</h3>
-
-      <% upcomingLeaves.forEach(upcomingLeave => { %>
-      <p><strong><%= upcomingLeave.fullname %></strong>: <%= formatDate(upcomingLeave.date.start) %> until <%= formatDate(upcomingLeave.date.return) %>, <%= upcomingLeave.status  %> </p>
-      <% }); %>
-    </div>
-  </div>
-
-  <div class="col-12 col-lg-6 p-5">
-    <div class="container h-100">
-      <h3 class="mb-3">Colleague Leaves</h3>
-
-      <% colleagueLeaves.forEach(colleagueLeave => { %>
-      <p><strong><%= colleagueLeave.fullname %></strong>: <%= formatDate(colleagueLeave.date.start) %> until <%= formatDate(colleagueLeave.date.return) %>, <%= colleagueLeave.status %> </p>
-      <% }); %>
-    </div>
-  </div>
-</div>
-
 
 <div class="modal fade" id="leaveApproval" tabindex="-1" aria-labelledby="leaveApproval" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-md">
