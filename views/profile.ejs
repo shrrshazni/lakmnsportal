@@ -154,11 +154,17 @@
     <div class="tab-pane fade" id="tab-leave" role="tabpanel" aria-labelledby="reviews-tab">
       <div class="row g-3 mb-6">
         <div class="col-12 col-xxl-3 order-0 order-xxl-1 mb-3">
-          <div class="card">
-            <div class="card-body">
-
-            </div>
-          </div>
+          <% if (userLeave) { %>
+          <ul class="list-group">
+            <% const leaveTypes = ['annual', 'sick', 'emergency', 'paternity', 'marriage', 'bereavement', 'hajj']; %>
+            <% leaveTypes.forEach(type => { %>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <%= type.charAt(0).toUpperCase() + type.slice(1) %>
+              <span class="badge bg-secondary"><%= userLeave[type] %></span>
+            </li>
+            <% }); %>
+          </ul>
+          <% }%>
         </div>
 
         <div class="col-12 col-xxl-9 order-1 order-xxl-0 border-y" id="profileRatingTable" data-list='{"valueNames":["product","rating","review","status","date"],"page":6,"pagination":true}'>
@@ -167,15 +173,14 @@
               <thead>
                 <tr>
                   <th class="sort white-space-nowrap align-middle" scope="col" style="min-width:220px;" data-sort="product">PRODUCT</th>
-                  <th class="sort align-middle" scope="col" data-sort="rating" style="max-width:10%;">RATING</th>
-                  <th class="sort align-middle" scope="col" style="min-width:480px" data-sort="review">REVIEW</th>
+                  <th class="sort align-middle" scope="col" data-sort="rating" style="max-width:10%;">TYPE</th>
                   <th class="sort align-middle" scope="col" style="max-width:12%;" data-sort="status">STATUS</th>
-                  <th class="sort text-end align-middle" scope="col" style="max-width:10%;" data-sort="date">DATE</th>
+                  <th class="sort text-end align-middle" scope="col" style="max-width:10%;" data-sort="date">DATE TIME</th>
                   <th class="sort text-end pe-0 align-middle" scope="col" style="width: 7%"> </th>
                 </tr>
               </thead>
               <tbody class="list" id="profile-review-table-body">
-                <tr class="hover-actions-trigger btn-reveal-trigger position-static">
+                <!-- <tr class="hover-actions-trigger btn-reveal-trigger position-static">
                   <td class="align-middle product pe-3"><a class="fw-semibold line-clamp-1" href="../../../apps/e-commerce/landing/product-details.html">Fitbit Sense Advanced Smartwatch with Tools for Heart Health, Stress Management &amp; Skin Temperature Trends, Carbon/Graphite, One Size (S &amp; L Bands)</a></td>
                   <td class="align-middle rating white-space-nowrap fs-10"><span class="fa fa-star text-warning"></span><span class="fa fa-star text-warning"></span><span class="fa fa-star text-warning"></span><span class="fa fa-star text-warning"></span><span class="fa-regular fa-star text-warning-light"></span>
                   </td>
@@ -194,7 +199,7 @@
                       </div>
                     </div>
                   </td>
-                </tr>
+                </tr> -->
               </tbody>
             </table>
           </div>
