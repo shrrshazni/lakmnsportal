@@ -88,288 +88,163 @@
   </script>
 </div>
 
-<div class="mb-6">
-  <div class="row g-4">
-    <div class="mb-0">
-      <h2 class="mb-2">Dashboard</h2>
-      <h5 class="text-body-tertiary fw-semibold">Here’s what’s going on at your portal right now</h5>
+<div class="row gy-3 mb-6 justify-content-between mt-0">
+  <div class="col-md-9 col-auto">
+    <h2 class="mb-2 text-body-emphasis">Dashboard</h2>
+    <h5 class="text-body-tertiary fw-semibold">Real-time data visualization for informed decision-making</h5>
+  </div>
+  <div class="col-md-3 col-auto">
+    <div class="flatpickr-input-container">
+      <input class="form-control ps-6 datetimepicker" id="datepicker" type="text" data-options='{"dateFormat":"M j, Y","disableMobile":true,"defaultDate":"Mar 1, 2022"}' /><span class="uil uil-calendar-alt flatpickr-icon text-body-tertiary"></span>
     </div>
   </div>
 </div>
 
-<div class="row mb-3 gy-6 mb-6">
-  <div class="col-12 col-xxl-2">
-    <div class="row align-items-center g-3 g-xxl-0 h-100 align-content-between">
-      <div class="col-12 col-sm-6 col-md-3 col-lg-6 col-xl-3 col-xxl-12">
-        <div class="d-flex align-items-center"><span class="fs-4 lh-1 uil uil-books text-primary-dark"></span>
-          <div class="ms-2">
-            <div class="d-flex align-items-end">
-              <h2 class="mb-0 me-2">18</h2><span class="fs-7 fw-semibold text-body">Submitted</span>
-            </div>
-            <p class="text-body-secondary fs-9 mb-0">Soon to be cleared</p>
+<div class="row gy-6 mb-6">
+  <div class="col-12 col-xxl-8 row mb-3 gy-3 ">
+    <div class="d-flex flex-column justify-content-between pb-3">
+      <div class="row g-5 mb-3">
+        <div class="row align-items-center g-5 mb-3 text-center text-sm-start col-md-6">
+          <div class="col-12 col-sm-auto mb-sm-2">
+            <div class="avatar avatar-5xl"><img class="rounded-circle border border-primary" src="/assets/img/team/avatar.webp" alt="" /></div>
+          </div>
+          <div class="col-12 col-sm-auto flex-1">
+            <h3>Ansolo Lazinatov</h3>
+            <p class="text-body-secondary">User's status</p>
+            <div><a class="me-2" href="#!"><span class="fab fa-linkedin-in text-body-quaternary text-opacity-75 text-primary-hover"></span></a><a class="me-2" href="#!"><span class="fab fa-facebook text-body-quaternary text-opacity-75 text-primary-hover"></span></a><a href="#!"><span class="fab fa-twitter text-body-quaternary text-opacity-75 text-primary-hover"></span></a></div>
           </div>
         </div>
+        <div class=""></div>
       </div>
-      <div class="col-12 col-sm-6 col-md-3 col-lg-6 col-xl-3 col-xxl-12">
-        <div class="d-flex align-items-center"><span class="fs-4 lh-1 uil uil-users-alt text-success-dark"></span>
-          <div class="ms-2">
-            <div class="d-flex align-items-end">
-              <h2 class="mb-0 me-2">7</h2><span class="fs-7 fw-semibold text-body">Approved</span>
-            </div>
-            <p class="text-body-secondary fs-9 mb-0">Awaiting return</p>
-          </div>
+      <div class="d-flex flex-between-center border-top border-dashed pt-4">
+        <div>
+          <h6>Following</h6>
+          <p class="fs-7 text-body-secondary mb-0">297</p>
         </div>
-      </div>
-      <div class="col-12 col-sm-6 col-md-3 col-lg-6 col-xl-3 col-xxl-12">
-        <div class="d-flex align-items-center"><span class="fs-4 lh-1 uil uil-invoice text-warning-dark"></span>
-          <div class="ms-2">
-            <div class="d-flex align-items-end">
-              <h2 class="mb-0 me-2">8</h2><span class="fs-7 fw-semibold text-body">Denied</span>
-            </div>
-            <p class="text-body-secondary fs-9 mb-0">Working hard</p>
-          </div>
+        <div>
+          <h6>Projects</h6>
+          <p class="fs-7 text-body-secondary mb-0">56</p>
         </div>
-      </div>
-      <div class="col-12 col-sm-6 col-md-3 col-lg-6 col-xl-3 col-xxl-12">
-        <div class="d-flex align-items-center"><span class="fs-4 lh-1 uil uil-refresh text-danger-dark"></span>
-          <div class="ms-2">
-            <div class="d-flex align-items-end">
-              <h2 class="mb-0 me-2">3</h2><span class="fs-7 fw-semibold text-body">Pending</span>
-            </div>
-            <p class="text-body-secondary fs-9 mb-0">Awating processing</p>
-          </div>
+        <div>
+          <h6>Completion</h6>
+          <p class="fs-7 text-body-secondary mb-0">97</p>
+        </div>
+        <div>
+          <h6>Completion</h6>
+          <p class="fs-7 text-body-secondary mb-0">97</p>
         </div>
       </div>
     </div>
   </div>
-  <div class="col-12 col-xl-6 col-xxl-5">
-    <div class="mx-xxl-0">
-      <h3>Leave Balances</h3>
-      <p class="text-body-tertiary">Remaining available days off</p>
-      <div class="">
-        <div class="row g-2 flex-between-center mb-0">
-          <div class="col-12 col-sm-12">
-            <% if (userLeave) { %>
-            <ul class="list-group">
-              <% const leaveTypes = ['annual', 'sick', 'emergency', 'paternity', 'marriage', 'bereavement', 'hajj']; %>
-              <% leaveTypes.forEach(type => { %>
-              <li class="list-group-item d-flex justify-content-between align-items-center">
-                <%= type.charAt(0).toUpperCase() + type.slice(1) %>
-                <span class="badge bg-secondary"><%= userLeave[type] %></span>
-              </li>
-              <% }); %>
-            </ul>
-            <% }%>
+
+  <div class="col-12 col-xxl-4">
+    <div id="carouselExampleIndicators" class="carousel slide">
+      <div class="carousel-inner">
+        <div class="carousel-item active">
+          <div class="card bg-subtle w-100 h-100">
+            <div class="card-body">
+              <p>Hello There</p>
+            </div>
+          </div>
+        </div>
+        <div class="carousel-item">
+          <div class="card bg-subtle w-100 h-100">
+            <div class="card-body">
+              <p>Hello There</p>
+            </div>
+          </div>
+        </div>
+        <div class="carousel-item">
+          <div class="card bg-subtle w-100 h-100">
+            <div class="card-body">
+              <p>Hello There</p>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  </div>
-  <div class="col-12 col-xl-6 col-xxl-5">
-    <div class="card border h-100 w-100 overflow-hidden">
-      <div class="bg-holder d-block bg-card" style="background-image:url(../assets/img/spot-illustrations/32.png);background-position: top right;">
-      </div>
-      <!--/.bg-holder-->
-
-      <div class="d-dark-none">
-        <div class="bg-holder d-none d-sm-block d-xl-none d-xxl-block bg-card" style="background-image:url(../assets/img/spot-illustrations/21.png);background-position: bottom right; background-size: auto;">
-        </div>
-        <!--/.bg-holder-->
-
-      </div>
-      <div class="d-light-none">
-        <div class="bg-holder d-none d-sm-block d-xl-none d-xxl-block bg-card" style="background-image:url(../assets/img/spot-illustrations/dark_21.png);background-position: bottom right; background-size: auto;">
-        </div>
-        <!--/.bg-holder-->
-
-      </div>
-      <div class="card-body px-5 position-relative">
-        <div class="badge badge-phoenix fs-10 badge-phoenix-warning mb-4"><span class="fw-bold">Coming soon</span><span class="fa-solid fa-award ms-1"></span></div>
-        <h3 class="mb-5">Feathered friends and their tales!</h3>
-        <p class="text-body-tertiary fw-semibold">LAKMNS PORTAL is coming <br class="d-none d-sm-block" />soon for fulfilling your every <br class="d-none d-sm-block" />needs. </p>
-      </div>
-      <div class="card-footer border-0 py-0 px-5 z-1">
-        <p class="text-body-tertiary fw-semibold">Follow <a href="https://lakmns.org.com/">LAKMNS </a>at <br class="d-none d-xxl-block" />for any updates from us.</p>
+      <div class="carousel-indicators">
+        <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+        <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="1" aria-label="Slide 2"></button>
+        <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="2" aria-label="Slide 3"></button>
       </div>
     </div>
   </div>
 </div>
 
 <div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis pt-7 pb-3 border-y mb-6">
-  <div class="row">
-    <div class="col-12 col-xl-7 col-xxl-6 mb-6">
-      <div id="leaveHistory" data-list='{"valueNames":["type","startdate","returndate","status"],"page":6,"pagination":true}'>
-        <div class="row g-3 justify-content-between align-items-end mb-4">
-          <div class="col-auto">
-            <h3>Current Leaves</h3>
-            <p class="text-body-tertiary lh-sm mb-0">Presently approved time off granted</p>
-          </div>
-          <div class="col-12 col-sm-auto">
-            <div class="d-flex align-items-center">
-              <div class="search-box me-0">
-                <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
-                  <input class="form-control search-input search" type="search" placeholder="Search" aria-label="Search" />
-                  <span class="fas fa-search search-box-icon"></span>
-                </form>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="table-responsive scrollbar">
-          <table class="table fs--1 mb-0 border-top border-200">
-            <thead>
-              <tr>
-                <th class="sort white-space-nowrap align-middle ps-0" scope="col" data-sort="type" style="width: 15%">
-                  TYPE
-                </th>
-                <th class="sort align-middle ps-3" scope="col" data-sort="startdate" style="width: 15%">
-                  START DATE
-                </th>
-                <th class="sort align-middle ps-3" scope="col" data-sort="returndate" style="width: 15%">
-                  RETURN DATE
-                </th>
-                <th class="sort align-middle text-end" scope="col" data-sort="status" style="width: 10%">
-                  STATUS
-                </th>
-                <th class="sort align-middle text-end" scope="col" style="width: 10%"></th>
-              </tr>
-            </thead>
-
-            <% 
-                  function formatDate(inputDate) {
-                    const day = String(inputDate.getDate()).padStart(2, '0');
-                    const month = String(inputDate.getMonth() + 1).padStart(2, '0');
-                    const year = inputDate.getFullYear();
-                  
-                    return `${day}/${month}/${year}`;
-                  }
-                  %>
-
-            <!-- table content -->
-            <tbody class="list" id="project-list-table-body">
-              <% if (leave && Array.isArray(leave)) { %>
-              <!-- table item -->
-              <% leave.forEach(function(leaves) { %>
-              <tr class="position-static">
-                <td class="align-middle time white-space-nowrap ps-0 type py-4">
-                  <a class="fw-bold fs-0" href="/leave/details/<%= leaves.uuid %>"><%= leaves.type %></a>
-                </td>
-                <td class="align-middle white-space-nowrap startdate ps-3 py-4">
-                  <p class="mb-0 fs--1 text-900"><%= formatDate(leaves.date.start) %></p>
-                </td>
-                <td class="align-middle white-space-nowrap returndate ps-3 py-4">
-                  <p class="mb-0 fs--1 text-900"><%= formatDate(leaves.date.return) %></p>
-                </td>
-                <td class="align-middle white-space-nowrap text-end status">
-                  <span class="badge badge-phoenix fs--2 badge-phoenix-success"><%= leaves.status %></span>
-                </td>
-                <td class="align-middle text-end white-space-nowrap pe-0 action">
-                  <div class="font-sans-serif btn-reveal-trigger position-static">
-                    <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs--2" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
-                      <span class="fas fa-ellipsis-h fs--2"></span>
-                    </button>
-                    <div class="dropdown-menu dropdown-menu-end py-2">
-                      <a class="dropdown-item" href="/leave/details/<%= leaves.uuid %>">View</a>
-                    </div>
-                  </div>
-                </td>
-              </tr>
-              <%  }); %> <% } else { %>
-              <tr>
-                <td colspan="7">No leaves submitted.</td>
-              </tr>
-              <% } %>
-            </tbody>
-          </table>
-        </div>
-        <div class="d-flex flex-wrap align-items-center justify-content-between py-3 pe-0 fs--1 border-bottom border-200">
-          <div class="d-flex">
-            <p class="mb-0 d-none d-sm-block me-3 fw-semi-bold text-900" data-list-info="data-list-info"></p>
-            <a class="fw-semi-bold" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semi-bold d-none" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
-          </div>
-          <div class="d-flex">
-            <button class="page-link" data-list-pagination="prev">
-              <span class="fas fa-chevron-left"></span>
-            </button>
-            <ul class="mb-0 pagination"></ul>
-            <button class="page-link pe-0" data-list-pagination="next">
-              <span class="fas fa-chevron-right"></span>
-            </button>
-          </div>
-        </div>
+  <div id="projectSummary" data-list='{"valueNames":["project","assigness","start","deadline","calculation","projectprogress","status","action"],"page":10,"pagination":true}'>
+    <div class="row align-items-end justify-content-between pb-4 g-3">
+      <div class="col-auto">
+        <h3>Team Members</h3>
+        <p class="text-body-tertiary lh-sm mb-0">Current team member work status and progress</p>
       </div>
     </div>
-    <div class="col-12 col-xl-5 col-xxl-6">
-      <div class="h-100 mb-3">
-        <div class="mb-1">
-          <h3 class="text-body-emphasis">Activity</h3>
-        </div>
-        <p class="text-body-tertiary mb-4">Department's recent leave activity</p>
-        <div class="timeline-vertical timeline-with-details">
-          <div class="timeline-item position-relative">
-            <div class="row g-md-3">
-              <div class="col-12 col-md-auto d-flex">
-                <div class="timeline-item-date order-1 order-md-0 me-md-4">
-                  <p class="fs-10 fw-semibold text-body-tertiary text-opacity-85 text-end">01 DEC, 2023<br class="d-none d-md-block" /> 10:30 AM</p>
-                </div>
-                <div class="timeline-item-bar position-md-relative me-3 me-md-0">
-                  <div class="icon-item icon-item-sm rounded-7 shadow-none bg-primary-subtle"><span class="fa-solid fa-chess text-primary-dark fs-10"></span></div><span class="timeline-bar border-end border-dashed"></span>
+    <div class="table-responsive ms-n1 ps-1 scrollbar">
+      <table class="table fs-9 mb-0 border-top border-translucent">
+        <thead>
+          <tr>
+            <th class="sort white-space-nowrap align-middle ps-0" scope="col" data-sort="project" style="width:20%;">PROJECT NAME</th>
+            <th class="sort align-middle ps-3" scope="col" data-sort="start" style="width:10%;">START DATE</th>
+            <th class="sort align-middle ps-3" scope="col" data-sort="deadline" style="width:15%;">DEADLINE</th>
+            <th class="sort align-middle ps-3" scope="col" data-sort="calculation" style="width:12%;">CALCULATION</th>
+            <th class="sort align-middle ps-3" scope="col" data-sort="projectprogress" style="width:5%;">PROGRESS</th>
+            <th class="sort align-middle ps-8" scope="col" data-sort="status" style="width:10%;">STATUS</th>
+            <th class="sort align-middle text-end" scope="col" style="width:10%;"></th>
+          </tr>
+        </thead>
+        <tbody class="list" id="project-summary-table-body">
+          <tr class="position-static">
+            <td class="align-middle time white-space-nowrap ps-0 project"><a class="fw-bold fs-8" href="#">Making the Butterflies shoot each other dead</a></td>
+            <td class="align-middle white-space-nowrap start ps-3">
+              <p class="mb-0 fs-9 text-body">Dec 12, 2018</p>
+            </td>
+            <td class="align-middle white-space-nowrap deadline ps-3">
+              <p class="mb-0 fs-9 text-body">Dec 12, 2026</p>
+            </td>
+            <td class="align-middle white-space-nowrap calculation ps-3">
+              <p class="fw-bold text-body-emphasis fs-9 mb-0">$4</p>
+              <p class="fw-semibold fs-10 text-body-tertiary mb-0">Cost</p>
+            </td>
+            <td class="align-middle white-space-nowrap ps-3 projectprogress">
+              <p class="text-body-secondary fs-10 mb-0">145 / 145</p>
+              <div class="progress" style="height:3px;">
+                <div class="progress-bar bg-success" style="width: 100%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100" role="progressbar"></div>
+              </div>
+            </td>
+            <td class="align-middle white-space-nowrap ps-8 status">
+              <div class="progress progress-stack mt-3" style="height:3px;">
+                <div class="progress-bar bg-info" style="width:30%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100" role="progressbar"></div>
+                <div class="progress-bar bg-danger" style="width:5%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100" data-bs-toggle="tooltip" data-bs-placement="top" title="5% Damage" role="progressbar"></div>
+                <div class="progress-bar bg-warning" style="width:45%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100" data-bs-toggle="tooltip" data-bs-placement="top" title="45% Damage" role="progressbar"></div>
+                <div class="progress-bar bg-success" style="width:15%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100" data-bs-toggle="tooltip" data-bs-placement="top" title="15% Damage" role="progressbar"></div>
+              </div>
+            </td>
+            <td class="align-middle text-end white-space-nowrap pe-0 action">
+              <div class="btn-reveal-trigger position-static">
+                <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs-10" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fas fa-ellipsis-h fs-10"></span></button>
+                <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item" href="#!">View</a><a class="dropdown-item" href="#!">Export</a>
+                  <div class="dropdown-divider"></div><a class="dropdown-item text-danger" href="#!">Remove</a>
                 </div>
               </div>
-              <div class="col">
-                <div class="timeline-item-content ps-6 ps-md-3">
-                  <h5 class="fs-9 lh-sm">Annual Leave</h5>
-                  <p class="fs-9">by <a class="fw-semibold" href="#!">Shantinon Mekalan</a></p>
-                  <p class="fs-9 text-body-secondary mb-5">The user requested leave, specifying the duration and reason, which was subsequently reviewed and approved, marking an authorized absence period.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="timeline-item position-relative">
-            <div class="row g-md-3">
-              <div class="col-12 col-md-auto d-flex">
-                <div class="timeline-item-date order-1 order-md-0 me-md-4">
-                  <p class="fs-10 fw-semibold text-body-tertiary text-opacity-85 text-end">03 JAN, 2023<br class="d-none d-md-block" /> 12:45 PM</p>
-                </div>
-                <div class="timeline-item-bar position-md-relative me-3 me-md-0">
-                  <div class="icon-item icon-item-sm rounded-7 shadow-none bg-primary-subtle"><span class="fa-solid fa-dove text-primary-dark fs-10"></span></div><span class="timeline-bar border-end border-dashed"></span>
-                </div>
-              </div>
-              <div class="col">
-                <div class="timeline-item-content ps-6 ps-md-3">
-                  <h5 class="fs-9 lh-sm">Sick Leave</h5>
-                  <p class="fs-9">by <a class="fw-semibold" href="#!">Bookworm22</a></p>
-                  <p class="fs-9 text-body-secondary mb-5">Employee submitted sick leave request, providing details on illness. After review, the leave was approved, allowing time off for recovery</p>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="timeline-item position-relative">
-            <div class="row g-md-3">
-              <div class="col-12 col-md-auto d-flex">
-                <div class="timeline-item-date order-1 order-md-0 me-md-4">
-                  <p class="fs-10 fw-semibold text-body-tertiary text-opacity-85 text-end">15 DEC, 2023<br class="d-none d-md-block" /> 2:30 AM</p>
-                </div>
-                <div class="timeline-item-bar position-md-relative me-3 me-md-0">
-                  <div class="icon-item icon-item-sm rounded-7 shadow-none bg-primary-subtle"><span class="fa-solid fa-dungeon text-primary-dark fs-10"></span></div>
-                </div>
-              </div>
-              <div class="col">
-                <div class="timeline-item-content ps-6 ps-md-3">
-                  <h5 class="fs-9 lh-sm">Hajj Leave</h5>
-                  <p class="fs-9">by <a class="fw-semibold" href="#!">Sharuka Nijibum</a></p>
-                  <p class="fs-9 text-body-secondary mb-0">Employee requested Hajj leave for 40 days, citing religious pilgrimage. The request was reviewed and approved, allowing dedicated time off</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
+      <div class="col-auto d-flex">
+        <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p><a class="fw-semibold" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semibold d-none" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
+      </div>
+      <div class="col-auto d-flex">
+        <button class="page-link" data-list-pagination="prev"><span class="fas fa-chevron-left"></span></button>
+        <ul class="mb-0 pagination"></ul>
+        <button class="page-link pe-0" data-list-pagination="next"><span class="fas fa-chevron-right"></span></button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- <div class="mx-lg-n4 mt-3">
+<div class="mt-3 mx-lg-n4">
   <div class="row g-3">
     <div class="col-12 col-xl-6 col-xxl-7">
       <div class="card todo-list h-100">
@@ -528,7 +403,7 @@
                 </div>
               </div>
               <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
-                <div class="d-flex lh-1 align-items-center"><a class="text-warning fw-bold fs-10 me-2" href="#!"><span class="fas fa-tasks me-1"></span>4</a>
+                <div class="d-flex lh-1 align-items-center">
                   <p class="text-body-tertiary fs-10 mb-md-0 me-2 me-md-3 me-xl-2 me-xxl-3 mb-0">13 Nov, 2021</p>
                   <div class="hover-md-hide hover-xl-show hover-xxl-hide">
                     <p class="text-body-tertiary fs-10 fw-bold mb-md-0 mb-0 ps-md-3 ps-xl-0 ps-xxl-3 border-start-md border-xl-0 border-start-xxl">10:00 PM</p>
@@ -572,7 +447,7 @@
             <div class="row justify-content-between align-items-md-center btn-reveal-trigger border-translucent gx-0 flex-1 cursor-pointer" data-bs-toggle="modal" data-bs-target="#exampleModal">
               <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
                 <div class="mb-1 mb-md-0 d-flex align-items-center lh-1">
-                  <label class="form-check-label mb-1 mb-md-0 mb-xl-1 mb-xxl-0 fs-8 me-2 line-clamp-1 text-body cursor-pointer">warming up</label><span class="badge badge-phoenix ms-auto fs-10 badge-phoenix-secondary">CLOSE</span>
+                  <label class="form-check-label mb-1 mb-md-0 mb-xl-1 mb-xxl-0 fs-8 me-2 line-clamp-1 text-body cursor-pointer">warming up</label><span class="badge badge-phoenix ms-auto fs-10 badge-phoenix-info">CLOSE</span>
                 </div>
               </div>
               <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
@@ -591,7 +466,7 @@
               </div>
             </div>
           </div>
-          <div class="d-flex hover-actions-trigger py-3 border-top">
+          <div class="d-flex hover-actions-trigger py-3 border-top border-bottom">
             <input class="form-check-input form-check-input-todolist flex-shrink-0 my-1 me-2 form-check-input-undefined" type="checkbox" id="checkbox-todo-8" data-event-propagation-prevent="data-event-propagation-prevent" />
             <div class="row justify-content-between align-items-md-center btn-reveal-trigger border-translucent gx-0 flex-1 cursor-pointer" data-bs-toggle="modal" data-bs-target="#exampleModal">
               <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
@@ -600,56 +475,8 @@
                 </div>
               </div>
               <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
-                <div class="d-flex lh-1 align-items-center"><a class="text-body-tertiary fw-bold fs-10 me-2" href="#!"><span class="fas fa-paperclip me-1"></span>2</a><a class="text-warning fw-bold fs-10 me-2" href="#!"><span class="fas fa-tasks me-1"></span>2</a>
-                  <p class="text-body-tertiary fs-10 mb-md-0 me-2 me-md-3 me-xl-2 me-xxl-3 mb-0">2o Nov, 2021</p>
-                  <div class="hover-md-hide hover-xl-show hover-xxl-hide">
-                    <p class="text-body-tertiary fs-10 fw-bold mb-md-0 mb-0 ps-md-3 ps-xl-0 ps-xxl-3 border-start-md border-xl-0 border-start-xxl">1:00 AM</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="d-none d-md-block d-xl-none d-xxl-block end-0 position-absolute" style="top: 23%;" data-event-propagation-prevent="data-event-propagation-prevent">
-              <div class="hover-actions end-0" data-event-propagation-prevent="data-event-propagation-prevent">
-                <button class="btn btn-phoenix-secondary btn-icon me-1 fs-10 text-body px-0 me-1" data-event-propagation-prevent="data-event-propagation-prevent"><span class="fas fa-edit"></span></button>
-                <button class="btn btn-phoenix-secondary btn-icon fs-10 text-danger px-0" data-event-propagation-prevent="data-event-propagation-prevent"><span class="fas fa-trash"></span></button>
-              </div>
-            </div>
-          </div>
-          <div class="d-flex hover-actions-trigger py-3 border-top">
-            <input class="form-check-input form-check-input-todolist flex-shrink-0 my-1 me-2 form-check-input-undefined" type="checkbox" id="checkbox-todo-9" data-event-propagation-prevent="data-event-propagation-prevent" />
-            <div class="row justify-content-between align-items-md-center btn-reveal-trigger border-translucent gx-0 flex-1 cursor-pointer" data-bs-toggle="modal" data-bs-target="#exampleModal">
-              <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
-                <div class="mb-1 mb-md-0 d-flex align-items-center lh-1">
-                  <label class="form-check-label mb-1 mb-md-0 mb-xl-1 mb-xxl-0 fs-8 me-2 line-clamp-1 text-body cursor-pointer">Modify the component</label>
-                </div>
-              </div>
-              <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
-                <div class="d-flex lh-1 align-items-center"><a class="text-body-tertiary fw-bold fs-10 me-2" href="#!"><span class="fas fa-paperclip me-1"></span>4</a>
-                  <p class="text-body-tertiary fs-10 mb-md-0 me-2 me-md-3 me-xl-2 me-xxl-3 mb-0">22 Nov, 2021</p>
-                  <div class="hover-md-hide hover-xl-show hover-xxl-hide">
-                    <p class="text-body-tertiary fs-10 fw-bold mb-md-0 mb-0 ps-md-3 ps-xl-0 ps-xxl-3 border-start-md border-xl-0 border-start-xxl">1:00 AM</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="d-none d-md-block d-xl-none d-xxl-block end-0 position-absolute" style="top: 23%;" data-event-propagation-prevent="data-event-propagation-prevent">
-              <div class="hover-actions end-0" data-event-propagation-prevent="data-event-propagation-prevent">
-                <button class="btn btn-phoenix-secondary btn-icon me-1 fs-10 text-body px-0 me-1" data-event-propagation-prevent="data-event-propagation-prevent"><span class="fas fa-edit"></span></button>
-                <button class="btn btn-phoenix-secondary btn-icon fs-10 text-danger px-0" data-event-propagation-prevent="data-event-propagation-prevent"><span class="fas fa-trash"></span></button>
-              </div>
-            </div>
-          </div>
-          <div class="d-flex hover-actions-trigger py-3 border-top border-bottom">
-            <input class="form-check-input form-check-input-todolist flex-shrink-0 my-1 me-2 form-check-input-undefined" type="checkbox" id="checkbox-todo-10" data-event-propagation-prevent="data-event-propagation-prevent" />
-            <div class="row justify-content-between align-items-md-center btn-reveal-trigger border-translucent gx-0 flex-1 cursor-pointer" data-bs-toggle="modal" data-bs-target="#exampleModal">
-              <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
-                <div class="mb-1 mb-md-0 d-flex align-items-center lh-1">
-                  <label class="form-check-label mb-1 mb-md-0 mb-xl-1 mb-xxl-0 fs-8 me-2 line-clamp-1 text-body cursor-pointer">Delete overlapping tasks and articles</label><span class="badge badge-phoenix ms-auto fs-10 badge-phoenix-secondary">CLOSE</span>
-                </div>
-              </div>
-              <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
                 <div class="d-flex lh-1 align-items-center"><a class="text-body-tertiary fw-bold fs-10 me-2" href="#!"><span class="fas fa-paperclip me-1"></span>2</a>
-                  <p class="text-body-tertiary fs-10 mb-md-0 me-2 me-md-3 me-xl-2 me-xxl-3 mb-0">25 Nov, 2021</p>
+                  <p class="text-body-tertiary fs-10 mb-md-0 me-2 me-md-3 me-xl-2 me-xxl-3 mb-0">2o Nov, 2021</p>
                   <div class="hover-md-hide hover-xl-show hover-xxl-hide">
                     <p class="text-body-tertiary fs-10 fw-bold mb-md-0 mb-0 ps-md-3 ps-xl-0 ps-xxl-3 border-start-md border-xl-0 border-start-xxl">1:00 AM</p>
                   </div>
@@ -728,7 +555,7 @@
                                   <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item" href="#!">Edit</a><a class="dropdown-item text-danger" href="#!">Delete</a><a class="dropdown-item" href="#!">Download</a><a class="dropdown-item" href="#!">Report abuse</a></div>
                                 </div>
                               </div>
-                              <div class="d-flex fs-9 text-body-tertiary mb-2 flex-wrap"><span>768 kb</span><span class="text-body-quaternary mx-1">| </span><a href="#!">Shantinan Mekalan </a><span class="text-body-quaternary mx-1">| </span><span class="text-nowrap">21st Dec, 12:56 PM</span></div><img class="rounded-2" src="../assets/img/generic/40.png" alt="" style="max-width:230px" />
+                              <div class="d-flex fs-9 text-body-tertiary mb-2 flex-wrap"><span>768 kb</span><span class="text-body-quaternary mx-1">| </span><a href="#!">Shantinan Mekalan </a><span class="text-body-quaternary mx-1">| </span><span class="text-nowrap">21st Dec, 12:56 PM</span></div><img class="rounded-2" src="assets/img/generic/40.png" alt="" style="max-width:230px" />
                             </div>
                           </div>
                           <div class="border-top px-0 pt-4 pb-3">
@@ -878,7 +705,7 @@
       </div>
     </div>
   </div>
-</div> -->
+</div>
 
 <% if (user.isAdmin === true || user.isChiefExec === true || user.isDeputyChiefExec === true) { %>
 <%
