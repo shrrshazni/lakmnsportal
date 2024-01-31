@@ -101,20 +101,22 @@
 </div>
 
 <div class="row gy-6 mb-6">
-  <div class="col-12 col-xxl-8 row mb-3 gy-3 ">
+  <div class="col-12 col-xxl-8 row mb-3 gy-3">
     <div class="d-flex flex-column justify-content-between pb-3">
       <div class="row g-5 mb-3">
-        <div class="row align-items-center g-5 mb-3 text-center text-sm-start col-md-6">
+        <div class="row align-items-center g-5 mb-3 text-center text-md-start col-md-6 ms-2 ms-xxl-0">
           <div class="col-12 col-sm-auto mb-sm-2">
             <div class="avatar avatar-5xl"><img class="rounded-circle border border-primary" src="/assets/img/team/avatar.webp" alt="" /></div>
           </div>
           <div class="col-12 col-sm-auto flex-1">
-            <h3>Ansolo Lazinatov</h3>
-            <p class="text-body-secondary">User's status</p>
-            <div><a class="me-2" href="#!"><span class="fab fa-linkedin-in text-body-quaternary text-opacity-75 text-primary-hover"></span></a><a class="me-2" href="#!"><span class="fab fa-facebook text-body-quaternary text-opacity-75 text-primary-hover"></span></a><a href="#!"><span class="fab fa-twitter text-body-quaternary text-opacity-75 text-primary-hover"></span></a></div>
+            <h3 class="mx-auto">Ansolo Lazinatov</h3>
+            <p class="text-body-secondary mx-auto">User's status</p>
+            <div class="mx-auto"><a class="me-2" href="#!"><span class="fab fa-linkedin-in text-body-quaternary text-opacity-75 text-primary-hover"></span></a><a class="me-2" href="#!"><span class="fab fa-facebook text-body-quaternary text-opacity-75 text-primary-hover"></span></a><a href="#!"><span class="fab fa-twitter text-body-quaternary text-opacity-75 text-primary-hover"></span></a></div>
           </div>
         </div>
-        <div class=""></div>
+        <div class="col-md-6">
+
+        </div>
       </div>
       <div class="d-flex flex-between-center border-top border-dashed pt-4">
         <div>
@@ -138,32 +140,92 @@
   </div>
 
   <div class="col-12 col-xxl-4">
-    <div id="carouselExampleIndicators" class="carousel slide">
+    <div class="carousel dashboard-carousel slide position-relative rounded-3" style="height: 27.5vh;" id="carouselExampleIndicators" data-bs-ride="carousel">
       <div class="carousel-inner">
-        <div class="carousel-item active">
-          <div class="card bg-subtle w-100 h-100">
+
+        <div class="carousel-item px-2 active">
+
+          <div class="card" style="height: 27.5vh;">
+            <div class="bg-holder d-block bg-card" style="background-image:url(../assets/img/spot-illustrations/32.png);background-position: top right;">
+            </div>
             <div class="card-body">
-              <p>Hello There</p>
+              <div class="d-flex justify-content-between">
+                <div class="badge badge-phoenix fs-10 badge-phoenix-primary mb-4"><span class="fa-solid fa-bell me-2"></span><span class="fw-bold">Notifications</span></div>
+                <a class="btn btn-link p-0 fs-9 fw-normal" role="button" href="/markAllAsRead">Mark all as read</a>
+              </div>
+
+              <div class="scrollbar-overlay">
+                <% if (notifications.length > 0) { %>
+                <% notifications.forEach(notification => { %>
+                <div class="px-2 px-sm-3 py-3 notification-card position-relative read border-bottom">
+                  <div class="d-flex align-items-center justify-content-between position-relative">
+                    <div class="d-flex">
+                      <div class="avatar avatar-m status-online me-3">
+                        <!-- Use the actual image source from your notification -->
+                        <img class="rounded-circle border border-primary" src="<%= notification.sender.profile %>" alt="" />
+                      </div>
+                      <div class="flex-1 me-sm-3">
+                        <h4 class="fs-9 text-body-emphasis"><%= notification.sender.fullname %></h4>
+                        <p class="fs-9 text-body-highlight mb-2 mb-sm-3 fw-normal">
+                          <span class='me-1 mt-1 fs-10'>💬</span><%= notification.message %>
+                          <span class="text-body-quaternary text-opacity-75 fw-bold fs-10">&nbsp;<%= timeAgo(notification.timestamp) %></span>
+                        </p>
+                        <p class="text-body-secondary fs-9 mb-0">
+                          <span class="me-1 fas fa-clock"></span>
+                          <span class="fw-bold"><%= formatTime(notification.timestamp) %></span>
+                        </p>
+                      </div>
+                    </div>
+                    <div class="d-none d-sm-block">
+                      <button class="btn fs-10 btn-sm dropdown-toggle dropdown-caret-none transition-none notification-dropdown-toggle" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
+                        <span class="fas fa-ellipsis-h fs-10 text-body"></span>
+                      </button>
+                      <div class="dropdown-menu dropdown-menu-end py-2">
+                        <a class="dropdown-item" href="/markAsRead/<%= notification._id %>">Mark as unread</a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <% }); %>
+                <% } else { %>
+                <div class="px-2 px-sm-3 py-3">
+                  <p>No notifications available.</p>
+                </div>
+                <% } %>
+              </div>
+
+              <div class="p-0 border-top border-translucent border-0 position-absolute start-0 bottom-0 w-100">
+                <div class="my-2 text-center fw-bold fs-10 text-body-tertiary text-opactity-85"><a class="fw-bolder" href="/">Notification history</a></div>
+              </div>
             </div>
           </div>
+
         </div>
-        <div class="carousel-item">
-          <div class="card bg-subtle w-100 h-100">
+
+        <div class="carousel-item px-2 false">
+
+          <div class="card" style="height: 27.5vh;">
             <div class="card-body">
-              <p>Hello There</p>
+              <p>Hello world 1</p>
             </div>
           </div>
+
         </div>
-        <div class="carousel-item">
-          <div class="card bg-subtle w-100 h-100">
+
+        <div class="carousel-item px-2 false">
+          <div class="card" style="height: 27.5vh;">
+
             <div class="card-body">
-              <p>Hello There</p>
+              <p>Hello world 2</p>
             </div>
+
           </div>
         </div>
+
       </div>
       <div class="carousel-indicators">
-        <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+        <button class="active" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="0" aria-current="true" aria-label="Slide 1"></button>
         <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="1" aria-label="Slide 2"></button>
         <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="2" aria-label="Slide 3"></button>
       </div>
@@ -172,7 +234,7 @@
 </div>
 
 <div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis pt-7 pb-3 border-y mb-6">
-  <div id="projectSummary" data-list='{"valueNames":["project","assigness","start","deadline","calculation","projectprogress","status","action"],"page":10,"pagination":true}'>
+  <div id="projectSummary" data-list='{"valueNames":["member","position","activity","when","taskprogress","status","action"],"page":6,"pagination":true}'>
     <div class="row align-items-end justify-content-between pb-4 g-3">
       <div class="col-auto">
         <h3>Team Members</h3>
@@ -183,29 +245,33 @@
       <table class="table fs-9 mb-0 border-top border-translucent">
         <thead>
           <tr>
-            <th class="sort white-space-nowrap align-middle ps-0" scope="col" data-sort="project" style="width:20%;">PROJECT NAME</th>
-            <th class="sort align-middle ps-3" scope="col" data-sort="start" style="width:10%;">START DATE</th>
-            <th class="sort align-middle ps-3" scope="col" data-sort="deadline" style="width:15%;">DEADLINE</th>
-            <th class="sort align-middle ps-3" scope="col" data-sort="calculation" style="width:12%;">CALCULATION</th>
-            <th class="sort align-middle ps-3" scope="col" data-sort="projectprogress" style="width:5%;">PROGRESS</th>
-            <th class="sort align-middle ps-8" scope="col" data-sort="status" style="width:10%;">STATUS</th>
+            <th class="sort white-space-nowrap align-middle ps-0" scope="col" data-sort="member" style="width:15%;">MEMBERS</th>
+            <th class="sort align-middle ps-3" scope="col" data-sort="position" style="width:10%;">POSITION</th>
+            <th class="sort align-middle ps-3" scope="col" data-sort="activity" style="width:25%;">LATEST ACTIVITY</th>
+            <th class="sort align-middle ps-3" scope="col" data-sort="when" style="width:10%;">WHEN</th>
+            <th class="sort align-middle ps-3" scope="col" data-sort="taskprogress" style="width:5%;">PROGRESS</th>
+            <th class="sort align-middle ps-8" scope="col" data-sort="status" style="width:5%;">STATUS</th>
             <th class="sort align-middle text-end" scope="col" style="width:10%;"></th>
           </tr>
         </thead>
         <tbody class="list" id="project-summary-table-body">
           <tr class="position-static">
-            <td class="align-middle time white-space-nowrap ps-0 project"><a class="fw-bold fs-8" href="#">Making the Butterflies shoot each other dead</a></td>
-            <td class="align-middle white-space-nowrap start ps-3">
-              <p class="mb-0 fs-9 text-body">Dec 12, 2018</p>
+            <td class="align-middle text-body white-space-nowrap ps-0 member">
+              <div class="avatar avatar-l">
+                <div class="avatar-name rounded-circle"><span>SS</span></div>
+              </div>
+              <a class="mb-0 ms-3 fw-bold fs-8" href="#">Sharir Shazni Sazali</a>
             </td>
-            <td class="align-middle white-space-nowrap deadline ps-3">
-              <p class="mb-0 fs-9 text-body">Dec 12, 2026</p>
+            <td class="align-middle white-space-nowrap position ps-3">
+              <p class="mb-0 fs-9 text-body">Officer</p>
             </td>
-            <td class="align-middle white-space-nowrap calculation ps-3">
-              <p class="fw-bold text-body-emphasis fs-9 mb-0">$4</p>
-              <p class="fw-semibold fs-10 text-body-tertiary mb-0">Cost</p>
+            <td class="align-middle activity ps-3">
+              <p class="mb-0 fs-9 text-body">Donec euismod nulla vitae augue finibus, vel ullamcorper ex ultrices. Ut faucibus justo sit amet scelerisque sagittis.</p>
             </td>
-            <td class="align-middle white-space-nowrap ps-3 projectprogress">
+            <td class="align-middle white-space-nowrap when ps-3">
+              <p class="fw-bold text-body-emphasis fs-9 mb-0">Dec 12, 2026</p>
+            </td>
+            <td class="align-middle white-space-nowrap ps-3 taskprogress">
               <p class="text-body-secondary fs-10 mb-0">145 / 145</p>
               <div class="progress" style="height:3px;">
                 <div class="progress-bar bg-success" style="width: 100%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100" role="progressbar"></div>
@@ -246,8 +312,8 @@
 
 <div class="mt-3 mx-lg-n4">
   <div class="row g-3">
-    <div class="col-12 col-xl-6 col-xxl-7">
-      <div class="card todo-list h-100">
+    <div class="col-12 col-xl-6 col-xxl-7 mb-3">
+      <div class="card task-list h-100">
         <div class="card-header border-bottom-0 pb-0">
           <div class="row justify-content-between align-items-center mb-4">
             <div class="col-auto">
@@ -259,7 +325,7 @@
                 <div class="col-12 col-sm-auto">
                   <div class="search-box w-100 mb-2 mb-sm-0" style="max-width:30rem;">
                     <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
-                      <input class="form-control search-input search" type="search" placeholder="Search tasks" aria-label="Search" />
+                      <input class="form-control search-input search" id="searchInput" type="search" placeholder="Search tasks" aria-label="Search" />
                       <span class="fas fa-search search-box-icon"></span>
 
                     </form>
@@ -273,20 +339,20 @@
             </div>
           </div>
         </div>
-        <div class="card-body py-0 scrollbar to-do-list-body">
+        <div class="card-body py-0 scrollbar task-list-body">
           <div class="d-flex hover-actions-trigger py-3 border-top">
             <input class="form-check-input form-check-input-todolist flex-shrink-0 my-1 me-2 form-check-input-undefined" type="checkbox" id="checkbox-todo-0" data-event-propagation-prevent="data-event-propagation-prevent" />
             <div class="row justify-content-between align-items-md-center btn-reveal-trigger border-translucent gx-0 flex-1 cursor-pointer" data-bs-toggle="modal" data-bs-target="#exampleModal">
               <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
                 <div class="mb-1 mb-md-0 d-flex align-items-center lh-1">
-                  <label class="form-check-label mb-1 mb-md-0 mb-xl-1 mb-xxl-0 fs-8 me-2 line-clamp-1 text-body cursor-pointer">Designing the dungeon</label><span class="badge badge-phoenix ms-auto fs-10 badge-phoenix-primary">DRAFT</span>
+                  <label class="form-check-label mb-1 mb-md-0 mb-xl-1 mb-xxl-0 fs-8 me-2 line-clamp-1 text-body cursor-pointer task-name">Designing the dungeon</label><span class="badge badge-phoenix ms-auto fs-10 badge-phoenix-primary">DRAFT</span>
                 </div>
               </div>
               <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
                 <div class="d-flex lh-1 align-items-center"><a class="text-body-tertiary fw-bold fs-10 me-2" href="#!"><span class="fas fa-paperclip me-1"></span>2</a>
-                  <p class="text-body-tertiary fs-10 mb-md-0 me-2 me-md-3 me-xl-2 me-xxl-3 mb-0">12 Nov, 2021</p>
+                  <p class="text-body-tertiary fs-10 mb-md-0 me-2 me-md-3 me-xl-2 me-xxl-3 mb-0 date">12 Nov, 2021</p>
                   <div class="hover-md-hide hover-xl-show hover-xxl-hide">
-                    <p class="text-body-tertiary fs-10 fw-bold mb-md-0 mb-0 ps-md-3 ps-xl-0 ps-xxl-3 border-start-md border-xl-0 border-start-xxl">12:00 PM</p>
+                    <p class="text-body-tertiary fs-10 fw-bold mb-md-0 mb-0 ps-md-3 ps-xl-0 ps-xxl-3 border-start-md border-xl-0 border-start-xxl time">12:00 PM</p>
                   </div>
                 </div>
               </div>
@@ -303,182 +369,14 @@
             <div class="row justify-content-between align-items-md-center btn-reveal-trigger border-translucent gx-0 flex-1 cursor-pointer" data-bs-toggle="modal" data-bs-target="#exampleModal">
               <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
                 <div class="mb-1 mb-md-0 d-flex align-items-center lh-1">
-                  <label class="form-check-label mb-1 mb-md-0 mb-xl-1 mb-xxl-0 fs-8 me-2 line-clamp-1 text-body cursor-pointer">Hiring a motion graphic designer</label><span class="badge badge-phoenix ms-auto fs-10 badge-phoenix-warning">URGENT</span>
+                  <label class="form-check-label mb-1 mb-md-0 mb-xl-1 mb-xxl-0 fs-8 me-2 line-clamp-1 text-body cursor-pointer task-name">Hiring a motion graphic designer</label><span class="badge badge-phoenix ms-auto fs-10 badge-phoenix-warning">URGENT</span>
                 </div>
               </div>
               <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
                 <div class="d-flex lh-1 align-items-center"><a class="text-body-tertiary fw-bold fs-10 me-2" href="#!"><span class="fas fa-paperclip me-1"></span>2</a><a class="text-warning fw-bold fs-10 me-2" href="#!"><span class="fas fa-tasks me-1"></span>3</a>
-                  <p class="text-body-tertiary fs-10 mb-md-0 me-2 me-md-3 me-xl-2 me-xxl-3 mb-0">12 Nov, 2021</p>
+                  <p class="text-body-tertiary fs-10 mb-md-0 me-2 me-md-3 me-xl-2 me-xxl-3 mb-0 date">12 Nov, 2021</p>
                   <div class="hover-md-hide hover-xl-show hover-xxl-hide">
-                    <p class="text-body-tertiary fs-10 fw-bold mb-md-0 mb-0 ps-md-3 ps-xl-0 ps-xxl-3 border-start-md border-xl-0 border-start-xxl">12:00 PM</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="d-none d-md-block d-xl-none d-xxl-block end-0 position-absolute" style="top: 23%;" data-event-propagation-prevent="data-event-propagation-prevent">
-              <div class="hover-actions end-0" data-event-propagation-prevent="data-event-propagation-prevent">
-                <button class="btn btn-phoenix-secondary btn-icon me-1 fs-10 text-body px-0 me-1" data-event-propagation-prevent="data-event-propagation-prevent"><span class="fas fa-edit"></span></button>
-                <button class="btn btn-phoenix-secondary btn-icon fs-10 text-danger px-0" data-event-propagation-prevent="data-event-propagation-prevent"><span class="fas fa-trash"></span></button>
-              </div>
-            </div>
-          </div>
-          <div class="d-flex hover-actions-trigger py-3 border-top">
-            <input class="form-check-input form-check-input-todolist flex-shrink-0 my-1 me-2 form-check-input-undefined" type="checkbox" id="checkbox-todo-2" data-event-propagation-prevent="data-event-propagation-prevent" />
-            <div class="row justify-content-between align-items-md-center btn-reveal-trigger border-translucent gx-0 flex-1 cursor-pointer" data-bs-toggle="modal" data-bs-target="#exampleModal">
-              <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
-                <div class="mb-1 mb-md-0 d-flex align-items-center lh-1">
-                  <label class="form-check-label mb-1 mb-md-0 mb-xl-1 mb-xxl-0 fs-8 me-2 line-clamp-1 text-body cursor-pointer">Daily Meetings Purpose, participants</label><span class="badge badge-phoenix ms-auto fs-10 badge-phoenix-info">ON PROCESS</span>
-                </div>
-              </div>
-              <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
-                <div class="d-flex lh-1 align-items-center"><a class="text-body-tertiary fw-bold fs-10 me-2" href="#!"><span class="fas fa-paperclip me-1"></span>4</a>
-                  <p class="text-body-tertiary fs-10 mb-md-0 me-2 me-md-3 me-xl-2 me-xxl-3 mb-0">12 Dec, 2021</p>
-                  <div class="hover-md-hide hover-xl-show hover-xxl-hide">
-                    <p class="text-body-tertiary fs-10 fw-bold mb-md-0 mb-0 ps-md-3 ps-xl-0 ps-xxl-3 border-start-md border-xl-0 border-start-xxl">05:00 AM</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="d-none d-md-block d-xl-none d-xxl-block end-0 position-absolute" style="top: 23%;" data-event-propagation-prevent="data-event-propagation-prevent">
-              <div class="hover-actions end-0" data-event-propagation-prevent="data-event-propagation-prevent">
-                <button class="btn btn-phoenix-secondary btn-icon me-1 fs-10 text-body px-0 me-1" data-event-propagation-prevent="data-event-propagation-prevent"><span class="fas fa-edit"></span></button>
-                <button class="btn btn-phoenix-secondary btn-icon fs-10 text-danger px-0" data-event-propagation-prevent="data-event-propagation-prevent"><span class="fas fa-trash"></span></button>
-              </div>
-            </div>
-          </div>
-          <div class="d-flex hover-actions-trigger py-3 border-top">
-            <input class="form-check-input form-check-input-todolist flex-shrink-0 my-1 me-2 form-check-input-undefined" type="checkbox" id="checkbox-todo-3" data-event-propagation-prevent="data-event-propagation-prevent" />
-            <div class="row justify-content-between align-items-md-center btn-reveal-trigger border-translucent gx-0 flex-1 cursor-pointer" data-bs-toggle="modal" data-bs-target="#exampleModal">
-              <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
-                <div class="mb-1 mb-md-0 d-flex align-items-center lh-1">
-                  <label class="form-check-label mb-1 mb-md-0 mb-xl-1 mb-xxl-0 fs-8 me-2 line-clamp-1 text-body cursor-pointer">Finalizing the geometric shapes</label>
-                </div>
-              </div>
-              <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
-                <div class="d-flex lh-1 align-items-center"><a class="text-body-tertiary fw-bold fs-10 me-2" href="#!"><span class="fas fa-paperclip me-1"></span>3</a>
-                  <p class="text-body-tertiary fs-10 mb-md-0 me-2 me-md-3 me-xl-2 me-xxl-3 mb-0">12 Nov, 2021</p>
-                  <div class="hover-md-hide hover-xl-show hover-xxl-hide">
-                    <p class="text-body-tertiary fs-10 fw-bold mb-md-0 mb-0 ps-md-3 ps-xl-0 ps-xxl-3 border-start-md border-xl-0 border-start-xxl">12:00 PM</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="d-none d-md-block d-xl-none d-xxl-block end-0 position-absolute" style="top: 23%;" data-event-propagation-prevent="data-event-propagation-prevent">
-              <div class="hover-actions end-0" data-event-propagation-prevent="data-event-propagation-prevent">
-                <button class="btn btn-phoenix-secondary btn-icon me-1 fs-10 text-body px-0 me-1" data-event-propagation-prevent="data-event-propagation-prevent"><span class="fas fa-edit"></span></button>
-                <button class="btn btn-phoenix-secondary btn-icon fs-10 text-danger px-0" data-event-propagation-prevent="data-event-propagation-prevent"><span class="fas fa-trash"></span></button>
-              </div>
-            </div>
-          </div>
-          <div class="d-flex hover-actions-trigger py-3 border-top">
-            <input class="form-check-input form-check-input-todolist flex-shrink-0 my-1 me-2 form-check-input-undefined" type="checkbox" id="checkbox-todo-4" data-event-propagation-prevent="data-event-propagation-prevent" />
-            <div class="row justify-content-between align-items-md-center btn-reveal-trigger border-translucent gx-0 flex-1 cursor-pointer" data-bs-toggle="modal" data-bs-target="#exampleModal">
-              <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
-                <div class="mb-1 mb-md-0 d-flex align-items-center lh-1">
-                  <label class="form-check-label mb-1 mb-md-0 mb-xl-1 mb-xxl-0 fs-8 me-2 line-clamp-1 text-body cursor-pointer">Daily meeting with team members</label>
-                </div>
-              </div>
-              <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
-                <div class="d-flex lh-1 align-items-center">
-                  <p class="text-body-tertiary fs-10 mb-md-0 me-2 me-md-3 me-xl-2 me-xxl-3 mb-0">1 Nov, 2021</p>
-                  <div class="hover-md-hide hover-xl-show hover-xxl-hide">
-                    <p class="text-body-tertiary fs-10 fw-bold mb-md-0 mb-0 ps-md-3 ps-xl-0 ps-xxl-3 border-start-md border-xl-0 border-start-xxl">12:00 PM</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="d-none d-md-block d-xl-none d-xxl-block end-0 position-absolute" style="top: 23%;" data-event-propagation-prevent="data-event-propagation-prevent">
-              <div class="hover-actions end-0" data-event-propagation-prevent="data-event-propagation-prevent">
-                <button class="btn btn-phoenix-secondary btn-icon me-1 fs-10 text-body px-0 me-1" data-event-propagation-prevent="data-event-propagation-prevent"><span class="fas fa-edit"></span></button>
-                <button class="btn btn-phoenix-secondary btn-icon fs-10 text-danger px-0" data-event-propagation-prevent="data-event-propagation-prevent"><span class="fas fa-trash"></span></button>
-              </div>
-            </div>
-          </div>
-          <div class="d-flex hover-actions-trigger py-3 border-top">
-            <input class="form-check-input form-check-input-todolist flex-shrink-0 my-1 me-2 form-check-input-undefined" type="checkbox" id="checkbox-todo-5" data-event-propagation-prevent="data-event-propagation-prevent" />
-            <div class="row justify-content-between align-items-md-center btn-reveal-trigger border-translucent gx-0 flex-1 cursor-pointer" data-bs-toggle="modal" data-bs-target="#exampleModal">
-              <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
-                <div class="mb-1 mb-md-0 d-flex align-items-center lh-1">
-                  <label class="form-check-label mb-1 mb-md-0 mb-xl-1 mb-xxl-0 fs-8 me-2 line-clamp-1 text-body cursor-pointer">Daily Standup Meetings</label>
-                </div>
-              </div>
-              <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
-                <div class="d-flex lh-1 align-items-center">
-                  <p class="text-body-tertiary fs-10 mb-md-0 me-2 me-md-3 me-xl-2 me-xxl-3 mb-0">13 Nov, 2021</p>
-                  <div class="hover-md-hide hover-xl-show hover-xxl-hide">
-                    <p class="text-body-tertiary fs-10 fw-bold mb-md-0 mb-0 ps-md-3 ps-xl-0 ps-xxl-3 border-start-md border-xl-0 border-start-xxl">10:00 PM</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="d-none d-md-block d-xl-none d-xxl-block end-0 position-absolute" style="top: 23%;" data-event-propagation-prevent="data-event-propagation-prevent">
-              <div class="hover-actions end-0" data-event-propagation-prevent="data-event-propagation-prevent">
-                <button class="btn btn-phoenix-secondary btn-icon me-1 fs-10 text-body px-0 me-1" data-event-propagation-prevent="data-event-propagation-prevent"><span class="fas fa-edit"></span></button>
-                <button class="btn btn-phoenix-secondary btn-icon fs-10 text-danger px-0" data-event-propagation-prevent="data-event-propagation-prevent"><span class="fas fa-trash"></span></button>
-              </div>
-            </div>
-          </div>
-          <div class="d-flex hover-actions-trigger py-3 border-top">
-            <input class="form-check-input form-check-input-todolist flex-shrink-0 my-1 me-2 form-check-input-undefined" type="checkbox" id="checkbox-todo-6" data-event-propagation-prevent="data-event-propagation-prevent" />
-            <div class="row justify-content-between align-items-md-center btn-reveal-trigger border-translucent gx-0 flex-1 cursor-pointer" data-bs-toggle="modal" data-bs-target="#exampleModal">
-              <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
-                <div class="mb-1 mb-md-0 d-flex align-items-center lh-1">
-                  <label class="form-check-label mb-1 mb-md-0 mb-xl-1 mb-xxl-0 fs-8 me-2 line-clamp-1 text-body cursor-pointer">Procrastinate for a month</label><span class="badge badge-phoenix ms-auto fs-10 badge-phoenix-info">ON PROCESS</span>
-                </div>
-              </div>
-              <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
-                <div class="d-flex lh-1 align-items-center"><a class="text-body-tertiary fw-bold fs-10 me-2" href="#!"><span class="fas fa-paperclip me-1"></span>3</a>
-                  <p class="text-body-tertiary fs-10 mb-md-0 me-2 me-md-3 me-xl-2 me-xxl-3 mb-0">12 Nov, 2021</p>
-                  <div class="hover-md-hide hover-xl-show hover-xxl-hide">
-                    <p class="text-body-tertiary fs-10 fw-bold mb-md-0 mb-0 ps-md-3 ps-xl-0 ps-xxl-3 border-start-md border-xl-0 border-start-xxl">12:00 PM</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="d-none d-md-block d-xl-none d-xxl-block end-0 position-absolute" style="top: 23%;" data-event-propagation-prevent="data-event-propagation-prevent">
-              <div class="hover-actions end-0" data-event-propagation-prevent="data-event-propagation-prevent">
-                <button class="btn btn-phoenix-secondary btn-icon me-1 fs-10 text-body px-0 me-1" data-event-propagation-prevent="data-event-propagation-prevent"><span class="fas fa-edit"></span></button>
-                <button class="btn btn-phoenix-secondary btn-icon fs-10 text-danger px-0" data-event-propagation-prevent="data-event-propagation-prevent"><span class="fas fa-trash"></span></button>
-              </div>
-            </div>
-          </div>
-          <div class="d-flex hover-actions-trigger py-3 border-top">
-            <input class="form-check-input form-check-input-todolist flex-shrink-0 my-1 me-2 form-check-input-undefined" type="checkbox" id="checkbox-todo-7" data-event-propagation-prevent="data-event-propagation-prevent" />
-            <div class="row justify-content-between align-items-md-center btn-reveal-trigger border-translucent gx-0 flex-1 cursor-pointer" data-bs-toggle="modal" data-bs-target="#exampleModal">
-              <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
-                <div class="mb-1 mb-md-0 d-flex align-items-center lh-1">
-                  <label class="form-check-label mb-1 mb-md-0 mb-xl-1 mb-xxl-0 fs-8 me-2 line-clamp-1 text-body cursor-pointer">warming up</label><span class="badge badge-phoenix ms-auto fs-10 badge-phoenix-info">CLOSE</span>
-                </div>
-              </div>
-              <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
-                <div class="d-flex lh-1 align-items-center"><a class="text-body-tertiary fw-bold fs-10 me-2" href="#!"><span class="fas fa-paperclip me-1"></span>3</a>
-                  <p class="text-body-tertiary fs-10 mb-md-0 me-2 me-md-3 me-xl-2 me-xxl-3 mb-0">12 Nov, 2021</p>
-                  <div class="hover-md-hide hover-xl-show hover-xxl-hide">
-                    <p class="text-body-tertiary fs-10 fw-bold mb-md-0 mb-0 ps-md-3 ps-xl-0 ps-xxl-3 border-start-md border-xl-0 border-start-xxl">12:00 PM</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="d-none d-md-block d-xl-none d-xxl-block end-0 position-absolute" style="top: 23%;" data-event-propagation-prevent="data-event-propagation-prevent">
-              <div class="hover-actions end-0" data-event-propagation-prevent="data-event-propagation-prevent">
-                <button class="btn btn-phoenix-secondary btn-icon me-1 fs-10 text-body px-0 me-1" data-event-propagation-prevent="data-event-propagation-prevent"><span class="fas fa-edit"></span></button>
-                <button class="btn btn-phoenix-secondary btn-icon fs-10 text-danger px-0" data-event-propagation-prevent="data-event-propagation-prevent"><span class="fas fa-trash"></span></button>
-              </div>
-            </div>
-          </div>
-          <div class="d-flex hover-actions-trigger py-3 border-top border-bottom">
-            <input class="form-check-input form-check-input-todolist flex-shrink-0 my-1 me-2 form-check-input-undefined" type="checkbox" id="checkbox-todo-8" data-event-propagation-prevent="data-event-propagation-prevent" />
-            <div class="row justify-content-between align-items-md-center btn-reveal-trigger border-translucent gx-0 flex-1 cursor-pointer" data-bs-toggle="modal" data-bs-target="#exampleModal">
-              <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
-                <div class="mb-1 mb-md-0 d-flex align-items-center lh-1">
-                  <label class="form-check-label mb-1 mb-md-0 mb-xl-1 mb-xxl-0 fs-8 me-2 line-clamp-1 text-body cursor-pointer">Make ready for release</label>
-                </div>
-              </div>
-              <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
-                <div class="d-flex lh-1 align-items-center"><a class="text-body-tertiary fw-bold fs-10 me-2" href="#!"><span class="fas fa-paperclip me-1"></span>2</a>
-                  <p class="text-body-tertiary fs-10 mb-md-0 me-2 me-md-3 me-xl-2 me-xxl-3 mb-0">2o Nov, 2021</p>
-                  <div class="hover-md-hide hover-xl-show hover-xxl-hide">
-                    <p class="text-body-tertiary fs-10 fw-bold mb-md-0 mb-0 ps-md-3 ps-xl-0 ps-xxl-3 border-start-md border-xl-0 border-start-xxl">1:00 AM</p>
+                    <p class="text-body-tertiary fs-10 fw-bold mb-md-0 mb-0 ps-md-3 ps-xl-0 ps-xxl-3 border-start-md border-xl-0 border-start-xxl time">12:00 PM</p>
                   </div>
                 </div>
               </div>
@@ -634,8 +532,35 @@
         </div>
         <div class="card-footer border-0"><a class="fw-bold fs-9 mt-4" href="#!"><span class="fas fa-plus me-1"></span>Add new task</a></div>
       </div>
+
+      <script>
+        $(document).ready(function() {
+          // Function to filter tasks based on search input
+          function filterTasks() {
+            var searchText = $('#searchInput').val().toLowerCase();
+
+            $('.task-list-body .hover-actions-trigger').each(function() {
+              var taskName = $(this).find('.task-name').text().toLowerCase();
+              var date = $(this).find('.date').text().toLowerCase();
+              var time = $(this).find('.time').text().toLowerCase();
+
+              // Show/hide tasks based on search input
+              if (taskName.includes(searchText) || date.includes(searchText) || time.includes(searchText)) {
+                $(this).show();
+              } else {
+                $(this).hide();
+              }
+            });
+          }
+
+          // Trigger filterTasks on keyup event in search input
+          $('#searchInput').on('keyup', function() {
+            filterTasks();
+          });
+        });
+      </script>
     </div>
-    <div class="col-12 col-xl-6 col-xxl-5">
+    <div class="col-12 col-xl-6 col-xxl-5 mb-3">
       <div class="card h-100">
         <div class="card-body">
           <div class="card-title mb-1">

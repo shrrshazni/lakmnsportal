@@ -52,3 +52,37 @@
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
   position: absolute;
 }
+
+/* dashboard user home */
+
+.testimonial-carousel {
+    border-radius: 1.5rem;
+  }
+
+.dashboard-carousel .carousel-indicators {
+    bottom: -2rem;
+  }
+  .dashboard-carousel .carousel-indicators button {
+    width: 12px;
+    height: 3px;
+    border-radius: 0.5rem;
+    border: 0;
+    -webkit-transition: width 0.5s;
+    -o-transition: width 0.5s;
+    transition: width 0.5s;
+  }
+  .dashboard-carousel .carousel-indicators button.active {
+    width: 1.5rem;
+  }
+
+  @media (min-width: 1200px) {
+    .task-list .task-list-body {
+      height: 270px;
+    }
+  }
+
+  @media (min-width: 400px) and (max-width: 800px)  {
+    .task-list .task-list-body {
+      height: 250px;
+    }
+}
