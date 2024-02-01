@@ -364,7 +364,8 @@
               </div>
             </div>
           </div>
-          <div class="d-flex hover-actions-trigger py-3 border-top">
+          
+          <div class="d-flex hover-actions-trigger py-3 border-top" >
             <input class="form-check-input form-check-input-todolist flex-shrink-0 my-1 me-2 form-check-input-undefined" type="checkbox" id="checkbox-todo-1" data-event-propagation-prevent="data-event-propagation-prevent" />
             <div class="row justify-content-between align-items-md-center btn-reveal-trigger border-translucent gx-0 flex-1 cursor-pointer" data-bs-toggle="modal" data-bs-target="#exampleModal">
               <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
@@ -388,6 +389,7 @@
               </div>
             </div>
           </div>
+
           <div class="modal fade" id="exampleModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-xl">
               <div class="modal-content bg-body overflow-hidden">
@@ -534,31 +536,40 @@
       </div>
 
       <script>
-        $(document).ready(function() {
-          // Function to filter tasks based on search input
-          function filterTasks() {
-            var searchText = $('#searchInput').val().toLowerCase();
+        function filterTasksByKeyword(keyword) {
+          // Get all elements with class "task-list-body"
+          var tasks = document.querySelectorAll('.task-list-body');
 
-            $('.task-list-body .hover-actions-trigger').each(function() {
-              var taskName = $(this).find('.task-name').text().toLowerCase();
-              var date = $(this).find('.date').text().toLowerCase();
-              var time = $(this).find('.time').text().toLowerCase();
+          // Loop through each task
+          tasks.forEach(function(task) {
+            // Check if the task contains the keyword in task-name, date, or time
+            var taskName = task.querySelector('.task-name').textContent.toLowerCase();
+            var date = task.querySelector('.date').textContent.toLowerCase();
+            var time = task.querySelector('.time').textContent.toLowerCase();
+            var taskId = task.id;
 
-              // Show/hide tasks based on search input
-              if (taskName.includes(searchText) || date.includes(searchText) || time.includes(searchText)) {
-                $(this).show();
-              } else {
-                $(this).hide();
-              }
-            });
-          }
-
-          // Trigger filterTasks on keyup event in search input
-          $('#searchInput').on('keyup', function() {
-            filterTasks();
+            // Check if the task ID matches the keyword or task name, date, or time contains the keyword
+            if (taskName.includes(keyword) || date.includes(keyword) || time.includes(keyword)) {
+              task.id.style.display = 'block'; // Show the task
+            } else if (taskName.split(' ').some(word => word.includes(keyword))) {
+              task.id.style.display = 'block'; // Show the task if any word in task name matches the keyword
+            } else {
+              task.id.style.display = 'none'; // Hide the task
+            }
           });
+        }
+
+        // Add an event listener to the search input field
+        var searchInput = document.getElementById('searchInput');
+        searchInput.addEventListener('input', function() {
+          var searchTerm = searchInput.value.toLowerCase();
+          filterTasksByKeyword(searchTerm);
         });
+
+        // Example usage
+        // filterTasksByKeyword('task-1');
       </script>
+
     </div>
     <div class="col-12 col-xl-6 col-xxl-5 mb-3">
       <div class="card h-100">

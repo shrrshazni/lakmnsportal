@@ -18,6 +18,7 @@ const nodemailer = require('nodemailer');
 const cron = require('node-cron');
 const { v4: uuidv4 } = require('uuid');
 const { send } = require('process');
+const fs = require('fs').promises;
 
 const mongoURI =
     'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/session';
@@ -47,7 +48,7 @@ app.use(
         saveUninitialized: false,
         store: store,
         cookie: {
-            maxAge: 1 * 60 * 60 * 1000 // Default session duration, will be updated below
+            maxAge: 7 * 60 * 60 * 1000
         }
     })
 );
@@ -144,8 +145,25 @@ const notificationSchema = new mongoose.Schema({
 
 // ACTIVITY
 const activitySchema = new mongoose.Schema({
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     date: String,
     items: []
+});
+
+// TASK
+const taskSchema = new mongoose.Schema({
+    creator: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    name: { type: String, required: true },
+    timestamp: { type: Date, required: true, default: Date.now },
+    due: { type: Date },
+    description: { type: String },
+    status: { type: String, enum: ['process', 'urgent', 'done', 'cancelled'], default: 'process' },
+    fileId: { type: String },
+    subtask: [{
+        name: { type: String }
+    }],
+    assignee: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    reminder: { type: Date }
 });
 
 // USER'S INFORMATION
@@ -205,10 +223,12 @@ const leaveSchema = new mongoose.Schema({
 // FILE
 const FileSchema = new mongoose.Schema({
     uuid: String,
+    user: String,
     name: String,
     path: String,
     date: { type: Date },
-    type: String
+    type: String,
+    size: String
 });
 
 //mongoose passport-local
@@ -220,6 +240,7 @@ const Activity = userDatabase.model('Activity', activitySchema);
 const Info = userDatabase.model('Info', infoSchema);
 const UserLeave = userDatabase.model('Leave', userLeaveSchema);
 const Notification = userDatabase.model('Notification', notificationSchema);
+const Task = userDatabase.model('Task', taskSchema);
 const Leave = leaveDatabase.model('Leave', leaveSchema);
 const File = fileDatabase.model('File', FileSchema);
 
@@ -2192,7 +2213,7 @@ app
                                     estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000)
                                 }
                             ];
-                        }else if (user.isDeputyChiefExec === true) {
+                        } else if (user.isDeputyChiefExec === true) {
                             approvals = [
                                 {
                                     recipient: user._id,
@@ -3104,10 +3125,65 @@ app.get('/markAllAsRead', isAuthenticated, async function (req, res) {
     }
 });
 
+// TEMP EXAMPLE
+app.get('/temp', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    }).populate('sender');
+
+    const task = await Task.find({assignee:user._id});
+    const file = await File.find();
+
+
+    // Creating two sample tasks
+    // const task1 = new Task({
+    //     creator: '65b083dd3a92b8716ae0d31b',
+    //     name: 'Create a detailed project outline',
+    //     timestamp: new Date(),
+    //     due: new Date('2024-02-10'),
+    //     description: 'Etiam fringilla pulvinar lacus, ut faucibus nisl venenatis et. In sollicitudin, quam in vestibulum porttitor, massa ipsum aliquam massa, in ultrices est turpis eget augue. Nulla facilisi. Cras condimentum sapien et molestie luctus. Praesent pellentesque urna augue, nec pellentesque magna dignissim eget.',
+    //     status: 'process',
+    //     fileId: uuidv4(),
+    //     subtask: [{ name: 'Subtask 1' }],
+    //     assignee: ['65b083223a92b8716ae0d312'],
+    //     reminder: new Date('2024-02-08T14:30:00'),
+    // });
+
+    // const task2 = new Task({
+    //     creator: '65b083dd3a92b8716ae0d31b',
+    //     name: 'Implement team feedback mechanism system',
+    //     timestamp: new Date(),
+    //     due: new Date('2024-02-15'),
+    //     description: 'Fusce eu turpis semper, iaculis eros a, convallis ipsum. Nullam aliquet, nisl non mollis mattis, lacus enim aliquam est, rhoncus gravida augue lorem ut purus. Donec viverra tincidunt ultrices.',
+    //     status: 'urgent',
+    //     fileId: uuidv4(),
+    //     subtask: [{ name: 'Subtask 2' }, { name: 'Subtask 3' }],
+    //     assignee: ['65b083223a92b8716ae0d312', '65b084393a92b8716ae0d328'],
+    //     reminder: new Date('2024-02-13T10:00:00'),
+    // });
+
+    // task1.save();
+    // task2.save();
+
+    res.render("temp", {
+        user: user,
+        notifications: notifications,
+        tasks: task,
+        files: file
+    });
+});
+
+
 // FILES
 
 // UPLOAD
 app.post('/upload-files', isAuthenticated, async (reqFiles, resFiles) => {
+    const username = reqFiles.user.username;
+    const user = await User.findOne({ username: username });
+
     if (!reqFiles.files || Object.keys(reqFiles.files).length === 0) {
         console.log('There is no files selected');
     } else {
@@ -3122,22 +3198,25 @@ app.post('/upload-files', isAuthenticated, async (reqFiles, resFiles) => {
             const today = new Date();
             const type = path.extname(file.name);
 
-            file.mv(upload, err => {
-                if (err) {
-                    console.log(err);
-                }
+            await file.mv(upload);
 
-                // Save file information to the MongoDB
-                const newFile = new File({
-                    uuid: uuid,
-                    name: file.name,
-                    path: pathUpload,
-                    date: today,
-                    type: type
-                });
+            // Calculate file size in megabytes
+            const fileSizeInBytes = (await fs.stat(upload)).size;
+            const fileSizeInMB = fileSizeInBytes / (1024 * 1024);
 
-                newFile.save();
+            console.log(fileSizeInMB);
+
+            const newFile = new File({
+                uuid: uuid,
+                user: user.fullname,
+                name: file.name,
+                path: pathUpload,
+                date: today,
+                type: type,
+                size: fileSizeInMB.toFixed(2) + ' MB'
             });
+
+            newFile.save();
         }
 
         console.log('Done upload files!');
