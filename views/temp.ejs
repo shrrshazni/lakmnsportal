@@ -115,7 +115,7 @@
                   <div class="py-6">
                     <div class="mb-7">
                       <div class="d-flex align-items-center mb-3">
-                        <h4 class="text-body me-3">Description</h4><a class="btn btn-link text-decoration-none p-0" href="#!"><span class="fa-solid fa-pen"></span></a>
+                        <h4 class="text-body me-3">Description</h4><a class="btn btn-link text-decoration-none p-0" data-bs-target="#description" data-bs-toggle="modal"><span class="fa-solid fa-pen"></span></a>
                       </div>
                       <p class="text-body-highlight mb-0"><%= item.description %></p>
                     </div>
@@ -148,9 +148,20 @@
 
                     <div class="mb-7">
                       <h4 class="mb-3">Subtasks</h4>
+
                       <% if(item.subtask && item.subtask.length > 0){ %>
+                      <% const lastSubtaskIndex = item.subtask.length - 1 ; %>
                       <% item.subtask.forEach((subtask,index) => { %>
-                      <div class="d-flex flex-between-center hover-actions-trigger py-3 border-top">
+
+                      <%
+                        var subtaskBorder = '';
+                        if(index === lastSubtaskIndex) {
+                          subtaskBorder = 'border-bottom';
+                        } else {
+                          subtaskBorder = '';
+                        }
+                        %>
+                      <div class="d-flex flex-between-center hover-actions-trigger py-3 border-top <%= subtaskBorder %> mb-3">
                         <div class="form-check mb-1 mb-md-0 d-flex align-items-center lh-1 min-h-auto">
                           <input class="subtask-checkbox form-check-input form-check-line-through mt-0 me-3" type="checkbox" id="subtaskundefined1" />
                           <label class="form-check-label mb-0 fs-8" for="subtaskundefined1"><%= subtask.name %></label>
@@ -164,7 +175,7 @@
                       <% }else { %>
                       <p>There is no subtask.</p>
                       <% } %>
-                      <a class="fw-bold fs-9" href="#!"><span class="fas fa-plus me-1"></span>Add subtask</a>
+                      <a class="fw-bold fs-9" href="#!" data-bs-target="#subtask" data-bs-toggle="modal"><span class="fas fa-plus me-1"></span>Add subtask</a>
                     </div>
                     <div class="mb-3">
                       <div>
@@ -224,7 +235,7 @@
                       <% }else { %>
                       <p>There is no file uploaded.</p>
                       <% } %>
-                    </div><a class="fw-bold fs-9" href="#!"><span class="fas fa-plus me-1"></span>Add file(s)</a>
+                    </div><a class="fw-bold fs-9" href="#!" data-bs-target="#file" data-bs-toggle="modal"><span class="fas fa-plus me-1"></span>Add file(s)</a>
                   </div>
                 </div>
                 <div class="col-12 col-lg-5">
@@ -255,6 +266,55 @@
                   </form>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal fade" id="description" aria-hidden="true" aria-labelledby="exampleModalToggleLabel" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-body p-3">
+              <form action="">
+                <textarea id="description" rows="8" placeholder="Write your description here" name="description"></textarea>
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button class="btn btn-primary" data-bs-target="#task<%= index %>" data-bs-toggle="modal">Back to task</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal fade" id="subtask" aria-hidden="true" aria-labelledby="exampleModalToggleLabel2" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h1 class="modal-title fs-5" id="exampleModalToggleLabel2">Modal 2</h1>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              Hide this modal and show the first with the button below.
+            </div>
+            <div class="modal-footer">
+              <button class="btn btn-primary" data-bs-target="#task<%= index %>" data-bs-toggle="modal">Back to first</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal fade" id="file" aria-hidden="true" aria-labelledby="exampleModalToggleLabel2" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h1 class="modal-title fs-5" id="exampleModalToggleLabel2">Modal 2</h1>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              Hide this modal and show the first with the button below.
+            </div>
+            <div class="modal-footer">
+              <button class="btn btn-primary" data-bs-target="#task<%= index %>" data-bs-toggle="modal">Back to first</button>
             </div>
           </div>
         </div>
