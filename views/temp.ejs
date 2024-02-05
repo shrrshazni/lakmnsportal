@@ -33,12 +33,13 @@
       <% tasks.forEach((item,index) => { %>
 
       <% 
+        var showForUser = '';
         var todoborder = '';
         var fileAmount = '';
         var displayTaskFile = '';
         var displayTaskSubtask = '';
         var statusTaskColour = '';
-        const associatedFile = files.filter((file) => file.uuid === item.fileId);;
+        const associatedFile = files.filter((file) => file.uuid === item.fileId);
 
         // check last item inside task
         if(index === lastIndexItem){
@@ -72,12 +73,17 @@
             statusTaskColour = 'danger';            
         } else if(item.status === 'done'){
             statusTaskColour = 'success';            
-        } 
+        }
+
+        if(item.creator === user._id){
+            showForUser = '';
+        }else{
+            showForUser = 'd-none';
+        }
       %>
 
       <div class="item">
         <div class="d-flex hover-actions-trigger py-3 border-top <%= todoborder %>">
-          <input class="form-check-input form-check-input-todolist flex-shrink-0 my-1 me-2 form-check-input-undefined" type="checkbox" id="checkbox-todo-1" data-event-propagation-prevent="data-event-propagation-prevent" />
           <div class="row justify-content-between align-items-md-center btn-reveal-trigger border-translucent gx-0 flex-1 cursor-pointer" data-bs-toggle="modal" data-bs-target="#task<%= index %>">
             <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
               <div class="mb-1 mb-md-0 d-flex align-items-center lh-1">
@@ -95,12 +101,22 @@
           </div>
           <div class="d-none d-md-block d-xl-none d-xxl-block end-0 position-absolute" style="top: 23%;" data-event-propagation-prevent="data-event-propagation-prevent">
             <div class="hover-actions end-0" data-event-propagation-prevent="data-event-propagation-prevent">
-              <button class="btn btn-phoenix-secondary btn-icon me-1 fs-10 text-body px-0 me-1" data-event-propagation-prevent="data-event-propagation-prevent"><span class="fas fa-edit"></span></button>
-              <button class="btn btn-phoenix-secondary btn-icon fs-10 text-danger px-0" data-event-propagation-prevent="data-event-propagation-prevent"><span class="fas fa-trash"></span></button>
+              <button class="btn btn-phoenix-secondary btn-icon me-1 fs-10 text-body px-0 me-1" data-event-propagation-prevent="data-event-propagation-prevent" data-bs-toggle="modal" data-bs-target="#task<%= index %>"><span class="fas fa-edit"></span></button>
+              <a class="btn btn-phoenix-secondary btn-icon fs-10 text-danger px-0 <%= showForUser %>" href="/update/delete/<%= item._id %>" data-event-propagation-prevent="data-event-propagation-prevent"><span class="fas fa-trash"></span></a>
             </div>
           </div>
         </div>
       </div>
+
+      <% 
+         var showDeleteTask = '';
+
+         if(item.creator === user._id){
+            showDeleteTask = "d-none";
+         } else {
+            showDeleteTask = "";
+         }
+      %>
 
       <div class="modal fade" id="task<%= index %>" tabindex="<%= index %>" aria-hidden="true">
         <div class="modal-dialog modal-xl">
@@ -110,7 +126,9 @@
               <button class="btn btn-phoenix-secondary btn-icon btn-icon-xl flex-shrink-0" type="button" data-bs-dismiss="modal" aria-label="Close"><span class="fa-solid fa-xmark"></span></button>
             </div>
             <div class="modal-body bg-body-highlight px-6 py-0">
-              <div class="row gx-14">
+
+              <form class="row gx-14" action="/update/task/<%= item._id %>" method="post">
+
                 <div class="col-12 col-lg-7 border-end-lg">
                   <div class="py-6">
                     <div class="mb-7">
@@ -143,9 +161,6 @@
                         return formattedDate.replace(/(\d+)/, (match, p1) => `${p1}${daySuffix(day)}`);
                       };
                     %>
-
-
-
                     <div class="mb-7">
                       <h4 class="mb-3">Subtasks</h4>
 
@@ -163,7 +178,7 @@
                         %>
                       <div class="d-flex flex-between-center hover-actions-trigger py-3 border-top <%= subtaskBorder %> mb-3">
                         <div class="form-check mb-1 mb-md-0 d-flex align-items-center lh-1 min-h-auto">
-                          <input class="subtask-checkbox form-check-input form-check-line-through mt-0 me-3" type="checkbox" id="subtaskundefined1" />
+                          <input class="subtask-checkbox form-check-input form-check-line-through mt-0 me-3" type="checkbox" name="subtaskCheckbox" value="<%= subtask._id %>" />
                           <label class="form-check-label mb-0 fs-8" for="subtaskundefined1"><%= subtask.name %></label>
                         </div>
                         <div class="hover-actions end-0">
@@ -238,83 +253,128 @@
                     </div><a class="fw-bold fs-9" href="#!" data-bs-target="#file" data-bs-toggle="modal"><span class="fas fa-plus me-1"></span>Add file(s)</a>
                   </div>
                 </div>
+
                 <div class="col-12 col-lg-5">
-                  <form action="/task/update/<%= item._id %>" method="post">
-                    <div class="py-6">
-                      <h4 class="mb-4 text-body-emphasis">Others Information</h4>
-                      <h5 class="text-body-highlight mb-2">Status</h5>
-                      <select class="form-select mb-4" aria-label="Default select example" name="status">
-                        <option selected="">Select</option>
-                        <option value="process">Process</option>
-                        <option value="done">Done</option>
-                        <option value="cancelled">Cancelled</option>
-                        <option value="urgent">Urgent</option>
-                      </select>
-                      <h5 class="text-body-highlight mb-2">Due Date</h5>
-                      <div class="flatpickr-input-container mb-4">
-                        <input class="form-control datetimepicker ps-6" type="text" name="due" placeholder="Set the due date" data-options='{"disableMobile":true}' /><span class="uil uil-calendar-alt flatpickr-icon text-body-tertiary"></span>
-                      </div>
-                      <h5 class="text-body-highlight mb-2">Reminder</h5>
-                      <div class="flatpickr-input-container mb-4">
-                        <input class="form-control datetimepicker ps-6 w-100" type="text" name="reminder" placeholder="Set reminder" data-options='{"disableMobile":true, "enableTime": true}' /><span class="uil uil-calendar-alt flatpickr-icon text-body-tertiary"></span>
-                      </div>
-                      <div class="text-end mb-9 d-flex">
-                        <button class="btn btn-phoenix-primary" type="submit">Update Task</button>
-                        <a role="button" class="btn btn-phoenix-danger" href="#">Delete Task</a>
-                      </div>
+                  <div class="py-6">
+                    <h4 class="mb-4 text-body-emphasis">Others Information</h4>
+                    <h5 class="text-body-highlight mb-2">Status</h5>
+                    <select class="form-select mb-4" aria-label="Default select example" name="status">
+                      <option selected="" value="">Select</option>
+                      <option value="process">Process</option>
+                      <option value="done">Done</option>
+                      <option value="cancelled">Cancelled</option>
+                      <option value="urgent">Urgent</option>
+                    </select>
+                    <h5 class="text-body-highlight mb-2">Due Date</h5>
+                    <div class="flatpickr-input-container mb-4">
+                      <input class="form-control datetimepicker ps-6" type="text" name="due" placeholder="Set the due date" data-options='{"disableMobile":true}' /><span class="uil uil-calendar-alt flatpickr-icon text-body-tertiary"></span>
                     </div>
-                  </form>
+                    <h5 class="text-body-highlight mb-2">Reminder</h5>
+                    <div class="flatpickr-input-container mb-4">
+                      <input class="form-control datetimepicker ps-6 w-100" type="text" name="reminder" placeholder="Set reminder" data-options='{"disableMobile":true, "enableTime": true}' /><span class="uil uil-calendar-alt flatpickr-icon text-body-tertiary"></span>
+                    </div>
+                    <div class="text-end mb-9 d-flex">
+                      <button class="btn btn-phoenix-primary loading-button" type="submit">
+                        <div class="content-button">
+                          <span>Update Task</span>
+                        </div>
+                      </button>
+                      <a role="button" class="btn btn-phoenix-danger <%= showDeleteTask %>" href="/delete/task/<%= item._id %>">Delete Task</a>
+                    </div>
+                  </div>
                 </div>
-              </div>
+
+              </form>
+
             </div>
           </div>
         </div>
       </div>
 
       <div class="modal fade" id="description" aria-hidden="true" aria-labelledby="exampleModalToggleLabel" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+          <div class="modal-content px-2 py-3">
+            <form action="/update/description/<%= item._id %>" method="post">
+              <div class="modal-body">
+                <label class="form-label" for="udpateDescription">Description</label>
+                <textarea class="form-control scrollbar-overlay" id="udpateDescription" placeholder="Leave a description here" style="height: 100px" name="description"></textarea>
+              </div>
+              <div class="modal-footer border-top-0">
+                <button class="btn btn-primary loading-button" type="submit">
+                  <div class="content-button">
+                    <span>Update</span>
+                  </div>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal fade" id="subtask" aria-hidden="true" aria-labelledby="" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
           <div class="modal-content">
-            <div class="modal-body p-3">
-              <form action="">
-                <textarea id="description" rows="8" placeholder="Write your description here" name="description"></textarea>
+            <form action="/update/subtask/<%= item._id %>" method="post">
+              <div class="modal-body">
+                <label class="form-label" for="updateSubtask">Subtask</label>
+                <input class="form-control" type="text" id="updateSubtask" name="subtask" placeholder="Add subtask here">
+              </div>
+              <div class="modal-footer border-top-0">
+                <button class="btn btn-primary loading-button" type="submit">
+                  <div class="content-button">
+                    <span>Add subtask</span>
+                  </div>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal fade" id="addFiles" aria-hidden="true" aria-labelledby="taskFile" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+          <div class="modal-content px-2 py-3">
+            <div class="modal-body">
+              <form class="dropzone dropzone-multiple p-3 mb-4 bg-subtle" id="dropzone" data-dropzone="data-dropzone" action="/update/file/<%= item._id %>" data-options='{"url":"/update/file/<%= item._id %>","paramName": "file"}'>
+                <div class="dz-message" data-dz-message="data-dz-message">
+                  <img class="me-2" src="../../../assets/img/icons/cloud-upload.svg" width="25" alt="" />Drop your files here
+                </div>
+                <div class="dz-preview dz-preview-multiple m-0 d-flex flex-column">
+                  <div class="d-flex mb-3 pb-3 border-bottom media">
+                    <div class="border border-300 p-1 rounded-2 me-2">
+                      <img class="rounded-2 dz-image" src="../../../assets/img/icons/file.png" alt="..." data-dz-thumbnail="data-dz-thumbnail" />
+                    </div>
+                    <div class="flex-1 d-flex flex-between-center">
+                      <div>
+                        <h6 data-dz-name="data-dz-name"></h6>
+                        <div class="d-flex align-items-center">
+                          <p class="mb-0 fs-9 text-400 lh-1" data-dz-size="data-dz-size"></p>
+                          <div class="dz-progress ms-n1" style="margin-top: 0.1rem;">
+                            <span class="dz-upload" data-dz-uploadprogress=""></span>
+                          </div>
+                        </div>
+                        <span class="fs-9 text-danger" data-dz-errormessage="data-dz-errormessage"></span>
+                      </div>
+                      <div class="dropdown font-sans-serif">
+                        <button class="btn btn-link text-600 btn-sm dropdown-toggle btn-reveal dropdown-caret-none" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                          <span class="fas fa-ellipsis-h"></span>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end border py-2">
+                          <a class="dropdown-item" href="#!" data-dz-remove="data-dz-remove">Remove File</a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <input class="d-none" type="text" name="uuid" value="<%= item.fileId %>">
               </form>
             </div>
-            <div class="modal-footer">
-              <button class="btn btn-primary" data-bs-target="#task<%= index %>" data-bs-toggle="modal">Back to task</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="modal fade" id="subtask" aria-hidden="true" aria-labelledby="exampleModalToggleLabel2" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h1 class="modal-title fs-5" id="exampleModalToggleLabel2">Modal 2</h1>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-              Hide this modal and show the first with the button below.
-            </div>
-            <div class="modal-footer">
-              <button class="btn btn-primary" data-bs-target="#task<%= index %>" data-bs-toggle="modal">Back to first</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="modal fade" id="file" aria-hidden="true" aria-labelledby="exampleModalToggleLabel2" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h1 class="modal-title fs-5" id="exampleModalToggleLabel2">Modal 2</h1>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-              Hide this modal and show the first with the button below.
-            </div>
-            <div class="modal-footer">
-              <button class="btn btn-primary" data-bs-target="#task<%= index %>" data-bs-toggle="modal">Back to first</button>
+            <div class="modal-footer border-top-0">
+              <button class="btn btn-primary loading-button" type="submit" id="uploadFiles">
+                <div class="content-button">
+                  <span><i class="fa fa-upload me-2" aria-hidden="true"></i>Upload</span>
+                </div>
+              </button>
             </div>
           </div>
         </div>
@@ -352,7 +412,131 @@
       });
     </script>
 
-    <div class="card-footer border-0"><a class="fw-bold fs-9 mt-4" href="#!"><span class="fas fa-plus me-1"></span>Add new task</a></div>
+    <div class="card-footer border-0"><a class="fw-bold fs-9 mt-4" href="#!" data-bs-toggle="modal" data-bs-target="#addTask"><span class="fas fa-plus me-1"></span>Add new task</a></div>
+
+    <div class="modal fade" id="addTask" aria-hidden="true" aria-labelledby="exampleModalToggleLabel" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered modal-md">
+        <div class="modal-content">
+
+          <div class="modal-header px-6 py-5 pe-sm-5 px-md-6 dark__bg-gray-1100">
+            <h3 class="text-body-highlight fw-bolder mb-0">Task Submission</h3>
+            <button class="btn btn-phoenix-secondary btn-icon btn-icon-xl flex-shrink-0" type="button" data-bs-dismiss="modal" aria-label="Close"><span class="fa-solid fa-xmark"></span></button>
+          </div>
+
+
+          <div class="modal-body bg-body-highlight px-6 py-2 rounded-bottom-3">
+            <form class="row g-3" action="/task/add/<%= uuid %>" method="post">
+              <div class="col-12">
+                <label class="form-label" for="addDescription">Description</label>
+                <textarea class="form-control scrollbar-overlay" id="addDescription" placeholder="Leave a description here" style="height: 100px" name="description"></textarea>
+              </div>
+
+              <div class="col-12 col-md-4">
+                <label for="taskStatus" class="form-label">Status</label>
+                <select class="form-select mb-4" id="taskStatus" aria-label="Default select example" name="status">
+                  <option selected="" value="">Select</option>
+                  <option value="process">Process</option>
+                  <option value="done">Done</option>
+                  <option value="cancelled">Cancelled</option>
+                  <option value="urgent">Urgent</option>
+                </select>
+              </div>
+
+              <div class="col-12 col-md-4">
+                <label for="taskDue" class="form-label">Due</label>
+                <div class="flatpickr-input-container">
+                  <input class="form-control datetimepicker ps-6" type="text" name="due" placeholder="Set the due date" id="taskDue" data-options='{"disableMobile":true}' /><span class="uil uil-calendar-alt flatpickr-icon text-body-tertiary"></span>
+                </div>
+              </div>
+
+              <div class="col-12 col-md-4">
+                <label for="taskReminder" class="form-label">Reminder</label>
+                <div class="flatpickr-input-container">
+                  <input class="form-control datetimepicker ps-6 w-100" type="text" name="reminder" placeholder="Set reminder" id="taskReminder" data-options='{"disableMobile":true, "enableTime": true}' /><span class="uil uil-calendar-alt flatpickr-icon text-body-tertiary"></span>
+                </div>
+              </div>
+
+              <div class="col-auto mb-6 d-flex">
+                <button class="btn btn-primary loading-button" type="submit">
+                  <div class="content-button">
+                    <span>Add Task</span>
+                  </div>
+                </button>
+
+                <a class="fw-bold fs-9 my-auto ms-3" href="#!" data-bs-target="#addTaskFiles" data-bs-toggle="modal"><span class="fas fa-plus me-1"></span>Add file(s)</a>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="addTaskFiles" aria-hidden="true" aria-labelledby="taskFile" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered modal-md">
+        <div class="modal-content px-2 py-3">
+          <div class="modal-body">
+            <form class="dropzone dropzone-multiple p-3 mb-4 bg-subtle" id="dropzone" data-dropzone="data-dropzone" action="/upload-files" data-options='{"url":"/upload-files","paramName": "file"}'>
+              <div class="dz-message" data-dz-message="data-dz-message">
+                <img class="me-2" src="../../../assets/img/icons/cloud-upload.svg" width="25" alt="" />Drop your files here
+              </div>
+              <div class="dz-preview dz-preview-multiple m-0 d-flex flex-column">
+                <div class="d-flex mb-3 pb-3 border-bottom media">
+                  <div class="border border-300 p-1 rounded-2 me-2">
+                    <img class="rounded-2 dz-image" src="../../../assets/img/icons/file.png" alt="..." data-dz-thumbnail="data-dz-thumbnail" />
+                  </div>
+                  <div class="flex-1 d-flex flex-between-center">
+                    <div>
+                      <h6 data-dz-name="data-dz-name"></h6>
+                      <div class="d-flex align-items-center">
+                        <p class="mb-0 fs-9 text-400 lh-1" data-dz-size="data-dz-size"></p>
+                        <div class="dz-progress ms-n1" style="margin-top: 0.1rem;">
+                          <span class="dz-upload" data-dz-uploadprogress=""></span>
+                        </div>
+                      </div>
+                      <span class="fs-9 text-danger" data-dz-errormessage="data-dz-errormessage"></span>
+                    </div>
+                    <div class="dropdown font-sans-serif">
+                      <button class="btn btn-link text-600 btn-sm dropdown-toggle btn-reveal dropdown-caret-none" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <span class="fas fa-ellipsis-h"></span>
+                      </button>
+                      <div class="dropdown-menu dropdown-menu-end border py-2">
+                        <a class="dropdown-item" href="#!" data-dz-remove="data-dz-remove">Remove File</a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <input class="d-none" type="text" name="uuid" value="<%= uuid %>">
+            </form>
+          </div>
+          <div class="modal-footer border-top-0">
+            <button class="btn btn-primary loading-button" type="submit" id="uploadFiles">
+              <div class="content-button">
+                <span><i class="fa fa-upload me-2" aria-hidden="true"></i>Upload</span>
+              </div>
+            </button>
+            <button class="btn btn-phoenix-secondary" type="button" data-bs-target="#addTask" data-bs-toggle="modal">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- alert toast upload -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 5">
+  <div class="d-flex">
+    <div class="toast align-items-center text-white border-0" role="alert" data-bs-autohide="false" aria-live="assertive" aria-atomic="true" id="alertUploadToast">
+      <div class="d-flex justify-content-between">
+        <div class="toast-body px-0 py-3">
+          <code id="dropzoneAlertContent" class="text-primary"></code>
+        </div>
+
+        <button class="btn ms-2 p-0" type="button" data-bs-dismiss="toast" aria-label="Close">
+          <span class="uil uil-times fs-7"></span>
+        </button>
+      </div>
+    </div>
   </div>
 </div>
 

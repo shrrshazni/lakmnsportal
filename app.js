@@ -3134,7 +3134,7 @@ app.get('/temp', isAuthenticated, async function (req, res) {
         read: false
     }).populate('sender');
 
-    const task = await Task.find({assignee:user._id});
+    const task = await Task.find({ assignee: user._id });
     const file = await File.find();
 
 
@@ -3172,8 +3172,180 @@ app.get('/temp', isAuthenticated, async function (req, res) {
         user: user,
         notifications: notifications,
         tasks: task,
-        files: file
+        files: file,
+        uuid: uuidv4()
     });
+});
+
+//ADD TASK 
+app.post('/task/add', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+
+    if (user) {
+
+    }
+});
+
+// UPDATE
+
+app.post('/update/:content/:id', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const content = req.params.content;
+    const id = req.params.id;
+
+    if (user) {
+        // task desc
+        if (content === 'description') {
+
+            const description = req.body.description;
+            const update = await Task.findOneAndUpdate(
+                { _id: id },
+                {
+                    $set:
+                        { description: description }
+                },
+                {
+                    new: true
+                }
+            )
+
+            if (update) {
+                console.log('Description task has been updated');
+                res.redirect('/temp');
+            } else {
+                console.log('Description task has not been updated.');
+                res.redirect('/');
+            }
+
+        } else if (content === 'subtask') {
+
+            const subtask = req.body.subtask;
+
+            const update = await Task.findOneAndUpdate(
+                { _id: id },
+                { $push: { subtask: { name: subtask } } },
+                { new: true }
+            );
+
+            if (update) {
+                console.log('Subtask added');
+                res.redirect('/');
+            } else {
+                console.log('Subtask failed to be added.')
+            }
+
+        } else if (content === 'task') {
+            const subtask = req.body.subtaskCheckbox;
+            const status = req.body.status;
+            const due = req.body.due;
+            const reminder = req.body.reminder;
+
+            const updateFields = {};
+
+            if (due) {
+                updateFields.due = new Date(due);
+            }
+
+            if (reminder) {
+                updateFields.reminder = new Date(reminder);
+            }
+
+            if (status !== undefined && status !== null && status !== '') {
+                updateFields.status = status;
+            }
+
+            if (subtask && subtask.length > 0) {
+                await Task.findByIdAndUpdate(
+                    { _id: id },
+                    { $pull: { subtask: { _id: { $in: subtask } } } },
+                    { new: true }
+                );
+                console.log('Selected subtasks have been deleted.');
+            } else {
+                console.log('There is no subtask selected.');
+            }
+
+            const update = await Task.findByIdAndUpdate(
+                { _id: id },
+                {
+                    $pull: { subtask: { _id: { $in: subtask } } },
+                    $set: updateFields,
+                },
+                { new: true }
+            );
+
+            if (update) {
+                console.log('Update task success');
+                res.redirect('/');
+            } else {
+                console.log('There is must be something wrong in the update');
+                res.redirect('/temp');
+            }
+
+        } else if (content === 'file') {
+
+            if (!req.files || Object.keys(req.files).length === 0) {
+                console.log('There is no files selected');
+            } else {
+                console.log('There are files try to be uploaded');
+
+                const uuid = req.body.uuid;
+
+                // No file with the report ID found, proceed with file upload
+                for (const file of Object.values(req.files)) {
+                    const upload = __dirname + '/public/uploads/' + file.name;
+                    const pathUpload = '/uploads/' + file.name;
+                    const today = new Date();
+                    const type = path.extname(file.name);
+
+                    await file.mv(upload);
+
+                    // Calculate file size in megabytes
+                    const fileSizeInBytes = (await fs.stat(upload)).size;
+                    const fileSizeInMB = fileSizeInBytes / (1024 * 1024);
+
+                    console.log(fileSizeInMB);
+
+                    const newFile = new File({
+                        uuid: uuid,
+                        user: user.fullname,
+                        name: file.name,
+                        path: pathUpload,
+                        date: today,
+                        type: type,
+                        size: fileSizeInMB.toFixed(2) + ' MB'
+                    });
+
+                    newFile.save();
+                }
+
+                console.log('Done upload files!');
+                res.redirect('/');
+            }
+        }
+    }
+});
+
+// DELETE 
+
+app.get('/delete/:content/:id', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const content = req.params.content;
+    const id = req.params.id;
+
+    if (user) {
+        if (content === 'task') {
+            const deletedTask = await Task.findByIdAndRemove(id);
+
+            if (deletedTask) {
+                console.log('The task selected has been deleted')
+                res.redirect('/');
+            }
+        }
+    }
 });
 
 
