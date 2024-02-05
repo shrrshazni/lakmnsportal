@@ -3180,8 +3180,30 @@ app.get('/temp', isAuthenticated, async function (req, res) {
     notifications: notifications,
     tasks: task,
     files: file,
-    uuid: uuidv4()
+    uuid: uuidv4(),
+    selectedNames: ''
   });
+});
+
+// SEARCH STAFF
+app.get('/search/task/assignee', isAuthenticated, async function (req, res) {
+  const query = req.query.query;
+
+  try {
+    let results;
+    if (query && query.trim() !== '') {
+      results = await User.find({
+        fullname: { $regex: query, $options: 'i' }
+      });
+    } else {
+      results = [];
+    }
+
+    res.json(results);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Internal Server Error');
+  }
 });
 
 //ADD TASK
@@ -3311,7 +3333,7 @@ app.post('/update/:content/:id', isAuthenticated, async function (req, res) {
             uuid: uuid,
             user: user.fullname,
             name: file.name,
-            path: pathUpload,
+            // path: pathUpload,
             date: today,
             type: type,
             size: fileSizeInMB.toFixed(2) + ' MB'
@@ -3424,43 +3446,6 @@ app.post('/status-update', isAuthenticated, async (req, res) => {
   } else {
     console.log('Status update failed!');
     res.redirect('/');
-  }
-});
-
-app.get('/temp2', isAuthenticated, async function (req, res) {
-  const username = req.user.username;
-  const user = await User.findOne({ username: username });
-  const notifications = await Notification.find({
-    recipient: user._id,
-    read: false
-  }).populate('sender');
-
-  if (user) {
-    res.render('temp2', {
-      user: user,
-      notifications: notifications
-    });
-  }
-});
-
-// SEARCH
-app.get('/search/task/assignee',isAuthenticated, async function (req, res) {  
-  const query = req.query.query;
-
-  try {
-    let results;
-    if (query && query.trim() !== '') {
-      results = await User.find({
-        fullname: { $regex: query, $options: 'i' }
-      });
-    } else {
-      results = [];
-    }
-
-    res.json(results);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Internal Server Error');
   }
 });
 
