@@ -146,8 +146,10 @@ const notificationSchema = new mongoose.Schema({
 // ACTIVITY
 const activitySchema = new mongoose.Schema({
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    date: String,
-    items: []
+    date: { type: Date, default: Date.now },
+    title: { type: String },
+    type: { type: String },
+    description: { type: String }
 });
 
 // TASK
@@ -310,6 +312,12 @@ app.get('/', isAuthenticated, async function (req, res) {
     const task = await Task.find({ assignee: user._id });
     const file = await File.find();
 
+    // activity
+
+    const activity = await Activity.find({ 'user.department' : user.department }).populate('user');
+
+    console.log(activity);    
+
     if (user) {
         res.render('home', {
             user: user,
@@ -323,6 +331,7 @@ app.get('/', isAuthenticated, async function (req, res) {
             leave: leave,
             tasks: task,
             files: file,
+            activities : activity,
             selectedNames: '',
             // toast
             show: '',
@@ -368,6 +377,7 @@ app.post('/task/add', isAuthenticated, async function (req, res) {
             if (task) {
                 console.log('New task added');
                 res.redirect('/');
+
             }
 
         } else {
@@ -557,7 +567,7 @@ app.get('/search/task/assignee', isAuthenticated, async function (req, res) {
         let results;
         if (query && query.trim() !== '') {
             results = await User.find({
-                department : user.department,
+                department: user.department,
                 fullname: { $regex: query, $options: 'i' }
             });
         } else {

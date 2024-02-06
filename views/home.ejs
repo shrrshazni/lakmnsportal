@@ -1016,6 +1016,7 @@
       </script>
 
     </div>
+
     <div class="col-12 col-xl-6 col-xxl-5 mb-3">
       <div class="card h-100">
         <div class="card-body">
@@ -1024,6 +1025,8 @@
           </div>
           <p class="text-body-tertiary mb-4">Recent activity across all projects</p>
           <div class="timeline-vertical timeline-with-details">
+            <% if(activities && activities.length >0){%>
+            <% activities.forEach(function(activity) { %>
             <div class="timeline-item position-relative">
               <div class="row g-md-3">
                 <div class="col-12 col-md-auto d-flex">
@@ -1043,44 +1046,10 @@
                 </div>
               </div>
             </div>
-            <div class="timeline-item position-relative">
-              <div class="row g-md-3">
-                <div class="col-12 col-md-auto d-flex">
-                  <div class="timeline-item-date order-1 order-md-0 me-md-4">
-                    <p class="fs-10 fw-semibold text-body-tertiary text-opacity-85 text-end">05 DEC, 2023<br class="d-none d-md-block" /> 12:30 AM</p>
-                  </div>
-                  <div class="timeline-item-bar position-md-relative me-3 me-md-0">
-                    <div class="icon-item icon-item-sm rounded-7 shadow-none bg-primary-subtle"><span class="fa-solid fa-dove text-primary-dark fs-10"></span></div><span class="timeline-bar border-end border-dashed"></span>
-                  </div>
-                </div>
-                <div class="col">
-                  <div class="timeline-item-content ps-6 ps-md-3">
-                    <h5 class="fs-9 lh-sm">Empower Your Digital Presence: The Phoenix Template Unveiled</h5>
-                    <p class="fs-9">by <a class="fw-semibold" href="#!">Bookworm22</a></p>
-                    <p class="fs-9 text-body-secondary mb-5">Unveiling the Phoenix template, a game-changer for your digital presence. With its powerful features and sleek design,</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="timeline-item position-relative">
-              <div class="row g-md-3">
-                <div class="col-12 col-md-auto d-flex">
-                  <div class="timeline-item-date order-1 order-md-0 me-md-4">
-                    <p class="fs-10 fw-semibold text-body-tertiary text-opacity-85 text-end">15 DEC, 2023<br class="d-none d-md-block" /> 2:30 AM</p>
-                  </div>
-                  <div class="timeline-item-bar position-md-relative me-3 me-md-0">
-                    <div class="icon-item icon-item-sm rounded-7 shadow-none bg-primary-subtle"><span class="fa-solid fa-dungeon text-primary-dark fs-10"></span></div>
-                  </div>
-                </div>
-                <div class="col">
-                  <div class="timeline-item-content ps-6 ps-md-3">
-                    <h5 class="fs-9 lh-sm">Phoenix Template: Simplified Design, Maximum Impact</h5>
-                    <p class="fs-9">by <a class="fw-semibold" href="#!">Sharuka Nijibum</a></p>
-                    <p class="fs-9 text-body-secondary mb-0">Introducing the Phoenix template, where simplified design meets maximum impact. Elevate your digital presence with its sleek and intuitive features.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <%  }) %>
+            <% }else { %>
+                <p>There is no activity yet.</p>
+            <% } %>
           </div>
         </div>
       </div>
