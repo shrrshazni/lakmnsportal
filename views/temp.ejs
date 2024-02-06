@@ -33,7 +33,6 @@
       <% tasks.forEach((item,index) => { %>
 
       <% 
-        var showForUser = '';
         var todoborder = '';
         var fileAmount = '';
         var displayTaskFile = '';
@@ -75,11 +74,7 @@
             statusTaskColour = 'success';            
         }
 
-        if(item.creator === user._id){
-            showForUser = '';
-        }else{
-            showForUser = 'd-none';
-        }
+        const showForUser = item.owner.toString() === user._id.toString() ? '' : 'd-none';
       %>
 
       <div class="item">
@@ -107,16 +102,6 @@
           </div>
         </div>
       </div>
-
-      <% 
-         var showDeleteTask = '';
-
-         if(item.creator === user._id){
-            showDeleteTask = "d-none";
-         } else {
-            showDeleteTask = "";
-         }
-      %>
 
       <div class="modal fade" id="task<%= index %>" tabindex="<%= index %>" aria-hidden="true">
         <div class="modal-dialog modal-xl">
@@ -219,7 +204,7 @@
                             </div>
                             <div class="btn-reveal-trigger">
                               <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fas fa-ellipsis-h"></span></button>
-                              <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item" href="#!">Edit</a><a class="dropdown-item text-danger" href="#!">Delete</a><a class="dropdown-item" href="#!">Download</a><a class="dropdown-item" href="#!">Report abuse</a></div>
+                              <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item text-danger" href="/files/delete/<%= file._id %>">Delete</a><a class="dropdown-item" href="/files/download/<%= file._id %>">Download</a><a class="dropdown-item d-none" href="#!">Report abuse</a></div>
                             </div>
                           </div>
                           <div class="d-flex fs-9 text-body-tertiary mb-2 flex-wrap"><span><%= file.size %></span><span class="text-body-quaternary mx-1">| </span><a href="#!"><%= file.user %> </a><span class="text-body-quaternary mx-1">| </span><span class="text-nowrap"><%= formatDateFile(file.date) %></span></div><img class="rounded-2" src="<%= file.path %>" alt="" style="max-width:230px" />
@@ -239,7 +224,7 @@
                             </div>
                             <div class="btn-reveal-trigger">
                               <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fas fa-ellipsis-h"></span></button>
-                              <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item" href="#!">Edit</a><a class="dropdown-item text-danger" href="#!">Delete</a><a class="dropdown-item" href="#!">Download</a><a class="dropdown-item" href="#!">Report abuse</a></div>
+                              <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item" href="#!">Edit</a><a class="dropdown-item text-danger" href="/">Delete</a><a class="dropdown-item" href="#!">Download</a><a class="dropdown-item" href="#!">Report abuse</a></div>
                             </div>
                           </div>
                         </div>
@@ -279,7 +264,7 @@
                           <span>Update Task</span>
                         </div>
                       </button>
-                      <a role="button" class="btn btn-phoenix-danger <%= showDeleteTask %>" href="/delete/task/<%= item._id %>">Delete Task</a>
+                      <a role="button" class="btn btn-phoenix-danger <%= showForUser %>" href="/delete/task/<%= item._id %>">Delete Task</a>
                     </div>
                   </div>
                 </div>
@@ -331,7 +316,7 @@
         </div>
       </div>
 
-      <div class="modal fade" id="addFiles" aria-hidden="true" aria-labelledby="taskFile" tabindex="-1">
+      <div class="modal fade" id="file" aria-hidden="true" aria-labelledby="taskFile" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered modal-md">
           <div class="modal-content px-2 py-3">
             <div class="modal-body">
@@ -370,6 +355,7 @@
               </form>
             </div>
             <div class="modal-footer border-top-0">
+              <button class="btn btn-phoenix-primary" type="button" data-bs-target="#task<%= index %>" data-bs-toggle="modal">Back</button>
               <button class="btn btn-primary loading-button" type="submit" id="uploadFiles">
                 <div class="content-button">
                   <span><i class="fa fa-upload me-2" aria-hidden="true"></i>Upload</span>
@@ -426,7 +412,13 @@
 
 
           <div class="modal-body bg-body-highlight px-6 py-2 rounded-bottom-3">
-            <form class="row g-3" action="/task/add/<%= uuid %>" method="post" id="taskForm">
+            <form class="row g-3" action="/task/add" method="post" id="taskForm">
+
+              <div class="col-12">
+                <label for="taskName" class="form-label">Task Name</label>
+                <input class="form-control" type="text" name="name" placeholder="Please enter task name here" id="taskName" />
+              </div>
+
               <div class="col-12">
                 <label class="form-label" for="addDescription">Description</label>
                 <textarea class="form-control scrollbar-overlay" id="addDescription" placeholder="Leave a description here" style="height: 100px" name="description"></textarea>
@@ -479,15 +471,15 @@
               </div>
 
               <input type="hidden" id="selectedNamesInput" name="selectedNames" value="<%= Array.isArray(selectedNames) ? selectedNames.join(',') : '' %>" />
-
+              <input type="hidden" name="uuid" value="<%= uuid %>">
               <div class="col-auto mb-6 d-flex">
-                <button class="btn btn-primary loading-button" type="submit">
+                <button class="btn btn-phoenix-primary loading-button" type="submit">
                   <div class="content-button">
                     <span>Add Task</span>
                   </div>
                 </button>
 
-                <a class="fw-bold fs-9 my-auto ms-3" href="#!" data-bs-target="#addTaskFiles" data-bs-toggle="modal"><span class="fas fa-plus me-1"></span>Add file(s)</a>
+                <a class="fw-bold fs-9 my-auto ms-4" href="#!" data-bs-target="#addTaskFiles" data-bs-toggle="modal"><span class="fas fa-plus me-1"></span>Add file(s)</a>
               </div>
             </form>
 
@@ -584,7 +576,7 @@
       <div class="modal-dialog modal-dialog-centered modal-md">
         <div class="modal-content px-2 py-3">
           <div class="modal-body">
-            <form class="dropzone dropzone-multiple p-3 mb-4 bg-subtle" id="dropzone" data-dropzone="data-dropzone" action="/upload-files" data-options='{"url":"/upload-files","paramName": "file"}'>
+            <form class="dropzone dropzone-multiple p-3 mb-4 bg-subtle" id="dropzone" data-dropzone="data-dropzone" action="/files/upload" data-options='{"url":"/files/upload","paramName": "file"}'>
               <div class="dz-message" data-dz-message="data-dz-message">
                 <img class="me-2" src="../../../assets/img/icons/cloud-upload.svg" width="25" alt="" />Drop your files here
               </div>
@@ -616,15 +608,16 @@
                 </div>
               </div>
               <input class="d-none" type="text" name="uuid" value="<%= uuid %>">
+
             </form>
           </div>
           <div class="modal-footer border-top-0">
+            <button class="btn btn-phoenix-primary" type="button" data-bs-target="#addTask" data-bs-toggle="modal">Back</button>
             <button class="btn btn-primary loading-button" type="submit" id="uploadFiles">
               <div class="content-button">
                 <span><i class="fa fa-upload me-2" aria-hidden="true"></i>Upload</span>
               </div>
             </button>
-            <button class="btn btn-phoenix-secondary" type="button" data-bs-target="#addTask" data-bs-toggle="modal">Cancel</button>
           </div>
         </div>
       </div>
