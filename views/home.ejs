@@ -255,36 +255,84 @@
           </tr>
         </thead>
         <tbody class="list" id="project-summary-table-body">
+          <% if(userDepartment && userDepartment.length>0){ %>
+          <% userDepartment.forEach(department => { %>
+
           <tr class="position-static">
             <td class="align-middle text-body white-space-nowrap ps-0 member">
               <div class="avatar avatar-l">
-                <div class="avatar-name rounded-circle"><span>SS</span></div>
+                <div class="avatar-name rounded-circle"><span><%= department.fullname.split(' ').map(part => part[0].toUpperCase()).join('').slice(0, 2) %></span></div>
               </div>
-              <a class="mb-0 ms-3 fw-bold fs-8" href="#">Sharir Shazni Sazali</a>
+              <a class="mb-0 ms-3 fw-bold fs-8" href="#"><%= department.fullname %></a>
             </td>
             <td class="align-middle white-space-nowrap position ps-3">
-              <p class="mb-0 fs-9 text-body">Officer</p>
+              <p class="mb-0 fs-9 text-body"><%= department.position %></p>
             </td>
+
+
+            <% const userActivities = activities.filter(activity => activity.user._id.toString() === department._id.toString()); %>
+
+            <% if (userActivities && userActivities.length > 0) { %>
+            <% const latestActivity = userActivities.reduce((latest, activity) => activity.date > latest.date ? activity : latest, userActivities[0]); %>
             <td class="align-middle activity ps-3">
-              <p class="mb-0 fs-9 text-body">Donec euismod nulla vitae augue finibus, vel ullamcorper ex ultrices. Ut faucibus justo sit amet scelerisque sagittis.</p>
+              <p class="fs-9 fw-semibold text-body-highlight mb-0">
+                <%= latestActivity.description %>
+              </p>
             </td>
             <td class="align-middle white-space-nowrap when ps-3">
-              <p class="fw-bold text-body-emphasis fs-9 mb-0">Dec 12, 2026</p>
+              <p class="fw-bold text-body-emphasis fs-9 mb-0">
+                <%= latestActivity.date.toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %>
+              </p>
             </td>
+
+            <% } else { %>
+            <p>No activities.</p>
+            <% } %>
+
+            <%
+            const userTasks = tasks.filter(task => {
+              return task.assignee && Array.isArray(task.assignee) &&
+                     task.assignee.some(assignee => assignee._id && assignee._id.toString() === department._id.toString());
+            });
+            %>
+
+
+            <% if (userTasks && userTasks.length > 0) { %>
+            <% const totalTasks = userTasks.length; %>
+            <% const doneTasks = userTasks.filter(task => task.status === 'done').length; %>
+            <% const cancelledTasks = userTasks.filter(task => task.status === 'cancelled').length; %>
+            <% const urgentTasks = userTasks.filter(task => task.status === 'urgent').length; %>
+            <% const processTasks = userTasks.filter(task => task.status === 'process').length; %>
+            <% const completionPercentage1 = (doneTasks / totalTasks) * 100; %>
+            <% const completionPercentage2 = (cancelledTasks / totalTasks) * 100; %>
+            <% const completionPercentage3 = (urgentTasks / totalTasks) * 100; %>
+            <% const completionPercentage4 = (processTasks / totalTasks) * 100; %>
+
             <td class="align-middle white-space-nowrap ps-3 taskprogress">
-              <p class="text-body-secondary fs-10 mb-0">145 / 145</p>
+              <p class="text-body-secondary fs-10 mb-0"><%= `${doneTasks} / ${totalTasks}` %></p>
               <div class="progress" style="height:3px;">
-                <div class="progress-bar bg-success" style="width: 100%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100" role="progressbar"></div>
+                <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar bg-success" style="width: <%= completionPercentage1 %>%" aria-valuenow="<%= completionPercentage1 %>" aria-valuemin="0" aria-valuemax="100" role="progressbar"></div>
               </div>
             </td>
+
             <td class="align-middle white-space-nowrap ps-8 status">
               <div class="progress progress-stack mt-3" style="height:3px;">
-                <div class="progress-bar bg-info" style="width:30%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100" role="progressbar"></div>
-                <div class="progress-bar bg-danger" style="width:5%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100" data-bs-toggle="tooltip" data-bs-placement="top" title="5% Damage" role="progressbar"></div>
-                <div class="progress-bar bg-warning" style="width:45%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100" data-bs-toggle="tooltip" data-bs-placement="top" title="45% Damage" role="progressbar"></div>
-                <div class="progress-bar bg-success" style="width:15%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100" data-bs-toggle="tooltip" data-bs-placement="top" title="15% Damage" role="progressbar"></div>
+                <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar bg-info" style="width:<%= completionPercentage4 %>%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100" role="progressbar"></div>
+                <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar bg-success" style="width:<%= completionPercentage1 %>%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100" data-bs-toggle="tooltip" data-bs-placement="top" title="5% Damage" role="progressbar"></div>
+                <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar bg-warning" style="width:<%= completionPercentage3 %>%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100" data-bs-toggle="tooltip" data-bs-placement="top" title="45% Damage" role="progressbar"></div>
+                <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar bg-danger" style="width:<%= completionPercentage2 %>%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100" data-bs-toggle="tooltip" data-bs-placement="top" title="15% Damage" role="progressbar"></div>
               </div>
             </td>
+            <% } else { %>
+            <td class="align-middle white-space-nowrap ps-3 taskprogress">
+              <p class="text-body-secondary fs-10 mb-0">No tasks</p>
+            </td>
+
+            <td class="align-middle white-space-nowrap ps-3 status">
+              <p class="text-body-secondary fs-10 mb-0">No tasks</p>
+            </td>
+            <% } %>
+
             <td class="align-middle text-end white-space-nowrap pe-0 action">
               <div class="btn-reveal-trigger position-static">
                 <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs-10" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fas fa-ellipsis-h fs-10"></span></button>
@@ -294,6 +342,10 @@
               </div>
             </td>
           </tr>
+          <% }); %>
+          <% }else { %>
+          <p>There is no user found in your department</p>
+          <% } %>
         </tbody>
       </table>
     </div>
@@ -1023,32 +1075,44 @@
           <div class="card-title mb-1">
             <h3 class="text-body-emphasis">Activity</h3>
           </div>
-          <p class="text-body-tertiary mb-4">Recent activity across all projects</p>
+          <p class="text-body-tertiary mb-4">Recent activity accross your department</p>
           <div class="timeline-vertical timeline-with-details">
             <% if(activities && activities.length >0){%>
-            <% activities.forEach(function(activity) { %>
+            <% const lastActivitiesIndex = activities.length - 1; %>
+            <% activities.forEach(function(activity, index) { %>
+
+            <% 
+                var borderActivity = '';
+
+                if(index  === lastActivitiesIndex) {
+                    borderActivity = 'd-none';
+                }else {
+                    borderActivity = '';
+                }
+            %>
+
             <div class="timeline-item position-relative">
               <div class="row g-md-3">
                 <div class="col-12 col-md-auto d-flex">
                   <div class="timeline-item-date order-1 order-md-0 me-md-4">
-                    <p class="fs-10 fw-semibold text-body-tertiary text-opacity-85 text-end">01 DEC, 2023<br class="d-none d-md-block" /> 10:30 AM</p>
+                    <p class="fs-10 fw-semibold text-body-tertiary text-opacity-85 text-end"><%= activity.date.toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %><br class="d-none d-md-block" /> <%= activity.date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone : 'Asia/Kuala_Lumpur' }) %></p>
                   </div>
                   <div class="timeline-item-bar position-md-relative me-3 me-md-0">
-                    <div class="icon-item icon-item-sm rounded-7 shadow-none bg-primary-subtle"><span class="fa-solid fa-chess text-primary-dark fs-10"></span></div><span class="timeline-bar border-end border-dashed"></span>
+                    <div class="icon-item icon-item-sm rounded-7 shadow-none bg-primary-subtle"><span class="fa-solid fa-chess text-primary-dark fs-10"></span></div><span class="timeline-bar border-end border-dashed <%= borderActivity %>"></span>
                   </div>
                 </div>
                 <div class="col">
                   <div class="timeline-item-content ps-6 ps-md-3">
-                    <h5 class="fs-9 lh-sm">Phoenix Template: Unleashing Creative Possibilities</h5>
-                    <p class="fs-9">by <a class="fw-semibold" href="#!">Shantinon Mekalan</a></p>
-                    <p class="fs-9 text-body-secondary mb-5">Discover limitless creativity with the Phoenix template! Our latest update offers an array of innovative features and design options.</p>
+                    <h5 class="fs-9 lh-sm"><%= activity.title %></h5>
+                    <p class="fs-9">by <a class="fw-semibold" href="#!"><%= activity.user.fullname %></a></p>
+                    <p class="fs-9 text-body-secondary mb-5"><%= activity.description %></p>
                   </div>
                 </div>
               </div>
             </div>
             <%  }) %>
             <% }else { %>
-                <p>There is no activity yet.</p>
+            <p>There is no activity yet.</p>
             <% } %>
           </div>
         </div>

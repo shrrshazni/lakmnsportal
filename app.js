@@ -309,20 +309,22 @@ app.get('/', isAuthenticated, async function (req, res) {
     const allUserLeave = await UserLeave.find();
     const userLeave = await UserLeave.findOne({ user: user._id });
     const leave = await Leave.find({ user: user._id });
-    const task = await Task.find({ assignee: user._id });
+    const task = await Task.find({ assignee: { $in: [user._id] } }).populate('assignee').exec();
     const file = await File.find();
 
-    // activity
+    const activities = await Activity.find().populate({
+        path: 'user',
+        match: { department: user.department }
+    }).exec();
 
-    const activity = await Activity.find({ 'user.department' : user.department }).populate('user');
-
-    console.log(activity);    
+    const userDepartment = await User.find({ department: user.department });
 
     if (user) {
         res.render('home', {
             user: user,
             notifications: notifications,
             uuid: uuidv4(),
+            userDepartment : userDepartment,
             // all data
             allUser: allUser,
             allUserLeave: allUserLeave,
@@ -331,7 +333,7 @@ app.get('/', isAuthenticated, async function (req, res) {
             leave: leave,
             tasks: task,
             files: file,
-            activities : activity,
+            activities: activities,
             selectedNames: '',
             // toast
             show: '',
