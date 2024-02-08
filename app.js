@@ -310,15 +310,15 @@ app.get('/', isAuthenticated, async function (req, res) {
     const allUserLeave = await UserLeave.find();
     const userLeave = await UserLeave.findOne({ user: user._id });
     const leave = await Leave.find({ user: user._id });
-    const task = await Task.find({ assignee: { $in: [user._id] } }).populate('assignee').exec();
+    const task = await Task.find({ assignee: { $in: [user._id] } }).sort({ timestamp: -1 }).populate('assignee').exec();
     const file = await File.find();
 
     const activities = await Activity.find().populate({
         path: 'user',
         match: { department: user.department }
-    }).exec();
+    }).sort({ date: -1 }).limit(7).exec();
 
-    const userDepartment = await User.find({ department: user.department });
+    const userDepartment = await User.find({ department: user.department, _id: { $ne: user._id } });
 
     if (user) {
         res.render('home', {
@@ -339,6 +339,40 @@ app.get('/', isAuthenticated, async function (req, res) {
             // toast
             show: '',
             alert: ''
+        });
+    }
+});
+
+// STAFF DETAILS
+
+app.get('/staff/details/:id', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    }).populate('sender');
+
+    const id = req.params.id;
+    const otherUser = await User.findOne({ _id: id });
+
+    const task = await Task.find({ assignee: { $in: [otherUser._id] } }).populate('assignee').exec();
+    const file = await File.find();
+    const allUser = await User.find();
+    const activities = await Activity.find({ user: otherUser._id });
+    const leave = await Leave.find({ user: otherUser._id });
+
+    if (user) {
+        res.render('staff-details', {
+            user: user,
+            notifications: notifications,
+            // other data
+            otherUser: otherUser,
+            tasks: task,
+            files: file,
+            allUser: allUser,
+            activities: activities,
+            leave: leave
         });
     }
 });
@@ -3388,40 +3422,6 @@ app.get('/markAllAsRead', isAuthenticated, async function (req, res) {
             // toast
             show: 'show',
             alert: 'All notification has been marked'
-        });
-    }
-});
-
-// TEMP EXAMPLE
-
-app.get('/temp/:id', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    }).populate('sender');
-
-    const id = req.params.id;
-    const otherUser = await User.findOne({ _id: id });
-
-    const task = await Task.find({ assignee: { $in: [otherUser._id] } }).populate('assignee').exec();
-    const file = await File.find();
-    const allUser = await User.find();
-    const activities = await Activity.find({ user: otherUser._id });
-    const leave = await Leave.find({ user: otherUser._id });
-
-    if (user) {
-        res.render('temp', {
-            user: user,
-            notifications: notifications,
-            // other data
-            otherUser: otherUser,
-            tasks: task,
-            files: file,
-            allUser: allUser,
-            activities: activities,
-            leave : leave
         });
     }
 });

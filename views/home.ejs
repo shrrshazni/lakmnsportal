@@ -109,9 +109,9 @@
             <div class="avatar avatar-5xl"><img class="rounded-circle border border-primary" src="/assets/img/team/avatar.webp" alt="" /></div>
           </div>
           <div class="col-12 col-sm-auto flex-1">
-            <h3 class="mx-auto">Ansolo Lazinatov</h3>
-            <p class="text-body-secondary mx-auto">User's status</p>
-            <div class="mx-auto"><a class="me-2" href="#!"><span class="fab fa-linkedin-in text-body-quaternary text-opacity-75 text-primary-hover"></span></a><a class="me-2" href="#!"><span class="fab fa-facebook text-body-quaternary text-opacity-75 text-primary-hover"></span></a><a href="#!"><span class="fab fa-twitter text-body-quaternary text-opacity-75 text-primary-hover"></span></a></div>
+            <h3 class="mx-auto"><%= user.fullname %></h3>
+            <p class="mx-auto text-primary">"User's status"</p>
+            <p class="fw-bold"><%= user.position %> <span class="fw-normal fst-italic">of <%= user.department %></span></p>
           </div>
         </div>
         <div class="col-md-6">
@@ -119,13 +119,21 @@
         </div>
       </div>
       <div class="d-flex flex-between-center border-top border-dashed pt-4">
+        <%
+            const totalTasks = tasks.filter(task => {
+              return task.assignee && Array.isArray(task.assignee) &&
+                     task.assignee.some(assignee => assignee._id && assignee._id.toString() === user._id.toString());
+            });
+
+            const totalActivity = activities.filter(item => {item.user.toString() === user._id.toString()}).length;
+        %>
         <div>
-          <h6>Following</h6>
-          <p class="fs-7 text-body-secondary mb-0">297</p>
+          <h6>Tasks</h6>
+          <p class="fs-7 text-body-secondary mb-0"><%= totalTasks.length %></p>
         </div>
         <div>
-          <h6>Projects</h6>
-          <p class="fs-7 text-body-secondary mb-0">56</p>
+          <h6>Activity</h6>
+          <p class="fs-7 text-body-secondary mb-0"><%= totalActivity %></p>
         </div>
         <div>
           <h6>Completion</h6>
@@ -263,7 +271,7 @@
               <div class="avatar avatar-l">
                 <div class="avatar-name rounded-circle"><span><%= department.fullname.split(' ').map(part => part[0].toUpperCase()).join('').slice(0, 2) %></span></div>
               </div>
-              <a class="mb-0 ms-3 fw-bold fs-8" href="#"><%= department.fullname %></a>
+              <a class="mb-0 ms-3 fw-bold fs-8" href="/staff/details/<%= department._id %>"><%= department.fullname %></a>
             </td>
             <td class="align-middle white-space-nowrap position ps-3">
               <p class="mb-0 fs-9 text-body"><%= department.position %></p>
@@ -550,7 +558,7 @@
                           <% } %>
                           <a class="fw-bold fs-9" href="#!" data-bs-target="#subtask<%= index %>" data-bs-toggle="modal"><span class="fas fa-plus me-1"></span>Add subtask</a>
                         </div>
-                        
+
                         <div class="mb-3">
                           <div>
                             <h4 class="mb-3">Files</h4>
