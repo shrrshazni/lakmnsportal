@@ -1,646 +1,508 @@
 <%- include('partials/private-header.ejs') %>
 
-<div class="container">
-  <div class="card task-list h-100">
-    <div class="card-header border-bottom-0 pb-0">
-      <div class="row justify-content-between align-items-center mb-4">
-        <div class="col-auto">
-          <h3 class="text-body-emphasis">To do</h3>
-          <p class="mb-0 text-body-tertiary">Task assigned to me</p>
+<nav class="mb-2" aria-label="breadcrumb">
+  <ol class="breadcrumb mb-0">
+    <li class="breadcrumb-item"><a href="/">Dashboard</a></li>
+    <li class="breadcrumb-item active">Staff Details</li>
+  </ol>
+</nav>
+<div class="pb-9">
+  <div class="row">
+    <div class="col-12">
+      <div class="row align-items-center justify-content-between g-3 mb-3">
+        <div class="col-12 col-md-auto">
+          <h2 class="mb-0">Staff details</h2>
         </div>
-        <div class="col-auto w-100 w-md-auto">
-          <div class="row align-items-center g-0 justify-content-between">
-            <div class="col-12 col-sm-auto">
-              <div class="search-box w-100 mb-2 mb-sm-0" style="max-width:30rem;">
-                <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
-                  <input class="form-control search-input search" id="searchInput" type="search" placeholder="Search tasks" aria-label="Search" />
-                  <span class="fas fa-search search-box-icon"></span>
-
-                </form>
-              </div>
+        <div class="col-12 col-md-auto">
+          <div class="d-flex d-none">
+            <div class="flex-1 d-md-none">
+              <button class="btn px-3 btn-phoenix-secondary text-body-tertiary me-2" data-phoenix-toggle="offcanvas" data-phoenix-target="#productFilterColumn"><span class="fa-solid fa-bars"></span></button>
             </div>
-            <div class="col-auto d-flex">
-              <p class="mb-0 ms-sm-3 fs-9 text-body-tertiary fw-bold"><span class="fas fa-filter me-1 fw-extra-bold fs-10"></span><%= tasks.length %> tasks</p>
-            </div>
+            <button class="btn btn-primary me-2"><span class="fa-solid fa-envelope me-2"></span><span>Send an email</span></button>
+            <button class="btn btn-phoenix-secondary px-3 px-sm-5 me-2"><span class="fa-solid fa-thumbtack me-sm-2"></span><span class="d-none d-sm-inline">Shortlist</span></button>
+            <button class="btn px-3 btn-phoenix-secondary" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fa-solid fa-ellipsis"></span></button>
+            <ul class="dropdown-menu dropdown-menu-end p-0" style="z-index: 9999;">
+              <li><a class="dropdown-item" href="#!">View profile</a></li>
+              <li><a class="dropdown-item" href="#!">Report</a></li>
+              <li><a class="dropdown-item" href="#!">Manage notifications</a></li>
+              <li><a class="dropdown-item text-danger" href="#!">Delete Lead</a></li>
+            </ul>
           </div>
         </div>
       </div>
     </div>
-
-    <div class="card-body py-0 scrollbar task-list-body" id="itemList">
-      <% if(tasks && tasks.length > 0 ) {%>
-      <% const lastIndexItem = tasks.length - 1; %>
-      <% tasks.forEach((item,index) => { %>
-
-      <% 
-        var todoborder = '';
-        var fileAmount = '';
-        var displayTaskFile = '';
-        var displayTaskSubtask = '';
-        var statusTaskColour = '';
-        const associatedFile = files.filter((file) => file.uuid === item.fileId);
-
-        // check last item inside task
-        if(index === lastIndexItem){
-            todoborder = 'border-bottom';
-        }else{
-            todoborder = '';
-        }
-
-        // find assc files
-        if (associatedFile.length > 0) {
-            fileAmount = associatedFile.length;
-            displayTaskFile = 'd-block';
-        } else {
-            fileAmount  = '';
-            displayTaskFile = 'd-none';
-        }
-
-        // check subtask
-        if(item.subtask.length > 0){
-            displayTaskSubtask = 'd-block';
-        } else {
-            displayTaskSubtask = '';
-        }
-
-        // check task status 
-        if(item.status === 'urgent'){
-            statusTaskColour = 'warning';
-        } else if(item.status === 'process'){
-            statusTaskColour = 'primary';
-        } else if(item.status === 'cancelled'){
-            statusTaskColour = 'danger';            
-        } else if(item.status === 'done'){
-            statusTaskColour = 'success';            
-        }
-
-        const showForUser = item.owner.toString() === user._id.toString() ? '' : 'd-none';
-      %>
-
-      <div class="item">
-        <div class="d-flex hover-actions-trigger py-3 border-top <%= todoborder %>">
-          <div class="row justify-content-between align-items-md-center btn-reveal-trigger border-translucent gx-0 flex-1 cursor-pointer" data-bs-toggle="modal" data-bs-target="#task<%= index %>">
-            <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
-              <div class="mb-1 mb-md-0 d-flex align-items-center lh-1">
-                <label class="form-check-label mb-1 mb-md-0 mb-xl-1 mb-xxl-0 fs-8 me-2 line-clamp-1 text-body cursor-pointer itemName"><%= item.name %></label><span class="badge badge-phoenix ms-auto fs-10 badge-phoenix-<%= statusTaskColour %> itemStatus"><%= item.status %></span>
-              </div>
-            </div>
-            <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
-              <div class="d-flex lh-1 align-items-center"><a class="text-body-tertiary fw-bold fs-10 me-2 <%= displayTaskFile %>" href="#!"><span class="fas fa-paperclip me-1"></span><%= fileAmount %></a><a class="text-warning fw-bold fs-10 me-2 <%= displayTaskSubtask %>" href="#!"><span class="fas fa-tasks me-1"></span><%= item.subtask.length %></a>
-                <p class="text-body-tertiary fs-10 mb-md-0 me-2 me-md-3 me-xl-2 me-xxl-3 mb-0 itemDate"><%= item.due ? item.due.toLocaleDateString('en-UK', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Not specified' %></p>
-                <div class="hover-md-hide hover-xl-show hover-xxl-hide">
-                  <p class="text-body-tertiary fs-10 fw-bold mb-md-0 mb-0 ps-md-3 ps-xl-0 ps-xxl-3 border-start-md border-xl-0 border-start-xxl itemTime"><%= item.reminder ? item.reminder.toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true, timeZone: 'Asia/Kuala_Lumpur' }) : 'Not specified' %></p>
+  </div>
+  <div class="row g-0 g-md-4 g-xl-6">
+    <div class="col-md-5 col-lg-5 col-xl-4">
+      <div class="sticky-leads-sidebar">
+        <div class="lead-details-offcanvas bg-body scrollbar phoenix-offcanvas phoenix-offcanvas-fixed" id="productFilterColumn">
+          <div class="d-flex justify-content-between align-items-center mb-2 d-md-none">
+            <h3 class="mb-0"><i class="fa fa-star-half-full" aria-hidden="true"></i> Details</h3>
+            <button class="btn p-0" data-phoenix-dismiss="offcanvas"><span class="uil uil-times fs-7"></span></button>
+          </div>
+          <div class="card mb-3">
+            <div class="card-body">
+              <div class="row align-items-center g-3 text-center text-xxl-start">
+                <div class="col-12 col-xxl-auto">
+                  <div class="avatar avatar-5xl"><img class="rounded-circle border border-primary" src="/assets/img/team/avatar.webp" alt="" /></div>
+                </div>
+                <div class="col-12 col-sm-auto flex-1">
+                  <h3 class="fw-bolder mb-2"><%= otherUser.fullname %></h3>
+                  <p class="mb-0"><%= otherUser.position %></p>
+                  <p class="fw-bold text-primary">"User Status"</p>
                 </div>
               </div>
             </div>
           </div>
-          <div class="d-none d-md-block d-xl-none d-xxl-block end-0 position-absolute" style="top: 23%;" data-event-propagation-prevent="data-event-propagation-prevent">
-            <div class="hover-actions end-0" data-event-propagation-prevent="data-event-propagation-prevent">
-              <button class="btn btn-phoenix-secondary btn-icon me-1 fs-10 text-body px-0 me-1" data-event-propagation-prevent="data-event-propagation-prevent" data-bs-toggle="modal" data-bs-target="#task<%= index %>"><span class="fas fa-edit"></span></button>
-              <a class="btn btn-phoenix-secondary btn-icon fs-10 text-danger px-0 <%= showForUser %>" href="/update/delete/<%= item._id %>" data-event-propagation-prevent="data-event-propagation-prevent"><span class="fas fa-trash"></span></a>
+          <div class="card mb-3">
+            <div class="card-body">
+              <div class="d-flex align-items-center mb-5">
+                <h3>About staff</h3>
+              </div>
+              <div class="mb-4">
+                <div class="d-flex align-items-center mb-1"><span class="me-2 uil uil-envelope-alt"> </span>
+                  <h5 class="text-body-highlight mb-0">Email</h5>
+                </div><a href="mailto:<%= otherUser.email %>"><%= otherUser.email %></a>
+              </div>
+              <div class="mb-4">
+                <div class="d-flex align-items-center mb-1"><span class="me-2 uil uil-phone"> </span>
+                  <h5 class="text-body-highlight mb-0">Phone</h5>
+                </div><a href="tel:+6<%= otherUser.phone %>">+6<%= otherUser.phone %> </a>
+              </div>
+              <div class="mb-4">
+                <div class="d-flex align-items-center mb-1"><span class="me-2 uil uil-home"> </span>
+                  <h5 class="text-body-highlight mb-0">Office Number</h5>
+                </div><a href="tel:+6<%= otherUser.officePhone %>">+6<%= otherUser.officePhone %> </a>
+              </div>
+              <div class="mb-4">
+                <div class="d-flex align-items-center mb-1"><span class="me-2 uil uil-building"></span>
+                  <h5 class="text-body-highlight mb-0">Department</h5>
+                </div>
+                <p class="text-primary"><%= otherUser.department %> </p>
+              </div>
+              <div class="mb-4">
+                <div class="d-flex align-items-center mb-1"><span class="me-2 uil uil-globe"></span>
+                  <h5 class="text-body-highlight mb-0">Section</h5>
+                </div>
+                <p class="text-primary"><%= otherUser.section %> </p>
+              </div>
+              <div class="mb-0">
+                <div class="d-flex align-items-center mb-1"><span class="me-2 uil uil-clock"></span>
+                  <h5 class="text-body-highlight mb-0">Last online</h5>
+                </div>
+                <p class="mb-0 text-body-secondary">12 November 2021, 10:54 AM</p>
+              </div>
+            </div>
+          </div>
+          <div class="mb-3">
+            <div class="carousel dashboard-carousel slide carousel-fade position-relative rounded-3" style="height: 27.5vh;" id="carouselExampleIndicators" data-bs-ride="carousel">
+              <div class="carousel-inner">
+
+                <div class="carousel-item active">
+
+                  <div class="card" style="height: 27.5vh;">
+                    <div class="bg-holder d-block bg-card" style="background-image:url(../assets/img/spot-illustrations/32.png);background-position: top right;">
+                    </div>
+                    <div class="card-body">
+
+                    </div>
+                  </div>
+
+                </div>
+
+                <div class="carousel-item false">
+
+                  <div class="card" style="height: 27.5vh;">
+                    <div class="card-body">
+                      <p>Hello world 1</p>
+                    </div>
+                  </div>
+
+                </div>
+
+                <div class="carousel-item false">
+                  <div class="card" style="height: 27.5vh;">
+
+                    <div class="card-body">
+                      <p>Hello world 2</p>
+                    </div>
+
+                  </div>
+                </div>
+
+              </div>
+              <div class="carousel-indicators">
+                <button class="active" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="0" aria-current="true" aria-label="Slide 1"></button>
+                <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="1" aria-label="Slide 2"></button>
+                <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="2" aria-label="Slide 3"></button>
+              </div>
             </div>
           </div>
         </div>
+        <div class="phoenix-offcanvas-backdrop d-lg-none top-0" data-phoenix-backdrop="data-phoenix-backdrop"></div>
       </div>
+    </div>
 
-      <div class="modal fade" id="task<%= index %>" tabindex="<%= index %>" aria-hidden="true">
-        <div class="modal-dialog modal-xl">
-          <div class="modal-content bg-body overflow-hidden">
-            <div class="modal-header px-6 py-5 pe-sm-5 px-md-6 dark__bg-gray-1100">
-              <h3 class="text-body-highlight fw-bolder mb-0"><%= item.name %></h3>
-              <button class="btn btn-phoenix-secondary btn-icon btn-icon-xl flex-shrink-0" type="button" data-bs-dismiss="modal" aria-label="Close"><span class="fa-solid fa-xmark"></span></button>
+    <div class="col-md-7 col-lg-7 col-xl-8">
+      <div class="lead-details-container">
+        <nav class="navbar pb-4 px-0 sticky-top bg-body nav-underline-scrollspy" id="navbar-staffs-detail">
+          <ul class="nav nav-underline fs-9">
+            <li class="nav-item"><a class="nav-link me-2" href="#scrollspyTask">Tasks</a></li>
+            <li class="nav-item"><a class="nav-link me-2" href="#scrollspyActivities">Activities</a></li>
+            <li class="nav-item"><a class="nav-link me-2" href="#scrollspyLeaves">Leaves</a></li>
+            <li class="nav-item"><a class="nav-link" href="#scrollspyAttachments">Attachments </a></li>
+          </ul>
+        </nav>
+        <div class="scrollspy-example rounded-2" data-bs-spy="scroll" data-bs-offset="0" data-bs-target="#navbar-staffs-detail" data-bs-root-margin="0px 0px -40%" data-bs-smooth-scroll="true" tabindex="0">
+
+          <div class="mb-8" style="min-height: 25vh;">
+            <h2 class="mb-4" id="scrollspyTask">Tasks</h2>
+            <div class="row align-items-center g-0 justify-content-start mb-3">
+              <div class="col-12 col-sm-auto">
+                <div class="search-box w-100 mb-2 mb-sm-0" style="max-width:30rem;">
+                  <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
+                    <input class="form-control search-input search" id="searchInput" type="search" placeholder="Search tasks" aria-label="Search" />
+                    <span class="fas fa-search search-box-icon"></span>
+
+                  </form>
+                </div>
+              </div>
+              <div class="col-auto d-flex">
+                <p class="mb-0 ms-sm-3 fs-9 text-body-tertiary fw-bold"><span class="fas fa-filter me-1 fw-extra-bold fs-10"></span><%= tasks.length %> tasks</p>
+              </div>
             </div>
-            <div class="modal-body bg-body-highlight px-6 py-0">
+            <div class="card-body py-0 scrollbar task-list-body" id="itemList">
+              <% if(tasks && tasks.length > 0 ) {%>
+              <% const lastIndexItem = tasks.length - 1; %>
+              <% tasks.forEach((item,index) => { %>
 
-              <form class="row gx-14" action="/update/task/<%= item._id %>" method="post">
+              <% 
+                      var todoborder = '';
+                      var fileAmount = '';
+                      var displayTaskFile = '';
+                      var displayTaskSubtask = '';
+                      var statusTaskColour = '';
+                      var checked = '';
 
-                <div class="col-12 col-lg-7 border-end-lg">
-                  <div class="py-6">
-                    <div class="mb-7">
-                      <div class="d-flex align-items-center mb-3">
-                        <h4 class="text-body me-3">Description</h4><a class="btn btn-link text-decoration-none p-0" data-bs-target="#description" data-bs-toggle="modal"><span class="fa-solid fa-pen"></span></a>
-                      </div>
-                      <p class="text-body-highlight mb-0"><%= item.description %></p>
-                    </div>
+                      const associatedFile = files.filter((file) => file.uuid === item.fileId);
+              
+                      // check last item inside task
+                      if(index === lastIndexItem){
+                          todoborder = 'border-bottom';
+                      }else{
+                          todoborder = '';
+                      }
+              
+                      // find assc files
+                      if (associatedFile.length > 0) {
+                          fileAmount = associatedFile.length;
+                          displayTaskFile = 'd-block';
+                      } else {
+                          fileAmount  = '';
+                          displayTaskFile = 'd-none';
+                      }
+              
+                      // check subtask
+                      if(item.subtask.length > 0){
+                          displayTaskSubtask = 'd-block';
+                      } else {
+                          displayTaskSubtask = '';
+                      }
+              
+                      // check task status 
+                      if(item.status === 'urgent'){
+                          statusTaskColour = 'warning';
+                          checked = '';
+                      } else if(item.status === 'process'){
+                          statusTaskColour = 'primary';
+                          checked = '';
+                      } else if(item.status === 'cancelled'){
+                          statusTaskColour = 'danger'; 
+                          checked = 'checked';           
+                      } else if(item.status === 'done'){
+                          statusTaskColour = 'success';
+                          checked = 'checked';            
+                      }
 
-                    <%
-                      const formatDateFile = (date) => {
-                        const options = { day: 'numeric', month: 'short', hour: 'numeric', minute: 'numeric', hour12: true };
-                        const formattedDate = new Intl.DateTimeFormat('en-US', options).format(date);
-                      
-                        // Add day suffix (st, nd, rd, or th)
-                        const day = date.getDate();
-                        const daySuffix = (day) => {
-                          if (day >= 11 && day <= 13) {
-                            return 'th';
-                          }
-                          const lastDigit = day % 10;
-                          switch (lastDigit) {
-                            case 1: return 'st';
-                            case 2: return 'nd';
-                            case 3: return 'rd';
-                            default: return 'th';
-                          }
-                        };
-                      
-                        return formattedDate.replace(/(\d+)/, (match, p1) => `${p1}${daySuffix(day)}`);
-                      };
+                    //
                     %>
-                    <div class="mb-7">
-                      <h4 class="mb-3">Subtasks</h4>
 
-                      <% if(item.subtask && item.subtask.length > 0){ %>
-                      <% const lastSubtaskIndex = item.subtask.length - 1 ; %>
-                      <% item.subtask.forEach((subtask,index) => { %>
-
-                      <%
-                        var subtaskBorder = '';
-                        if(index === lastSubtaskIndex) {
-                          subtaskBorder = 'border-bottom';
-                        } else {
-                          subtaskBorder = '';
-                        }
-                        %>
-                      <div class="d-flex flex-between-center hover-actions-trigger py-3 border-top <%= subtaskBorder %> mb-3">
-                        <div class="form-check mb-1 mb-md-0 d-flex align-items-center lh-1 min-h-auto">
-                          <input class="subtask-checkbox form-check-input form-check-line-through mt-0 me-3" type="checkbox" name="subtaskCheckbox" value="<%= subtask._id %>" />
-                          <label class="form-check-label mb-0 fs-8" for="subtaskundefined1"><%= subtask.name %></label>
-                        </div>
-                        <div class="hover-actions end-0">
-                          <button class="btn btn-sm me-1 fs-10 text-body-tertiary px-0 me-3"><span class="fa-solid fa-pencil"></span></button>
-                          <button class="btn btn-sm text-body-tertiary px-0"><span class="fa-solid fa-xmark fs-8"></span></button>
-                        </div>
+              <div class="item">
+                <div class="d-flex py-3 border-top <%= todoborder %>">
+                  <input class="form-check-input form-check-input-todolist flex-shrink-0 my-1 me-2 form-check-input-undefined" type="checkbox" id="checkbox-todo-2" data-event-propagation-prevent="data-event-propagation-prevent" <%= checked %> />
+                  <div class="row justify-content-between align-items-md-center btn-reveal-trigger border-translucent gx-0 flex-1">
+                    <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
+                      <div class="mb-1 mb-md-0 d-flex align-items-center lh-1">
+                        <label class="form-check-label mb-1 mb-md-0 mb-xl-1 mb-xxl-0 fs-8 me-2 line-clamp-1 text-body itemName"><%= item.name %></label><span class="badge badge-phoenix ms-auto fs-10 badge-phoenix-<%= statusTaskColour %> itemStatus"><%= item.status %></span>
                       </div>
-                      <% }); %>
-                      <% }else { %>
-                      <p>There is no subtask.</p>
-                      <% } %>
-                      <a class="fw-bold fs-9" href="#!" data-bs-target="#subtask" data-bs-toggle="modal"><span class="fas fa-plus me-1"></span>Add subtask</a>
                     </div>
-                    <div class="mb-3">
-                      <div>
-                        <h4 class="mb-3">Files</h4>
-                      </div>
-
-                      <% const modalFiles = files.filter((file) => file.uuid === item.fileId); %>
-                      <% const lastIndexFile = modalFiles.length - 1; var borderModalFile = ''; %>
-                      <% if(modalFiles && modalFiles.length > 0){ %>
-                      <% modalFiles.forEach((file, index) => { %>
-
-                      <% 
-                        if(index === lastIndexFile){
-                            borderModalFile = 'border-bottom';
-                        } else {
-                            borderModalFile = '';
-                        }
-                      %>
-
-                      <% if(file.type === '.png' || file.type === '.webp' || file.type === '.jpg' || file.type === '.jpeg' || file.type === '.gif' ){ %>
-                      <div class="border-top <%= borderModalFile %> px-0 pt-4 pb-3">
-                        <div class="me-n3">
-                          <div class="d-flex flex-between-center">
-                            <div class="d-flex mb-1"><span class="fa-solid fa-image me-2 text-body-tertiary fs-9"></span>
-                              <p class="text-body-highlight mb-0 lh-1"><%= file.name %></p>
-                            </div>
-                            <div class="btn-reveal-trigger">
-                              <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fas fa-ellipsis-h"></span></button>
-                              <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item text-danger" href="/files/delete/<%= file._id %>">Delete</a><a class="dropdown-item" href="/files/download/<%= file._id %>">Download</a><a class="dropdown-item d-none" href="#!">Report abuse</a></div>
-                            </div>
-                          </div>
-                          <div class="d-flex fs-9 text-body-tertiary mb-2 flex-wrap"><span><%= file.size %></span><span class="text-body-quaternary mx-1">| </span><a href="#!"><%= file.user %> </a><span class="text-body-quaternary mx-1">| </span><span class="text-nowrap"><%= formatDateFile(file.date) %></span></div><img class="rounded-2" src="<%= file.path %>" alt="" style="max-width:230px" />
+                    <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
+                      <div class="d-flex lh-1 align-items-center"><a class="text-body-tertiary fw-bold fs-10 me-2 <%= displayTaskFile %>" href="#!"><span class="fas fa-paperclip me-1"></span><%= fileAmount %></a><a class="text-warning fw-bold fs-10 me-2 <%= displayTaskSubtask %>" href="#!"><span class="fas fa-tasks me-1"></span><%= item.subtask.length %></a>
+                        <p class="text-body-tertiary fs-10 mb-md-0 me-2 me-md-3 me-xl-2 me-xxl-3 mb-0 itemDate"><%= item.due ? item.due.toLocaleDateString('en-UK', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Not specified' %></p>
+                        <div class="hover-md-hide hover-xl-show hover-xxl-hide">
+                          <p class="text-body-tertiary fs-10 fw-bold mb-md-0 mb-0 ps-md-3 ps-xl-0 ps-xxl-3 border-start-md border-xl-0 border-start-xxl itemTime"><%= item.reminder ? item.reminder.toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true, timeZone: 'Asia/Kuala_Lumpur' }) : 'Not specified' %></p>
                         </div>
                       </div>
-
-                      <% }else { %>
-
-                      <div class="border-top <%= borderModalFile %> px-0 pt-4 pb-3">
-                        <div class="me-n3">
-                          <div class="d-flex flex-between-center">
-                            <div>
-                              <div class="d-flex align-items-center mb-1"><span class="fa-solid fa-image me-2 fs-9 text-body-tertiary"></span>
-                                <p class="text-body-highlight mb-0 lh-1"><%= file.name %></p>
-                              </div>
-                              <div class="d-flex fs-9 text-body-tertiary mb-0 flex-wrap"><span><%= file.size %></span><span class="text-body-quaternary mx-1">| </span><a href="#!"><%= file.user %> </a><span class="text-body-quaternary mx-1">| </span><span class="text-nowrap"><%= formatDateFile(file.date) %></span></div>
-                            </div>
-                            <div class="btn-reveal-trigger">
-                              <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fas fa-ellipsis-h"></span></button>
-                              <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item" href="#!">Edit</a><a class="dropdown-item text-danger" href="/">Delete</a><a class="dropdown-item" href="#!">Download</a><a class="dropdown-item" href="#!">Report abuse</a></div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <% } %>
-                      <% }); %>
-                      <% }else { %>
-                      <p>There is no file uploaded.</p>
-                      <% } %>
-                    </div><a class="fw-bold fs-9" href="#!" data-bs-target="#file" data-bs-toggle="modal"><span class="fas fa-plus me-1"></span>Add file(s)</a>
-                  </div>
-                </div>
-
-                <div class="col-12 col-lg-5">
-                  <div class="py-6">
-                    <h4 class="mb-4 text-body-emphasis">Others Information</h4>
-                    <h5 class="text-body-highlight mb-2">Status</h5>
-                    <select class="form-select mb-4" aria-label="Default select example" name="status">
-                      <option selected="" value="">Select</option>
-                      <option value="process">Process</option>
-                      <option value="done">Done</option>
-                      <option value="cancelled">Cancelled</option>
-                      <option value="urgent">Urgent</option>
-                    </select>
-                    <h5 class="text-body-highlight mb-2">Due Date</h5>
-                    <div class="flatpickr-input-container mb-4">
-                      <input class="form-control datetimepicker ps-6" type="text" name="due" placeholder="Set the due date" data-options='{"disableMobile":true}' /><span class="uil uil-calendar-alt flatpickr-icon text-body-tertiary"></span>
-                    </div>
-                    <h5 class="text-body-highlight mb-2">Reminder</h5>
-                    <div class="flatpickr-input-container mb-4">
-                      <input class="form-control datetimepicker ps-6 w-100" type="text" name="reminder" placeholder="Set reminder" data-options='{"disableMobile":true, "enableTime": true}' /><span class="uil uil-calendar-alt flatpickr-icon text-body-tertiary"></span>
-                    </div>
-                    <div class="text-end mb-9 d-flex">
-                      <button class="btn btn-phoenix-primary loading-button" type="submit">
-                        <div class="content-button">
-                          <span>Update Task</span>
-                        </div>
-                      </button>
-                      <a role="button" class="btn btn-phoenix-danger <%= showForUser %>" href="/delete/task/<%= item._id %>">Delete Task</a>
                     </div>
                   </div>
                 </div>
+              </div>
 
-              </form>
-
+              <% }); %>
+              <% } else { %>
+              <p>There is not task assigned to you.</p>
+              <% } %>
             </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="modal fade" id="description" aria-hidden="true" aria-labelledby="exampleModalToggleLabel" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered modal-md">
-          <div class="modal-content px-2 py-3">
-            <form action="/update/description/<%= item._id %>" method="post">
-              <div class="modal-body">
-                <label class="form-label" for="udpateDescription">Description</label>
-                <textarea class="form-control scrollbar-overlay" id="udpateDescription" placeholder="Leave a description here" style="height: 100px" name="description"></textarea>
-              </div>
-              <div class="modal-footer border-top-0">
-                <button class="btn btn-primary loading-button" type="submit">
-                  <div class="content-button">
-                    <span>Update</span>
-                  </div>
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-
-      <div class="modal fade" id="subtask" aria-hidden="true" aria-labelledby="" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-          <div class="modal-content">
-            <form action="/update/subtask/<%= item._id %>" method="post">
-              <div class="modal-body">
-                <label class="form-label" for="updateSubtask">Subtask</label>
-                <input class="form-control" type="text" id="updateSubtask" name="subtask" placeholder="Add subtask here">
-              </div>
-              <div class="modal-footer border-top-0">
-                <button class="btn btn-primary loading-button" type="submit">
-                  <div class="content-button">
-                    <span>Add subtask</span>
-                  </div>
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-
-      <div class="modal fade" id="file" aria-hidden="true" aria-labelledby="taskFile" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered modal-md">
-          <div class="modal-content px-2 py-3">
-            <div class="modal-body">
-              <form class="dropzone dropzone-multiple p-3 mb-4 bg-subtle" id="dropzone" data-dropzone="data-dropzone" action="/update/file/<%= item._id %>" data-options='{"url":"/update/file/<%= item._id %>","paramName": "file"}'>
-                <div class="dz-message" data-dz-message="data-dz-message">
-                  <img class="me-2" src="../../../assets/img/icons/cloud-upload.svg" width="25" alt="" />Drop your files here
-                </div>
-                <div class="dz-preview dz-preview-multiple m-0 d-flex flex-column">
-                  <div class="d-flex mb-3 pb-3 border-bottom media">
-                    <div class="border border-300 p-1 rounded-2 me-2">
-                      <img class="rounded-2 dz-image" src="../../../assets/img/icons/file.png" alt="..." data-dz-thumbnail="data-dz-thumbnail" />
-                    </div>
-                    <div class="flex-1 d-flex flex-between-center">
-                      <div>
-                        <h6 data-dz-name="data-dz-name"></h6>
-                        <div class="d-flex align-items-center">
-                          <p class="mb-0 fs-9 text-400 lh-1" data-dz-size="data-dz-size"></p>
-                          <div class="dz-progress ms-n1" style="margin-top: 0.1rem;">
-                            <span class="dz-upload" data-dz-uploadprogress=""></span>
-                          </div>
-                        </div>
-                        <span class="fs-9 text-danger" data-dz-errormessage="data-dz-errormessage"></span>
-                      </div>
-                      <div class="dropdown font-sans-serif">
-                        <button class="btn btn-link text-600 btn-sm dropdown-toggle btn-reveal dropdown-caret-none" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                          <span class="fas fa-ellipsis-h"></span>
-                        </button>
-                        <div class="dropdown-menu dropdown-menu-end border py-2">
-                          <a class="dropdown-item" href="#!" data-dz-remove="data-dz-remove">Remove File</a>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <input class="d-none" type="text" name="uuid" value="<%= item.fileId %>">
-              </form>
-            </div>
-            <div class="modal-footer border-top-0">
-              <button class="btn btn-phoenix-primary" type="button" data-bs-target="#task<%= index %>" data-bs-toggle="modal">Back</button>
-              <button class="btn btn-primary loading-button" type="submit" id="uploadFiles">
-                <div class="content-button">
-                  <span><i class="fa fa-upload me-2" aria-hidden="true"></i>Upload</span>
-                </div>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <% }); %>
-      <% } else { %>
-      <p>There is not task assigned to you.</p>
-      <% } %>
-    </div>
-
-    <script>
-      document.addEventListener("DOMContentLoaded", function() {
-        const searchInput = document.getElementById("searchInput");
-        const items = document.getElementsByClassName("item");
-
-        // Add event listener for the search input
-        searchInput.addEventListener("input", function() {
-          const keyword = searchInput.value.toLowerCase();
-
-          // Loop through the list items and show/hide based on the keyword
-          for (let i = 0; i < items.length; i++) {
-            const itemName = items[i].getElementsByClassName("itemName")[0].innerText.toLowerCase();
-            const itemDate = items[i].getElementsByClassName("itemDate")[0].innerText.toLowerCase();
-            const itemTime = items[i].getElementsByClassName("itemTime")[0].innerText.toLowerCase();
-            const itemStatus = items[i].getElementsByClassName("itemStatus")[0].innerText.toLowerCase();
-
-            if (itemName.includes(keyword) || itemDate.includes(keyword) || itemTime.includes(keyword) || itemStatus.includes(keyword)) {
-              items[i].style.display = "block";
-            } else {
-              items[i].style.display = "none";
-            }
-          }
-        });
-      });
-    </script>
-
-    <div class="card-footer border-0"><a class="fw-bold fs-9 mt-4" href="#!" data-bs-toggle="modal" data-bs-target="#addTask"><span class="fas fa-plus me-1"></span>Add new task</a></div>
-
-    <div class="modal fade" id="addTask" aria-hidden="true" aria-labelledby="exampleModalToggleLabel" tabindex="-1">
-      <div class="modal-dialog modal-dialog-centered modal-md">
-
-        <div class="modal-content">
-
-          <div class="modal-header px-6 py-5 pe-sm-5 px-md-6 dark__bg-gray-1100">
-            <h3 class="text-body-highlight fw-bolder mb-0">Task Submission</h3>
-            <button class="btn btn-phoenix-secondary btn-icon btn-icon-xl flex-shrink-0" type="button" data-bs-dismiss="modal" aria-label="Close"><span class="fa-solid fa-xmark"></span></button>
-          </div>
-
-
-          <div class="modal-body bg-body-highlight px-6 py-2 rounded-bottom-3">
-            <form class="row g-3" action="/task/add" method="post" id="taskForm">
-
-              <div class="col-12">
-                <label for="taskName" class="form-label">Task Name</label>
-                <input class="form-control" type="text" name="name" placeholder="Please enter task name here" id="taskName" />
-              </div>
-
-              <div class="col-12">
-                <label class="form-label" for="addDescription">Description</label>
-                <textarea class="form-control scrollbar-overlay" id="addDescription" placeholder="Leave a description here" style="height: 100px" name="description"></textarea>
-              </div>
-
-              <div class="col-12 col-md-4">
-                <label for="taskStatus" class="form-label">Status</label>
-                <select class="form-select mb-4" id="taskStatus" aria-label="Default select example" name="status">
-                  <option selected="" value="">Select</option>
-                  <option value="process">Process</option>
-                  <option value="done">Done</option>
-                  <option value="cancelled">Cancelled</option>
-                  <option value="urgent">Urgent</option>
-                </select>
-              </div>
-
-              <div class="col-12 col-md-4">
-                <label for="taskDue" class="form-label">Due</label>
-                <div class="flatpickr-input-container">
-                  <input class="form-control datetimepicker ps-6" type="text" name="due" placeholder="Set the due date" id="taskDue" data-options='{"disableMobile":true}' /><span class="uil uil-calendar-alt flatpickr-icon text-body-tertiary"></span>
-                </div>
-              </div>
-
-              <div class="col-12 col-md-4">
-                <label for="taskReminder" class="form-label">Reminder</label>
-                <div class="flatpickr-input-container">
-                  <input class="form-control datetimepicker ps-6 w-100" type="text" name="reminder" placeholder="Set reminder" id="taskReminder" data-options='{"disableMobile":true, "enableTime": true}' /><span class="uil uil-calendar-alt flatpickr-icon text-body-tertiary"></span>
-                </div>
-              </div>
-
-              <div class="col-md-12 mt-0 mb-3">
-                <h4 class="form-label">Shift Member For Patrol Location</h4>
-                <div id="selectedNames" class="d-flex flex-wrap border border-300 rounded-3 px-2" style="min-height: 2.5rem"></div>
-              </div>
-
-
-              <div class="col-md-12 mt-0">
-                <div class="row">
-                  <div class="col-6">
-                    <label class="form-label" for="validationCustom03">Search Staff Name</label>
-                    <input type="text" name="query" id="queryInput" class="form-control" placeholder="Search and click staff name" />
-                    <div class="invalid-feedback">
-                      Please search and click staff assigned.
-                    </div>
-                    <div class="valid-feedback">Looks good!</div>
-                  </div>
-
-                  <div id="results" class="mt-3 mb-3 col-12"></div>
-                </div>
-              </div>
-
-              <input type="hidden" id="selectedNamesInput" name="selectedNames" value="<%= Array.isArray(selectedNames) ? selectedNames.join(',') : '' %>" />
-              <input type="hidden" name="uuid" value="<%= uuid %>">
-              <div class="col-auto mb-6 d-flex">
-                <button class="btn btn-phoenix-primary loading-button" type="submit">
-                  <div class="content-button">
-                    <span>Add Task</span>
-                  </div>
-                </button>
-
-                <a class="fw-bold fs-9 my-auto ms-4" href="#!" data-bs-target="#addTaskFiles" data-bs-toggle="modal"><span class="fas fa-plus me-1"></span>Add file(s)</a>
-              </div>
-            </form>
 
             <script>
-              $(document).ready(function() {
-                const queryInput = $('#queryInput');
-                const selectedNamesDiv = $('#selectedNames');
-                const reportIdInput = $('#reportIdInput');
-                const displayNamesContainer = $('#displayNamesContainer');
-                const selectedNames = [];
+              document.addEventListener("DOMContentLoaded", function() {
+                const searchInput = document.getElementById("searchInput");
+                const items = document.getElementsByClassName("item");
 
-                $('#taskForm input[name="query"]').on('input', function() {
-                  const query = $(this).val();
-                  if (query.trim() !== '') {
-                    $.ajax({
-                      url: `/search/task/assignee?query=${query}`,
-                      method: 'GET',
-                      success: function(results) {
-                        displayResults(results);
-                      },
-                      error: function(error) {
-                        console.error(error);
-                      }
-                    });
-                  } else {
-                    // Clear results if the search query is empty
-                    displayResults([]);
+                // Add event listener for the search input
+                searchInput.addEventListener("input", function() {
+                  const keyword = searchInput.value.toLowerCase();
+
+                  // Loop through the list items and show/hide based on the keyword
+                  for (let i = 0; i < items.length; i++) {
+                    const itemName = items[i].getElementsByClassName("itemName")[0].innerText.toLowerCase();
+                    const itemDate = items[i].getElementsByClassName("itemDate")[0].innerText.toLowerCase();
+                    const itemTime = items[i].getElementsByClassName("itemTime")[0].innerText.toLowerCase();
+                    const itemStatus = items[i].getElementsByClassName("itemStatus")[0].innerText.toLowerCase();
+
+                    if (itemName.includes(keyword) || itemDate.includes(keyword) || itemTime.includes(keyword) || itemStatus.includes(keyword)) {
+                      items[i].style.display = "block";
+                    } else {
+                      items[i].style.display = "none";
+                    }
                   }
                 });
-
-                function displayResults(results) {
-                  const resultsDiv = $('#results');
-                  resultsDiv.empty();
-
-                  if (results.length === 0) {
-                    resultsDiv.append('<p class="text-muted">No results found</p>');
-                  } else {
-                    results.forEach(result => {
-                      const resultDiv = $(
-                        '<div class="result btn btn-outline-primary mr-2 mb-2"></div>'
-                      ).text(result.fullname);
-                      resultsDiv.append(resultDiv);
-
-                      // Add click event to handle adding and removing names
-                      resultDiv.click(function() {
-                        const clickedName = result.fullname;
-
-                        // Check if the name is already selected
-                        const index = selectedNames.indexOf(clickedName);
-                        if (index === -1) {
-                          // If not selected, add it to the array and update the display
-                          selectedNames.push(clickedName);
-                          updateSelectedNamesDisplay();
-                        } else {
-                          // If already selected, remove it from the array and update the display
-                          selectedNames.splice(index, 1);
-                          updateSelectedNamesDisplay();
-                        }
-                      });
-                    });
-                  }
-                }
-
-                function updateSelectedNamesDisplay() {
-                  // Update the display with the selected names
-                  selectedNamesDiv.empty();
-                  selectedNames.forEach(name => {
-                    const nameDiv = $(
-                      '<div class="selectedName btn btn-outline-secondary mr-2 mb-1 mt-1"></div>'
-                    ).text(name);
-                    selectedNamesDiv.append(nameDiv);
-
-                    // Add click event to remove the name
-                    nameDiv.click(function() {
-                      const removedName = $(this).text();
-                      const index = selectedNames.indexOf(removedName);
-                      selectedNames.splice(index, 1);
-                      updateSelectedNamesDisplay();
-                    });
-                  });
-
-                  // Update the hidden input value with selected names
-                  $('#selectedNamesInput').val(selectedNames.join(','));
-                }
               });
             </script>
+
           </div>
 
-        </div>
-      </div>
-    </div>
-
-    <div class="modal fade" id="addTaskFiles" aria-hidden="true" aria-labelledby="taskFile" tabindex="-1">
-      <div class="modal-dialog modal-dialog-centered modal-md">
-        <div class="modal-content px-2 py-3">
-          <div class="modal-body">
-            <form class="dropzone dropzone-multiple p-3 mb-4 bg-subtle" id="dropzone" data-dropzone="data-dropzone" action="/files/upload" data-options='{"url":"/files/upload","paramName": "file"}'>
-              <div class="dz-message" data-dz-message="data-dz-message">
-                <img class="me-2" src="../../../assets/img/icons/cloud-upload.svg" width="25" alt="" />Drop your files here
+          <div class="mb-8" style="min-height: 25vh;">
+            <div class="d-flex justify-content-between align-items-center mb-4" id="scrollspyActivities">
+              <h2 class="mb-0">Activities</h2>
+            </div>
+            <div class="border-top border-bottom border-translucent" id="leadDetailsTable" data-list='{"valueNames":["title","description","date","time"],"page":5,"pagination":true}'>
+              <div class="table-responsive scrollbar mx-n1 px-1">
+                <table class="table fs-9 mb-0">
+                  <thead>
+                    <tr>
+                      <th class="sort white-space-nowrap align-middle pe-3 ps-0 text-uppercase" scope="col" data-sort="title" style="width:20%;">title</th>
+                      <th class="sort align-middle pe-6 text-uppercase text-start" scope="col" data-sort="description" style="width:30%; ">Description</th>
+                      <th class="sort align-middle text-start text-uppercase" scope="col" data-sort="date" style="width:15%; ">Date</th>
+                      <th class="sort align-middle ps-0 text-start text-uppercase" scope="col" data-sort="time" style="width:15%; ">Time</th>
+                    </tr>
+                  </thead>
+                  <tbody class="list" id="lead-details-table-body">
+                    <% if(activities && activities.length > 0){ %>
+                    <% activities.forEach(item => { %>
+                    <tr class="position-static">
+                      <td class="title align-middle white-space-nowrap py-2 ps-0"><a class="fw-semibold text-primary" href="#!"><%= item.title %></a></td>
+                      <td class="description align-middle white-space-nowrap text-start fw-bold text-body-tertiary py-2 text-start pe-6"><%= item.description%></td>
+                      <td class="date align-middle text-body-tertiary text-start py-2"><%= item.date.toLocaleDateString('en-UK', { day: '2-digit', month: 'short', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></td>
+                      <td class="time align-middle text-body-tertiary text-start"><%= item.date.toLocaleTimeString('en-UK', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone : 'Asia/Kuala_Lumpur' }) %></td>
+                    </tr>
+                    <% }); %>
+                    <% }else{ %>
+                    <p>No activity for <%= otherUser.fullname %></p>
+                    <% } %>
+                  </tbody>
+                </table>
               </div>
-              <div class="dz-preview dz-preview-multiple m-0 d-flex flex-column">
-                <div class="d-flex mb-3 pb-3 border-bottom media">
-                  <div class="border border-300 p-1 rounded-2 me-2">
-                    <img class="rounded-2 dz-image" src="../../../assets/img/icons/file.png" alt="..." data-dz-thumbnail="data-dz-thumbnail" />
-                  </div>
-                  <div class="flex-1 d-flex flex-between-center">
-                    <div>
-                      <h6 data-dz-name="data-dz-name"></h6>
-                      <div class="d-flex align-items-center">
-                        <p class="mb-0 fs-9 text-400 lh-1" data-dz-size="data-dz-size"></p>
-                        <div class="dz-progress ms-n1" style="margin-top: 0.1rem;">
-                          <span class="dz-upload" data-dz-uploadprogress=""></span>
+              <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
+                <div class="col-auto d-flex">
+                  <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p><a class="fw-semibold" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semibold d-none" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
+                </div>
+                <div class="col-auto d-flex">
+                  <button class="page-link" data-list-pagination="prev"><span class="fas fa-chevron-left"></span></button>
+                  <ul class="mb-0 pagination"></ul>
+                  <button class="page-link pe-0" data-list-pagination="next"><span class="fas fa-chevron-right"></span></button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-8" style="min-height: 25vh;">
+            <h2 class="mb-4" id="scrollspyLeaves">Leaves</h2>
+            <div id="leaveHistory" data-list='{"valueNames":["type","startdate","returndate","status"],"page":6,"pagination":true}'>
+              <div class="table-responsive scrollbar">
+                <table class="table fs-9 mb-0 border-top border-200">
+                  <thead>
+                    <tr>
+                      <th class="sort white-space-nowrap align-middle ps-0" scope="col" data-sort="type" style="width: 15%">
+                        TYPE
+                      </th>
+                      <th class="sort align-middle ps-3" scope="col" data-sort="startdate" style="width: 15%">
+                        START DATE
+                      </th>
+                      <th class="sort align-middle ps-3" scope="col" data-sort="returndate" style="width: 15%">
+                        RETURN DATE
+                      </th>
+                      <th class="sort align-middle text-end" scope="col" data-sort="status" style="width: 10%">
+                        STATUS
+                      </th>
+                      <th class="sort align-middle text-end" scope="col" style="width: 10%"></th>
+                    </tr>
+                  </thead>
+
+                  <% 
+                      function formatDate(inputDate) {
+                        const day = String(inputDate.getDate()).padStart(2, '0');
+                        const month = String(inputDate.getMonth() + 1).padStart(2, '0');
+                        const year = inputDate.getFullYear();
+                      
+                        return `${day}/${month}/${year}`;
+                      }
+                      %>
+
+                  <!-- table content -->
+                  <tbody class="list" id="project-list-table-body">
+                    <% if (leave && Array.isArray(leave)) { %>
+                    <!-- table item -->
+                    <% leave.forEach(function(leaves) { %>
+                    <tr class="position-static">
+                      <td class="align-middle time white-space-nowrap ps-0 type py-4">
+                        <a class="fw-bold fs-0" href="/leave/details/<%= leaves.uuid %>"><%= leaves.type %></a>
+                      </td>
+                      <td class="align-middle white-space-nowrap startdate ps-3 py-4">
+                        <p class="mb-0 fs-9 text-900"><%= formatDate(leaves.date.start) %></p>
+                      </td>
+                      <td class="align-middle white-space-nowrap returndate ps-3 py-4">
+                        <p class="mb-0 fs-9 text-900"><%= formatDate(leaves.date.return) %></p>
+                      </td>
+                      <td class="align-middle white-space-nowrap text-end status">
+                        <span class="badge badge-phoenix fs-9 badge-phoenix-success"><%= leaves.status %></span>
+                      </td>
+                      <td class="align-middle text-end white-space-nowrap pe-0 action">
+                        <div class="font-sans-serif btn-reveal-trigger position-static">
+                          <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs--2" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
+                            <span class="fas fa-ellipsis-h fs-9"></span>
+                          </button>
+                          <div class="dropdown-menu dropdown-menu-end py-2">
+                            <a class="dropdown-item" href="/leave/details/<%= leaves.uuid %>">View</a>
+                          </div>
                         </div>
-                      </div>
-                      <span class="fs-9 text-danger" data-dz-errormessage="data-dz-errormessage"></span>
+                      </td>
+                    </tr>
+                    <%  }); %> <% } else { %>
+                    <tr>
+                      <td colspan="7">No leaves submitted.</td>
+                    </tr>
+                    <% } %>
+                  </tbody>
+                </table>
+              </div>
+              <div class="d-flex flex-wrap align-items-center justify-content-between py-3 pe-0 fs-9 border-bottom border-200">
+                <div class="d-flex">
+                  <p class="mb-0 d-none d-sm-block me-3 fw-semi-bold text-900" data-list-info="data-list-info"></p>
+                  <a class="fw-semi-bold" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semi-bold d-none" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
+                </div>
+                <div class="d-flex">
+                  <button class="page-link" data-list-pagination="prev">
+                    <span class="fas fa-chevron-left"></span>
+                  </button>
+                  <ul class="mb-0 pagination"></ul>
+                  <button class="page-link pe-0" data-list-pagination="next">
+                    <span class="fas fa-chevron-right"></span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h2 class="mb-4" id="scrollspyAttachments">Attachments</h2>
+
+            <%
+              const formatDateFile = (date) => {
+                const options = { day: 'numeric', month: 'short', hour: 'numeric', minute: 'numeric', hour12: true };
+                const formattedDate = new Intl.DateTimeFormat('en-US', options).format(date);
+              
+                // Add day suffix (st, nd, rd, or th)
+                const day = date.getDate();
+                const daySuffix = (day) => {
+                  if (day >= 11 && day <= 13) {
+                    return 'th';
+                  }
+                  const lastDigit = day % 10;
+                  switch (lastDigit) {
+                    case 1: return 'st';
+                    case 2: return 'nd';
+                    case 3: return 'rd';
+                    default: return 'th';
+                     }
+                };
+              
+                return formattedDate.replace(/(\d+)/, (match, p1) => `${p1}${daySuffix(day)}`);
+              };
+            %>
+
+            <% const modalFiles = files.filter((file) => file.user.toString() === otherUser._id.toString()); %>
+            <% const lastIndexFile = modalFiles.length - 1; var borderModalFile = ''; %>
+            <% if(modalFiles && modalFiles.length > 0){ %>
+            <% modalFiles.forEach((file, index) => { %>
+
+            <% 
+                  if(index === lastIndexFile){
+                      borderModalFile = 'border-bottom';
+                  } else {
+                      borderModalFile = '';
+                  }
+                %>
+
+            <% if(file.type === '.png' || file.type === '.webp' || file.type === '.jpg' || file.type === '.jpeg' || file.type === '.gif' ){ %>
+            <div class="border-top <%= borderModalFile %> border-dashed px-0 pt-4 pb-3">
+              <div class="me-n3">
+                <div class="d-flex flex-between-center">
+                  <div class="d-flex mb-1"><span class="fa-solid fa-image me-2 text-body-tertiary fs-9"></span>
+                    <p class="text-body-highlight mb-0 lh-1"><%= file.name %></p>
+                  </div>
+                  <div class="btn-reveal-trigger">
+                    <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fas fa-ellipsis-h"></span></button>
+                    <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item" href="/files/download/<%= file._id %>">Download</a><a class="dropdown-item d-none" href="#!">Report abuse</a></div>
+                  </div>
+                </div>
+                <% const userFile = allUser.find(item => item._id.toString() === otherUser._id.toString()); %>
+                <div class="d-flex fs-9 text-body-tertiary mb-2 flex-wrap"><span><%= file.size %></span><span class="text-body-quaternary mx-1">| </span><a href="#!"><%= userFile.fullname %> </a><span class="text-body-quaternary mx-1">| </span><span class="text-nowrap"><%= formatDateFile(file.date) %></span></div><img class="rounded-2" src="<%= file.path %>" alt="" style="max-width:230px" />
+              </div>
+            </div>
+
+            <% }else { %>
+
+            <div class="border-top <%= borderModalFile %> px-0 pt-4 pb-3">
+              <div class="me-n3">
+                <div class="d-flex flex-between-center">
+                  <div>
+                    <div class="d-flex align-items-center mb-1"><span class="fa-solid fa-image me-2 fs-9 text-body-tertiary"></span>
+                      <p class="text-body-highlight mb-0 lh-1"><%= file.name %></p>
                     </div>
-                    <div class="dropdown font-sans-serif">
-                      <button class="btn btn-link text-600 btn-sm dropdown-toggle btn-reveal dropdown-caret-none" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        <span class="fas fa-ellipsis-h"></span>
-                      </button>
-                      <div class="dropdown-menu dropdown-menu-end border py-2">
-                        <a class="dropdown-item" href="#!" data-dz-remove="data-dz-remove">Remove File</a>
-                      </div>
-                    </div>
+                    <div class="d-flex fs-9 text-body-tertiary mb-0 flex-wrap"><span><%= file.size %></span><span class="text-body-quaternary mx-1">| </span><a href="#!"><%= file.user %> </a><span class="text-body-quaternary mx-1">| </span><span class="text-nowrap"><%= formatDateFile(file.date) %></span></div>
+                  </div>
+                  <div class="btn-reveal-trigger">
+                    <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fas fa-ellipsis-h"></span></button>
+                    <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item" href="#!">Edit</a><a class="dropdown-item text-danger" href="/">Delete</a><a class="dropdown-item" href="#!">Download</a><a class="dropdown-item" href="#!">Report abuse</a></div>
                   </div>
                 </div>
               </div>
-              <input class="d-none" type="text" name="uuid" value="<%= uuid %>">
+            </div>
 
-            </form>
+            <% } %>
+            <% }); %>
+            <% }else { %>
+            <p>There is no file uploaded.</p>
+            <% } %>
+
+
           </div>
-          <div class="modal-footer border-top-0">
-            <button class="btn btn-phoenix-primary" type="button" data-bs-target="#addTask" data-bs-toggle="modal">Back</button>
-            <button class="btn btn-primary loading-button" type="submit" id="uploadFiles">
-              <div class="content-button">
-                <span><i class="fa fa-upload me-2" aria-hidden="true"></i>Upload</span>
-              </div>
-            </button>
-          </div>
+
         </div>
       </div>
     </div>
   </div>
 </div>
-
-<!-- alert toast upload -->
-<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 5">
-  <div class="d-flex">
-    <div class="toast align-items-center text-white border-0" role="alert" data-bs-autohide="false" aria-live="assertive" aria-atomic="true" id="alertUploadToast">
-      <div class="d-flex justify-content-between">
-        <div class="toast-body px-0 py-3">
-          <code id="dropzoneAlertContent" class="text-primary"></code>
-        </div>
-
-        <button class="btn ms-2 p-0" type="button" data-bs-dismiss="toast" aria-label="Close">
-          <span class="uil uil-times fs-7"></span>
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-
 
 <%- include('partials/private-footer.ejs') %>

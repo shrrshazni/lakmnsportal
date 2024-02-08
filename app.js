@@ -85,6 +85,7 @@ const userSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true },
     nric: { type: String, required: true, unique: true },
     phone: String,
+    officePhone: String,
     profile: String,
     age: { type: Number, min: 0 },
     address: String,
@@ -235,7 +236,7 @@ const leaveSchema = new mongoose.Schema({
 // FILE
 const FileSchema = new mongoose.Schema({
     uuid: String,
-    user: String,
+    user: { type: mongoose.Schema.Types.ObjectId },
     name: String,
     path: String,
     date: { type: Date },
@@ -324,7 +325,7 @@ app.get('/', isAuthenticated, async function (req, res) {
             user: user,
             notifications: notifications,
             uuid: uuidv4(),
-            userDepartment : userDepartment,
+            userDepartment: userDepartment,
             // all data
             allUser: allUser,
             allUserLeave: allUserLeave,
@@ -506,7 +507,7 @@ app.post('/update/:content/:id', isAuthenticated, async function (req, res) {
 
                     const newFile = new File({
                         uuid: uuid,
-                        user: user.fullname,
+                        user: user._id,
                         name: file.name,
                         path: pathUpload,
                         date: today,
@@ -3391,6 +3392,40 @@ app.get('/markAllAsRead', isAuthenticated, async function (req, res) {
     }
 });
 
+// TEMP EXAMPLE
+
+app.get('/temp/:id', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    }).populate('sender');
+
+    const id = req.params.id;
+    const otherUser = await User.findOne({ _id: id });
+
+    const task = await Task.find({ assignee: { $in: [otherUser._id] } }).populate('assignee').exec();
+    const file = await File.find();
+    const allUser = await User.find();
+    const activities = await Activity.find({ user: otherUser._id });
+    const leave = await Leave.find({ user: otherUser._id });
+
+    if (user) {
+        res.render('temp', {
+            user: user,
+            notifications: notifications,
+            // other data
+            otherUser: otherUser,
+            tasks: task,
+            files: file,
+            allUser: allUser,
+            activities: activities,
+            leave : leave
+        });
+    }
+});
+
 // FILES
 
 // UPLOAD
@@ -3422,7 +3457,7 @@ app.post('/files/upload', isAuthenticated, async (reqFiles, resFiles) => {
 
             const newFile = new File({
                 uuid: uuid,
-                user: user.fullname,
+                user: user._id,
                 name: file.name,
                 path: pathUpload,
                 date: today,

@@ -298,11 +298,12 @@
 
 
             <% if (userTasks && userTasks.length > 0) { %>
-            <% const totalTasks = userTasks.length; %>
             <% const doneTasks = userTasks.filter(task => task.status === 'done').length; %>
             <% const cancelledTasks = userTasks.filter(task => task.status === 'cancelled').length; %>
             <% const urgentTasks = userTasks.filter(task => task.status === 'urgent').length; %>
             <% const processTasks = userTasks.filter(task => task.status === 'process').length; %>
+
+            <% const totalTasks = userTasks.length - cancelledTasks; %>
             <% const completionPercentage1 = (doneTasks / totalTasks) * 100; %>
             <% const completionPercentage2 = (cancelledTasks / totalTasks) * 100; %>
             <% const completionPercentage3 = (urgentTasks / totalTasks) * 100; %>
@@ -369,8 +370,8 @@
         <div class="card-header border-bottom-0 pb-0">
           <div class="row justify-content-between align-items-center mb-4">
             <div class="col-auto">
-              <h3 class="text-body-emphasis">To do</h3>
-              <p class="mb-0 text-body-tertiary">Task assigned to me</p>
+              <h3 class="text-body-emphasis">Tasks</h3>
+              <p class="mb-0 text-body-tertiary">Monitor team task progress regularly</p>
             </div>
             <div class="col-auto w-100 w-md-auto">
               <div class="row align-items-center g-0 justify-content-between">
@@ -402,6 +403,8 @@
                 var displayTaskFile = '';
                 var displayTaskSubtask = '';
                 var statusTaskColour = '';
+                var checked = '';
+
                 const associatedFile = files.filter((file) => file.uuid === item.fileId);
         
                 // check last item inside task
@@ -428,21 +431,27 @@
                 }
         
                 // check task status 
+                // check task status 
                 if(item.status === 'urgent'){
-                    statusTaskColour = 'warning';
-                } else if(item.status === 'process'){
-                    statusTaskColour = 'primary';
-                } else if(item.status === 'cancelled'){
-                    statusTaskColour = 'danger';            
-                } else if(item.status === 'done'){
-                    statusTaskColour = 'success';            
-                }
+                          statusTaskColour = 'warning';
+                          checked = '';
+                      } else if(item.status === 'process'){
+                          statusTaskColour = 'primary';
+                          checked = '';
+                      } else if(item.status === 'cancelled'){
+                          statusTaskColour = 'danger'; 
+                          checked = 'checked';           
+                      } else if(item.status === 'done'){
+                          statusTaskColour = 'success';
+                          checked = 'checked';            
+                      }
         
                 const showForUser = item.owner.toString() === user._id.toString() ? '' : 'd-none';
               %>
 
           <div class="item">
             <div class="d-flex hover-actions-trigger py-3 border-top <%= todoborder %>">
+              <input class="form-check-input form-check-input-todolist flex-shrink-0 my-1 me-2 form-check-input-undefined" type="checkbox" id="checkbox-todo-2" data-event-propagation-prevent="data-event-propagation-prevent" <%= checked %> />
               <div class="row justify-content-between align-items-md-center btn-reveal-trigger border-translucent gx-0 flex-1 cursor-pointer" data-bs-toggle="modal" data-bs-target="#task<%= index %>">
                 <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
                   <div class="mb-1 mb-md-0 d-flex align-items-center lh-1">
@@ -541,6 +550,7 @@
                           <% } %>
                           <a class="fw-bold fs-9" href="#!" data-bs-target="#subtask<%= index %>" data-bs-toggle="modal"><span class="fas fa-plus me-1"></span>Add subtask</a>
                         </div>
+                        
                         <div class="mb-3">
                           <div>
                             <h4 class="mb-3">Files</h4>
@@ -716,7 +726,7 @@
                         </div>
                       </div>
                     </div>
-                    <input type="text" name="uuid" value="<%= item.fileId %>">
+                    <input type="hidden" name="uuid" value="<%= item.fileId %>">
                   </form>
                 </div>
                 <div class="modal-footer border-top-0">
