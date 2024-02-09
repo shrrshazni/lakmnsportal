@@ -84,7 +84,13 @@
                 <div class="d-flex align-items-center mb-1"><span class="me-2 uil uil-globe"></span>
                   <h5 class="text-body-highlight mb-0">Section</h5>
                 </div>
-                <p class="text-primary"><%= otherUser.section %> </p>
+                <% if(otherUser.section === ''){
+                    var section = '-';
+                  }else {
+                    var section = otherUser.section;
+                  } 
+                %>
+                <p class="text-primary"><%= section %> </p>
               </div>
               <div class="mb-0">
                 <div class="d-flex align-items-center mb-1"><span class="me-2 uil uil-clock"></span>
@@ -149,7 +155,7 @@
           <ul class="nav nav-underline fs-9">
             <li class="nav-item"><a class="nav-link me-2" href="#scrollspyTask">Tasks</a></li>
             <li class="nav-item"><a class="nav-link me-2" href="#scrollspyActivities">Activities</a></li>
-            <li class="nav-item"><a class="nav-link me-2" href="#scrollspyLeaves">Leaves</a></li>
+            <li class="nav-item"><a class="nav-link me-2" href="#scrollspyLeaves">Leave</a></li>
             <li class="nav-item"><a class="nav-link" href="#scrollspyAttachments">Attachments </a></li>
           </ul>
         </nav>
@@ -250,7 +256,7 @@
 
               <% }); %>
               <% } else { %>
-              <p>There is not task assigned to you.</p>
+              <p>There is no task assigned to you.</p>
               <% } %>
             </div>
 
@@ -327,7 +333,7 @@
           </div>
 
           <div class="mb-8" style="min-height: 25vh;">
-            <h2 class="mb-4" id="scrollspyLeaves">Leaves</h2>
+            <h2 class="mb-4" id="scrollspyLeaves">Leave</h2>
             <div id="leaveHistory" data-list='{"valueNames":["type","startdate","returndate","status"],"page":6,"pagination":true}'>
               <div class="table-responsive scrollbar">
                 <table class="table fs-9 mb-0 border-top border-200">
@@ -361,7 +367,7 @@
 
                   <!-- table content -->
                   <tbody class="list" id="project-list-table-body">
-                    <% if (leave && Array.isArray(leave)) { %>
+                    <% if (leave && leave.length>0) { %>
                     <!-- table item -->
                     <% leave.forEach(function(leaves) { %>
                     <tr class="position-static">
@@ -389,9 +395,7 @@
                       </td>
                     </tr>
                     <%  }); %> <% } else { %>
-                    <tr>
-                      <td colspan="7">No leaves submitted.</td>
-                    </tr>
+                    <p>No leave submitted</p>
                     <% } %>
                   </tbody>
                 </table>

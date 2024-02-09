@@ -125,23 +125,28 @@
                      task.assignee.some(assignee => assignee._id && assignee._id.toString() === user._id.toString());
             });
 
-            const totalActivity = activities.filter(item => {item.user.toString() === user._id.toString()}).length;
+            const doneTasks1 = totalTasks.filter(task => task.status === 'done').length; 
+            const processTasks1 = totalTasks.filter(task => task.status === 'process').length; 
+
+            const totalActivity = otherActivities.filter(item => {
+             return item.user.toString() === user._id.toString();
+            });
         %>
         <div>
           <h6>Tasks</h6>
           <p class="fs-7 text-body-secondary mb-0"><%= totalTasks.length %></p>
         </div>
         <div>
-          <h6>Activity</h6>
-          <p class="fs-7 text-body-secondary mb-0"><%= totalActivity %></p>
+          <h6>Activities</h6>
+          <p class="fs-7 text-body-secondary mb-0"><%= totalActivity.length %></p>
         </div>
         <div>
           <h6>Completion</h6>
-          <p class="fs-7 text-body-secondary mb-0">97</p>
+          <p class="fs-7 text-body-secondary mb-0"><%= doneTasks1 %></p>
         </div>
         <div>
-          <h6>Completion</h6>
-          <p class="fs-7 text-body-secondary mb-0">97</p>
+          <h6>In Process</h6>
+          <p class="fs-7 text-body-secondary mb-0"><%= processTasks1 %></p>
         </div>
       </div>
     </div>
@@ -298,7 +303,7 @@
             <% } %>
 
             <%
-            const userTasks = tasks.filter(task => {
+            const userTasks = otherTasks.filter(task => {
               return task.assignee && Array.isArray(task.assignee) &&
                      task.assignee.some(assignee => assignee._id && assignee._id.toString() === department._id.toString());
             });

@@ -319,6 +319,8 @@ app.get('/', isAuthenticated, async function (req, res) {
     }).sort({ date: -1 }).limit(7).exec();
 
     const userDepartment = await User.find({ department: user.department, _id: { $ne: user._id } });
+    const otherTask = await Task.find({ assignee: { $ne: [user._id] } });
+    const otherActivities = await Activity.find();
 
     if (user) {
         res.render('home', {
@@ -326,6 +328,8 @@ app.get('/', isAuthenticated, async function (req, res) {
             notifications: notifications,
             uuid: uuidv4(),
             userDepartment: userDepartment,
+            otherTasks : otherTask,
+            otherActivities: otherActivities,
             // all data
             allUser: allUser,
             allUserLeave: allUserLeave,
