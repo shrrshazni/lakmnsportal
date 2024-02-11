@@ -153,12 +153,12 @@
   </div>
 
   <div class="col-12 col-xxl-4">
-    <div class="carousel dashboard-carousel slide position-relative rounded-3" style="height: 27.5vh;" id="carouselExampleIndicators" data-bs-ride="carousel">
+    <div class="carousel dashboard-carousel slide carousel-fade position-relative rounded-3" id="carouselExampleIndicators" data-bs-ride="carousel">
       <div class="carousel-inner">
 
-        <div class="carousel-item px-2 active">
+        <div class="carousel-item active" style="height: 35vh;">
 
-          <div class="card" style="height: 27.5vh;">
+          <div class="card" style="height: 35vh;">
             <div class="bg-holder d-block bg-card" style="background-image:url(../assets/img/spot-illustrations/32.png);background-position: top right;">
             </div>
             <div class="card-body">
@@ -216,9 +216,9 @@
 
         </div>
 
-        <div class="carousel-item px-2 false">
+        <div class="carousel-item false">
 
-          <div class="card" style="height: 27.5vh;">
+          <div class="card" style="height: 35vh;">
             <div class="card-body">
               <p>Hello world 1</p>
             </div>
@@ -226,8 +226,8 @@
 
         </div>
 
-        <div class="carousel-item px-2 false">
-          <div class="card" style="height: 27.5vh;">
+        <div class="carousel-item false">
+          <div class="card" style="height: 35vh;">
 
             <div class="card-body">
               <p>Hello world 2</p>
@@ -338,11 +338,11 @@
               </div>
             </td>
             <% } else { %>
-            <td class="align-middle white-space-nowrap ps-3 taskprogress">
+            <td class="align-middle white-space-nowrap ps-3 text-start taskprogress">
               <p class="text-body-secondary fs-10 mb-0">No tasks</p>
             </td>
 
-            <td class="align-middle white-space-nowrap ps-3 status">
+            <td class="align-middle white-space-nowrap ps-3 text-center status">
               <p class="text-body-secondary fs-10 mb-0">No tasks</p>
             </td>
             <% } %>
@@ -376,7 +376,7 @@
   </div>
 </div>
 
-<div class="mt-3 mx-lg-n4">
+<div class="mt-3 mx-lg-n4 mb-6">
   <div class="row g-3">
     <div class="col-12 col-xl-6 col-xxl-7 mb-3">
       <div class="card task-list h-100">
@@ -1144,6 +1144,89 @@
   </div>
 </div>
 
+<div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis pt-7 pb-3 border-y mb-6 row g-3">
+  <div class="col-12 col-xxl-4 mb-3">
+
+  </div>
+
+  <div class="col-12 col-xxl-8 mb-3">
+
+    <div id="calendarHeatmap" style="height: 400px;"></div>
+
+    <script>
+      // Sample data (replace this with your own data)
+      const data = [
+        ['2024-02-01', 10],
+        ['2024-02-02', 5],
+        // ... more data entries
+      ];
+
+      // Function to create the calendar heatmap with Bootstrap colors
+      function createCalendarHeatmap(data) {
+        const option = {
+          tooltip: {
+            position: 'top',
+            formatter: function(params) {
+              return params.value[0] + ': ' + params.value[1];
+            },
+          },
+          visualMap: {
+            min: 0,
+            max: 20, // Adjust this based on your data
+            calculable: true,
+            orient: 'horizontal',
+            left: 'center',
+            bottom: '15%',
+          },
+          calendar: {
+            top: 'middle',
+            left: 'center',
+            cellSize: ['auto', 13],
+            range: ['2024-02-01', '2024-02-28'], // Adjust the date range based on your data
+            itemStyle: {
+              normal: {
+                borderWidth: 0.5
+              },
+            },
+            yearLabel: {
+              show: false
+            },
+          },
+          series: [{
+            type: 'heatmap',
+            coordinateSystem: 'calendar',
+            data: data,
+            itemStyle: {
+              color: function(params) {
+                const value = params.value[1];
+                if (value <= 5) {
+                  return '#d1f7d8'; // Light green
+                } else if (value <= 10) {
+                  return '#add8e6'; // Light blue
+                } else if (value <= 15) {
+                  return '#ffd700'; // Yellow
+                } else {
+                  return '#ffb6c1'; // Light pink
+                }
+              },
+            },
+          }, ],
+        };
+
+        // Initialize ECharts instance
+        const myChart = echarts.init(document.getElementById('calendarHeatmap'));
+
+        // Set the option
+        myChart.setOption(option);
+      }
+
+      // Call the function with your data
+      createCalendarHeatmap(data);
+    </script>
+
+  </div>
+</div>
+
 <% if (user.isAdmin === true || user.isChiefExec === true || user.isDeputyChiefExec === true) { %>
 <%
     const submittedLeaves = allLeave.filter(leave => leave.status === 'submitted');
@@ -1153,6 +1236,7 @@
 %>
 <div class="pb-5">
   <div class="row g-4">
+
     <div class="col-12 col-xxl-6">
       <div class="mb-8">
         <h2 class="mb-2">Leave</h2>
@@ -1214,17 +1298,16 @@
           </select>
         </div>
       </div>
-      <div id="total-leave-chart" style="min-height:320px;width:100%"></div>
+      <div id="total-leave-chart" style="min-height:320px;"></div>
 
       <script>
         document.addEventListener('DOMContentLoaded', function() {
           // Initialize ECharts chart
-          var leaveChart = echarts.init(document.getElementById('total-leave-chart'));
           var leaveChart = echarts.init(document.getElementById('total-leave-chart'), null, {
-            devicePixelRatio: window.devicePixelRatio > 1 ? 10 : 1,
-            renderer: 'canvas', // Use the 'canvas' renderer
-            width: 'auto', // Automatically adjust width
-            height: 'auto' // Automatically adjust height
+            devicePixelRatio: window.devicePixelRatio > 1 ? 2 : 1,
+            renderer: 'canvas',
+            width: 'auto',
+            height: 'auto'
           });
 
           // Sample data for testing
@@ -1268,7 +1351,7 @@
 
               var option = {
                 responsive: true,
-                color: ['#3874ff', '#0097eb'],
+                color: [theme.primary, '#0097eb'],
                 tooltip: {
                   trigger: 'axis',
                   padding: 10,
@@ -1281,7 +1364,7 @@
                   transitionDuration: 0,
                   axisPointer: {
                     type: 'none'
-                  }
+                  },
                 },
                 xAxis: [{
                     type: 'category',
@@ -1399,6 +1482,19 @@
             }
           }
 
+          const handleTooltipPosition = ([pos, , dom, , size]) => {
+            // only for mobile device
+            if (window.innerWidth <= 540) {
+              const tooltipHeight = dom.offsetHeight;
+              const obj = {
+                top: pos[1] - tooltipHeight - 20
+              };
+              obj[pos[0] < size.viewSize[0] / 2 ? 'left' : 'right'] = 5;
+              return obj;
+            }
+            return null; // else default behavior
+          };
+
           // Initial update based on default selected month
           updateChart('January');
 
@@ -1407,10 +1503,28 @@
             var selectedMonth = this.value;
             updateChart(selectedMonth);
           });
+
+          window.addEventListener('resize', function() {
+            leaveChart.resize();
+          });
         });
       </script>
 
     </div>
+
+    <script>
+      const style = getComputedStyle(document.body);
+      const theme = {
+        primary: style.getPropertyValue('--phoenix-primary'),
+        secondary: style.getPropertyValue('--phoenix-secondary'),
+        success: style.getPropertyValue('--phoenix-success'),
+        info: style.getPropertyValue('--phoenix-info'),
+        warning: style.getPropertyValue('--phoenix-warning'),
+        danger: style.getPropertyValue('--phoenix-danger'),
+        bg_primary_subtle: style.getPropertyValue('--phoenix-primary-bg-subtle')
+      };
+    </script>
+
     <div class="col-12 col-xxl-6">
       <div class="row g-3">
         <div class="col-12 col-md-6">
@@ -1430,6 +1544,7 @@
               <!-- JavaScript code for ECharts -->
               <script>
                 document.addEventListener('DOMContentLoaded', function() {
+
                   // Initialize ECharts chart
                   var leaveStatusChart = echarts.init(document.getElementById('leave-status-chart'));
 
@@ -1486,7 +1601,7 @@
 
                   // Chart options
                   var option = {
-                    color: '#3874ff',
+                    color: theme.primary,
                     tooltip: {
                       trigger: 'item',
                       padding: [7, 10],
@@ -1533,7 +1648,7 @@
                       },
                       backgroundStyle: {
                         borderRadius: 10,
-                        color: '#525b75',
+                        color: theme.bg_primary_subtle,
                         opacity: 0.2
                       }
                     }],
@@ -1552,7 +1667,7 @@
 
               <div class="mt-2">
                 <div class="d-flex align-items-center mb-2">
-                  <div class="bullet-item me-2" style="background-color: #3874ff;"></div>
+                  <div class="bullet-item me-2 bg-primary"></div>
                   <h6 class="text-body fw-semibold flex-1 mb-0">Approved</h6>
                   <h6 class="text-body fw-semibold mb-0">52%</h6>
                 </div>
