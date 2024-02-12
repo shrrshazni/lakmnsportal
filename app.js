@@ -405,6 +405,7 @@ app.get('/', isAuthenticated, async function (req, res) {
 
 // ECHARTS
 
+// USER'S LEAVE TYPE
 app.get(
   '/api/echarts/leaveType/:id',
   isAuthenticated,

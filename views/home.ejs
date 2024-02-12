@@ -169,13 +169,13 @@
   </div>
 
   <div class="col-12 col-xxl-4">
-    <div class="carousel dashboard-carousel slide carousel-fade position-relative rounded-3" id="carouselExampleIndicators" data-bs-ride="carousel">
+    <div class="carousel dashboard-carousel slide carousel-fade position-relative rounded-3" id="carousel-1">
       <div class="carousel-inner">
 
         <div class="carousel-item active" style="height: 35vh;">
 
           <div class="card" style="height: 35vh;">
-            <div class="bg-holder d-block bg-card" style="background-image:url(../assets/img/spot-illustrations/32.png);background-position: top right;">
+            <div class="bg-holder d-block bg-card" style="background-image:url(/assets/img/spot-illustrations/32.png);background-position: top right;">
             </div>
             <div class="card-body">
               <div class="d-flex justify-content-between">
@@ -236,7 +236,22 @@
 
           <div class="card" style="height: 35vh;">
             <div class="card-body">
-              <p>Hello world 1</p>
+
+              <h5 class="text-body-emphasis text-nowrap">Leave Balances</h5>
+              <div class="mx-auto mt-n10" id="leave-type-chart-carousel" style="height:400px; width: 250px;"></div>
+
+              <script>
+                const leaveTypeURL = '/api/echarts/leaveType/<%= user._id %>';
+
+                fetch(leaveTypeURL)
+                  .then(response => response.json())
+                  .then(fetchLeaveTypeData1 => {
+                    updateLeaveTypeChart(fetchLeaveTypeData1, 'leave-type-chart-carousel');
+                  })
+                  .catch(error => {
+                    console.error('Error fetching user leave data:', error);
+                  });
+              </script>
             </div>
           </div>
 
@@ -254,9 +269,9 @@
 
       </div>
       <div class="carousel-indicators">
-        <button class="active" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="0" aria-current="true" aria-label="Slide 1"></button>
-        <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="1" aria-label="Slide 2"></button>
-        <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="2" aria-label="Slide 3"></button>
+        <button class="active" type="button" data-bs-target="#carousel-1" data-bs-slide-to="0" aria-current="true" aria-label="Slide 1"></button>
+        <button type="button" data-bs-target="#carousel-1" data-bs-slide-to="1" aria-label="Slide 2"></button>
+        <button type="button" data-bs-target="#carousel-1" data-bs-slide-to="2" aria-label="Slide 3"></button>
       </div>
     </div>
   </div>
@@ -1204,8 +1219,6 @@
     </div>
 
     <script>
-      const leaveTypeURL = '/api/echarts/leaveType/<%= user._id %>';
-
       fetch(leaveTypeURL)
         .then(response => response.json())
         .then(fetchLeaveTypeData => {
@@ -1218,7 +1231,7 @@
       function updateLeaveTypeChart(fetchLeaveTypeData, echartsId) {
 
         var leaveTypeData = {
-          labels: ['Annual Leave', 'Sick Leave', 'Emergency Taken', 'Unpaid Taken', 'Special Taken'],
+          labels: ['Annual Leave Balance', 'Sick Leave Balance', 'Emergency Leave Taken', 'Unpaid Leave Taken', 'Special Leave Taken'],
           data: [
             fetchLeaveTypeData.annual,
             fetchLeaveTypeData.sick,
@@ -1256,7 +1269,7 @@
                   padding: [0, 0, 5, 15]
                 },
                 y: {
-                  fontSize: 12.8,
+                  fontSize: 12,
                   color: theme.primary,
                   fontWeight: 600
                 }
@@ -1273,6 +1286,11 @@
             data: leaveTypeData.labels.map((label, index) => ({
               value: leaveTypeData.data[index],
               name: label,
+              emphasis: index === 0 ? {
+                label: {
+                  show: true,
+                },
+              } : {},
             })),
           }, ],
           grid: {
@@ -1295,8 +1313,7 @@
   </div>
 
   <div class="col-12 col-xxl-8 mb-3">
-
-
+    <div class="vh-50" data-calendar='{"events":[{"title":"Bootcamp","start":"2023-12-07"}]}'></div>
   </div>
 
 </div>

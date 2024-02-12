@@ -101,16 +101,139 @@
             </div>
           </div>
           <div class="mb-3">
-            <div class="carousel dashboard-carousel slide carousel-fade position-relative rounded-3" style="height: 27.5vh;" id="carouselExampleIndicators" data-bs-ride="carousel">
+            <div class="carousel dashboard-carousel slide carousel-fade position-relative rounded-3" style="height: 35vh;" id="carousel-2">
               <div class="carousel-inner">
 
                 <div class="carousel-item active">
 
-                  <div class="card" style="height: 27.5vh;">
-                    <div class="bg-holder d-block bg-card" style="background-image:url(../assets/img/spot-illustrations/32.png);background-position: top right;">
-                    </div>
+                  <div class="card" style="height: 35vh;">
                     <div class="card-body">
+                      <h5 class="text-body-emphasis text-nowrap">Leave Balances</h5>
+                      <div class="mx-auto mt-n10" id="leave-type-chart-carousel" style="height:400px; width: 250px;"></div>
 
+                      <script>
+                        // take the root of the colour from css for echarts
+                        const style = getComputedStyle(document.body);
+                        const theme = {
+                          primary: style.getPropertyValue('--phoenix-primary'),
+                          secondary: style.getPropertyValue('--phoenix-secondary'),
+                          success: style.getPropertyValue('--phoenix-success'),
+                          info: style.getPropertyValue('--phoenix-info'),
+                          warning: style.getPropertyValue('--phoenix-warning'),
+                          danger: style.getPropertyValue('--phoenix-danger'),
+                          bg_primary_subtle: style.getPropertyValue('--phoenix-primary-bg-subtle'),
+                          tertiary: style.getPropertyPriority('--phoenix-tertiary-color'),
+                          light: style.getPropertyValue('--phoenix-light'),
+                          dark: style.getPropertyValue('--phoenix-dark')
+                        };
+
+                        //   take css class color based on their property color/bg-colour for echarts
+                        function getColor(className, property) {
+                          var element = document.createElement('div');
+                          element.className = className;
+                          document.body.appendChild(element);
+
+                          var computedStyle = window.getComputedStyle(element);
+                          var color = computedStyle.getPropertyValue(property);
+
+                          document.body.removeChild(element);
+
+                          return color;
+                        }
+
+                        const leaveTypeURL = '/api/echarts/leaveType/<%= otherUser._id %>';
+
+                        fetch(leaveTypeURL)
+                          .then(response => response.json())
+                          .then(fetchLeaveTypeData => {
+                            updateLeaveTypeChart(fetchLeaveTypeData, 'leave-type-chart-carousel');
+                          })
+                          .catch(error => {
+                            console.error('Error fetching user leave data:', error);
+                          });
+
+                        function updateLeaveTypeChart(fetchLeaveTypeData, echartsId) {
+
+                          var leaveTypeData = {
+                            labels: ['Annual Leave Balance', 'Sick Leave Balance', 'Emergency Leave Taken', 'Unpaid Leave Taken', 'Special Leave Taken'],
+                            data: [
+                              fetchLeaveTypeData.annual,
+                              fetchLeaveTypeData.sick,
+                              fetchLeaveTypeData.emergency.taken,
+                              fetchLeaveTypeData.paternity.taken + fetchLeaveTypeData.marriage.taken + fetchLeaveTypeData.bereavement.taken + fetchLeaveTypeData.study.taken + fetchLeaveTypeData.hajj.taken,
+                              fetchLeaveTypeData.unpaid,
+                              fetchLeaveTypeData.special,
+                            ],
+                          };
+                          // Initialize ECharts instance
+                          var leaveTypeChart = echarts.init(document.getElementById(echartsId), null, {
+                            devicePixelRatio: window.devicePixelRatio > 1 ? 2 : 1,
+                            renderer: 'canvas',
+                            width: 'auto',
+                            height: 'auto'
+                          });
+
+                          var option = {
+                            color: [getColor('bg-info-light', 'background-color'), getColor('bg-warning-light', 'background-color'), getColor('bg-danger-light', 'background-color'), getColor('bg-success-light', 'background-color'), getColor('bg-primary', 'background-color')],
+                            series: [{
+                              name: 'Tasks assigned to me',
+                              type: 'pie',
+                              radius: ['70%', '85%'],
+                              startAngle: 30,
+                              avoidLabelOverlap: false,
+                              label: {
+                                show: false,
+                                position: 'center',
+                                formatter: '{x|{c} } \n {y|{b}}',
+                                rich: {
+                                  x: {
+                                    fontSize: 31.25,
+                                    fontWeight: 800,
+                                    color: theme.primary,
+                                    padding: [0, 0, 5, 15]
+                                  },
+                                  y: {
+                                    fontSize: 12,
+                                    color: theme.primary,
+                                    fontWeight: 600
+                                  }
+                                }
+                              },
+                              emphasis: {
+                                label: {
+                                  show: true
+                                }
+                              },
+                              labelLine: {
+                                show: false
+                              },
+                              data: leaveTypeData.labels.map((label, index) => ({
+                                value: leaveTypeData.data[index],
+                                name: label,
+                                emphasis: index === 0 ? {
+                                  label: {
+                                    show: true,
+                                  },
+                                } : {},
+                              })),
+                            }, ],
+                            grid: {
+                              bottom: 0,
+                              top: 0,
+                              left: 0,
+                              right: 0,
+                              containLabel: false
+                            },
+                          };
+
+                          leaveTypeChart.setOption(option);
+
+                          window.addEventListener('resize', function() {
+                            leaveTypeChart.resize();
+                          });
+
+                        }
+                      </script>
                     </div>
                   </div>
 
@@ -118,16 +241,18 @@
 
                 <div class="carousel-item false">
 
-                  <div class="card" style="height: 27.5vh;">
+                  <div class="card" style="height: 35vh;">
+                    
+                    <div class="bg-holder d-block bg-card" style="background-image:url(/assets/img/spot-illustrations/32.png);background-position: top right;">
+                    </div>
                     <div class="card-body">
-                      <p>Hello world 1</p>
                     </div>
                   </div>
 
                 </div>
 
                 <div class="carousel-item false">
-                  <div class="card" style="height: 27.5vh;">
+                  <div class="card" style="height: 35vh;">
 
                     <div class="card-body">
                       <p>Hello world 2</p>
@@ -138,9 +263,9 @@
 
               </div>
               <div class="carousel-indicators">
-                <button class="active" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="0" aria-current="true" aria-label="Slide 1"></button>
-                <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="1" aria-label="Slide 2"></button>
-                <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="2" aria-label="Slide 3"></button>
+                <button class="active" type="button" data-bs-target="#carousel-2" data-bs-slide-to="0" aria-current="true" aria-label="Slide 1"></button>
+                <button type="button" data-bs-target="#carousel-2" data-bs-slide-to="1" aria-label="Slide 2"></button>
+                <button type="button" data-bs-target="#carousel-2" data-bs-slide-to="2" aria-label="Slide 3"></button>
               </div>
             </div>
           </div>
