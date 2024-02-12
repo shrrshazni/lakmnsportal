@@ -120,12 +120,31 @@ const userLeaveSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   annual: { type: Number, default: 14 },
   sick: { type: Number, default: 14 },
-  emergency: { type: Number, default: 0 },
-  paternity: { type: Number, default: 3 },
-  marriage: { type: Number, default: 3 },
-  bereavement: { type: Number, default: 3 },
+  emergency: {
+    leave: { type: Number, default: 0 },
+    taken: { type: Number, default: 0 }
+  },
+  paternity: {
+    leave: { type: Number, default: 3 },
+    taken: { type: Number, default: 0 }
+  },
+  marriage: {
+    leave: { type: Number, default: 3 },
+    taken: { type: Number, default: 0 }
+  },
+  bereavement: {
+    leave: { type: Number, default: 3 },
+    taken: { type: Number, default: 0 }
+  },
+  study: {
+    leave: { type: Number, default: 3 },
+    taken: { type: Number, default: 0 }
+  },
+  hajj: {
+    leave: { type: Number, default: 40 },
+    taken: { type: Number, default: 0 }
+  },
   unpaid: { type: Number, default: 0 },
-  hajj: { type: Number, default: 40 },
   special: { type: Number, default: 0 }
 });
 
@@ -320,8 +339,6 @@ app.get('/', isAuthenticated, async function (req, res) {
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-  console.log(sevenDaysAgo);
-  
   const activities = await Activity.find({
     department: user.department,
     date: { $gte: sevenDaysAgo }
@@ -338,6 +355,26 @@ app.get('/', isAuthenticated, async function (req, res) {
   });
   const otherTask = await Task.find({ assignee: { $ne: [user._id] } });
   const otherActivities = await Activity.find();
+
+  //   updating
+  //   const newUserLeaveData = {
+  //     user: user._id,
+  //     // Populate other fields as needed
+  //     annual: 15,
+  //     sick: 15,
+  //     emergency: { leave: 0, taken: 4 },
+  //     paternity: { leave: 3, taken: 1 },
+  //     marriage: { leave: 3, taken: 1 },
+  //     bereavement: { leave: 3, taken: 1 },
+  //     study: { leave: 5, taken: 2 },
+  //     hajj: { leave: 40, taken: 0 },
+  //     unpaid: 1,
+  //     special: 3
+  //   };
+
+  //   const newUserLeave = new UserLeave(newUserLeaveData);
+
+  //   newUserLeave.save();
 
   if (user) {
     res.render('home', {
@@ -363,6 +400,24 @@ app.get('/', isAuthenticated, async function (req, res) {
     });
   }
 });
+
+// FETCH API
+
+// ECHARTS
+
+app.get(
+  '/api/echarts/leaveType/:id',
+  isAuthenticated,
+  async function (req, res) {
+    const { id } = req.params;
+    const userLeave = await UserLeave.findOne({ user: id });
+
+    if (!userLeave) {
+      return res.status(404).json({ error: 'User leave data not found' });
+    }
+    res.json(userLeave);
+  }
+);
 
 // STAFF DETAILS
 

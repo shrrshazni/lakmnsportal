@@ -1,54 +1,11 @@
-<div class="card border h-100 w-100 overflow-hidden">
-
-    <div class="card-body px-5 position-relative">
-      <div class="d-flex justify-content-between">
-        <div class="badge badge-phoenix fs-10 badge-phoenix-primary mb-4"><span class="fa-solid fa-bell me-2"></span><span class="fw-bold">Notifications</span></div>
-        <a class="btn btn-link p-0 fs-9 fw-normal" role="button" href="/markAllAsRead">Mark all as read</a>
-      </div>
-      <div class="scrollbar-overlay">
-        <% if (notifications.length > 0) { %>
-        <% notifications.forEach(notification => { %>
-        <div class="px-2 px-sm-3 py-3 notification-card position-relative read border-bottom">
-          <div class="d-flex align-items-center justify-content-between position-relative">
-            <div class="d-flex">
-              <div class="avatar avatar-m status-online me-3">
-                <!-- Use the actual image source from your notification -->
-                <img class="rounded-circle border border-primary" src="<%= notification.sender.profile %>" alt="" />
-              </div>
-              <div class="flex-1 me-sm-3">
-                <h4 class="fs-9 text-body-emphasis"><%= notification.sender.fullname %></h4>
-                <p class="fs-9 text-body-highlight mb-2 mb-sm-3 fw-normal">
-                  <span class='me-1 mt-1 fs-10'>💬</span><%= notification.message %>
-                  <span class="text-body-quaternary text-opacity-75 fw-bold fs-10">&nbsp;<%= timeAgo(notification.timestamp) %></span>
-                </p>
-                <p class="text-body-secondary fs-9 mb-0">
-                  <span class="me-1 fas fa-clock"></span>
-                  <span class="fw-bold"><%= formatTime(notification.timestamp) %></span>
-                </p>
-              </div>
-            </div>
-            <div class="d-none d-sm-block">
-              <button class="btn fs-10 btn-sm dropdown-toggle dropdown-caret-none transition-none notification-dropdown-toggle" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
-                <span class="fas fa-ellipsis-h fs-10 text-body"></span>
-              </button>
-              <div class="dropdown-menu dropdown-menu-end py-2">
-                <a class="dropdown-item" href="/markAsRead/<%= notification._id %>">Mark as unread</a>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <% }); %>
-        <% } else { %>
-        <div class="px-2 px-sm-3 py-3">
-          <p>No notifications available.</p>
-        </div>
-        <% } %>
-      </div>
-
-      <div class="p-0 border-top border-translucent border-0 position-absolute start-0 bottom-0 w-100">
-        <div class="my-2 text-center fw-bold fs-10 text-body-tertiary text-opactity-85"><a class="fw-bolder" href="/">Notification history</a></div>
-      </div>
-    </div>
-
-  </div>
+var leaveTypeData = {
+    labels: ['Annual Leave', 'Sick Leave', 'Emergency Taken', 'Unpaid Taken', 'Special Taken'],
+    data: [
+      fetchLeaveTypeData.annual,
+      fetchLeaveTypeData.sick,
+      fetchLeaveTypeData.emergency.taken,
+      fetchLeaveTypeData.paternity.taken + fetchLeaveTypeData.marriage.taken + fetchLeaveTypeData.bereavement.taken + fetchLeaveTypeData.study.taken + fetchLeaveTypeData.hajj.taken,
+      fetchLeaveTypeData.unpaid,
+      fetchLeaveTypeData.special,
+    ],
+  };
