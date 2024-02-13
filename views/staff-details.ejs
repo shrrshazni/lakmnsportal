@@ -4,6 +4,7 @@
   <ol class="breadcrumb mb-0">
     <li class="breadcrumb-item"><a href="/">Dashboard</a></li>
     <li class="breadcrumb-item active">Staff Details</li>
+    <li class="breadcrumb-item active"><%= otherUser.fullname %></li>
   </ol>
 </nav>
 <div class="pb-9">
@@ -33,6 +34,7 @@
     </div>
   </div>
   <div class="row g-0 g-md-4 g-xl-6">
+
     <div class="col-md-5 col-lg-5 col-xl-4">
       <div class="sticky-leads-sidebar">
         <div class="lead-details-offcanvas bg-body scrollbar phoenix-offcanvas phoenix-offcanvas-fixed" id="productFilterColumn">
@@ -101,12 +103,12 @@
             </div>
           </div>
           <div class="mb-3">
-            <div class="carousel dashboard-carousel slide carousel-fade position-relative rounded-3" style="height: 35vh;" id="carousel-2">
+            <div class="carousel dashboard-carousel slide carousel-fade position-relative rounded-3" id="carousel-2">
               <div class="carousel-inner">
 
-                <div class="carousel-item active">
+                <div class="carousel-item active" style="height: 375px;">
 
-                  <div class="card" style="height: 35vh;">
+                  <div class="card" style="height: 375px;">
                     <div class="card-body">
                       <h5 class="text-body-emphasis text-nowrap">Leave Balances</h5>
                       <div class="mx-auto mt-n10" id="leave-type-chart-carousel" style="height:400px; width: 250px;"></div>
@@ -155,14 +157,14 @@
                         function updateLeaveTypeChart(fetchLeaveTypeData, echartsId) {
 
                           var leaveTypeData = {
-                            labels: ['Annual Leave Balance', 'Sick Leave Balance', 'Emergency Leave Taken', 'Unpaid Leave Taken', 'Special Leave Taken'],
+                            labels: ['Annual Leave Balance', 'Sick Leave Balance', 'Emergency Leave Taken', 'Special Leave Taken', 'Unpaid Leave Taken'],
                             data: [
-                              fetchLeaveTypeData.annual,
-                              fetchLeaveTypeData.sick,
+                              fetchLeaveTypeData.annual.leave - fetchLeaveTypeData.annual.taken,
+                              fetchLeaveTypeData.sick.leave - fetchLeaveTypeData.sick.taken,
                               fetchLeaveTypeData.emergency.taken,
-                              fetchLeaveTypeData.paternity.taken + fetchLeaveTypeData.marriage.taken + fetchLeaveTypeData.bereavement.taken + fetchLeaveTypeData.study.taken + fetchLeaveTypeData.hajj.taken,
-                              fetchLeaveTypeData.unpaid,
-                              fetchLeaveTypeData.special,
+                              fetchLeaveTypeData.paternity.taken + fetchLeaveTypeData.marriage.taken + fetchLeaveTypeData.bereavement.taken + fetchLeaveTypeData.study.taken + fetchLeaveTypeData.hajj.taken + fetchLeaveTypeData.special.taken,
+                              fetchLeaveTypeData.unpaid.taken,
+                              fetchLeaveTypeData.special.taken,
                             ],
                           };
                           // Initialize ECharts instance
@@ -241,8 +243,8 @@
 
                 <div class="carousel-item false">
 
-                  <div class="card" style="height: 35vh;">
-                    
+                  <div class="card" style="height: 375px;">
+
                     <div class="bg-holder d-block bg-card" style="background-image:url(/assets/img/spot-illustrations/32.png);background-position: top right;">
                     </div>
                     <div class="card-body">
@@ -251,10 +253,10 @@
 
                 </div>
 
-                <div class="carousel-item false">
-                  <div class="card" style="height: 35vh;">
+                <div class="carousel-item false d-none">
+                  <div class="card" style="height: 375px;">
 
-                    <div class="card-body">
+                    <div class="card-body d-none">
                       <p>Hello world 2</p>
                     </div>
 
@@ -265,7 +267,7 @@
               <div class="carousel-indicators">
                 <button class="active" type="button" data-bs-target="#carousel-2" data-bs-slide-to="0" aria-current="true" aria-label="Slide 1"></button>
                 <button type="button" data-bs-target="#carousel-2" data-bs-slide-to="1" aria-label="Slide 2"></button>
-                <button type="button" data-bs-target="#carousel-2" data-bs-slide-to="2" aria-label="Slide 3"></button>
+                <button class="d-none" type="button" data-bs-target="#carousel-2" data-bs-slide-to="2" aria-label="Slide 3"></button>
               </div>
             </div>
           </div>
@@ -381,7 +383,7 @@
 
               <% }); %>
               <% } else { %>
-              <p>There is no task assigned to you.</p>
+              <p class="white-space-nowrap fs-9">There is no task assigned yet</p>
               <% } %>
             </div>
 
@@ -413,33 +415,60 @@
 
           </div>
 
-          <div class="mb-8" style="min-height: 25vh;">
-            <div class="d-flex justify-content-between align-items-center mb-4" id="scrollspyActivities">
-              <h2 class="mb-0">Activities</h2>
-            </div>
-            <div class="border-top border-bottom border-translucent" id="leadDetailsTable" data-list='{"valueNames":["title","description","date","time"],"page":5,"pagination":true}'>
-              <div class="table-responsive scrollbar mx-n1 px-1">
+          <div class="mb-8" style="min-height: 25vh;" id="scrollspyActivities">
+            <div class="border-bottom border-translucent" data-list='{"valueNames":["title","type","description","date","time"],"page":5,"pagination":true}'>
+              <div class="d-md-flex justify-content-between align-items-center mb-4">
+                <h2 class="col-12 col-md-auto mb-3">Activities</h2>
+                <div class="col-12 col-md-auto">
+                  <div class="search-box">
+                    <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
+                      <input class="form-control search-input search form-control-sm" type="search" placeholder="Search activities" aria-label="Search" />
+                      <span class="fas fa-search search-box-icon"></span>
+
+                    </form>
+                  </div>
+                </div>
+              </div>
+
+              <div class="table-responsive scrollbar mx-n1 px-1 border-top">
                 <table class="table fs-9 mb-0">
                   <thead>
                     <tr>
-                      <th class="sort white-space-nowrap align-middle pe-3 ps-0 text-uppercase" scope="col" data-sort="title" style="width:20%;">title</th>
-                      <th class="sort align-middle pe-6 text-uppercase text-start" scope="col" data-sort="description" style="width:30%; ">Description</th>
-                      <th class="sort align-middle text-start text-uppercase" scope="col" data-sort="date" style="width:15%; ">Date</th>
-                      <th class="sort align-middle ps-0 text-start text-uppercase" scope="col" data-sort="time" style="width:15%; ">Time</th>
+                      <th class="sort white-space-nowrap align-middle pe-3 ps-0 text-uppercase" scope="col" data-sort="title" style="width:25%;min-width: 125px;">Title</th>
+                      <th class="sort align-middle ps-0 text-start text-uppercase" scope="col" data-sort="type" style="width:20%;min-width: 125px;">Type</th>
+                      <th class="sort align-middle pe-6 text-uppercase text-start" scope="col" data-sort="description" style="width:30%;min-width: 200px; ">Description</th>
+                      <th class="sort align-middle ps-0 text-start text-uppercase" scope="col" data-sort="date" style="width:15%;min-width: 100px;">Date</th>
+                      <th class="sort align-middle ps-0 text-start text-uppercase" scope="col" data-sort="time" style="width:15%;min-width: 100px;">Time</th>
+                      <th class="sort align-middle text-end" scope="col" style="width: 10%"></th>
                     </tr>
                   </thead>
-                  <tbody class="list" id="lead-details-table-body">
+                  <tbody class="list">
                     <% if(activities && activities.length > 0){ %>
                     <% activities.forEach(item => { %>
                     <tr class="position-static">
-                      <td class="title align-middle white-space-nowrap py-2 ps-0"><a class="fw-semibold text-primary" href="#!"><%= item.title %></a></td>
-                      <td class="description align-middle white-space-nowrap text-start fw-bold text-body-tertiary py-2 text-start pe-6"><%= item.description%></td>
-                      <td class="date align-middle text-body-tertiary text-start py-2"><%= item.date.toLocaleDateString('en-UK', { day: '2-digit', month: 'short', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></td>
-                      <td class="time align-middle text-body-tertiary text-start"><%= item.date.toLocaleTimeString('en-UK', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone : 'Asia/Kuala_Lumpur' }) %></td>
+                      <td class="title align-middle white-space-nowrap py-4 ps-0 fw-bold text-primary"><%= item.title %></td>
+                      <td class="type align-middle text-body-tertiary fw-bold text-start py-2 ps-0">TYPE TBD</td>
+                      <td class="description align-middle white-space-nowrap text-start fw-bold text-body-tertiary py-2 text-start ps-2"><%= item.description%></td>
+                      <td class="date align-middle text-body-tertiary text-start py-2 ps-0"><%= item.date.toLocaleDateString('en-UK', { day: '2-digit', month: 'short', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></td>
+                      <td class="time align-middle text-body-tertiary text-start py-2 ps-0"><%= item.date.toLocaleTimeString('en-UK', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone : 'Asia/Kuala_Lumpur' }) %></td>
+                      <td class="align-middle text-end white-space-nowrap ps-0 action">
+                        <div class="font-sans-serif btn-reveal-trigger position-static">
+                          <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs--2" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
+                            <span class="fas fa-ellipsis-h fs-9"></span>
+                          </button>
+                          <div class="dropdown-menu dropdown-menu-end py-2">
+                            <a class="dropdown-item" href="/">View</a>
+                          </div>
+                        </div>
+                      </td>
                     </tr>
                     <% }); %>
                     <% }else{ %>
-                    <p>No activity for <%= otherUser.fullname %></p>
+                    <tr class="position-static">
+                      <td class="align-middle white-space-nowrap border-bottom-0">
+                        <p>No activity detected from <span class="fw-bold text-primary"><%= otherUser.fullname %></span></p>
+                      </td>
+                    </tr>
                     <% } %>
                   </tbody>
                 </table>
@@ -457,23 +486,34 @@
             </div>
           </div>
 
-          <div class="mb-8" style="min-height: 25vh;">
-            <h2 class="mb-4" id="scrollspyLeaves">Leave</h2>
-            <div id="leaveHistory" data-list='{"valueNames":["type","startdate","returndate","status"],"page":6,"pagination":true}'>
+          <div class="mb-8" style="min-height: 25vh;" id="scrollspyLeaves">
+            <div data-list='{"valueNames":["type","startdate","returndate","status"],"page":6,"pagination":true}'>
+              <div class="d-md-flex justify-content-between align-items-center mb-4">
+                <h2 class="col-12 col-md-auto mb-3">Leave</h2>
+                <div class="col-12 col-md-auto">
+                  <div class="search-box">
+                    <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
+                      <input class="form-control search-input search form-control-sm" type="search" placeholder="Search leave" aria-label="Search" />
+                      <span class="fas fa-search search-box-icon"></span>
+
+                    </form>
+                  </div>
+                </div>
+              </div>
               <div class="table-responsive scrollbar">
                 <table class="table fs-9 mb-0 border-top border-200">
                   <thead>
                     <tr>
-                      <th class="sort white-space-nowrap align-middle ps-0" scope="col" data-sort="type" style="width: 15%">
+                      <th class="sort white-space-nowrap align-middle ps-0" scope="col" data-sort="type" style="width:20%;min-width: 150px;">
                         TYPE
                       </th>
-                      <th class="sort align-middle ps-3" scope="col" data-sort="startdate" style="width: 15%">
+                      <th class="sort align-middle ps-3" scope="col" data-sort="startdate" style="width:15%;min-width: 100px;">
                         START DATE
                       </th>
-                      <th class="sort align-middle ps-3" scope="col" data-sort="returndate" style="width: 15%">
+                      <th class="sort align-middle ps-3" scope="col" data-sort="returndate" style="width:15%;min-width: 100px;">
                         RETURN DATE
                       </th>
-                      <th class="sort align-middle text-end" scope="col" data-sort="status" style="width: 10%">
+                      <th class="sort align-middle text-end" scope="col" data-sort="status" style="width:20%;min-width: 125px;">
                         STATUS
                       </th>
                       <th class="sort align-middle text-end" scope="col" style="width: 10%"></th>
@@ -491,7 +531,7 @@
                       %>
 
                   <!-- table content -->
-                  <tbody class="list" id="project-list-table-body">
+                  <tbody class="list">
                     <% if (leave && leave.length>0) { %>
                     <!-- table item -->
                     <% leave.forEach(function(leaves) { %>
@@ -520,7 +560,11 @@
                       </td>
                     </tr>
                     <%  }); %> <% } else { %>
-                    <p>No leave submitted</p>
+                    <tr class="position-static">
+                      <td class="align-middle time white-space-nowrap ps-0 border-bottom-0">
+                        <p>No leave submitted from <span class="fw-bold text-primary"><%= otherUser.fullname %></span></p>
+                      </td>
+                    </tr>
                     <% } %>
                   </tbody>
                 </table>
@@ -543,8 +587,8 @@
             </div>
           </div>
 
-          <div>
-            <h2 class="mb-4" id="scrollspyAttachments">Attachments</h2>
+          <div id="scrollspyAttachments">
+            <h2 class="mb-4">Attachments</h2>
 
             <%
               const formatDateFile = (date) => {
@@ -622,7 +666,7 @@
             <% } %>
             <% }); %>
             <% }else { %>
-            <p>There is no file uploaded.</p>
+            <p class="white-space-nowrap fs-9">There is no file uploaded yet</p>
             <% } %>
 
 

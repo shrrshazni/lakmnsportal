@@ -26,25 +26,52 @@
 <div class="row">
   <div class="col-12 col-lg-9">
 
-    <div class="mb-5">
+    <div class="border p-3 mb-3 rounded-3">
+      <form class="dropzone dropzone-multiple p-3 mb-4 bg-subtle" id="dropzone" data-dropzone="data-dropzone" action="/files/upload" data-options='{"url":"/files/upload","paramName": "file"}'>
+        <div class="dz-message" data-dz-message="data-dz-message">
+          <img class="me-2" src="../../../assets/img/icons/cloud-upload.svg" width="25" alt="" />Drop your files here
+        </div>
+        <div class="dz-preview dz-preview-multiple m-0 d-flex flex-column">
+          <div class="d-flex mb-3 pb-3 border-bottom media">
+            <div class="border border-300 p-1 rounded-2 me-2">
+              <img class="rounded-2 dz-image" src="../../../assets/img/icons/file.png" alt="..." data-dz-thumbnail="data-dz-thumbnail" />
+            </div>
+            <div class="flex-1 d-flex flex-between-center">
+              <div>
+                <h6 data-dz-name="data-dz-name"></h6>
+                <div class="d-flex align-items-center">
+                  <p class="mb-0 fs-9 text-400 lh-1" data-dz-size="data-dz-size"></p>
+                  <div class="dz-progress ms-n1" style="margin-top: 0.1rem;">
+                    <span class="dz-upload" data-dz-uploadprogress=""></span>
+                  </div>
+                </div>
+                <span class="fs-9 text-danger" data-dz-errormessage="data-dz-errormessage"></span>
+              </div>
+              <div class="dropdown font-sans-serif">
+                <button class="btn btn-link text-600 btn-sm dropdown-toggle btn-reveal dropdown-caret-none" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                  <span class="fas fa-ellipsis-h"></span>
+                </button>
+                <div class="dropdown-menu dropdown-menu-end border py-2">
+                  <a class="dropdown-item" href="#!" data-dz-remove="data-dz-remove">Remove File</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <input class="d-none" type="text" name="uuid" value="<%= uuid %>">
+      </form>
+    </div>
 
-      <div class="card mb-3">
-        <div class="card-body">
-          <h5 class="mb-3">User Leave Balance</h5>
-          <% if (userLeave) { %>
-          <ul class="list-group">
-            <% const leaveTypes = ['annual', 'sick', 'paternity', 'marriage', 'bereavement', 'hajj']; %>
-            <% leaveTypes.forEach(type => { %>
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-              <%= type.charAt(0).toUpperCase() + type.slice(1) %>
-              <span class="badge bg-secondary"><%= userLeave[type] %></span>
-            </li>
-            <% }); %>
-          </ul>
-          <% } %>
+    <div class="mb-6">
+      <div class="row g-3 justify-content-end">
+        <div class="col-auto">
+          <button class="btn btn-phoenix-secondary loading-button" type="submit" id="uploadFiles">
+            <div class="content-button">
+              <span><i class="fa fa-upload me-2" aria-hidden="true"></i>Upload Files</span>
+            </div>
+          </button>
         </div>
       </div>
-
     </div>
 
     <!-- leave form -->
@@ -55,7 +82,7 @@
             type = 'Select leave type';
         }
       %>
-      <div class="col-sm-6 col-md-8">
+      <div class="col-sm-6 col-md-12">
         <div class="form-floating">
           <select class="form-select <%= validationType %>" id="floatingSelectTask" name="type">
             <option selected="selected" value="<%= type %>"><%= type %></option>
@@ -78,9 +105,9 @@
         </div>
       </div>
 
-      <div class="col-sm-6 col-md-4">
+      <div class="col-sm-6 col-md-4 d-none">
         <div class="form-floating">
-          <input class="form-control" id="floatingInputGrid" type="text" name="username" placeholder="" value="<%= user.username %>" disabled />
+          <input class="form-control" id="floatingInputGrid" type="hidden" name="username" placeholder="" value="<%= user.username %>" disabled />
           <label for="floatingInputGrid">Username</label>
         </div>
       </div>
@@ -127,7 +154,7 @@
       <div class="col-12 gy-6">
         <div class="row g-3 justify-content-end">
           <div class="col-auto">
-            <a role="button" class="btn btn-phoenix-primary bg-transparent border border-0 mx-2" data-bs-toggle="modal" data-bs-target="#addFiles">Add files +</a>
+            <a role="button" class="btn btn-phoenix-tertiary" href="/files/delete/cancel/<%= uuid %>">Cancel</a>
           </div>
           <div class="col-auto">
             <button class="btn btn-primary w-100 mb-3 loading-button" type="submit" name="submit">
@@ -139,249 +166,336 @@
 
     </form>
 
-    <!-- current leaves -->
-    <div class="bg-body-emphasis min-vh-50 mb-6 p-5">
-      <div id="leaveHistory" data-list='{"valueNames":["type","startdate","returndate","status"],"page":6,"pagination":true}'>
-        <div class="row g-3 justify-content-between align-items-end mb-4">
-          <div class="col-auto">
-            <h3>Current Leaves</h3>
-            <p class="text-body-tertiary lh-sm mb-0">Presently approved time off granted</p>
-          </div>
-          <div class="col-12 col-sm-auto">
-            <div class="d-flex align-items-center">
-              <div class="search-box me-0">
-                <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
-                  <input class="form-control search-input search" type="search" placeholder="Search" aria-label="Search" />
-                  <span class="fas fa-search search-box-icon"></span>
-                </form>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="table-responsive scrollbar">
-          <table class="table fs--1 mb-0 border-top border-200">
-            <thead>
-              <tr>
-                <th class="sort white-space-nowrap align-middle ps-0" scope="col" data-sort="type" style="width: 15%">
-                  TYPE
-                </th>
-                <th class="sort align-middle ps-3" scope="col" data-sort="startdate" style="width: 15%">
-                  START DATE
-                </th>
-                <th class="sort align-middle ps-3" scope="col" data-sort="returndate" style="width: 15%">
-                  RETURN DATE
-                </th>
-                <th class="sort align-middle text-end" scope="col" data-sort="status" style="width: 10%">
-                  STATUS
-                </th>
-                <th class="sort align-middle text-end" scope="col" style="width: 10%"></th>
-              </tr>
-            </thead>
-
-            <% 
-            function formatDate(inputDate) {
-              const day = String(inputDate.getDate()).padStart(2, '0');
-              const month = String(inputDate.getMonth() + 1).padStart(2, '0');
-              const year = inputDate.getFullYear();
-            
-              return `${day}/${month}/${year}`;
-            }
-            %>
-
-            <!-- table content -->
-            <tbody class="list" id="project-list-table-body">
-              <% if (leave && Array.isArray(leave)) { %>
-              <!-- table item -->
-              <% leave.forEach(function(leaves) { %>
-              <tr class="position-static">
-                <td class="align-middle time white-space-nowrap ps-0 type py-4">
-                  <a class="fw-bold fs-0" href="/leave/details/<%= leaves.uuid %>"><%= leaves.type %></a>
-                </td>
-                <td class="align-middle white-space-nowrap startdate ps-3 py-4">
-                  <p class="mb-0 fs--1 text-900"><%= formatDate(leaves.date.start) %></p>
-                </td>
-                <td class="align-middle white-space-nowrap returndate ps-3 py-4">
-                  <p class="mb-0 fs--1 text-900"><%= formatDate(leaves.date.return) %></p>
-                </td>
-                <td class="align-middle white-space-nowrap text-end status">
-                  <span class="badge badge-phoenix fs--2 badge-phoenix-success"><%= leaves.status %></span>
-                </td>
-                <td class="align-middle text-end white-space-nowrap pe-0 action">
-                  <div class="font-sans-serif btn-reveal-trigger position-static">
-                    <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs--2" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
-                      <span class="fas fa-ellipsis-h fs--2"></span>
-                    </button>
-                    <div class="dropdown-menu dropdown-menu-end py-2">
-                      <a class="dropdown-item" href="/leave/details/<%= leaves.uuid %>">View</a>
-                    </div>
-                  </div>
-                </td>
-              </tr>
-              <%  }); %> <% } else { %>
-              <tr>
-                <td colspan="7">No leaves submitted.</td>
-              </tr>
-              <% } %>
-            </tbody>
-          </table>
-        </div>
-        <div class="d-flex flex-wrap align-items-center justify-content-between py-3 pe-0 fs--1 border-bottom border-200">
-          <div class="d-flex">
-            <p class="mb-0 d-none d-sm-block me-3 fw-semi-bold text-900" data-list-info="data-list-info"></p>
-            <a class="fw-semi-bold" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semi-bold d-none" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
-          </div>
-          <div class="d-flex">
-            <button class="page-link" data-list-pagination="prev">
-              <span class="fas fa-chevron-left"></span>
-            </button>
-            <ul class="mb-0 pagination"></ul>
-            <button class="page-link pe-0" data-list-pagination="next">
-              <span class="fas fa-chevron-right"></span>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
   </div>
 
   <div class="col-12 col-lg-3 mb-6">
 
-    <div class="card h-100 scrollbar-overlay overflow-y-auto">
-      <div class="card-body">
-        <div class="card-title mb-1">
-          <h3 class="text-body-emphasis">Activity</h3>
-        </div>
-        <p class="text-body-tertiary mb-4">Department's recent leave activity</p>
-        <div class="timeline-vertical timeline-with-details">
-          <div class="timeline-item position-relative">
-            <div class="row g-md-3">
-              <div class="col-12 col-md-auto d-flex">
-                <div class="timeline-item-date order-1 order-md-0 me-md-4">
-                  <p class="fs-10 fw-semibold text-body-tertiary text-opacity-85 text-end">01 DEC, 2023<br class="d-none d-md-block" /> 10:30 AM</p>
-                </div>
-                <div class="timeline-item-bar position-md-relative me-3 me-md-0">
-                  <div class="icon-item icon-item-sm rounded-7 shadow-none bg-primary-subtle"><span class="fa-solid fa-chess text-primary-dark fs-10"></span></div><span class="timeline-bar border-end border-dashed"></span>
-                </div>
-              </div>
-              <div class="col">
-                <div class="timeline-item-content ps-6 ps-md-3">
-                  <h5 class="fs-9 lh-sm">Annual Leave</h5>
-                  <p class="fs-9">by <a class="fw-semibold" href="#!">Shantinon Mekalan</a></p>
-                  <p class="fs-9 text-body-secondary mb-5">The user requested leave, specifying the duration and reason, which was subsequently reviewed and approved, marking an authorized absence period.</p>
-                </div>
-              </div>
+    <div class="mb-5">
+
+      <div class="card mb-3">
+        <div class="card-body">
+          <h5 class="mb-3">Leave Balances</h5>
+
+          <div class="mx-auto mt-n5" id="leave-type-chart-carousel" style="height:300px; width: 250px;"></div>
+
+          <script>
+            // take the root of the colour from css for echarts
+            const style = getComputedStyle(document.body);
+            const theme = {
+              primary: style.getPropertyValue('--phoenix-primary'),
+              secondary: style.getPropertyValue('--phoenix-secondary'),
+              success: style.getPropertyValue('--phoenix-success'),
+              info: style.getPropertyValue('--phoenix-info'),
+              warning: style.getPropertyValue('--phoenix-warning'),
+              danger: style.getPropertyValue('--phoenix-danger'),
+              bg_primary_subtle: style.getPropertyValue('--phoenix-primary-bg-subtle'),
+              tertiary: style.getPropertyPriority('--phoenix-tertiary-color'),
+              light: style.getPropertyValue('--phoenix-light'),
+              dark: style.getPropertyValue('--phoenix-dark')
+            };
+
+            //   take css class color based on their property color/bg-colour for echarts
+            function getColor(className, property) {
+              var element = document.createElement('div');
+              element.className = className;
+              document.body.appendChild(element);
+
+              var computedStyle = window.getComputedStyle(element);
+              var color = computedStyle.getPropertyValue(property);
+
+              document.body.removeChild(element);
+
+              return color;
+            }
+          </script>
+
+          <script>
+            const leaveTypeURL = '/api/echarts/leaveType/<%= user._id %>';
+
+            fetch(leaveTypeURL)
+              .then(response => response.json())
+              .then(fetchLeaveTypeData => {
+                updateLeaveTypeChart(fetchLeaveTypeData, 'leave-type-chart-carousel');
+              })
+              .catch(error => {
+                console.error('Error fetching user leave data:', error);
+              });
+
+            function updateLeaveTypeChart(fetchLeaveTypeData, echartsId) {
+
+              var leaveTypeData = {
+                labels: ['Annual Leave Balance', 'Sick Leave Balance', 'Emergency Leave Taken', 'Special Leave Taken', 'Unpaid Leave Taken'],
+                data: [
+                  fetchLeaveTypeData.annual.leave - fetchLeaveTypeData.annual.taken,
+                  fetchLeaveTypeData.sick.leave - fetchLeaveTypeData.sick.taken,
+                  fetchLeaveTypeData.emergency.taken,
+                  fetchLeaveTypeData.paternity.taken + fetchLeaveTypeData.marriage.taken + fetchLeaveTypeData.bereavement.taken + fetchLeaveTypeData.study.taken + fetchLeaveTypeData.hajj.taken + fetchLeaveTypeData.special.taken,
+                  fetchLeaveTypeData.unpaid.taken,
+                  fetchLeaveTypeData.special.taken,
+                ],
+              };
+
+              // Initialize ECharts instance
+              var leaveTypeChart = echarts.init(document.getElementById(echartsId), null, {
+                devicePixelRatio: window.devicePixelRatio > 1 ? 2 : 1,
+                renderer: 'canvas',
+                width: 'auto',
+                height: 'auto'
+              });
+
+              var option = {
+                color: [getColor('bg-info-light', 'background-color'), getColor('bg-warning-light', 'background-color'), getColor('bg-danger-light', 'background-color'), getColor('bg-success-light', 'background-color'), getColor('bg-primary', 'background-color')],
+                series: [{
+                  name: 'Tasks assigned to me',
+                  type: 'pie',
+                  radius: ['70%', '85%'],
+                  startAngle: 30,
+                  avoidLabelOverlap: false,
+                  label: {
+                    show: false,
+                    position: 'center',
+                    formatter: '{x|{c} } \n {y|{b}}',
+                    rich: {
+                      x: {
+                        fontSize: 31.25,
+                        fontWeight: 800,
+                        color: '#3874ff',
+                        padding: [0, 0, 5, 15]
+                      },
+                      y: {
+                        fontSize: 12,
+                        color: '#3874ff',
+                        fontWeight: 600
+                      }
+                    }
+                  },
+                  emphasis: {
+                    label: {
+                      show: true
+                    }
+                  },
+                  labelLine: {
+                    show: false
+                  },
+                  data: leaveTypeData.labels.map((label, index) => ({
+                    value: leaveTypeData.data[index],
+                    name: label,
+                    emphasis: index === 0 ? {
+                      label: {
+                        show: true,
+                      },
+                    } : {},
+                  })),
+                }, ],
+                grid: {
+                  bottom: 0,
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  containLabel: false
+                },
+              };
+
+              leaveTypeChart.setOption(option);
+
+              window.addEventListener('resize', function() {
+                leaveTypeChart.resize();
+              });
+
+            }
+          </script>
+
+          <% 
+           const annual = ((userLeave.annual.leave - userLeave.annual.taken)/ userLeave.annual.leave) * 100;
+           const sick = ((userLeave.sick.leave - userLeave.sick.taken)/ userLeave.sick.leave) * 100;
+           const emergency = ((userLeave.emergency.taken)/ 7) * 100;
+           const marriage = (userLeave.marriage.taken/1) * 100;
+           const paternity = (userLeave.paternity.taken/3) * 100;
+           const study = (userLeave.study.taken/3) * 100;
+           const bereavement = (userLeave.bereavement.taken/3) * 100;
+           const hajj = (userLeave.hajj.taken/1) * 100;
+           const unpaid = (userLeave.unpaid.taken/10) * 100;
+          %>
+
+          <div class="align-items-center justify-content-between d-flex mb-0">
+
+            <div class="d-flex align-items-center mb-1">
+              <span class="d-inline-block bg-info-light bullet-item me-2"></span>
+              <p class="mb-0 fw-semibold text-body lh-sm flex-1">Annual Leave Balance</p>
             </div>
-          </div>
-          <div class="timeline-item position-relative">
-            <div class="row g-md-3">
-              <div class="col-12 col-md-auto d-flex">
-                <div class="timeline-item-date order-1 order-md-0 me-md-4">
-                  <p class="fs-10 fw-semibold text-body-tertiary text-opacity-85 text-end">03 JAN, 2023<br class="d-none d-md-block" /> 12:45 PM</p>
-                </div>
-                <div class="timeline-item-bar position-md-relative me-3 me-md-0">
-                  <div class="icon-item icon-item-sm rounded-7 shadow-none bg-primary-subtle"><span class="fa-solid fa-dove text-primary-dark fs-10"></span></div><span class="timeline-bar border-end border-dashed"></span>
-                </div>
+
+            <div style="position: relative;">
+              <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:<%= annual %>">
+                <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
+                  <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
+                  <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
+                </svg>
               </div>
-              <div class="col">
-                <div class="timeline-item-content ps-6 ps-md-3">
-                  <h5 class="fs-9 lh-sm">Sick Leave</h5>
-                  <p class="fs-9">by <a class="fw-semibold" href="#!">Bookworm22</a></p>
-                  <p class="fs-9 text-body-secondary mb-5">Employee submitted sick leave request, providing details on illness. After review, the leave was approved, allowing time off for recovery</p>
-                </div>
-              </div>
+              <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(-10%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.annual.leave - userLeave.annual.taken %></span>
             </div>
+
           </div>
-          <div class="timeline-item position-relative">
-            <div class="row g-md-3">
-              <div class="col-12 col-md-auto d-flex">
-                <div class="timeline-item-date order-1 order-md-0 me-md-4">
-                  <p class="fs-10 fw-semibold text-body-tertiary text-opacity-85 text-end">15 DEC, 2023<br class="d-none d-md-block" /> 2:30 AM</p>
-                </div>
-                <div class="timeline-item-bar position-md-relative me-3 me-md-0">
-                  <div class="icon-item icon-item-sm rounded-7 shadow-none bg-primary-subtle"><span class="fa-solid fa-dungeon text-primary-dark fs-10"></span></div>
-                </div>
-              </div>
-              <div class="col">
-                <div class="timeline-item-content ps-6 ps-md-3">
-                  <h5 class="fs-9 lh-sm">Hajj Leave</h5>
-                  <p class="fs-9">by <a class="fw-semibold" href="#!">Sharuka Nijibum</a></p>
-                  <p class="fs-9 text-body-secondary mb-0">Employee requested Hajj leave for 40 days, citing religious pilgrimage. The request was reviewed and approved, allowing dedicated time off</p>
-                </div>
-              </div>
+
+          <div class="align-items-center justify-content-between d-flex mb-0 mt-n2">
+
+            <div class="d-flex align-items-center mb-1">
+              <span class="d-inline-block bg-warning-light bullet-item me-2"></span>
+              <p class="mb-0 fw-semibold text-body lh-sm flex-1">Sick Leave Balance</p>
             </div>
+
+            <div style="position: relative;">
+              <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:<%= sick %>">
+                <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
+                  <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
+                  <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
+                </svg>
+              </div>
+
+              <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(-10%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.sick.leave - userLeave.sick.taken %></span>
+            </div>
+
           </div>
+
+          <div class="align-items-center justify-content-between d-flex mb-0 mt-n2">
+
+            <div class="d-flex align-items-center mb-1">
+              <span class="d-inline-block bg-danger-light bullet-item me-2"></span>
+              <p class="mb-0 fw-semibold text-body lh-sm flex-1">Emergency Leave Taken</p>
+            </div>
+
+            <div style="position: relative;">
+              <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:<%= emergency %>">
+                <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
+                  <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
+                  <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
+                </svg>
+              </div>
+              <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.emergency.taken %></span>
+            </div>
+
+          </div>
+
+          <div class="align-items-center justify-content-between d-flex mb-0 mt-n2">
+
+            <div class="d-flex align-items-center mb-1">
+              <span class="d-inline-block bg-success-light bullet-item me-2"></span>
+              <p class="mb-0 fw-semibold text-body lh-sm flex-1">Marriage Leave Taken</p>
+            </div>
+
+            <div style="position: relative;">
+              <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:<%= marriage %>">
+                <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
+                  <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
+                  <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
+                </svg>
+              </div>
+              <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.marriage.taken %></span>
+            </div>
+
+          </div>
+
+          <div class="align-items-center justify-content-between d-flex mb-0 mt-n2">
+
+            <div class="d-flex align-items-center mb-1">
+              <span class="d-inline-block bg-success-light bullet-item me-2"></span>
+              <p class="mb-0 fw-semibold text-body lh-sm flex-1">Paternity Leave Taken</p>
+            </div>
+
+            <div style="position: relative;">
+              <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:<%= paternity %>">
+                <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
+                  <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
+                  <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
+                </svg>
+              </div>
+              <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.paternity.taken %></span>
+            </div>
+
+          </div>
+
+          <div class="align-items-center justify-content-between d-flex mb-0 mt-n2">
+
+            <div class="d-flex align-items-center mb-1">
+              <span class="d-inline-block bg-success-light bullet-item me-2"></span>
+              <p class="mb-0 fw-semibold text-body lh-sm flex-1">Study Leave Taken</p>
+            </div>
+
+            <div style="position: relative;">
+              <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:<%= study %>">
+                <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
+                  <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
+                  <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
+                </svg>
+              </div>
+              <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.study.taken %></span>
+            </div>
+
+          </div>
+
+          <div class="align-items-center justify-content-between d-flex mb-0 mt-n2">
+
+            <div class="d-flex align-items-center mb-1">
+              <span class="d-inline-block bg-success-light bullet-item me-2"></span>
+              <p class="mb-0 fw-semibold text-body lh-sm flex-1">Hajj Leave Taken</p>
+            </div>
+
+            <div style="position: relative;">
+              <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:<%= hajj %>">
+                <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
+                  <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
+                  <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
+                </svg>
+              </div>
+              <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.hajj.taken %></span>
+            </div>
+
+          </div>
+
+          <div class="align-items-center justify-content-between d-flex mb-0 mt-n2">
+
+            <div class="d-flex align-items-center mb-1">
+              <span class="d-inline-block bg-success-light bullet-item me-2"></span>
+              <p class="mb-0 fw-semibold text-body lh-sm flex-1">Bereavement Leave Taken</p>
+            </div>
+
+            <div style="position: relative;">
+              <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:<%= bereavement %>">
+                <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
+                  <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
+                  <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
+                </svg>
+              </div>
+              <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.bereavement.taken %></span>
+            </div>
+
+          </div>
+
+          <div class="align-items-center justify-content-between d-flex mb-0 mt-n2">
+
+            <div class="d-flex align-items-center mb-1">
+              <span class="d-inline-block bg-primary bullet-item me-2"></span>
+              <p class="mb-0 fw-semibold text-body lh-sm flex-1">Unpaid Leave Taken</p>
+            </div>
+
+            <div style="position: relative;">
+              <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:<%= unpaid %>">
+                <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
+                  <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
+                  <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
+                </svg>
+              </div>
+              <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.unpaid.taken %></span>
+            </div>
+
+          </div>
+
         </div>
       </div>
+
     </div>
+
   </div>
 
-</div>
-
-
-
-
-<!-- Modal -->
-<div class="modal fade" id="addFiles" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-md">
-    <div class="modal-content">
-      <div class="modal-header border border-0">
-        <h5 class="modal-title" id="filesUpload">
-          Upload Files
-        </h5>
-        <button class="btn p-1" type="button" data-bs-dismiss="modal" aria-label="Close">
-          <span class="fas fa-times fs-9"></span>
-        </button>
-      </div>
-
-      <div class="modal-body p-3">
-        <form class="dropzone dropzone-multiple p-3 mb-4 bg-subtle" id="dropzone" data-dropzone="data-dropzone" action="/files/upload" data-options='{"url":"/files/upload","paramName": "file"}'>
-          <div class="dz-message" data-dz-message="data-dz-message">
-            <img class="me-2" src="../../../assets/img/icons/cloud-upload.svg" width="25" alt="" />Drop your files here
-          </div>
-          <div class="dz-preview dz-preview-multiple m-0 d-flex flex-column">
-            <div class="d-flex mb-3 pb-3 border-bottom media">
-              <div class="border border-300 p-1 rounded-2 me-2">
-                <img class="rounded-2 dz-image" src="../../../assets/img/icons/file.png" alt="..." data-dz-thumbnail="data-dz-thumbnail" />
-              </div>
-              <div class="flex-1 d-flex flex-between-center">
-                <div>
-                  <h6 data-dz-name="data-dz-name"></h6>
-                  <div class="d-flex align-items-center">
-                    <p class="mb-0 fs-9 text-400 lh-1" data-dz-size="data-dz-size"></p>
-                    <div class="dz-progress ms-n1" style="margin-top: 0.1rem;">
-                      <span class="dz-upload" data-dz-uploadprogress=""></span>
-                    </div>
-                  </div>
-                  <span class="fs-9 text-danger" data-dz-errormessage="data-dz-errormessage"></span>
-                </div>
-                <div class="dropdown font-sans-serif">
-                  <button class="btn btn-link text-600 btn-sm dropdown-toggle btn-reveal dropdown-caret-none" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    <span class="fas fa-ellipsis-h"></span>
-                  </button>
-                  <div class="dropdown-menu dropdown-menu-end border py-2">
-                    <a class="dropdown-item" href="#!" data-dz-remove="data-dz-remove">Remove File</a>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <input class="d-none" type="text" name="uuid" value="<%= uuid %>">
-        </form>
-      </div>
-
-      <div class="modal-footer">
-        <button class="btn btn-primary loading-button type=" submit" id="uploadFiles">
-          <div class="content-button">
-            <span><i class="fa fa-upload me-2" aria-hidden="true"></i>Upload</span>
-          </div>
-        </button>
-        <button class="btn btn-outline-primary" type="button" data-bs-dismiss="modal">
-          Cancel
-        </button>
-      </div>
-    </div>
-  </div>
 </div>
 
 <!-- toast alert submission -->

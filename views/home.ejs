@@ -110,7 +110,7 @@
     <h5 class="text-body-tertiary fw-semibold">Real-time data visualization for informed decision-making</h5>
   </div>
   <div class="col-md-3 col-auto">
-    <div class="flatpickr-input-container">
+    <div class="flatpickr-input-container d-none">
       <input class="form-control ps-6 datetimepicker" id="datepicker" type="text" data-options='{"dateFormat":"M j, Y","disableMobile":true,"defaultDate":"Mar 1, 2022"}' /><span class="uil uil-calendar-alt flatpickr-icon text-body-tertiary"></span>
     </div>
   </div>
@@ -124,10 +124,18 @@
           <div class="col-12 col-sm-auto mb-sm-2">
             <div class="avatar avatar-5xl"><img class="rounded-circle border border-primary" src="/assets/img/team/avatar.webp" alt="" /></div>
           </div>
+
+          <% 
+            if(user.section === ''){
+                var showSection = ''
+            }else{
+                var showSection = ' in ' + user.section;
+            }
+          %>
           <div class="col-12 col-sm-auto flex-1">
             <h3 class="mx-auto"><%= user.fullname %></h3>
+            <p class="fw-bold"><%= user.position %> <span class="fw-normal fst-italic">of <%= user.department %><%= showSection %></span></p>
             <p class="mx-auto text-primary">"User's status"</p>
-            <p class="fw-bold"><%= user.position %> <span class="fw-normal fst-italic">of <%= user.department %></span></p>
           </div>
         </div>
         <div class="col-md-6">
@@ -172,9 +180,9 @@
     <div class="carousel dashboard-carousel slide carousel-fade position-relative rounded-3" id="carousel-1">
       <div class="carousel-inner">
 
-        <div class="carousel-item active" style="height: 35vh;">
+        <div class="carousel-item active" style="height: 375px;">
 
-          <div class="card" style="height: 35vh;">
+          <div class="card" style="height: 375px;">
             <div class="bg-holder d-block bg-card" style="background-image:url(/assets/img/spot-illustrations/32.png);background-position: top right;">
             </div>
             <div class="card-body">
@@ -234,11 +242,11 @@
 
         <div class="carousel-item false">
 
-          <div class="card" style="height: 35vh;">
+          <div class="card" style="height: 375px;">
             <div class="card-body">
 
               <h5 class="text-body-emphasis text-nowrap">Leave Balances</h5>
-              <div class="mx-auto mt-n10" id="leave-type-chart-carousel" style="height:400px; width: 250px;"></div>
+              <div class="mx-auto mt-n7" id="leave-type-chart-carousel" style="height:400px; width: 250px;"></div>
 
               <script>
                 const leaveTypeURL = '/api/echarts/leaveType/<%= user._id %>';
@@ -257,8 +265,8 @@
 
         </div>
 
-        <div class="carousel-item false">
-          <div class="card" style="height: 35vh;">
+        <div class="carousel-item false d-none">
+          <div class="card" style="height: 375px;">
 
             <div class="card-body">
               <p>Hello world 2</p>
@@ -271,19 +279,30 @@
       <div class="carousel-indicators">
         <button class="active" type="button" data-bs-target="#carousel-1" data-bs-slide-to="0" aria-current="true" aria-label="Slide 1"></button>
         <button type="button" data-bs-target="#carousel-1" data-bs-slide-to="1" aria-label="Slide 2"></button>
-        <button type="button" data-bs-target="#carousel-1" data-bs-slide-to="2" aria-label="Slide 3"></button>
+        <button class="d-none" type="button" data-bs-target="#carousel-1" data-bs-slide-to="2" aria-label="Slide 3"></button>
       </div>
     </div>
   </div>
 </div>
 
 <div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis pt-7 pb-3 border-y mb-6">
-  <div id="projectSummary" data-list='{"valueNames":["member","position","activity","when","taskprogress","status","action"],"page":6,"pagination":true}'>
+  <div id="team-members" data-list='{"valueNames":["member","position","activity","when","taskprogress","status","action"],"page":6,"pagination":true}'>
     <div class="row align-items-end justify-content-between pb-4 g-3">
+
       <div class="col-auto">
         <h3>Team Members</h3>
         <p class="text-body-tertiary lh-sm mb-0">Current team member work status and progress</p>
       </div>
+
+      <div class="col-12 col-md-auto">
+        <div class="search-box">
+          <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
+            <input class="form-control search-input search form-control-sm" type="search" placeholder="Search team members" aria-label="Search" />
+            <span class="fas fa-search search-box-icon"></span>
+          </form>
+        </div>
+      </div>
+
     </div>
     <div class="table-responsive ms-n1 ps-1 scrollbar">
       <table class="table fs-9 mb-0 border-top border-translucent">
@@ -383,8 +402,8 @@
             <td class="align-middle text-end white-space-nowrap pe-0 action">
               <div class="btn-reveal-trigger position-static">
                 <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs-10" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fas fa-ellipsis-h fs-10"></span></button>
-                <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item" href="#!">View</a><a class="dropdown-item" href="#!">Export</a>
-                  <div class="dropdown-divider"></div><a class="dropdown-item text-danger" href="#!">Remove</a>
+                <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item" href="/staff/details/<%= department._id %>">View</a><a class="dropdown-item d-none" href="#!">Export</a>
+                  <div class="dropdown-divider d-none"></div><a class="dropdown-item text-danger d-none" href="#!">Remove</a>
                 </div>
               </div>
             </td>
@@ -1191,23 +1210,23 @@
         <hr class="bg-body-secondary mb-2 mt-2" />
         <div class="d-flex align-items-center mb-1"><span class="d-inline-block bg-info-light bullet-item me-2"></span>
           <p class="mb-0 fw-semibold text-body lh-sm flex-1">Annual Leave</p>
-          <h5 class="mb-0 text-body"><%= userLeave.annual %></h5>
+          <h5 class="mb-0 text-body"><%= userLeave.annual.leave - userLeave.annual.taken %></h5>
         </div>
         <div class="d-flex align-items-center mb-1"><span class="d-inline-block bg-warning-light bullet-item me-2"></span>
           <p class="mb-0 fw-semibold text-body lh-sm flex-1">Sick Leave</p>
-          <h5 class="mb-0 text-body"><%= userLeave.sick %></h5>
+          <h5 class="mb-0 text-body"><%= userLeave.sick.leave - userLeave.sick.taken %></h5>
         </div>
         <div class="d-flex align-items-center mb-1"><span class="d-inline-block bg-danger-light bullet-item me-2"></span>
           <p class="mb-0 fw-semibold text-body lh-sm flex-1">Emergency Leave Taken</p>
           <h5 class="mb-0 text-body"><%= userLeave.emergency.taken %></h5>
         </div>
-        <div class="d-flex align-items-center mb-1"><span class="d-inline-block bg-success-light bullet-item me-2"></span>
+        <div class="d-flex align-items-center"><span class="d-inline-block bg-success-light bullet-item me-2"></span>
+            <p class="mb-0 fw-semibold text-body lh-sm flex-1">Special Leave Taken</p>
+            <h5 class="mb-0 text-body"><%= userLeave.marriage.taken + userLeave.paternity.taken + userLeave.bereavement.taken  + userLeave.study.taken + userLeave.hajj.taken + userLeave.special.taken  %></h5>
+          </div>
+        <div class="d-flex align-items-center mb-1"><span class="d-inline-block bg-primary bullet-item me-2"></span>
           <p class="mb-0 fw-semibold text-body lh-sm flex-1">Unpaid Leave Taken</p>
-          <h5 class="mb-0 text-body"><%= userLeave.unpaid %></h5>
-        </div>
-        <div class="d-flex align-items-center"><span class="d-inline-block bg-primary bullet-item me-2"></span>
-          <p class="mb-0 fw-semibold text-body lh-sm flex-1">Special Leave Taken</p>
-          <h5 class="mb-0 text-body"><%= userLeave.marriage.taken + userLeave.paternity.taken + userLeave.bereavement.taken  + userLeave.study.taken + userLeave.hajj.taken  %></h5>
+          <h5 class="mb-0 text-body"><%= userLeave.unpaid.taken %></h5>
         </div>
         <a class="btn btn-outline-primary mt-5" href="/leave/history">See History<span class="fas fa-angle-right ms-2 fs-10 text-center"></span></a>
       </div>
@@ -1231,14 +1250,14 @@
       function updateLeaveTypeChart(fetchLeaveTypeData, echartsId) {
 
         var leaveTypeData = {
-          labels: ['Annual Leave Balance', 'Sick Leave Balance', 'Emergency Leave Taken', 'Unpaid Leave Taken', 'Special Leave Taken'],
+          labels: ['Annual Leave Balance', 'Sick Leave Balance', 'Emergency Leave Taken', 'Special Leave Taken', 'Unpaid Leave Taken'],
           data: [
-            fetchLeaveTypeData.annual,
-            fetchLeaveTypeData.sick,
+            fetchLeaveTypeData.annual.leave - fetchLeaveTypeData.annual.taken,
+            fetchLeaveTypeData.sick.leave - fetchLeaveTypeData.sick.taken,
             fetchLeaveTypeData.emergency.taken,
-            fetchLeaveTypeData.paternity.taken + fetchLeaveTypeData.marriage.taken + fetchLeaveTypeData.bereavement.taken + fetchLeaveTypeData.study.taken + fetchLeaveTypeData.hajj.taken,
-            fetchLeaveTypeData.unpaid,
-            fetchLeaveTypeData.special,
+            fetchLeaveTypeData.paternity.taken + fetchLeaveTypeData.marriage.taken + fetchLeaveTypeData.bereavement.taken + fetchLeaveTypeData.study.taken + fetchLeaveTypeData.hajj.taken + fetchLeaveTypeData.special.taken,
+            fetchLeaveTypeData.unpaid.taken,
+            fetchLeaveTypeData.special.taken,
           ],
         };
         // Initialize ECharts instance
@@ -1312,8 +1331,19 @@
     </script>
   </div>
 
-  <div class="col-12 col-xxl-8 mb-3">
-    <div class="vh-50" data-calendar='{"events":[{"title":"Bootcamp","start":"2023-12-07"}]}'></div>
+  <div class="col-12 col-xxl-8 mb-3 px-xxl-5">
+    <div class="card" style="height: 350px;">
+      <div class="bg-holder d-block bg-card" style="background-image:url(/assets/img/spot-illustrations/32.png);background-position: top right;">
+      </div>
+      <div class="card-body">
+        <div class="card-title">
+          <h5 class="badge badge-phoenix badge-phoenix-warning"><span class="me-2 fa-solid fa-ribbon"></span>Coming Soon</h5>
+
+          <h3 class="mt-5">Full Calendar</h3>
+          <p class="fw-normal fs-8">is a versatile JavaScript library for creating interactive calendars. It supports dynamic event rendering, drag-and-drop functionality, various views, and customization options, making it ideal for diverse scheduling needs</p>
+        </div>
+      </div>
+    </div>
   </div>
 
 </div>
@@ -2138,148 +2168,6 @@
             </div>
           </div>
         </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- table for all leave -->
-<div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis pt-7 border-y">
-  <div data-list='{"valueNames":["type","user","approval","status","datetime"],"page":6}'>
-    <div class="row align-items-end justify-content-between pb-5 g-3">
-      <div class="col-auto">
-        <h3>User Leave</h3>
-        <p class="text-body-tertiary lh-sm mb-0">User initiates leave request for personal or professional absence temporarily</p>
-      </div>
-      <div class="col-12 col-md-auto">
-        <div class="row g-2 gy-3">
-          <div class="col-auto flex-1">
-            <div class="search-box">
-              <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
-                <input class="form-control search-input search form-control-sm" type="search" placeholder="Search" aria-label="Search" />
-                <span class="fas fa-search search-box-icon"></span>
-
-              </form>
-            </div>
-          </div>
-          <div class="col-auto">
-            <button class="btn btn-sm btn-phoenix-secondary bg-body-emphasis bg-body-hover me-2" type="button">All leave</button>
-            <button class="btn btn-sm btn-phoenix-secondary bg-body-emphasis bg-body-hover action-btn" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fas fa-ellipsis-h" data-fa-transform="shrink-2"></span></button>
-            <ul class="dropdown-menu dropdown-menu-end d-none">
-              <li><a class="dropdown-item" href="#">Action</a></li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="table-responsive mx-n1 px-1 scrollbar">
-      <table class="table fs-9 mb-0 border-top border-translucent">
-        <thead>
-          <tr>
-            <th class="white-space-nowrap fs-9 ps-0 align-middle">
-              <div class="form-check mb-0 fs-8">
-                <input class="form-check-input" id="checkbox-select" type="checkbox" data-bulk-select='{"body":"table-user-leave-admin"}' />
-              </div>
-            </th>
-            <th class="sort white-space-nowrap align-middle" scope="col" style="min-width:200px;" data-sort="type">TYPE</th>
-            <th class="sort align-middle" scope="col" data-sort="user" style="min-width:250px;">USER</th>
-            <th class="sort align-middle" scope="col" style="max-width:300px;" data-sort="approval">APPROVALS</th>
-            <th class="sort text-start ps-5 align-middle" scope="col" style="min-width:200px;" data-sort="status">STATUS</th>
-            <th class="sort text-end align-middle" scope="col" style="min-width:200px;" data-sort="datetime">DATE TIME</th>
-            <th class="sort text-end pe-0 align-middle" scope="col"></th>
-          </tr>
-        </thead>
-        <tbody class="list" id="table-user-leave-admin">
-          <%
-            function formatDate(timestamp) {
-                const options = { day: 'numeric', month: 'long', year: 'numeric' };
-                const formattedDate = new Date(timestamp).toLocaleDateString('en-US', options);
-    
-                // Split the formatted date to get day, month, and year separately
-                const [month, day, year] = formattedDate.split(' ');
-
-                // Get today's date components
-                const today = new Date();
-                const todayOptions = { day: 'numeric', month: 'long', year: 'numeric' };
-                const todayFormatted = today.toLocaleDateString('en-US', todayOptions);
-
-                // Check if the timestamp is from today
-                if (formattedDate === todayFormatted) {
-                  return 'Just today';
-                } else {
-                  // Format the date as 'day Month year'
-                  const formattedDateCustom = `${day} ${month} ${year}`;
-                  return formattedDateCustom;
-                }
-            }
-          %>
-          <% if(allLeave.length > 0 && allLeave){ %>
-          <% allLeave.forEach((leave) => { %>
-          <tr class="hover-actions-trigger btn-reveal-trigger position-static">
-            <td class="fs-9 align-middle ps-0">
-              <div class="form-check mb-0 fs-8">
-                <input class="form-check-input" type="checkbox" data-bulk-select-row='{"":""}' />
-              </div>
-            </td>
-
-            <td class="align-middle type white-space-nowrap"><a class="fw-bold fs-8" href="/leave/details/<%= leave.uuid %>"><%= leave.type %></a></td>
-            <td class="align-middle user white-space-nowrap">
-              <% const correspondingUser = allUser.find(user => user._id.toString() === leave.user.toString()); %>
-              <% if (correspondingUser) { %>
-              <!-- Populate user information (example: name and avatar) -->
-              <a class="d-flex align-items-center text-body" href="#">
-                <div class="avatar avatar-l">
-                  <div class="avatar-name rounded-circle"><span><%= correspondingUser.fullname.charAt(0) %></span></div>
-                </div>
-                <h6 class="mb-0 ms-3 text-body"><%= correspondingUser.fullname %></h6>
-              </a>
-              <% } else { %>
-              <!-- Handle the case where the user is not found -->
-              <p>User not found</p>
-              <% } %>
-            </td>
-            <td class="align-middle approval white-space-nowrap">
-              <% if (leave.approvals && leave.approvals.length > 0) { %>
-              <% const latestApproval = leave.approvals.reduce((latest, approval) => approval.timestamp > latest.timestamp ? approval : latest, leave.approvals[0]); %>
-              <p class="fs-9 fw-semibold text-body-highlight mb-0"><%= latestApproval.role %> has <%= latestApproval.comment %> at <%= formatDate(latestApproval.timestamp) %></p>
-              <% }%>
-            </td>
-            <td class="align-middle text-start ps-5 status"><span class="badge badge-phoenix fs-10 badge-phoenix-success"><span class="badge-label"><%= leave.status %></span><span class="ms-1" data-feather="check" style="height:12.8px;width:12.8px;"></span></span></td>
-            <td class="align-middle text-end datetime white-space-nowrap">
-              <div class="hover-hide">
-                <h6 class="text-body-highlight mb-0"><%= formatDate(leave.timestamp) %></h6>
-              </div>
-            </td>
-            <td class="align-middle white-space-nowrap text-end pe-0">
-              <div class="position-relative">
-                <div class="hover-actions">
-                  <button class="btn btn-sm btn-phoenix-secondary fs-10"><span class="fas fa-trash"></span></button>
-                </div>
-              </div>
-              <div class="btn-reveal-trigger position-static">
-                <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs-10" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fas fa-ellipsis-h fs-10"></span></button>
-                <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item" href="#!">View</a><a class="dropdown-item" href="#!">Export</a>
-                  <div class="dropdown-divider"></div><a class="dropdown-item text-danger" href="#!">Remove</a>
-                </div>
-              </div>
-            </td>
-          </tr>
-          <% }); %>
-          <% } else { %>
-          <p>There is single leave here</p>
-          <% } %>
-        </tbody>
-      </table>
-    </div>
-    <div class="row align-items-center py-1">
-      <div class="pagination d-none"></div>
-      <div class="col d-flex fs-9">
-        <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p><a class="fw-semibold" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semibold d-none" href="#!" data-list-view="less">View Less</a>
-      </div>
-      <div class="col-auto d-flex">
-
-        <button class="btn btn-link px-1 me-1" type="button" title="Previous" data-list-pagination="prev"><span class="fas fa-chevron-left me-2"></span>Previous</button>
-        <button class="btn btn-link px-1 ms-1" type="button" title="Next" data-list-pagination="next">Next<span class="fas fa-chevron-right ms-2"></span></button>
       </div>
     </div>
   </div>

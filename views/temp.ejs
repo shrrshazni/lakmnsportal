@@ -1,0 +1,18 @@
+<tbody class="list">
+    <% if(activities && activities.length > 0){ %>
+    <% activities.forEach(item => { %>
+    <tr class="position-static">
+      <td class="title align-middle white-space-nowrap py-2 ps-0"><a class="fw-semibold text-primary" href="#!"><%= item.title %></a></td>
+      <td class="description align-middle white-space-nowrap text-start fw-bold text-body-tertiary py-2 text-start pe-6"><%= item.description%></td>
+      <td class="date align-middle text-body-tertiary text-start py-2"><%= item.date.toLocaleDateString('en-UK', { day: '2-digit', month: 'short', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></td>
+      <td class="time align-middle text-body-tertiary text-start"><%= item.date.toLocaleTimeString('en-UK', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone : 'Asia/Kuala_Lumpur' }) %></td>
+    </tr>
+    <% }); %>
+    <% }else{ %>
+    <tr class="position-static">
+      <td class="align-middle white-space-nowrap ps-0">
+        <p>No activity detected from <span class="fw-bold text-primary"><%= otherUser.fullname %></span></p>
+      </td>
+    </tr>
+    <% } %>
+  </tbody>
