@@ -48,13 +48,13 @@
   <ol class="breadcrumb mb-0">
     <li class="breadcrumb-item"><a href="#!">Leave</a></li>
     <li class="breadcrumb-item"><a href="#!">Details</a></li>
-    <li class="breadcrumb-item active" aria-current="page"><%= leave.uuid %></li>
+    <li class="breadcrumb-item active" aria-current="page"><%= leave._id %></li>
   </ol>
 </nav>
 
 <div class="row d-flex flex-wrap justify-content-between align-items-end mb-2">
   <div class="col-auto">
-    <h2>Leave Request #<%= user.fullname %></span></h2>
+    <h2>Leave Request #<a href="/staff/details/<%= userReq._id %>"><%= userReq.fullname %></a></h2>
     <p class="text-body-secondary mb-0">Leave request on <br class="d-sm-none"><span class="ms-sm-1"><%= formatCustomDate(leave.timestamp) %></span></p>
   </div>
 
@@ -64,12 +64,13 @@
   </div>
 </div>
 
-<div class="row gy-5 gx-5 mb-3">
-  <div class="col-12 col-lg-6">
-    <div class="border rounded-3 overflow-hidden h-100">
-      <div class="min-vh-50 p-3">
+<div class="row gy-5 gx-5 mb-xxl-6 mb-3">
 
-        <div class="row g-3 d-flex justify-content-between mb-0 p-3">
+  <div class="col-12 col-lg-6">
+    <div class="border rounded-3 overflow-hidden">
+      <div class="p-3" style="min-height: 35vh;">
+
+        <div class="row g-3 d-flex justify-content-between mb-3 p-3">
           <div class="col-auto">
             <h3><%= leave.type %></h3>
           </div>
@@ -80,46 +81,113 @@
         </div>
 
         <div class="container mt-n5 px-4 py-4">
-          <div class="card">
-            <div class="card-header">
-              <h5 class="mb-0">User Information</h5>
+
+          <div class="mb-5">
+            <h5><span class="fa-solid fa-calendar-days me-2"></span>Date requested ( <span class="fst-italic text-primary"><%= leaveDays %> days</span> )</h5>
+            <hr>
+            <p class="text-body-highlight"><%= leave.date.start.toLocaleDateString('en-US', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %> <span class="fw-normal fst-normal">until</span> <%= leave.date.return.toLocaleDateString('en-US', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %> </p>
+          </div>
+
+          <div class="mb-5">
+            <h5><span class="fa-solid fa-pen-nib me-2"></span>Purpose of leave</h5>
+            <hr>
+            <p class="text-body-highlight"><%= leave.purpose %></p>
+          </div>
+
+          <%
+            const formatDateFile = (date) => {
+              const options = { day: 'numeric', month: 'short', hour: 'numeric', minute: 'numeric', hour12: true };
+              const formattedDate = new Intl.DateTimeFormat('en-US', options).format(date);
+            
+              // Add day suffix (st, nd, rd, or th)
+              const day = date.getDate();
+              const daySuffix = (day) => {
+                if (day >= 11 && day <= 13) {
+                  return 'th';
+                }
+                const lastDigit = day % 10;
+                   switch (lastDigit) {
+                  case 1: return 'st';
+                  case 2: return 'nd';
+                  case 3: return 'rd';
+                  default: return 'th';
+                }
+              };
+            
+              return formattedDate.replace(/(\d+)/, (match, p1) => `${p1}${daySuffix(day)}`);
+            };
+          %>
+
+          <div class="mb-0">
+            <div class="card mb-3">
+              <div class="card-body">
+                <% const modalFiles = files.filter((file) => file.uuid === item.fileId); %>
+                <% const lastIndexFile = modalFiles.length - 1; var borderModalFile = ''; %>
+                <% if(modalFiles && modalFiles.length > 0){ %>
+                <% modalFiles.forEach((file, index) => { %>
+
+                <% 
+                    if(index === lastIndexFile){
+                        borderModalFile = 'border-bottom';
+                    } else {
+                        borderModalFile = '';
+                    }
+                  %>
+
+                <% if(file.type === '.png' || file.type === '.webp' || file.type === '.jpg' || file.type === '.jpeg' || file.type === '.gif' ){ %>
+                <div class="border-top <%= borderModalFile %> px-0 pt-4 pb-3">
+                  <div class="me-n3">
+                    <div class="d-flex flex-between-center">
+                      <div class="d-flex mb-1"><span class="fa-solid fa-image me-2 text-body-tertiary fs-9"></span>
+                        <p class="text-body-highlight mb-0 lh-1"><%= file.name %></p>
+                      </div>
+                      <div class="btn-reveal-trigger">
+                        <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fas fa-ellipsis-h"></span></button>
+                        <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item text-danger" href="/files/delete/<%= file._id %>">Delete</a><a class="dropdown-item" href="/files/download/<%= file._id %>">Download</a><a class="dropdown-item d-none" href="#!">Report abuse</a></div>
+                      </div>
+                    </div>
+                    <div class="d-flex fs-9 text-body-tertiary mb-2 flex-wrap"><span><%= file.size %></span><span class="text-body-quaternary mx-1">| </span><a href="#!"><%= file.user %> </a><span class="text-body-quaternary mx-1">| </span><span class="text-nowrap"><%= formatDateFile(file.date) %></span></div><img class="rounded-2" src="<%= file.path %>" alt="" style="max-width:230px" />
+                  </div>
+                </div>
+
+                <% }else { %>
+
+                <div class="border-top <%= borderModalFile %> px-0 pt-4 pb-3">
+                  <div class="me-n3">
+                    <div class="d-flex flex-between-center">
+                      <div>
+                        <div class="d-flex align-items-center mb-1"><span class="fa-solid fa-image me-2 fs-9 text-body-tertiary"></span>
+                          <p class="text-body-highlight mb-0 lh-1"><%= file.name %></p>
+                        </div>
+                        <div class="d-flex fs-9 text-body-tertiary mb-0 flex-wrap"><span><%= file.size %></span><span class="text-body-quaternary mx-1">| </span><a href="#!"><%= file.user %> </a><span class="text-body-quaternary mx-1">| </span><span class="text-nowrap"><%= formatDateFile(file.date) %></span></div>
+                      </div>
+                      <div class="btn-reveal-trigger">
+                        <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fas fa-ellipsis-h"></span></button>
+                        <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item" href="#!">Edit</a><a class="dropdown-item text-danger" href="/">Delete</a><a class="dropdown-item" href="#!">Download</a><a class="dropdown-item" href="#!">Report abuse</a></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <% } %>
+                <% }); %>
+                <% }else { %>
+                <p class="fs-9">There is no file attached</p>
+                <% } %>
+              </div>
             </div>
-            <div class="card-body">
-              <p class="card-text mb-1"><strong>Full Name:</strong> <%= user.fullname %></p>
-              <p class="card-text mb-1"><strong>Username:</strong> <%= user.username %></p>
-              <p class="card-text mb-1"><strong>Grade:</strong> <%= user.grade %></p>
-              <p class="card-text mb-1"><strong>Department:</strong> <%= user.department %></p>
+
+            <div>
+              <a class="fw-bold fs-9" href="#!" data-bs-target="#leave-file" data-bs-toggle="modal"><span class="fas fa-plus me-1"></span>Add file(s)</a>
             </div>
           </div>
 
-          <div class="card mt-3">
-            <div class="card-header">
-              <h5 class="mb-0">Leave Information</h5>
-            </div>
-            <div class="card-body">
-              <p class="card-text mb-1"><strong>Start Date:</strong> <%= formatCustomDate(leave.date.start) %></p>
-              <p class="card-text mb-1"><strong>Return Date:</strong> <%= formatCustomDate(leave.date.return) %></p>
-            </div>
-          </div>
-
-          <div class="card mt-3">
-            <div class="card-header">
-              <h5 class="mb-0">User Leave Information</h5>
-            </div>
-            <div class="card-body">
-              <p class="card-text mb-1"><strong>Annual Leave:</strong> <%= userLeave.annual %></p>
-              <p class="card-text mb-1"><strong>Sick Leave:</strong> <%= userLeave.sick %></p>
-              <p class="card-text mb-1"><strong>Marriage Leave:</strong> <%= userLeave.marriage %></p>
-              <p class="card-text mb-1"><strong>Bereavement Leave:</strong> <%= userLeave.bereavement %></p>
-              <p class="card-text mb-1"><strong>Paternity Leave:</strong> <%= userLeave.paternity %></p>
-              <p class="card-text mb-1"><strong>Hajj Leave:</strong> <%= userLeave.hajj %></p>
-            </div>
-          </div>
         </div>
 
       </div>
     </div>
   </div>
+
   <div class="col-12 col-lg-6">
     <div class="timeline-vertical">
       <% if (approvals && approvals.length > 0) { %>
@@ -203,8 +271,66 @@
       <% } %>
     </div>
   </div>
+
 </div>
 
+<div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis pt-7 pb-3 border-y row g-3 vh-50 d-none">
+
+</div>
+
+<!-- leave file -->
+<div class="modal fade" id="leave-file" aria-hidden="true" aria-labelledby="leavefile" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-md">
+    <div class="modal-content px-2 py-3">
+      <div class="modal-body">
+        <form class="dropzone dropzone-multiple p-3 mb-4 bg-subtle" id="dropzone" data-dropzone="data-dropzone" action="/files/upload" data-options='{"url":"/files/upload","paramName": "file"}'>
+          <div class="dz-message" data-dz-message="data-dz-message">
+            <img class="me-2" src="../../../assets/img/icons/cloud-upload.svg" width="25" alt="" />Drop your files here
+          </div>
+          <div class="dz-preview dz-preview-multiple m-0 d-flex flex-column">
+            <div class="d-flex mb-3 pb-3 border-bottom media">
+              <div class="border border-300 p-1 rounded-2 me-2">
+                <img class="rounded-2 dz-image" src="../../../assets/img/icons/file.png" alt="..." data-dz-thumbnail="data-dz-thumbnail" />
+              </div>
+              <div class="flex-1 d-flex flex-between-center">
+                <div>
+                  <h6 data-dz-name="data-dz-name"></h6>
+                  <div class="d-flex align-items-center">
+                    <p class="mb-0 fs-9 text-400 lh-1" data-dz-size="data-dz-size"></p>
+                    <div class="dz-progress ms-n1" style="margin-top: 0.1rem;">
+                      <span class="dz-upload" data-dz-uploadprogress=""></span>
+                    </div>
+                  </div>
+                  <span class="fs-9 text-danger" data-dz-errormessage="data-dz-errormessage"></span>
+                </div>
+                <div class="dropdown font-sans-serif">
+                  <button class="btn btn-link text-600 btn-sm dropdown-toggle btn-reveal dropdown-caret-none" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <span class="fas fa-ellipsis-h"></span>
+                  </button>
+                  <div class="dropdown-menu dropdown-menu-end border py-2">
+                    <a class="dropdown-item" href="#!" data-dz-remove="data-dz-remove">Remove File</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <input class="d-none" type="text" name="uuid" value="<%= leave.uuid %>">
+
+        </form>
+      </div>
+      <div class="modal-footer border-top-0">
+        <button class="btn btn-phoenix-primary" type="button" data-bs-target="#addTask" data-bs-toggle="modal">Back</button>
+        <button class="btn btn-primary loading-button" type="submit" id="uploadFiles">
+          <div class="content-button">
+            <span><i class="fa fa-upload me-2" aria-hidden="true"></i>Upload</span>
+          </div>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- leave approval -->
 <div class="modal fade" id="leaveApproval" tabindex="-1" aria-labelledby="leaveApproval" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-md">
     <div class="modal-content">
@@ -221,4 +347,6 @@
     </div>
   </div>
 </div>
+
+
 <%- include('partials/private-footer.ejs') %>

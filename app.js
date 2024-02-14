@@ -246,7 +246,7 @@ const leaveSchema = new mongoose.Schema({
     purpose: String,
     status: {
         type: String,
-        enum: ['pending', 'approved', 'denied', 'submitted', 'invalid'],
+        enum: ['pending', 'approved', 'denied', 'submitted', 'invalid', 'cancelled'],
         default: 'pending'
     },
     comment: String,
@@ -3051,7 +3051,7 @@ app.get('/leave/history', isAuthenticated, async function (req, res) {
     }).populate('sender');
 
     if (user) {
-        const leave = await Leave.find({ user: user._id });
+        const leave = await Leave.find({ user: user._id }).sort({ 'date.start': -1 });
         const userLeave = await UserLeave.findOne({ user: user._id });
 
         res.render('leave-history', {
@@ -3064,8 +3064,8 @@ app.get('/leave/history', isAuthenticated, async function (req, res) {
 });
 
 // DETAILS
-app.get('/leave/details/:uuid', isAuthenticated, async function (req, res) {
-    const uuid = req.params.uuid;
+app.get('/leave/details/:id', isAuthenticated, async function (req, res) {
+    const id = req.params.id;
     const username = req.user.username;
     const user = await User.findOne({ username: username });
     const notifications = await Notification.find({
@@ -3074,31 +3074,29 @@ app.get('/leave/details/:uuid', isAuthenticated, async function (req, res) {
     }).populate('sender');
 
     if (user) {
-        const leave = await Leave.findOne({ uuid: uuid });
+        const leave = await Leave.findOne({ _id: id });
         const approvals = leave.approvals;
         const userLeave = await UserLeave.findOne({ user: user._id });
+        const userReq = await User.findOne({ _id: leave.user });
 
-        // const currentDate = new Date();
-        // const colleagues = await User.find({ department: user.department });
-        // const colleagueLeaves = await Leave.find({
-        //   username: { $in: colleagues.map(colleague => colleague.username) },
-        //   'date.start': { $gte: currentDate },
-        //   username: { $ne: user.username }
-        // });
+        //get amount of days leave requested
+        const leaveStartDate = leave.date.start;
+        const leaveReturnDate = leave.date.return;
+        const amountDays = calculateBusinessDays(leaveStartDate, leaveReturnDate);
 
-        // const upcomingLeaves = await Leave.find({
-        //   user: user._id,
-        //   'date.start': { $gte: currentDate }
-        // });
+        //find file from leave
+        const file = await File.find({ uuid: leave.uuid });
 
         res.render('leave-details', {
             user: user,
             notifications: notifications,
+            userReq: userReq,
             leave: leave,
             approvals: approvals,
-            userLeave: userLeave
-            //   upcomingLeaves: upcomingLeaves,
-            //   colleagueLeaves: colleagueLeaves
+            userLeave: userLeave,
+            files : file,
+            // data
+            leaveDays: amountDays
         });
     }
 });
@@ -3691,6 +3689,48 @@ calculateAge = function (birthdate) {
     let age = today.diff(birthdateObj, 'years');
 
     return age;
+};
+
+// GET NUMBERS OF DAYS BETWEEN TWO DATES
+calculateBusinessDays = function (startDateString, endDateString) {
+    const start = new Date(startDateString);
+    const end = new Date(endDateString);
+
+    // Convert dates to Malaysia Time (UTC+8)
+    start.setUTCHours(start.getUTCHours() + 8);
+    end.setUTCHours(end.getUTCHours() + 8);
+
+    // Ensure the dates are set to midnight to exclude time from the calculation
+    start.setUTCHours(0, 0, 0, 0);
+    end.setUTCHours(0, 0, 0, 0);
+
+    const defaultPublicHolidays = ["2024-02-16", "2024-05-01", "2024-05-07"];
+    const allPublicHolidays = defaultPublicHolidays;
+
+    let count = 0;
+
+    while (start <= end) {
+        const dayOfWeek = start.getUTCDay();
+
+        // Check if the current day is a business day (Monday to Friday) and not a public holiday
+        if (dayOfWeek >= 1 && dayOfWeek <= 5 && !isPublicHoliday(start, allPublicHolidays)) {
+            count++;
+        }
+
+        start.setUTCDate(start.getUTCDate() + 1);
+    }
+
+    return count;
+};
+
+isPublicHoliday = function (date, publicHolidays) {
+    const formattedDate = formatDate(date);
+
+    return publicHolidays.some(holiday => holiday === formattedDate);
+};
+
+formatDate = function (date) {
+    return date.toISOString().split('T')[0];
 };
 
 // PORT INITIALIZATION ON CLOUD OR LOCAL (5001)

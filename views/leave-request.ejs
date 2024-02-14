@@ -14,17 +14,14 @@
   <div class="col-auto">
     <div class="row g-2 g-sm-3">
       <div class="col-auto">
-
-      </div>
-      <div class="col-auto">
-
+        <a class="btn btn-phoenix-primary" role="button" href="/leave/history">Check History</a>
       </div>
     </div>
   </div>
 </div>
 
 <div class="row">
-  <div class="col-12 col-lg-9">
+  <div class="col-12 col-lg-9 order-1 order-xxl-0">
 
     <div class="border p-3 mb-3 rounded-3">
       <form class="dropzone dropzone-multiple p-3 mb-4 bg-subtle" id="dropzone" data-dropzone="data-dropzone" action="/files/upload" data-options='{"url":"/files/upload","paramName": "file"}'>
@@ -65,7 +62,7 @@
     <div class="mb-6">
       <div class="row g-3 justify-content-end">
         <div class="col-auto">
-          <button class="btn btn-phoenix-secondary loading-button" type="submit" id="uploadFiles">
+          <button class="btn btn-phoenix-primary loading-button" type="submit" id="uploadFiles">
             <div class="content-button">
               <span><i class="fa fa-upload me-2" aria-hidden="true"></i>Upload Files</span>
             </div>
@@ -154,7 +151,7 @@
       <div class="col-12 gy-6">
         <div class="row g-3 justify-content-end">
           <div class="col-auto">
-            <a role="button" class="btn btn-phoenix-tertiary" href="/files/delete/cancel/<%= uuid %>">Cancel</a>
+            <a role="button" class="btn btn-phoenix-secondary" href="/files/delete/cancel/<%= uuid %>">Cancel</a>
           </div>
           <div class="col-auto">
             <button class="btn btn-primary w-100 mb-3 loading-button" type="submit" name="submit">
@@ -168,7 +165,7 @@
 
   </div>
 
-  <div class="col-12 col-lg-3 mb-6">
+  <div class="col-12 col-lg-3 mb-2 mb-lg-6 order-0 order-xxl-1">
 
     <div class="mb-5">
 
