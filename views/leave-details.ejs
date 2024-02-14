@@ -67,8 +67,8 @@
 <div class="row gy-5 gx-5 mb-xxl-6 mb-3">
 
   <div class="col-12 col-lg-6">
-    <div class="border rounded-3 overflow-hidden">
-      <div class="p-3" style="min-height: 35vh;">
+    <div class="border rounded-3 overflow-auto scrollbar">
+      <div class="p-3" style="height: 50vh;">
 
         <div class="row g-3 d-flex justify-content-between mb-3 p-3">
           <div class="col-auto">
@@ -121,7 +121,7 @@
           <div class="mb-0">
             <div class="card mb-3">
               <div class="card-body">
-                <% const modalFiles = files.filter((file) => file.uuid === item.fileId); %>
+                <% const modalFiles = files.filter((file) => file.uuid === leave.uuid); %>
                 <% const lastIndexFile = modalFiles.length - 1; var borderModalFile = ''; %>
                 <% if(modalFiles && modalFiles.length > 0){ %>
                 <% modalFiles.forEach((file, index) => { %>
@@ -135,7 +135,7 @@
                   %>
 
                 <% if(file.type === '.png' || file.type === '.webp' || file.type === '.jpg' || file.type === '.jpeg' || file.type === '.gif' ){ %>
-                <div class="border-top <%= borderModalFile %> px-0 pt-4 pb-3">
+                <div class="px-0 pt-0 pb-3">
                   <div class="me-n3">
                     <div class="d-flex flex-between-center">
                       <div class="d-flex mb-1"><span class="fa-solid fa-image me-2 text-body-tertiary fs-9"></span>
@@ -152,7 +152,7 @@
 
                 <% }else { %>
 
-                <div class="border-top <%= borderModalFile %> px-0 pt-4 pb-3">
+                <div class="px-0 pt-4 pb-3">
                   <div class="me-n3">
                     <div class="d-flex flex-between-center">
                       <div>
@@ -283,7 +283,7 @@
   <div class="modal-dialog modal-dialog-centered modal-md">
     <div class="modal-content px-2 py-3">
       <div class="modal-body">
-        <form class="dropzone dropzone-multiple p-3 mb-4 bg-subtle" id="dropzone" data-dropzone="data-dropzone" action="/files/upload" data-options='{"url":"/files/upload","paramName": "file"}'>
+        <form class="dropzone dropzone-multiple p-3 mb-4 bg-subtle" id="dropzone-leave-details" data-dropzone="data-dropzone" action="/files/upload" data-options='{"url":"/files/upload","paramName": "file"}'>
           <div class="dz-message" data-dz-message="data-dz-message">
             <img class="me-2" src="../../../assets/img/icons/cloud-upload.svg" width="25" alt="" />Drop your files here
           </div>
@@ -320,10 +320,72 @@
       </div>
       <div class="modal-footer border-top-0">
         <button class="btn btn-phoenix-primary" type="button" data-bs-target="#addTask" data-bs-toggle="modal">Back</button>
-        <button class="btn btn-primary loading-button" type="submit" id="uploadFiles">
+        <button class="btn btn-primary loading-button" type="submit" id="uploadFiles-leave-details">
           <div class="content-button">
             <span><i class="fa fa-upload me-2" aria-hidden="true"></i>Upload</span>
           </div>
+        </button>
+      </div>
+
+      <script>
+        // upload files
+        $(document).ready(function() {
+          // Function to show the toast
+          function showDropzoneFilesToast(content) {
+            $('#dropzoneAlertContent').text(content);
+
+            var toast = new bootstrap.Toast(
+              document.getElementById('alertUploadToast')
+            );
+            toast.show();
+          }
+
+          var myDropzone = Dropzone.forElement('#dropzone-leave-details');
+
+          $('#uploadFiles-leave-details').on('click', function() {
+            setTimeout(function() {
+              // files upload process queue
+
+              if (myDropzone.getQueuedFiles().length > 0) {
+                // If files are present, show the toast with appropriate content
+                showDropzoneFilesToast('Files has been uploaded');
+                // Process the Dropzone queue
+                myDropzone.processQueue();
+
+                $('#leave-file').modal('hide');
+
+                setTimeout(function() {
+                  window.location.href = '/leave/details/<%= leave._id %>';
+                }, 2000);
+
+              } else {
+                // If no files are present, show the toast with different content
+                showDropzoneFilesToast('No files selected');
+              }
+
+              button.prop('type', 'submit');
+            }, 1000);
+          });
+        });
+      </script>
+
+    </div>
+  </div>
+</div>
+
+
+
+<!-- alert toast upload -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 5">
+  <div class="d-flex">
+    <div class="toast align-items-center text-white border-0" role="alert" data-bs-autohide="false" aria-live="assertive" aria-atomic="true" id="alertUploadToast">
+      <div class="d-flex justify-content-between">
+        <div class="toast-body px-0 py-3">
+          <code id="dropzoneAlertContent" class="text-primary"></code>
+        </div>
+
+        <button class="btn ms-2 p-0" type="button" data-bs-dismiss="toast" aria-label="Close">
+          <span class="uil uil-times fs-7"></span>
         </button>
       </div>
     </div>
