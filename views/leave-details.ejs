@@ -28,7 +28,7 @@
   var showApproval = 'd-none';
   if (approvals && approvals.length > 0) {
         const userApprovalExists = approvals.some(approval => approval.recipient.equals(user._id));
-        const isUserLeaveOwner = user.username === leave.username;
+        const isUserLeaveOwner = user._id.toString() === leave._id.toString();
 
         if (!isUserLeaveOwner && leave.status !== 'approved' && leave.status !== 'denied') {
             if (userApprovalExists) {
@@ -42,6 +42,14 @@
             }
         }
     }
+
+    var showLeaveMenu = '';
+
+    if(userReq._id.toString() === user._id.toString()){
+        showLeaveMenu = '';
+    }else {
+        showLeaveMenu = 'd-none';
+    }
 %>
 
 <nav class="mb-2" aria-label="breadcrumb">
@@ -54,21 +62,42 @@
 
 <div class="row d-flex flex-wrap justify-content-between align-items-end mb-2">
   <div class="col-auto">
-    <h2>Leave Request #<a href="/staff/details/<%= userReq._id %>"><%= userReq.fullname %></a></h2>
+    <h2>Leave Request <a href="/staff/details/<%= userReq._id %>">#<%= userReq.fullname %></a></h2>
     <p class="text-body-secondary mb-0">Leave request on <br class="d-sm-none"><span class="ms-sm-1"><%= formatCustomDate(leave.timestamp) %></span></p>
   </div>
 
-  <div class="col-auto <%= showApproval %>">
-    <a class="btn btn-primary me-2" role="button" href="/leave/approved/<%= leave.uuid %>">Approve</a>
-    <a class="btn btn-outline-danger me-2" role="button" href="/leave/denied/<%= leave.uuid %>">Deny</a>
+  <div class="col-auto">
+    <div class="<%= showApproval %>">
+      <a class="btn btn-primary me-2" role="button" href="/leave/approved/<%= leave._id %>">Approve</a>
+      <a class="btn btn-outline-danger me-2" role="button" href="/leave/denied/<%= leave._id %>">Deny</a>
+    </div>
+    <button class="btn px-3 btn-phoenix-secondary <%= showLeaveMenu %>" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fa-solid fa-ellipsis"></span></button>
+    <ul class="dropdown-menu dropdown-menu-end p-0" style="z-index: 9999;">
+      <li><a class="dropdown-item" href="/leave/history">Leave History</a></li>
+      <li><a class="dropdown-item" href="#!">Cancel Request</a></li>
+      <li><a class="dropdown-item" href="#!">Print</a></li>
+    </ul>
   </div>
 </div>
 
-<div class="row gy-5 gx-5 mb-xxl-6 mb-3">
+<div class="row gy-5 gx-5 mb-xxl-6 mb-6">
 
   <div class="col-12 col-lg-6">
     <div class="border rounded-3 overflow-auto scrollbar">
       <div class="p-3" style="height: 50vh;">
+
+        <% 
+        var statusColor = '';
+        if (leave.status == "pending"){
+            statusColor = 'info';
+        } else if(leave.status == "approved" || leave.status == "submitted") {
+            statusColor = 'success';
+        } else if(leave.status == "denied" ||  leave.status == "cancelled") {
+            statusColor = 'danger';
+        }else if (leave.status == "invalid"){
+            statusColor = 'warning';
+        } 
+        %>
 
         <div class="row g-3 d-flex justify-content-between mb-3 p-3">
           <div class="col-auto">
@@ -76,7 +105,7 @@
           </div>
 
           <div class="col-auto">
-            <p class="badge badge-phoenix badge-phoenix-primary fs-9"><%= leave.status %></p>
+            <p class="badge badge-phoenix badge-phoenix-<%= statusColor %> fs-10"><%= leave.status %></p>
           </div>
         </div>
 
@@ -116,12 +145,19 @@
             
               return formattedDate.replace(/(\d+)/, (match, p1) => `${p1}${daySuffix(day)}`);
             };
+
+            var showAddFiles = '';
+                    if(user._id.toString() === userReq._id.toString( ) && (leave.status!=='approved' || leave.status!=='denied')){
+                        showAddFiles = '';
+                    }else{
+                        showAddFiles = 'd-none';
+                    }
           %>
 
           <div class="mb-0">
             <div class="card mb-3">
               <div class="card-body">
-                <% const modalFiles = files.filter((file) => file.uuid === leave.uuid); %>
+                <% const modalFiles = files.filter((file) => file.uuid === leave.fileId); console.log(modalFiles); %>
                 <% const lastIndexFile = modalFiles.length - 1; var borderModalFile = ''; %>
                 <% if(modalFiles && modalFiles.length > 0){ %>
                 <% modalFiles.forEach((file, index) => { %>
@@ -132,7 +168,7 @@
                     } else {
                         borderModalFile = '';
                     }
-                  %>
+                %>
 
                 <% if(file.type === '.png' || file.type === '.webp' || file.type === '.jpg' || file.type === '.jpeg' || file.type === '.gif' ){ %>
                 <div class="px-0 pt-0 pb-3">
@@ -178,7 +214,7 @@
             </div>
 
             <div>
-              <a class="fw-bold fs-9" href="#!" data-bs-target="#leave-file" data-bs-toggle="modal"><span class="fas fa-plus me-1"></span>Add file(s)</a>
+              <a class="fw-bold fs-9 <%= showAddFiles %>" href="#!" data-bs-target="#leave-file" data-bs-toggle="modal"><span class="fas fa-plus me-1"></span>Add file(s)</a>
             </div>
           </div>
 
@@ -202,7 +238,7 @@
       var border = '';
       var display = ''
 
-      if(approval.estimated === null){
+      if(approval.timestamp !== null){
         date = new Date(approval.timestamp).toLocaleDateString('en-UK', { 
           year: 'numeric', 
           month: 'long', 
@@ -274,8 +310,10 @@
 
 </div>
 
-<div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis pt-7 pb-3 border-y row g-3 vh-50 d-none">
-
+<div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis pt-7 pb-3 border-y row g-3 d-none" style="height: 35vh;">
+    <div class="mb-0">
+        
+    </div>
 </div>
 
 <!-- leave file -->
@@ -314,7 +352,8 @@
               </div>
             </div>
           </div>
-          <input class="d-none" type="text" name="uuid" value="<%= leave.uuid %>">
+          <input class="d-none" type="text" name="origin" value="leave">
+          <input class="d-none" type="text" name="uuid" value="<%= leave.fileId %>">
 
         </form>
       </div>

@@ -23,12 +23,12 @@ function formatDate(inputDate) {
   <div class="col-auto">
     <h2 class="mb-0">Leave History</h2>
   </div>
-  <div class="col-auto">
+  <div class="col-12 col-lg-auto">
     <div class="row g-2 g-sm-3 d-lg-flex">
-      <div class="col-12 col-lg-auto">
+      <div class="col-auto">
         <a class="btn btn-phoenix-primary" role="button" href="/leave/request">Request Leave</a>
       </div>
-      <div class="col-12 col-lg-auto">
+      <div class="col-auto">
         <button class="btn px-3 btn-phoenix-secondary" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fa-solid fa-ellipsis"></span></button>
         <ul class="dropdown-menu dropdown-menu-end p-0" style="z-index: 9999;">
           <li><a class="dropdown-item" href="#!">Print</a></li>
@@ -94,7 +94,7 @@ function formatDate(inputDate) {
 
             <!-- table content -->
             <tbody class="list" id="project-list-table-body">
-              <% if (leave && Array.isArray(leave)) { %>
+              <% if (leave && leave.length > 0) { %>
               <!-- table item -->
               <% leave.forEach(function(leaves) { %>
               <tr class="position-static">
@@ -102,10 +102,10 @@ function formatDate(inputDate) {
                   <a class="fw-bold fs-8" href="/leave/details/<%= leaves._id %>"><%= leaves.type %></a>
                 </td>
                 <td class="align-middle white-space-nowrap startdate ps-3 py-4">
-                  <p class="mb-0 fs-8 text-900"><%= formatDate(leaves.date.start) %></p>
+                  <p class="mb-0 fs-9 text-900"><%= formatDate(leaves.date.start) %></p>
                 </td>
                 <td class="align-middle white-space-nowrap returndate ps-3 py-4">
-                  <p class="mb-0 fs-8 text-900"><%= formatDate(leaves.date.return) %></p>
+                  <p class="mb-0 fs-9 text-900"><%= formatDate(leaves.date.return) %></p>
                 </td>
                 <td class="align-middle white-space-nowrap text-end status">
                   <span class="badge badge-phoenix fs-10 badge-phoenix-success"><%= leaves.status %></span>
@@ -116,14 +116,14 @@ function formatDate(inputDate) {
                       <span class="fas fa-ellipsis-h fs-9"></span>
                     </button>
                     <div class="dropdown-menu dropdown-menu-end py-2">
-                      <a class="dropdown-item" href="/leave/details/<%= leaves.uuid %>">View</a>
+                      <a class="dropdown-item" href="/leave/details/<%= leaves._id %>">View</a>
                     </div>
                   </div>
                 </td>
               </tr>
               <%  }); %> <% } else { %>
               <tr>
-                <td colspan="7">No leaves submitted.</td>
+                <td><p class="align-middle">No leaves submitted.</p></td>
               </tr>
               <% } %>
             </tbody>

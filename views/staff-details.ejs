@@ -534,7 +534,7 @@
                     <% leave.forEach(function(leaves) { %>
                     <tr class="position-static">
                       <td class="align-middle time white-space-nowrap ps-0 type py-4">
-                        <a class="fw-bold fs-0" href="/leave/details/<%= leaves.uuid %>"><%= leaves.type %></a>
+                        <a class="fw-bold fs-0" href="/leave/details/<%= leaves._id %>"><%= leaves.type %></a>
                       </td>
                       <td class="align-middle white-space-nowrap startdate ps-3 py-4">
                         <p class="mb-0 fs-9 text-900"><%= formatDate(leaves.date.start) %></p>
@@ -543,7 +543,7 @@
                         <p class="mb-0 fs-9 text-900"><%= formatDate(leaves.date.return) %></p>
                       </td>
                       <td class="align-middle white-space-nowrap text-end status">
-                        <span class="badge badge-phoenix fs-9 badge-phoenix-success"><%= leaves.status %></span>
+                        <span class="badge badge-phoenix fs-10 badge-phoenix-success"><%= leaves.status %></span>
                       </td>
                       <td class="align-middle text-end white-space-nowrap pe-0 action">
                         <div class="font-sans-serif btn-reveal-trigger position-static">
@@ -587,7 +587,8 @@
           <div id="scrollspyAttachments">
             <h2 class="mb-4">Attachments</h2>
 
-            <%
+            <div class="overflow-x-hidden vh-50 scrollbar w-100">
+              <%
               const formatDateFile = (date) => {
                 const options = { day: 'numeric', month: 'short', hour: 'numeric', minute: 'numeric', hour12: true };
                 const formattedDate = new Intl.DateTimeFormat('en-US', options).format(date);
@@ -611,12 +612,12 @@
               };
             %>
 
-            <% const modalFiles = files.filter((file) => file.user.toString() === otherUser._id.toString()); %>
-            <% const lastIndexFile = modalFiles.length - 1; var borderModalFile = ''; %>
-            <% if(modalFiles && modalFiles.length > 0){ %>
-            <% modalFiles.forEach((file, index) => { %>
+              <% const modalFiles = files.filter((file) => file.user.toString() === otherUser._id.toString() && file.origin !== 'leave'); %>
+              <% const lastIndexFile = modalFiles.length - 1; var borderModalFile = ''; %>
+              <% if(modalFiles && modalFiles.length > 0){ %>
+              <% modalFiles.forEach((file, index) => { %>
 
-            <% 
+              <% 
                   if(index === lastIndexFile){
                       borderModalFile = 'border-bottom';
                   } else {
@@ -624,50 +625,50 @@
                   }
                 %>
 
-            <% if(file.type === '.png' || file.type === '.webp' || file.type === '.jpg' || file.type === '.jpeg' || file.type === '.gif' ){ %>
-            <div class="border-top <%= borderModalFile %> border-dashed px-0 pt-4 pb-3">
-              <div class="me-n3">
-                <div class="d-flex flex-between-center">
-                  <div class="d-flex mb-1"><span class="fa-solid fa-image me-2 text-body-tertiary fs-9"></span>
-                    <p class="text-body-highlight mb-0 lh-1"><%= file.name %></p>
-                  </div>
-                  <div class="btn-reveal-trigger">
-                    <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fas fa-ellipsis-h"></span></button>
-                    <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item" href="/files/download/<%= file._id %>">Download</a><a class="dropdown-item d-none" href="#!">Report abuse</a></div>
-                  </div>
-                </div>
-                <% const userFile = allUser.find(item => item._id.toString() === otherUser._id.toString()); %>
-                <div class="d-flex fs-9 text-body-tertiary mb-2 flex-wrap"><span><%= file.size %></span><span class="text-body-quaternary mx-1">| </span><a href="#!"><%= userFile.fullname %> </a><span class="text-body-quaternary mx-1">| </span><span class="text-nowrap"><%= formatDateFile(file.date) %></span></div><img class="rounded-2" src="<%= file.path %>" alt="" style="max-width:230px" />
-              </div>
-            </div>
-
-            <% }else { %>
-
-            <div class="border-top <%= borderModalFile %> px-0 pt-4 pb-3">
-              <div class="me-n3">
-                <div class="d-flex flex-between-center">
-                  <div>
-                    <div class="d-flex align-items-center mb-1"><span class="fa-solid fa-image me-2 fs-9 text-body-tertiary"></span>
+              <% if(file.type === '.png' || file.type === '.webp' || file.type === '.jpg' || file.type === '.jpeg' || file.type === '.gif' ){ %>
+              <div class="border-top <%= borderModalFile %> border-dashed px-0 pt-4 pb-3">
+                <div class="me-n3">
+                  <div class="d-flex flex-between-center">
+                    <div class="d-flex mb-1"><span class="fa-solid fa-image me-2 text-body-tertiary fs-9"></span>
                       <p class="text-body-highlight mb-0 lh-1"><%= file.name %></p>
                     </div>
-                    <div class="d-flex fs-9 text-body-tertiary mb-0 flex-wrap"><span><%= file.size %></span><span class="text-body-quaternary mx-1">| </span><a href="#!"><%= file.user %> </a><span class="text-body-quaternary mx-1">| </span><span class="text-nowrap"><%= formatDateFile(file.date) %></span></div>
+                    <div class="btn-reveal-trigger me-3">
+                      <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fas fa-ellipsis-h"></span></button>
+                      <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item" href="/files/download/<%= file._id %>">Download</a><a class="dropdown-item d-none" href="#!">Report abuse</a></div>
+                    </div>
                   </div>
-                  <div class="btn-reveal-trigger">
-                    <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fas fa-ellipsis-h"></span></button>
-                    <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item" href="#!">Edit</a><a class="dropdown-item text-danger" href="/">Delete</a><a class="dropdown-item" href="#!">Download</a><a class="dropdown-item" href="#!">Report abuse</a></div>
+                  <% const userFile = allUser.find(item => item._id.toString() === otherUser._id.toString()); %>
+                  <div class="d-flex fs-9 text-body-tertiary mb-2 flex-wrap"><span><%= file.size %></span><span class="text-body-quaternary mx-1">| </span><a href="#!"><%= userFile.fullname %> </a><span class="text-body-quaternary mx-1">| </span><span class="text-nowrap"><%= formatDateFile(file.date) %></span></div><img class="rounded-2" src="<%= file.path %>" alt="" style="max-width:230px" />
+                </div>
+              </div>
+
+              <% }else { %>
+
+              <div class="border-top <%= borderModalFile %> px-0 pt-4 pb-3">
+                <div class="me-n3">
+                  <div class="d-flex flex-between-center">
+                    <div>
+                      <div class="d-flex align-items-center mb-1"><span class="fa-solid fa-image me-2 fs-9 text-body-tertiary"></span>
+                        <p class="text-body-highlight mb-0 lh-1"><%= file.name %></p>
+                      </div>
+                      <div class="d-flex fs-9 text-body-tertiary mb-0 flex-wrap"><span><%= file.size %></span><span class="text-body-quaternary mx-1">| </span><a href="#!"><%= file.user %> </a><span class="text-body-quaternary mx-1">| </span><span class="text-nowrap"><%= formatDateFile(file.date) %></span></div>
+                    </div>
+                    <div class="btn-reveal-trigger me-3">
+                      <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fas fa-ellipsis-h"></span></button>
+                      <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item" href="#!">Edit</a><a class="dropdown-item text-danger" href="/">Delete</a><a class="dropdown-item" href="#!">Download</a><a class="dropdown-item" href="#!">Report abuse</a></div>
+                    </div>
                   </div>
                 </div>
               </div>
+
+              <% } %>
+              <% }); %>
+              <% }else { %>
+              <p class="white-space-nowrap fs-9">There is no file uploaded yet</p>
+              <% } %>
+
+
             </div>
-
-            <% } %>
-            <% }); %>
-            <% }else { %>
-            <p class="white-space-nowrap fs-9">There is no file uploaded yet</p>
-            <% } %>
-
-
-          </div>
 
         </div>
       </div>
