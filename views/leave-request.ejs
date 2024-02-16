@@ -73,7 +73,7 @@
     </div>
 
     <!-- leave form -->
-    <form class="row g-3 mb-6" action="/leave/request/<%= uuid %>" method="post" id="leaveForm">
+    <form class="row g-3 mb-6" action="/leave/request" method="post" id="leaveForm">
         
       <div class="col-sm-6 col-md-12">
         <div class="form-floating">
@@ -161,6 +161,8 @@
           </div>
         </div>
       </div>
+
+      <input type="hidden" name="uuid" value="<%= uuid %>">
 
     </form>
 
