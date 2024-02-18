@@ -35,9 +35,12 @@
                 const userApprovalIndex = approvals.findIndex(approval => approval.recipient.equals(user._id));
                 if (userApprovalIndex > 0) {
                     const previousApprovalStatus = approvals[userApprovalIndex - 1].status;
-                    if (previousApprovalStatus === 'approved' || previousApprovalStatus === 'submitted') {
-                        showApproval = ''; // Show approval
-                    }
+                    if (
+                         (previousApprovalStatus === 'approved' || previousApprovalStatus === 'submitted') &&
+                         !(approvals[userApprovalIndex].status === 'approved' || approvals[userApprovalIndex].status === 'denied')
+                       ) {
+                            showApproval = '';
+                         }
                 }
             }
         }
@@ -311,9 +314,9 @@
 </div>
 
 <div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis pt-7 pb-3 border-y row g-3 d-none" style="height: 35vh;">
-    <div class="mb-0">
-        
-    </div>
+  <div class="mb-0">
+
+  </div>
 </div>
 
 <!-- leave file -->

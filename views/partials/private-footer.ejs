@@ -62,6 +62,18 @@
 <script>
   // button loading function
   $(document).ready(function() {
+    $('.loading-upload-button').on('click', function() {
+      $('.loading-upload-button').addClass('loading');
+      $('.content-upload-button').addClass('noshow');
+
+      setTimeout(function() {
+        $('.loading-upload-button').removeClass('loading');
+        $('.content-upload-button').removeClass('noshow');
+      }, 2500);
+    });
+  });
+
+  $(document).ready(function() {
     $('.loading-button').on('click', function() {
       $('.loading-button').addClass('loading');
       $('.content-button').addClass('noshow');
@@ -97,7 +109,7 @@
           // Process the Dropzone queue
           myDropzone.processQueue();
 
-        //   $('#addFiles').modal('hide');
+          //   $('#addFiles').modal('hide');
         } else {
           // If no files are present, show the toast with different content
           showDropzoneFilesToast('No files selected');
@@ -107,7 +119,6 @@
       }, 2000);
     });
   });
-
 </script>
 
 </body>

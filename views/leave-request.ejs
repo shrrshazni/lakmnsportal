@@ -63,8 +63,8 @@
     <div class="mb-6">
       <div class="row g-3 justify-content-end">
         <div class="col-auto">
-          <button class="btn btn-phoenix-primary loading-button" type="submit" id="uploadFiles">
-            <div class="content-button">
+          <button class="btn btn-phoenix-primary loading-upload-button" type="submit" id="uploadFiles">
+            <div class="content-upload-button">
               <span><i class="fa fa-upload me-2" aria-hidden="true"></i>Upload Files</span>
             </div>
           </button>
@@ -128,11 +128,8 @@
 
       <div class="col-6 col-md-4 mb-3">
         <div class="form-floating">
-          <input type="text" name="query" id="queryInput" class="form-control" placeholder="Search and click staff name" required />
+          <input type="text" name="query" id="queryInput" class="form-control" placeholder="Search and click staff name"/>
           <label class="form-label" for="queryInput">Search Staff Name</label>
-          <div class="invalid-feedback">
-            Please search and click staff assigned.
-          </div>
         </div>
         <div id="results" class="mt-3 mb-3 col-12"></div>
       </div>

@@ -40,19 +40,6 @@
     visibility: hidden;
   }
 
-/* landing page */
-.gradient-circle {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  background: radial-gradient(circle, #3874ff, #182848);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-  position: absolute;
-}
-
 /* dashboard user home */
 
 .testimonial-carousel {
