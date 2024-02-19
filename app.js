@@ -371,20 +371,20 @@ app.get('/', isAuthenticated, async function (req, res) {
     const otherActivities = await Activity.find();
 
     // const newUserLeave = new UserLeave({
-    //     user: '65b084393a92b8716ae0d328',
-    //     annual: { leave: 14, taken: 5 },
-    //     sick: { leave: 14, taken: 3 },
-    //     emergency: { leave: 3, taken: 2 },
-    //     paternity: { leave: 3, taken: 1 },
-    //     marriage: { leave: 3, taken: 4 },
+    //     user: '65d2b954951a37fca57c0385',
+    //     annual: { leave: 37.5, taken: 9 },
+    //     sick: { leave: 14, taken: 0 },
+    //     emergency: { leave: 3, taken: 0 },
+    //     paternity: { leave: 3, taken: 0 },
+    //     marriage: { leave: 1, taken: 1 },
     //     bereavement: { leave: 3, taken: 1 },
-    //     study: { leave: 5, taken: 3 },
-    //     hajj: { leave: 40, taken: 1 },
+    //     study: { leave: 5, taken: 0 },
+    //     hajj: { leave: 40, taken: 0 },
     //     unpaid: { taken: 0 },
-    //     special: { taken: 2 }
+    //     special: { taken: 0 }
     // });
 
-    // newUserLeave.save()
+    // newUserLeave.save();
 
     if (user) {
         res.render('home', {
