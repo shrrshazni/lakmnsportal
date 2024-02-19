@@ -80,14 +80,15 @@
           <select class="form-select" id="floatingSelectTask" required aria-label="leave selection" name="type">
             <option value="">Select leave type</option>
             <option value="Annual Leave">Annual Leave</option>
+            <option value="Half Day Leave">Half Day Leave</option>
             <option value="Sick Leave">Sick Leave</option>
+            <option value="Extended Sick Leave">Extended Sick Leave</option>
             <option value="Emergency Leave">Emergency Leave</option>
             <option value="Marriage Leave">Marriage Leave</option>
-            <option value="Bereavement Leave">Bereavement Leave</option>
-            <option value="Study Leave">Study Leave</option>
-            <option value="Paternity Leave">Paternity Leave</option>
-            <option value="Unpaid Leave">Unpaid Leave</option>
             <option value="Hajj Leave">Hajj Leave</option>
+            <option value="Paternity Leave">Paternity Leave</option>
+            <option value="Unpaid Leave">Without Record Leave</option>
+            <option value="Unpaid Leave">Unpaid Leave</option>
             <option value="Special Leave">Special Leave</option>
           </select>
           <div class="invalid-feedback">Please select a leave type</div>
@@ -128,19 +129,22 @@
 
       <div class="col-6 col-md-4 mb-3">
         <div class="form-floating">
-          <input type="text" name="query" id="queryInput" class="form-control" placeholder="Search and click staff name"/>
-          <label class="form-label" for="queryInput">Search Staff Name</label>
+          <input type="text" name="query" id="queryInput" class="form-control" placeholder="Search staff name" required/>
+          <label class="form-label" for="queryInput">Search Relief Staff</label>
+          <div class="invalid-feedback">
+            Please select relief staff
+          </div>
         </div>
         <div id="results" class="mt-3 mb-3 col-12"></div>
       </div>
 
-      <input type="hidden" id="selectedNamesInput" name="selectedNames" value="<%= Array.isArray(selectedNames) ? selectedNames.join(',') : '' %>" />
+      <input type="hidden" id="selectedNamesInput" name="selectedNames" value="<%= Array.isArray(selectedNames) ? selectedNames.join(',') : '' %>"/>
 
       <div class="col-12 gy-6 mt-0">
         <div class="form-floating">
           <textarea class="form-control scrollbar" id="floatingProjectOverview" name="purpose" placeholder="State your purpose here" style="height: 125px" required></textarea>
           <div class="invalid-feedback">
-            Please state the purpose of leave.
+            Please state the purpose of leave
           </div>
           <label for="floatingProjectOverview">Purpose of leave</label>
         </div>
