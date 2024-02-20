@@ -126,6 +126,10 @@ const userLeaveSchema = new mongoose.Schema({
         leave: { type: Number, default: 14 },
         taken: { type: Number, default: 0 }
     },
+    sickExtended: {
+        leave: { type: Number, default: 60 },
+        taken: { type: Number, default: 0 }
+    },
     emergency: {
         leave: { type: Number, default: 0 },
         taken: { type: Number, default: 0 }
@@ -134,16 +138,24 @@ const userLeaveSchema = new mongoose.Schema({
         leave: { type: Number, default: 3 },
         taken: { type: Number, default: 0 }
     },
-    marriage: {
-        leave: { type: Number, default: 3 },
+    maternity: {
+        leave: { type: Number, default: 60 },
         taken: { type: Number, default: 0 }
     },
     bereavement: {
         leave: { type: Number, default: 3 },
         taken: { type: Number, default: 0 }
-    },
+    }, // will be removed later
     study: {
         leave: { type: Number, default: 3 },
+        taken: { type: Number, default: 0 }
+    }, // will be removed later
+    marriage: {
+        leave: { type: Number, default: 3 },
+        taken: { type: Number, default: 0 }
+    },
+    attendExam: {
+        leave: { type: Number, default: 5 },
         taken: { type: Number, default: 0 }
     },
     hajj: {
@@ -154,6 +166,7 @@ const userLeaveSchema = new mongoose.Schema({
         taken: { type: Number, default: 0 }
     },
     special: {
+        leave: { type: Number, default: 3 },
         taken: { type: Number, default: 0 }
     }
 });
@@ -371,17 +384,20 @@ app.get('/', isAuthenticated, async function (req, res) {
     const otherActivities = await Activity.find();
 
     // const newUserLeave = new UserLeave({
-    //     user: '65d2b954951a37fca57c0385',
-    //     annual: { leave: 37.5, taken: 9 },
+    //     user: '65b1b953bf237e83aa5a7f27', // Replace with the actual user ID
+    //     annual: { leave: 14, taken: 0 },
     //     sick: { leave: 14, taken: 0 },
-    //     emergency: { leave: 3, taken: 0 },
+    //     sickExtended: { leave: 60, taken: 0 },
+    //     emergency: { leave: 0, taken:0 },
     //     paternity: { leave: 3, taken: 0 },
-    //     marriage: { leave: 1, taken: 1 },
-    //     bereavement: { leave: 3, taken: 1 },
-    //     study: { leave: 5, taken: 0 },
+    //     maternity: { leave: 60, taken: 0 },
+    //     bereavement: { leave: 3, taken: 0 }, // will be removed later
+    //     study: { leave: 3, taken: 0 }, // will be removed later
+    //     marriage: { leave: 3, taken: 0 },
+    //     attendExam: { leave: 5, taken: 0 },
     //     hajj: { leave: 40, taken: 0 },
     //     unpaid: { taken: 0 },
-    //     special: { taken: 0 }
+    //     special: { leave: 7, taken: 0 }
     // });
 
     // newUserLeave.save();
@@ -421,7 +437,7 @@ app.get(
     isAuthenticated,
     async function (req, res) {
         const { id } = req.params;
-        const userLeave = await UserLeave.findOne({ user: id });
+        const userLeave = await UserLeave.findOne({ user: id }).populate('user').exec();
 
         if (!userLeave) {
             return res.status(404).json({ error: 'User leave data not found' });
@@ -963,7 +979,7 @@ app.get('/profile', isAuthenticated, async function (req, res) {
         res.render('profile', {
             user: user,
             notifications: notifications,
-            leave : leave,
+            leave: leave,
             userLeave: userLeave,
             activities: activities,
             info: info,
@@ -1037,405 +1053,112 @@ app
 
             console.log(uuid);
 
-            const existing = await Leave.findOne({ fileId: uuid });
+            // init to submit the leave req
+            var leaveBalance = '';
+            var approvals = '';
+            var sendNoti = [];
+            var sendEmail = [];
+            const chiefExec = await User.findOne({ isChiefExec: true });
+            const depChiefExec = await User.findOne({ isDeputyChiefExec: true });
+            const headOfSection = await User.findOne({
+                isHeadOfSection: true,
+                section: user.section
+            });
+            const headOfDepartment = await User.findOne({
+                isHeadOfDepartment: true,
+                department: user.department
+            });
+            const adminHR = await User.findOne({
+                isAdmin: true,
+                department: 'Human Resource'
+            });
+            const userLeave = await UserLeave.findOne({ user: user._id });
+            // find assignee
+            const assignee = await User.find({ fullname: { $in: selectedNames } });
 
-            if (!existing) {
-                var leaveBalance = '';
-                var approvals = '';
-                var sendNoti = [];
-                var sendEmail = [];
-                const chiefExec = await User.findOne({ isChiefExec: true });
-                const depChiefExec = await User.findOne({ isDeputyChiefExec: true });
-                const headOfSection = await User.findOne({
-                    isHeadOfSection: true,
-                    section: user.section
-                });
-                const headOfDepartment = await User.findOne({
-                    isHeadOfDepartment: true,
-                    department: user.department
-                });
-                const adminHR = await User.findOne({
-                    isAdmin: true,
-                    department: 'Human Resource'
-                });
-                const userLeave = await UserLeave.findOne({ user: user._id });
-                // find assignee
-                const assignee = await User.find({ fullname: { $in: selectedNames } });
-
-                // Calculate the difference in hours between the two dates
-                var numberOfDays = '';
-                var timeDifference = '';
-
-                if (type === 'Annual Leave' || type === 'Sick Leave') {
-                    numberOfDays = calculateBusinessDays(startDate, returnDate);
-                } else if (type === 'Emergency Leave') {
-                    numberOfDays = calculateBusinessDays(startDate, returnDate);
-                } else if (
-                    type === 'Marriage Leave' ||
-                    type === 'Paternity Leave' ||
-                    type === 'Study Leave' ||
-                    type === 'Hajj Leave' ||
-                    type === 'Unpaid Leave' ||
-                    type === 'Special Leave'
-                ) {
-                    timeDifference = returnDate.getTime() - startDate.getTime();
-
-                    // Convert milliseconds to days
-                    numberOfDays = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
-                }
-
-                const newDate = {
-                    start: new Date(startDate),
-                    return: new Date(returnDate)
-                };
-
-                // for home dashboard
-                const leaveHome = await Leave.find({ user: user._id });
-                const allUser = await User.find();
-                const allLeave = await Leave.find();
-                const allUserLeave = await UserLeave.find();
-                const taskHome = await Task.find({ assignee: { $in: [user._id] } })
-                    .sort({ timestamp: -1 })
-                    .populate('assignee')
-                    .exec();
-                const fileHome = await File.find();
-                const sevenDaysAgo = new Date();
-                sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-                const activitiesHome = await Activity.find({
-                    department: user.department,
-                    date: { $gte: sevenDaysAgo }
+            // for home dashboard
+            const leaveHome = await Leave.find({ user: user._id });
+            const allUser = await User.find();
+            const allLeave = await Leave.find();
+            const allUserLeave = await UserLeave.find();
+            const taskHome = await Task.find({ assignee: { $in: [user._id] } })
+                .sort({ timestamp: -1 })
+                .populate('assignee')
+                .exec();
+            const fileHome = await File.find();
+            const sevenDaysAgo = new Date();
+            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+            const activitiesHome = await Activity.find({
+                department: user.department,
+                date: { $gte: sevenDaysAgo }
+            })
+                .populate({
+                    path: 'user'
                 })
-                    .populate({
-                        path: 'user'
-                    })
-                    .sort({ date: -1 })
-                    .exec();
-                const userDepartmentHome = await User.find({
-                    department: user.department,
-                    _id: { $ne: user._id }
-                });
-                const otherTaskHome = await Task.find({
-                    assignee: { $ne: [user._id] }
-                });
-                const otherActivitiesHome = await Activity.find();
+                .sort({ date: -1 })
+                .exec();
+            const userDepartmentHome = await User.find({
+                department: user.department,
+                _id: { $ne: user._id }
+            });
+            const otherTaskHome = await Task.find({
+                assignee: { $ne: [user._id] }
+            });
+            const otherActivitiesHome = await Activity.find();
 
-                // set approval based on role
-                if (type === 'Annual Leave') {
-                    leaveBalance = userLeave.annual.leave - userLeave.annual.taken;
+            const newDate = {
+                start: new Date(startDate),
+                return: new Date(returnDate)
+            };
 
-                    if (leaveBalance >= numberOfDays) {
+            const today = new Date();
+
+            const amountDayRequest = calculateBusinessDays(today, startDate);
+
+            // Calculate the difference in hours between the two dates
+            var numberOfDays = '';
+            var timeDifference = '';
+            var leaveBalance = '';
+            var leaveTaken = '';
+            var approvals = [];
+
+            if (type === 'Annual Leave' || type === 'Sick Leave') {
+                numberOfDays = calculateBusinessDays(startDate, returnDate);
+            } else if (type === 'Half Day Leave') {
+                numberOfDays = calculateBusinessDays(startDate, returnDate) / 2;
+            } else if (type === 'Emergency Leave') {
+                numberOfDays = calculateBusinessDays(startDate, today);
+            } else if (
+                type === 'Marriage Leave' ||
+                type === 'Paternity Leave' ||
+                type === 'Maternity Leave' ||
+                type === 'Attend Exam Leave' ||
+                type === 'Hajj Leave' ||
+                type === 'Unpaid Leave' ||
+                type === 'Special Leave' ||
+                type === 'Extended Sick Leave'
+            ) {
+                timeDifference = returnDate.getTime() - startDate.getTime();
+                // Convert milliseconds to days
+                numberOfDays = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
+            }
+
+            // set approval based on role
+            if (type === 'Annual Leave') {
+                leaveBalance = userLeave.annual.leave - userLeave.annual.taken;
+
+                if (leaveBalance >= numberOfDays && numberOfDays > 0) {
+
+                    if (amountDayRequest >= 3) {
                         console.log(numberOfDays);
                         console.log(
                             'Sufficient annual leave balance for the requested duration'
                         );
 
-                        if (user.isOfficer === true) {
-                            if (headOfSection) {
-                                approvals = [
-                                    {
-                                        recipient: user._id,
-                                        role: 'Staff',
-                                        status: 'submitted',
-                                        comment: 'Submitted leave request',
-                                        timestamp: new Date(),
-                                        estimated: ''
-                                    },
-                                    ...(assignee && assignee.length > 0
-                                        ? assignee.map(assigneeItem => ({
-                                            recipient: assigneeItem._id,
-                                            role: 'Temporary Replacement',
-                                            status: 'pending',
-                                            comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                            estimated: new Date(
-                                                Date.now() + 1 * 24 * 60 * 60 * 1000
-                                            ),
-                                            timestamp: ''
-                                        }))
-                                        : []),
-                                    {
-                                        recipient: headOfSection._id,
-                                        role: 'Head of Section',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: headOfDepartment._id,
-                                        role: 'Head of Department',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: adminHR._id,
-                                        role: 'Human Resource',
-                                        status: 'pending',
-                                        comment: 'Leave request needs to be reviewed',
-                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }
-                                ];
-                            } else {
-                                approvals = [
-                                    {
-                                        recipient: user._id,
-                                        role: 'Staff',
-                                        status: 'submitted',
-                                        comment: 'Submitted leave request',
-                                        timestamp: new Date(),
-                                        estimated: ''
-                                    },
-                                    ...(assignee && assignee.length > 0
-                                        ? assignee.map(assigneeItem => ({
-                                            recipient: assigneeItem._id,
-                                            role: 'Temporary Replacement',
-                                            status: 'pending',
-                                            comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                            estimated: new Date(
-                                                Date.now() + 1 * 24 * 60 * 60 * 1000
-                                            ),
-                                            timestamp: ''
-                                        }))
-                                        : []),
-                                    {
-                                        recipient: headOfDepartment._id,
-                                        role: 'Head of Department',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: adminHR._id,
-                                        role: 'Human Resource',
-                                        status: 'pending',
-                                        comment: 'Leave request needs to be reviewed',
-                                        estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }
-                                ];
-                            }
-                        } else if (user.isHeadOfSection === true) {
-                            approvals = [
-                                {
-                                    recipient: user._id,
-                                    role: 'Staff',
-                                    status: 'submitted',
-                                    comment: 'Submitted leave request',
-                                    timestamp: new Date(),
-                                    estimated: ''
-                                },
-                                ...(assignee && assignee.length > 0
-                                    ? assignee.map(assigneeItem => ({
-                                        recipient: assigneeItem._id,
-                                        role: 'Temporary Replacement',
-                                        status: 'pending',
-                                        comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }))
-                                    : []),
-                                {
-                                    recipient: headOfDepartment._id,
-                                    role: 'Head of Department',
-                                    status: 'pending',
-                                    comment: 'Leave request needs approval',
-                                    estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                },
-                                {
-                                    recipient: depChiefExec._id,
-                                    role: 'Deputy Chief Executive Officer',
-                                    status: 'pending',
-                                    comment: 'Leave request needs approval',
-                                    estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                },
-                                {
-                                    recipient: adminHR._id,
-                                    role: 'Human Resource',
-                                    status: 'pending',
-                                    comment: 'Leave request needs to be reviewed',
-                                    estimated: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                }
-                            ];
-                        } else if (user.isHeadOfDepartment === true) {
-                            approvals = [
-                                {
-                                    recipient: user._id,
-                                    role: 'Staff',
-                                    status: 'submitted',
-                                    comment: 'Submitted leave request',
-                                    timestamp: new Date(),
-                                    estimated: ''
-                                },
-                                ...(assignee && assignee.length > 0
-                                    ? assignee.map(assigneeItem => ({
-                                        recipient: assigneeItem._id,
-                                        role: 'Temporary Replacement',
-                                        status: 'pending',
-                                        comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }))
-                                    : []),
-                                {
-                                    recipient: depChiefExec._id,
-                                    role: 'Deputy Chief Executive Officer',
-                                    status: 'pending',
-                                    comment: 'Leave request needs approval',
-                                    estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                },
-                                {
-                                    recipient: chiefExec._id,
-                                    role: 'Chief Executive Officer',
-                                    status: 'pending',
-                                    comment: 'Leave request needs approval',
-                                    estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                },
-                                {
-                                    recipient: adminHR._id,
-                                    role: 'Human Resource',
-                                    status: 'pending',
-                                    comment: 'Leave request needs to be reviewed',
-                                    estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                }
-                            ];
-                        } else if (user.isDeputyChiefExec === true) {
-                            approvals = [
-                                {
-                                    recipient: user._id,
-                                    role: 'Staff',
-                                    status: 'submitted',
-                                    comment: 'Submitted leave request',
-                                    timestamp: new Date(),
-                                    estimated: ''
-                                },
-                                ...(assignee && assignee.length > 0
-                                    ? assignee.map(assigneeItem => ({
-                                        recipient: assigneeItem._id,
-                                        role: 'Temporary Replacement',
-                                        status: 'pending',
-                                        comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }))
-                                    : []),
-                                {
-                                    recipient: chiefExec._id,
-                                    role: 'Chief Executive Officer',
-                                    status: 'pending',
-                                    comment: 'Leave request needs approval',
-                                    estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                },
-                                {
-                                    recipient: adminHR._id,
-                                    role: 'Human Resource',
-                                    status: 'pending',
-                                    comment: 'Leave request needs to be reviewed',
-                                    estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                }
-                            ];
-                        } else {
-                            if (headOfSection) {
-                                approvals = [
-                                    {
-                                        recipient: user._id,
-                                        role: 'Staff',
-                                        status: 'submitted',
-                                        comment: 'Submitted leave request',
-                                        timestamp: new Date(),
-                                        estimated: ''
-                                    },
-                                    ...(assignee && assignee.length > 0
-                                        ? assignee.map(assigneeItem => ({
-                                            recipient: assigneeItem._id,
-                                            role: 'Temporary Replacement',
-                                            status: 'pending',
-                                            comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                            estimated: new Date(
-                                                Date.now() + 1 * 24 * 60 * 60 * 1000
-                                            ),
-                                            timestamp: ''
-                                        }))
-                                        : []),
-                                    {
-                                        recipient: headOfSection._id,
-                                        role: 'Head of Section',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: headOfDepartment._id,
-                                        role: 'Head of Department',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: adminHR._id,
-                                        role: 'Human Resource',
-                                        status: 'pending',
-                                        comment: 'Leave request needs to be reviewed',
-                                        estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }
-                                ];
-                            } else {
-                                approvals = [
-                                    {
-                                        recipient: user._id,
-                                        role: 'Staff',
-                                        status: 'submitted',
-                                        comment: 'Submitted leave request',
-                                        timestamp: new Date(),
-                                        estimated: ''
-                                    },
-                                    ...(assignee && assignee.length > 0
-                                        ? assignee.map(assigneeItem => ({
-                                            recipient: assigneeItem._id,
-                                            role: 'Temporary Replacement',
-                                            status: 'pending',
-                                            comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                            estimated: new Date(
-                                                Date.now() + 1 * 24 * 60 * 60 * 1000
-                                            ),
-                                            timestamp: ''
-                                        }))
-                                        : []),
-                                    {
-                                        recipient: headOfDepartment._id,
-                                        role: 'Head of Department',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: adminHR._id,
-                                        role: 'Human Resource',
-                                        status: 'pending',
-                                        comment: 'Leave request needs to be reviewed',
-                                        estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }
-                                ];
-                            }
-                        }
+                        approvals = generateApprovals(user, headOfSection, headOfDepartment, depChiefExec, chiefExec, adminHR, assignee);
                     } else {
                         console.log(
-                            'Insufficient annual leave balance for the requested duration'
+                            'The leave date applied must be more than 3 days from today'
                         );
 
                         res.render('home', {
@@ -1458,325 +1181,52 @@ app
                             // toast
                             show: 'show',
                             alert:
-                                'Insufficient annual leave balance for the requested duration'
+                                'The leave date applied must be more than 3 days from today'
                         });
                     }
-                } else if (type === 'Sick Leave') {
-                    leaveBalance = userLeave.sick.leave - userLeave.sick.taken;
+                } else {
+                    console.log(
+                        'Insufficient annual leave balance for the requested duration'
+                    );
 
-                    if (leaveBalance >= numberOfDays) {
+                    res.render('home', {
+                        user: user,
+                        notifications: notifications,
+                        uuid: uuidv4(),
+                        userDepartment: userDepartmentHome,
+                        otherTasks: otherTaskHome,
+                        otherActivities: otherActivitiesHome,
+                        // all data
+                        allUser: allUser,
+                        allUserLeave: allUserLeave,
+                        allLeave: allLeave,
+                        userLeave: userLeave,
+                        leave: leaveHome,
+                        tasks: taskHome,
+                        files: fileHome,
+                        activities: activitiesHome,
+                        selectedNames: '',
+                        // toast
+                        show: 'show',
+                        alert:
+                            'Insufficient annual leave balance for the requested duration'
+                    });
+                }
+
+            } else if (type === 'Half Day Leave') {
+                leaveBalance = userLeave.annual.leave - userLeave.annual.taken;
+
+                if (leaveBalance >= numberOfDays && numberOfDays > 0) {
+                    if (amountDayRequest >= 3) {
                         console.log(numberOfDays);
                         console.log(
-                            'Sufficient sick leave balance for the requested duration'
+                            'Sufficient annual leave balance for the requested duration'
                         );
 
-                        if (user.isOfficer === true) {
-                            if (headOfSection) {
-                                approvals = [
-                                    {
-                                        recipient: user._id,
-                                        role: 'Staff',
-                                        status: 'submitted',
-                                        comment: 'Submitted leave request',
-                                        timestamp: new Date(),
-                                        estimated: ''
-                                    },
-                                    ...(assignee && assignee.length > 0
-                                        ? assignee.map(assigneeItem => ({
-                                            recipient: assigneeItem._id,
-                                            role: 'Temporary Replacement',
-                                            status: 'pending',
-                                            comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                            estimated: new Date(
-                                                Date.now() + 1 * 24 * 60 * 60 * 1000
-                                            ),
-                                            timestamp: ''
-                                        }))
-                                        : []),
-                                    {
-                                        recipient: headOfSection._id,
-                                        role: 'Head of Section',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: headOfDepartment._id,
-                                        role: 'Head of Department',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: adminHR._id,
-                                        role: 'Human Resource',
-                                        status: 'pending',
-                                        comment: 'Leave request needs to be reviewed',
-                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }
-                                ];
-                            } else {
-                                approvals = [
-                                    {
-                                        recipient: user._id,
-                                        role: 'Staff',
-                                        status: 'submitted',
-                                        comment: 'Submitted leave request',
-                                        timestamp: new Date(),
-                                        estimated: ''
-                                    },
-                                    ...(assignee && assignee.length > 0
-                                        ? assignee.map(assigneeItem => ({
-                                            recipient: assigneeItem._id,
-                                            role: 'Temporary Replacement',
-                                            status: 'pending',
-                                            comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                            estimated: new Date(
-                                                Date.now() + 1 * 24 * 60 * 60 * 1000
-                                            ),
-                                            timestamp: ''
-                                        }))
-                                        : []),
-                                    {
-                                        recipient: headOfDepartment._id,
-                                        role: 'Head of Department',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: adminHR._id,
-                                        role: 'Human Resource',
-                                        status: 'pending',
-                                        comment: 'Leave request needs to be reviewed',
-                                        estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }
-                                ];
-                            }
-                        } else if (user.isHeadOfSection === true) {
-                            approvals = [
-                                {
-                                    recipient: user._id,
-                                    role: 'Staff',
-                                    status: 'submitted',
-                                    comment: 'Submitted leave request',
-                                    timestamp: new Date(),
-                                    estimated: ''
-                                },
-                                ...(assignee && assignee.length > 0
-                                    ? assignee.map(assigneeItem => ({
-                                        recipient: assigneeItem._id,
-                                        role: 'Temporary Replacement',
-                                        status: 'pending',
-                                        comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }))
-                                    : []),
-                                {
-                                    recipient: headOfDepartment._id,
-                                    role: 'Head of Department',
-                                    status: 'pending',
-                                    comment: 'Leave request needs approval',
-                                    estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                },
-                                {
-                                    recipient: depChiefExec._id,
-                                    role: 'Deputy Chief Executive Officer',
-                                    status: 'pending',
-                                    comment: 'Leave request needs approval',
-                                    estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                },
-                                {
-                                    recipient: adminHR._id,
-                                    role: 'Human Resource',
-                                    status: 'pending',
-                                    comment: 'Leave request needs to be reviewed',
-                                    estimated: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                }
-                            ];
-                        } else if (user.isHeadOfDepartment === true) {
-                            approvals = [
-                                {
-                                    recipient: user._id,
-                                    role: 'Staff',
-                                    status: 'submitted',
-                                    comment: 'Submitted leave request',
-                                    timestamp: new Date(),
-                                    estimated: ''
-                                },
-                                ...(assignee && assignee.length > 0
-                                    ? assignee.map(assigneeItem => ({
-                                        recipient: assigneeItem._id,
-                                        role: 'Temporary Replacement',
-                                        status: 'pending',
-                                        comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }))
-                                    : []),
-                                {
-                                    recipient: depChiefExec._id,
-                                    role: 'Deputy Chief Executive Officer',
-                                    status: 'pending',
-                                    comment: 'Leave request needs approval',
-                                    estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                },
-                                {
-                                    recipient: chiefExec._id,
-                                    role: 'Chief Executive Officer',
-                                    status: 'pending',
-                                    comment: 'Leave request needs approval',
-                                    estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                },
-                                {
-                                    recipient: adminHR._id,
-                                    role: 'Human Resource',
-                                    status: 'pending',
-                                    comment: 'Leave request needs to be reviewed',
-                                    estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                }
-                            ];
-                        } else if (user.isDeputyChiefExec === true) {
-                            approvals = [
-                                {
-                                    recipient: user._id,
-                                    role: 'Staff',
-                                    status: 'submitted',
-                                    comment: 'Submitted leave request',
-                                    timestamp: new Date(),
-                                    estimated: ''
-                                },
-                                ...(assignee && assignee.length > 0
-                                    ? assignee.map(assigneeItem => ({
-                                        recipient: assigneeItem._id,
-                                        role: 'Temporary Replacement',
-                                        status: 'pending',
-                                        comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }))
-                                    : []),
-                                {
-                                    recipient: chiefExec._id,
-                                    role: 'Chief Executive Officer',
-                                    status: 'pending',
-                                    comment: 'Leave request needs approval',
-                                    estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                },
-                                {
-                                    recipient: adminHR._id,
-                                    role: 'Human Resource',
-                                    status: 'pending',
-                                    comment: 'Leave request needs to be reviewed',
-                                    estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                }
-                            ];
-                        } else {
-                            if (headOfSection) {
-                                approvals = [
-                                    {
-                                        recipient: user._id,
-                                        role: 'Staff',
-                                        status: 'submitted',
-                                        comment: 'Submitted leave request',
-                                        timestamp: new Date(),
-                                        estimated: ''
-                                    },
-                                    ...(assignee && assignee.length > 0
-                                        ? assignee.map(assigneeItem => ({
-                                            recipient: assigneeItem._id,
-                                            role: 'Temporary Replacement',
-                                            status: 'pending',
-                                            comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                            estimated: new Date(
-                                                Date.now() + 1 * 24 * 60 * 60 * 1000
-                                            ),
-                                            timestamp: ''
-                                        }))
-                                        : []),
-                                    {
-                                        recipient: headOfSection._id,
-                                        role: 'Head of Section',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: headOfDepartment._id,
-                                        role: 'Head of Department',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: adminHR._id,
-                                        role: 'Human Resource',
-                                        status: 'pending',
-                                        comment: 'Leave request needs to be reviewed',
-                                        estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }
-                                ];
-                            } else {
-                                approvals = [
-                                    {
-                                        recipient: user._id,
-                                        role: 'Staff',
-                                        status: 'submitted',
-                                        comment: 'Submitted leave request',
-                                        timestamp: new Date(),
-                                        estimated: ''
-                                    },
-                                    ...(assignee && assignee.length > 0
-                                        ? assignee.map(assigneeItem => ({
-                                            recipient: assigneeItem._id,
-                                            role: 'Temporary Replacement',
-                                            status: 'pending',
-                                            comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                            estimated: new Date(
-                                                Date.now() + 1 * 24 * 60 * 60 * 1000
-                                            ),
-                                            timestamp: ''
-                                        }))
-                                        : []),
-                                    {
-                                        recipient: headOfDepartment._id,
-                                        role: 'Head of Department',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: adminHR._id,
-                                        role: 'Human Resource',
-                                        status: 'pending',
-                                        comment: 'Leave request needs to be reviewed',
-                                        estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }
-                                ];
-                            }
-                        }
+                        approvals = generateApprovals(user, headOfSection, headOfDepartment, depChiefExec, chiefExec, adminHR, assignee);
                     } else {
                         console.log(
-                            'Insufficient sick leave balance for the requested duration'
+                            'The leave date applied must be more than 3 days from today'
                         );
 
                         res.render('home', {
@@ -1799,2851 +1249,942 @@ app
                             // toast
                             show: 'show',
                             alert:
-                                'Insufficient sick leave balance for the requested duration'
+                                'The leave date applied must be more than 3 days from today'
                         });
                     }
-                } else if (type === 'Emergency Leave') {
-                    leaveAmount = userLeave.emergency.leave;
-                    leaveTaken = userLeave.emergency.taken;
-
-                    if (leaveAmount >= numberOfDays && leaveTaken <= 7) {
-                        console.log(
-                            'Sufficient emergency leave days and leave taken for the requested duration'
-                        );
-
-                        if (user.isOfficer === true) {
-                            if (headOfSection) {
-                                approvals = [
-                                    {
-                                        recipient: user._id,
-                                        role: 'Staff',
-                                        status: 'submitted',
-                                        comment: 'Submitted leave request',
-                                        timestamp: new Date(),
-                                        estimated: ''
-                                    },
-                                    ...(assignee && assignee.length > 0
-                                        ? assignee.map(assigneeItem => ({
-                                            recipient: assigneeItem._id,
-                                            role: 'Temporary Replacement',
-                                            status: 'pending',
-                                            comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                            estimated: new Date(
-                                                Date.now() + 1 * 24 * 60 * 60 * 1000
-                                            ),
-                                            timestamp: ''
-                                        }))
-                                        : []),
-                                    {
-                                        recipient: headOfSection._id,
-                                        role: 'Head of Section',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: headOfDepartment._id,
-                                        role: 'Head of Department',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: adminHR._id,
-                                        role: 'Human Resource',
-                                        status: 'pending',
-                                        comment: 'Leave request needs to be reviewed',
-                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }
-                                ];
-                            } else {
-                                approvals = [
-                                    {
-                                        recipient: user._id,
-                                        role: 'Staff',
-                                        status: 'submitted',
-                                        comment: 'Submitted leave request',
-                                        timestamp: new Date(),
-                                        estimated: ''
-                                    },
-                                    ...(assignee && assignee.length > 0
-                                        ? assignee.map(assigneeItem => ({
-                                            recipient: assigneeItem._id,
-                                            role: 'Temporary Replacement',
-                                            status: 'pending',
-                                            comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                            estimated: new Date(
-                                                Date.now() + 1 * 24 * 60 * 60 * 1000
-                                            ),
-                                            timestamp: ''
-                                        }))
-                                        : []),
-                                    {
-                                        recipient: headOfDepartment._id,
-                                        role: 'Head of Department',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: adminHR._id,
-                                        role: 'Human Resource',
-                                        status: 'pending',
-                                        comment: 'Leave request needs to be reviewed',
-                                        estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }
-                                ];
-                            }
-                        } else if (user.isHeadOfSection === true) {
-                            approvals = [
-                                {
-                                    recipient: user._id,
-                                    role: 'Staff',
-                                    status: 'submitted',
-                                    comment: 'Submitted leave request',
-                                    timestamp: new Date(),
-                                    estimated: ''
-                                },
-                                ...(assignee && assignee.length > 0
-                                    ? assignee.map(assigneeItem => ({
-                                        recipient: assigneeItem._id,
-                                        role: 'Temporary Replacement',
-                                        status: 'pending',
-                                        comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }))
-                                    : []),
-                                {
-                                    recipient: headOfDepartment._id,
-                                    role: 'Head of Department',
-                                    status: 'pending',
-                                    comment: 'Leave request needs approval',
-                                    estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                },
-                                {
-                                    recipient: depChiefExec._id,
-                                    role: 'Deputy Chief Executive Officer',
-                                    status: 'pending',
-                                    comment: 'Leave request needs approval',
-                                    estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                },
-                                {
-                                    recipient: adminHR._id,
-                                    role: 'Human Resource',
-                                    status: 'pending',
-                                    comment: 'Leave request needs to be reviewed',
-                                    estimated: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                }
-                            ];
-                        } else if (user.isHeadOfDepartment === true) {
-                            approvals = [
-                                {
-                                    recipient: user._id,
-                                    role: 'Staff',
-                                    status: 'submitted',
-                                    comment: 'Submitted leave request',
-                                    timestamp: new Date(),
-                                    estimated: ''
-                                },
-                                ...(assignee && assignee.length > 0
-                                    ? assignee.map(assigneeItem => ({
-                                        recipient: assigneeItem._id,
-                                        role: 'Temporary Replacement',
-                                        status: 'pending',
-                                        comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }))
-                                    : []),
-                                {
-                                    recipient: depChiefExec._id,
-                                    role: 'Deputy Chief Executive Officer',
-                                    status: 'pending',
-                                    comment: 'Leave request needs approval',
-                                    estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                },
-                                {
-                                    recipient: chiefExec._id,
-                                    role: 'Chief Executive Officer',
-                                    status: 'pending',
-                                    comment: 'Leave request needs approval',
-                                    estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                },
-                                {
-                                    recipient: adminHR._id,
-                                    role: 'Human Resource',
-                                    status: 'pending',
-                                    comment: 'Leave request needs to be reviewed',
-                                    estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                }
-                            ];
-                        } else if (user.isDeputyChiefExec === true) {
-                            approvals = [
-                                {
-                                    recipient: user._id,
-                                    role: 'Staff',
-                                    status: 'submitted',
-                                    comment: 'Submitted leave request',
-                                    timestamp: new Date(),
-                                    estimated: ''
-                                },
-                                ...(assignee && assignee.length > 0
-                                    ? assignee.map(assigneeItem => ({
-                                        recipient: assigneeItem._id,
-                                        role: 'Temporary Replacement',
-                                        status: 'pending',
-                                        comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }))
-                                    : []),
-                                {
-                                    recipient: chiefExec._id,
-                                    role: 'Chief Executive Officer',
-                                    status: 'pending',
-                                    comment: 'Leave request needs approval',
-                                    estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                },
-                                {
-                                    recipient: adminHR._id,
-                                    role: 'Human Resource',
-                                    status: 'pending',
-                                    comment: 'Leave request needs to be reviewed',
-                                    estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                }
-                            ];
-                        } else {
-                            if (headOfSection) {
-                                approvals = [
-                                    {
-                                        recipient: user._id,
-                                        role: 'Staff',
-                                        status: 'submitted',
-                                        comment: 'Submitted leave request',
-                                        timestamp: new Date(),
-                                        estimated: ''
-                                    },
-                                    ...(assignee && assignee.length > 0
-                                        ? assignee.map(assigneeItem => ({
-                                            recipient: assigneeItem._id,
-                                            role: 'Temporary Replacement',
-                                            status: 'pending',
-                                            comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                            estimated: new Date(
-                                                Date.now() + 1 * 24 * 60 * 60 * 1000
-                                            ),
-                                            timestamp: ''
-                                        }))
-                                        : []),
-                                    {
-                                        recipient: headOfSection._id,
-                                        role: 'Head of Section',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: headOfDepartment._id,
-                                        role: 'Head of Department',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: adminHR._id,
-                                        role: 'Human Resource',
-                                        status: 'pending',
-                                        comment: 'Leave request needs to be reviewed',
-                                        estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }
-                                ];
-                            } else {
-                                approvals = [
-                                    {
-                                        recipient: user._id,
-                                        role: 'Staff',
-                                        status: 'submitted',
-                                        comment: 'Submitted leave request',
-                                        timestamp: new Date(),
-                                        estimated: ''
-                                    },
-                                    ...(assignee && assignee.length > 0
-                                        ? assignee.map(assigneeItem => ({
-                                            recipient: assigneeItem._id,
-                                            role: 'Temporary Replacement',
-                                            status: 'pending',
-                                            comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                            estimated: new Date(
-                                                Date.now() + 1 * 24 * 60 * 60 * 1000
-                                            ),
-                                            timestamp: ''
-                                        }))
-                                        : []),
-                                    {
-                                        recipient: headOfDepartment._id,
-                                        role: 'Head of Department',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: adminHR._id,
-                                        role: 'Human Resource',
-                                        status: 'pending',
-                                        comment: 'Leave request needs to be reviewed',
-                                        estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }
-                                ];
-                            }
-                        }
-                    } else {
-                        console.log(
-                            'Insufficient emergency leave days and leave taken reach maximum for the requested duration'
-                        );
-
-                        res.render('home', {
-                            user: user,
-                            notifications: notifications,
-                            uuid: uuidv4(),
-                            userDepartment: userDepartmentHome,
-                            otherTasks: otherTaskHome,
-                            otherActivities: otherActivitiesHome,
-                            // all data
-                            allUser: allUser,
-                            allUserLeave: allUserLeave,
-                            allLeave: allLeave,
-                            userLeave: userLeave,
-                            leave: leaveHome,
-                            tasks: taskHome,
-                            files: fileHome,
-                            activities: activitiesHome,
-                            selectedNames: '',
-                            // toast
-                            show: 'show',
-                            alert:
-                                'Exceed 3 days leave or reached maximum 7 times taken for the requested emergency leave'
-                        });
-                    }
-                } else if (type === 'Bereavement Leave') {
-                    leaveAmount = userLeave.bereavement.leave;
-                    leaveTaken = userLeave.bereavement.taken;
-
-                    if (leaveAmount >= numberOfDays && leaveTaken <= 3) {
-                        console.log(
-                            'Sufficient bereavement leave days and leave taken for the requested duration'
-                        );
-
-                        if (user.isOfficer === true) {
-                            if (headOfSection) {
-                                approvals = [
-                                    {
-                                        recipient: user._id,
-                                        role: 'Staff',
-                                        status: 'submitted',
-                                        comment: 'Submitted leave request',
-                                        timestamp: new Date(),
-                                        estimated: ''
-                                    },
-                                    ...(assignee && assignee.length > 0
-                                        ? assignee.map(assigneeItem => ({
-                                            recipient: assigneeItem._id,
-                                            role: 'Temporary Replacement',
-                                            status: 'pending',
-                                            comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                            estimated: new Date(
-                                                Date.now() + 1 * 24 * 60 * 60 * 1000
-                                            ),
-                                            timestamp: ''
-                                        }))
-                                        : []),
-                                    {
-                                        recipient: headOfSection._id,
-                                        role: 'Head of Section',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: headOfDepartment._id,
-                                        role: 'Head of Department',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: adminHR._id,
-                                        role: 'Human Resource',
-                                        status: 'pending',
-                                        comment: 'Leave request needs to be reviewed',
-                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }
-                                ];
-                            } else {
-                                approvals = [
-                                    {
-                                        recipient: user._id,
-                                        role: 'Staff',
-                                        status: 'submitted',
-                                        comment: 'Submitted leave request',
-                                        timestamp: new Date(),
-                                        estimated: ''
-                                    },
-                                    ...(assignee && assignee.length > 0
-                                        ? assignee.map(assigneeItem => ({
-                                            recipient: assigneeItem._id,
-                                            role: 'Temporary Replacement',
-                                            status: 'pending',
-                                            comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                            estimated: new Date(
-                                                Date.now() + 1 * 24 * 60 * 60 * 1000
-                                            ),
-                                            timestamp: ''
-                                        }))
-                                        : []),
-                                    {
-                                        recipient: headOfDepartment._id,
-                                        role: 'Head of Department',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: adminHR._id,
-                                        role: 'Human Resource',
-                                        status: 'pending',
-                                        comment: 'Leave request needs to be reviewed',
-                                        estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }
-                                ];
-                            }
-                        } else if (user.isHeadOfSection === true) {
-                            approvals = [
-                                {
-                                    recipient: user._id,
-                                    role: 'Staff',
-                                    status: 'submitted',
-                                    comment: 'Submitted leave request',
-                                    timestamp: new Date(),
-                                    estimated: ''
-                                },
-                                ...(assignee && assignee.length > 0
-                                    ? assignee.map(assigneeItem => ({
-                                        recipient: assigneeItem._id,
-                                        role: 'Temporary Replacement',
-                                        status: 'pending',
-                                        comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }))
-                                    : []),
-                                {
-                                    recipient: headOfDepartment._id,
-                                    role: 'Head of Department',
-                                    status: 'pending',
-                                    comment: 'Leave request needs approval',
-                                    estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                },
-                                {
-                                    recipient: depChiefExec._id,
-                                    role: 'Deputy Chief Executive Officer',
-                                    status: 'pending',
-                                    comment: 'Leave request needs approval',
-                                    estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                },
-                                {
-                                    recipient: adminHR._id,
-                                    role: 'Human Resource',
-                                    status: 'pending',
-                                    comment: 'Leave request needs to be reviewed',
-                                    estimated: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                }
-                            ];
-                        } else if (user.isHeadOfDepartment === true) {
-                            approvals = [
-                                {
-                                    recipient: user._id,
-                                    role: 'Staff',
-                                    status: 'submitted',
-                                    comment: 'Submitted leave request',
-                                    timestamp: new Date(),
-                                    estimated: ''
-                                },
-                                ...(assignee && assignee.length > 0
-                                    ? assignee.map(assigneeItem => ({
-                                        recipient: assigneeItem._id,
-                                        role: 'Temporary Replacement',
-                                        status: 'pending',
-                                        comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }))
-                                    : []),
-                                {
-                                    recipient: depChiefExec._id,
-                                    role: 'Deputy Chief Executive Officer',
-                                    status: 'pending',
-                                    comment: 'Leave request needs approval',
-                                    estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                },
-                                {
-                                    recipient: chiefExec._id,
-                                    role: 'Chief Executive Officer',
-                                    status: 'pending',
-                                    comment: 'Leave request needs approval',
-                                    estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                },
-                                {
-                                    recipient: adminHR._id,
-                                    role: 'Human Resource',
-                                    status: 'pending',
-                                    comment: 'Leave request needs to be reviewed',
-                                    estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                }
-                            ];
-                        } else if (user.isDeputyChiefExec === true) {
-                            approvals = [
-                                {
-                                    recipient: user._id,
-                                    role: 'Staff',
-                                    status: 'submitted',
-                                    comment: 'Submitted leave request',
-                                    timestamp: new Date(),
-                                    estimated: ''
-                                },
-                                ...(assignee && assignee.length > 0
-                                    ? assignee.map(assigneeItem => ({
-                                        recipient: assigneeItem._id,
-                                        role: 'Temporary Replacement',
-                                        status: 'pending',
-                                        comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }))
-                                    : []),
-                                {
-                                    recipient: chiefExec._id,
-                                    role: 'Chief Executive Officer',
-                                    status: 'pending',
-                                    comment: 'Leave request needs approval',
-                                    estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                },
-                                {
-                                    recipient: adminHR._id,
-                                    role: 'Human Resource',
-                                    status: 'pending',
-                                    comment: 'Leave request needs to be reviewed',
-                                    estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                }
-                            ];
-                        } else {
-                            if (headOfSection) {
-                                approvals = [
-                                    {
-                                        recipient: user._id,
-                                        role: 'Staff',
-                                        status: 'submitted',
-                                        comment: 'Submitted leave request',
-                                        timestamp: new Date(),
-                                        estimated: ''
-                                    },
-                                    ...(assignee && assignee.length > 0
-                                        ? assignee.map(assigneeItem => ({
-                                            recipient: assigneeItem._id,
-                                            role: 'Temporary Replacement',
-                                            status: 'pending',
-                                            comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                            estimated: new Date(
-                                                Date.now() + 1 * 24 * 60 * 60 * 1000
-                                            ),
-                                            timestamp: ''
-                                        }))
-                                        : []),
-                                    {
-                                        recipient: headOfSection._id,
-                                        role: 'Head of Section',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: headOfDepartment._id,
-                                        role: 'Head of Department',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: adminHR._id,
-                                        role: 'Human Resource',
-                                        status: 'pending',
-                                        comment: 'Leave request needs to be reviewed',
-                                        estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }
-                                ];
-                            } else {
-                                approvals = [
-                                    {
-                                        recipient: user._id,
-                                        role: 'Staff',
-                                        status: 'submitted',
-                                        comment: 'Submitted leave request',
-                                        timestamp: new Date(),
-                                        estimated: ''
-                                    },
-                                    ...(assignee && assignee.length > 0
-                                        ? assignee.map(assigneeItem => ({
-                                            recipient: assigneeItem._id,
-                                            role: 'Temporary Replacement',
-                                            status: 'pending',
-                                            comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                            estimated: new Date(
-                                                Date.now() + 1 * 24 * 60 * 60 * 1000
-                                            ),
-                                            timestamp: ''
-                                        }))
-                                        : []),
-                                    {
-                                        recipient: headOfDepartment._id,
-                                        role: 'Head of Department',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: adminHR._id,
-                                        role: 'Human Resource',
-                                        status: 'pending',
-                                        comment: 'Leave request needs to be reviewed',
-                                        estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }
-                                ];
-                            }
-                        }
-                    } else {
-                        console.log(
-                            'Insufficient bereavement leave days and leave taken reach maximum for the requested duration'
-                        );
-
-                        res.render('home', {
-                            user: user,
-                            notifications: notifications,
-                            uuid: uuidv4(),
-                            userDepartment: userDepartmentHome,
-                            otherTasks: otherTaskHome,
-                            otherActivities: otherActivitiesHome,
-                            // all data
-                            allUser: allUser,
-                            allUserLeave: allUserLeave,
-                            allLeave: allLeave,
-                            userLeave: userLeave,
-                            leave: leaveHome,
-                            tasks: taskHome,
-                            files: fileHome,
-                            activities: activitiesHome,
-                            selectedNames: '',
-                            // toast
-                            show: 'show',
-                            alert:
-                                'Exceed 3 days leave or reached maximum 3 times taken for the requested bereavement leave'
-                        });
-                    }
-                } else if (type === 'Study Leave') {
-                    leaveAmount = userLeave.study.leave;
-                    leaveTaken = userLeave.study.taken;
-
-                    if (leaveAmount >= numberOfDays && leaveTaken <= 3) {
-                        console.log(
-                            'Sufficient study leave days and leave taken for the requested duration'
-                        );
-
-                        if (user.isOfficer === true) {
-                            if (headOfSection) {
-                                approvals = [
-                                    {
-                                        recipient: user._id,
-                                        role: 'Staff',
-                                        status: 'submitted',
-                                        comment: 'Submitted leave request',
-                                        timestamp: new Date(),
-                                        estimated: ''
-                                    },
-                                    ...(assignee && assignee.length > 0
-                                        ? assignee.map(assigneeItem => ({
-                                            recipient: assigneeItem._id,
-                                            role: 'Temporary Replacement',
-                                            status: 'pending',
-                                            comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                            estimated: new Date(
-                                                Date.now() + 1 * 24 * 60 * 60 * 1000
-                                            ),
-                                            timestamp: ''
-                                        }))
-                                        : []),
-                                    {
-                                        recipient: headOfSection._id,
-                                        role: 'Head of Section',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: headOfDepartment._id,
-                                        role: 'Head of Department',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: adminHR._id,
-                                        role: 'Human Resource',
-                                        status: 'pending',
-                                        comment: 'Leave request needs to be reviewed',
-                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }
-                                ];
-                            } else {
-                                approvals = [
-                                    {
-                                        recipient: user._id,
-                                        role: 'Staff',
-                                        status: 'submitted',
-                                        comment: 'Submitted leave request',
-                                        timestamp: new Date(),
-                                        estimated: ''
-                                    },
-                                    ...(assignee && assignee.length > 0
-                                        ? assignee.map(assigneeItem => ({
-                                            recipient: assigneeItem._id,
-                                            role: 'Temporary Replacement',
-                                            status: 'pending',
-                                            comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                            estimated: new Date(
-                                                Date.now() + 1 * 24 * 60 * 60 * 1000
-                                            ),
-                                            timestamp: ''
-                                        }))
-                                        : []),
-                                    {
-                                        recipient: headOfDepartment._id,
-                                        role: 'Head of Department',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: adminHR._id,
-                                        role: 'Human Resource',
-                                        status: 'pending',
-                                        comment: 'Leave request needs to be reviewed',
-                                        estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }
-                                ];
-                            }
-                        } else if (user.isHeadOfSection === true) {
-                            approvals = [
-                                {
-                                    recipient: user._id,
-                                    role: 'Staff',
-                                    status: 'submitted',
-                                    comment: 'Submitted leave request',
-                                    timestamp: new Date(),
-                                    estimated: ''
-                                },
-                                ...(assignee && assignee.length > 0
-                                    ? assignee.map(assigneeItem => ({
-                                        recipient: assigneeItem._id,
-                                        role: 'Temporary Replacement',
-                                        status: 'pending',
-                                        comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }))
-                                    : []),
-                                {
-                                    recipient: headOfDepartment._id,
-                                    role: 'Head of Department',
-                                    status: 'pending',
-                                    comment: 'Leave request needs approval',
-                                    estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                },
-                                {
-                                    recipient: depChiefExec._id,
-                                    role: 'Deputy Chief Executive Officer',
-                                    status: 'pending',
-                                    comment: 'Leave request needs approval',
-                                    estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                },
-                                {
-                                    recipient: adminHR._id,
-                                    role: 'Human Resource',
-                                    status: 'pending',
-                                    comment: 'Leave request needs to be reviewed',
-                                    estimated: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                }
-                            ];
-                        } else if (user.isHeadOfDepartment === true) {
-                            approvals = [
-                                {
-                                    recipient: user._id,
-                                    role: 'Staff',
-                                    status: 'submitted',
-                                    comment: 'Submitted leave request',
-                                    timestamp: new Date(),
-                                    estimated: ''
-                                },
-                                ...(assignee && assignee.length > 0
-                                    ? assignee.map(assigneeItem => ({
-                                        recipient: assigneeItem._id,
-                                        role: 'Temporary Replacement',
-                                        status: 'pending',
-                                        comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }))
-                                    : []),
-                                {
-                                    recipient: depChiefExec._id,
-                                    role: 'Deputy Chief Executive Officer',
-                                    status: 'pending',
-                                    comment: 'Leave request needs approval',
-                                    estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                },
-                                {
-                                    recipient: chiefExec._id,
-                                    role: 'Chief Executive Officer',
-                                    status: 'pending',
-                                    comment: 'Leave request needs approval',
-                                    estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                },
-                                {
-                                    recipient: adminHR._id,
-                                    role: 'Human Resource',
-                                    status: 'pending',
-                                    comment: 'Leave request needs to be reviewed',
-                                    estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                }
-                            ];
-                        } else if (user.isDeputyChiefExec === true) {
-                            approvals = [
-                                {
-                                    recipient: user._id,
-                                    role: 'Staff',
-                                    status: 'submitted',
-                                    comment: 'Submitted leave request',
-                                    timestamp: new Date(),
-                                    estimated: ''
-                                },
-                                ...(assignee && assignee.length > 0
-                                    ? assignee.map(assigneeItem => ({
-                                        recipient: assigneeItem._id,
-                                        role: 'Temporary Replacement',
-                                        status: 'pending',
-                                        comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }))
-                                    : []),
-                                {
-                                    recipient: chiefExec._id,
-                                    role: 'Chief Executive Officer',
-                                    status: 'pending',
-                                    comment: 'Leave request needs approval',
-                                    estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                },
-                                {
-                                    recipient: adminHR._id,
-                                    role: 'Human Resource',
-                                    status: 'pending',
-                                    comment: 'Leave request needs to be reviewed',
-                                    estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                }
-                            ];
-                        } else {
-                            if (headOfSection) {
-                                approvals = [
-                                    {
-                                        recipient: user._id,
-                                        role: 'Staff',
-                                        status: 'submitted',
-                                        comment: 'Submitted leave request',
-                                        timestamp: new Date(),
-                                        estimated: ''
-                                    },
-                                    ...(assignee && assignee.length > 0
-                                        ? assignee.map(assigneeItem => ({
-                                            recipient: assigneeItem._id,
-                                            role: 'Temporary Replacement',
-                                            status: 'pending',
-                                            comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                            estimated: new Date(
-                                                Date.now() + 1 * 24 * 60 * 60 * 1000
-                                            ),
-                                            timestamp: ''
-                                        }))
-                                        : []),
-                                    {
-                                        recipient: headOfSection._id,
-                                        role: 'Head of Section',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: headOfDepartment._id,
-                                        role: 'Head of Department',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: adminHR._id,
-                                        role: 'Human Resource',
-                                        status: 'pending',
-                                        comment: 'Leave request needs to be reviewed',
-                                        estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }
-                                ];
-                            } else {
-                                approvals = [
-                                    {
-                                        recipient: user._id,
-                                        role: 'Staff',
-                                        status: 'submitted',
-                                        comment: 'Submitted leave request',
-                                        timestamp: new Date(),
-                                        estimated: ''
-                                    },
-                                    ...(assignee && assignee.length > 0
-                                        ? assignee.map(assigneeItem => ({
-                                            recipient: assigneeItem._id,
-                                            role: 'Temporary Replacement',
-                                            status: 'pending',
-                                            comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                            estimated: new Date(
-                                                Date.now() + 1 * 24 * 60 * 60 * 1000
-                                            ),
-                                            timestamp: ''
-                                        }))
-                                        : []),
-                                    {
-                                        recipient: headOfDepartment._id,
-                                        role: 'Head of Department',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: adminHR._id,
-                                        role: 'Human Resource',
-                                        status: 'pending',
-                                        comment: 'Leave request needs to be reviewed',
-                                        estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }
-                                ];
-                            }
-                        }
-                    } else {
-                        console.log(
-                            'Insufficient study leave days and leave taken reach maximum for the requested duration'
-                        );
-
-                        res.render('home', {
-                            user: user,
-                            notifications: notifications,
-                            uuid: uuidv4(),
-                            userDepartment: userDepartmentHome,
-                            otherTasks: otherTaskHome,
-                            otherActivities: otherActivitiesHome,
-                            // all data
-                            allUser: allUser,
-                            allUserLeave: allUserLeave,
-                            allLeave: allLeave,
-                            userLeave: userLeave,
-                            leave: leaveHome,
-                            tasks: taskHome,
-                            files: fileHome,
-                            activities: activitiesHome,
-                            selectedNames: '',
-                            // toast
-                            show: 'show',
-                            alert:
-                                'Exceed 5 days leave or reached maximum 3 times taken for the requested study leave'
-                        });
-                    }
-                } else if (type === 'Paternity Leave') {
-                    leaveAmount = userLeave.paternity.leave;
-                    leaveTaken = userLeave.paternity.taken;
-
-                    if (leaveAmount >= numberOfDays && leaveTaken <= 6) {
-                        console.log(
-                            'Sufficient paternity leave days and leave taken for the requested duration'
-                        );
-
-                        if (user.isOfficer === true) {
-                            if (headOfSection) {
-                                approvals = [
-                                    {
-                                        recipient: user._id,
-                                        role: 'Staff',
-                                        status: 'submitted',
-                                        comment: 'Submitted leave request',
-                                        timestamp: new Date(),
-                                        estimated: ''
-                                    },
-                                    ...(assignee && assignee.length > 0
-                                        ? assignee.map(assigneeItem => ({
-                                            recipient: assigneeItem._id,
-                                            role: 'Temporary Replacement',
-                                            status: 'pending',
-                                            comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                            estimated: new Date(
-                                                Date.now() + 1 * 24 * 60 * 60 * 1000
-                                            ),
-                                            timestamp: ''
-                                        }))
-                                        : []),
-                                    {
-                                        recipient: headOfSection._id,
-                                        role: 'Head of Section',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: headOfDepartment._id,
-                                        role: 'Head of Department',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: adminHR._id,
-                                        role: 'Human Resource',
-                                        status: 'pending',
-                                        comment: 'Leave request needs to be reviewed',
-                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }
-                                ];
-                            } else {
-                                approvals = [
-                                    {
-                                        recipient: user._id,
-                                        role: 'Staff',
-                                        status: 'submitted',
-                                        comment: 'Submitted leave request',
-                                        timestamp: new Date(),
-                                        estimated: ''
-                                    },
-                                    ...(assignee && assignee.length > 0
-                                        ? assignee.map(assigneeItem => ({
-                                            recipient: assigneeItem._id,
-                                            role: 'Temporary Replacement',
-                                            status: 'pending',
-                                            comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                            estimated: new Date(
-                                                Date.now() + 1 * 24 * 60 * 60 * 1000
-                                            ),
-                                            timestamp: ''
-                                        }))
-                                        : []),
-                                    {
-                                        recipient: headOfDepartment._id,
-                                        role: 'Head of Department',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: adminHR._id,
-                                        role: 'Human Resource',
-                                        status: 'pending',
-                                        comment: 'Leave request needs to be reviewed',
-                                        estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }
-                                ];
-                            }
-                        } else if (user.isHeadOfSection === true) {
-                            approvals = [
-                                {
-                                    recipient: user._id,
-                                    role: 'Staff',
-                                    status: 'submitted',
-                                    comment: 'Submitted leave request',
-                                    timestamp: new Date(),
-                                    estimated: ''
-                                },
-                                ...(assignee && assignee.length > 0
-                                    ? assignee.map(assigneeItem => ({
-                                        recipient: assigneeItem._id,
-                                        role: 'Temporary Replacement',
-                                        status: 'pending',
-                                        comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }))
-                                    : []),
-                                {
-                                    recipient: headOfDepartment._id,
-                                    role: 'Head of Department',
-                                    status: 'pending',
-                                    comment: 'Leave request needs approval',
-                                    estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                },
-                                {
-                                    recipient: depChiefExec._id,
-                                    role: 'Deputy Chief Executive Officer',
-                                    status: 'pending',
-                                    comment: 'Leave request needs approval',
-                                    estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                },
-                                {
-                                    recipient: adminHR._id,
-                                    role: 'Human Resource',
-                                    status: 'pending',
-                                    comment: 'Leave request needs to be reviewed',
-                                    estimated: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                }
-                            ];
-                        } else if (user.isHeadOfDepartment === true) {
-                            approvals = [
-                                {
-                                    recipient: user._id,
-                                    role: 'Staff',
-                                    status: 'submitted',
-                                    comment: 'Submitted leave request',
-                                    timestamp: new Date(),
-                                    estimated: ''
-                                },
-                                ...(assignee && assignee.length > 0
-                                    ? assignee.map(assigneeItem => ({
-                                        recipient: assigneeItem._id,
-                                        role: 'Temporary Replacement',
-                                        status: 'pending',
-                                        comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }))
-                                    : []),
-                                {
-                                    recipient: depChiefExec._id,
-                                    role: 'Deputy Chief Executive Officer',
-                                    status: 'pending',
-                                    comment: 'Leave request needs approval',
-                                    estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                },
-                                {
-                                    recipient: chiefExec._id,
-                                    role: 'Chief Executive Officer',
-                                    status: 'pending',
-                                    comment: 'Leave request needs approval',
-                                    estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                },
-                                {
-                                    recipient: adminHR._id,
-                                    role: 'Human Resource',
-                                    status: 'pending',
-                                    comment: 'Leave request needs to be reviewed',
-                                    estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                }
-                            ];
-                        } else if (user.isDeputyChiefExec === true) {
-                            approvals = [
-                                {
-                                    recipient: user._id,
-                                    role: 'Staff',
-                                    status: 'submitted',
-                                    comment: 'Submitted leave request',
-                                    timestamp: new Date(),
-                                    estimated: ''
-                                },
-                                ...(assignee && assignee.length > 0
-                                    ? assignee.map(assigneeItem => ({
-                                        recipient: assigneeItem._id,
-                                        role: 'Temporary Replacement',
-                                        status: 'pending',
-                                        comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }))
-                                    : []),
-                                {
-                                    recipient: chiefExec._id,
-                                    role: 'Chief Executive Officer',
-                                    status: 'pending',
-                                    comment: 'Leave request needs approval',
-                                    estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                },
-                                {
-                                    recipient: adminHR._id,
-                                    role: 'Human Resource',
-                                    status: 'pending',
-                                    comment: 'Leave request needs to be reviewed',
-                                    estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                }
-                            ];
-                        } else {
-                            if (headOfSection) {
-                                approvals = [
-                                    {
-                                        recipient: user._id,
-                                        role: 'Staff',
-                                        status: 'submitted',
-                                        comment: 'Submitted leave request',
-                                        timestamp: new Date(),
-                                        estimated: ''
-                                    },
-                                    ...(assignee && assignee.length > 0
-                                        ? assignee.map(assigneeItem => ({
-                                            recipient: assigneeItem._id,
-                                            role: 'Temporary Replacement',
-                                            status: 'pending',
-                                            comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                            estimated: new Date(
-                                                Date.now() + 1 * 24 * 60 * 60 * 1000
-                                            ),
-                                            timestamp: ''
-                                        }))
-                                        : []),
-                                    {
-                                        recipient: headOfSection._id,
-                                        role: 'Head of Section',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: headOfDepartment._id,
-                                        role: 'Head of Department',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: adminHR._id,
-                                        role: 'Human Resource',
-                                        status: 'pending',
-                                        comment: 'Leave request needs to be reviewed',
-                                        estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }
-                                ];
-                            } else {
-                                approvals = [
-                                    {
-                                        recipient: user._id,
-                                        role: 'Staff',
-                                        status: 'submitted',
-                                        comment: 'Submitted leave request',
-                                        timestamp: new Date(),
-                                        estimated: ''
-                                    },
-                                    ...(assignee && assignee.length > 0
-                                        ? assignee.map(assigneeItem => ({
-                                            recipient: assigneeItem._id,
-                                            role: 'Temporary Replacement',
-                                            status: 'pending',
-                                            comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                            estimated: new Date(
-                                                Date.now() + 1 * 24 * 60 * 60 * 1000
-                                            ),
-                                            timestamp: ''
-                                        }))
-                                        : []),
-                                    {
-                                        recipient: headOfDepartment._id,
-                                        role: 'Head of Department',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: adminHR._id,
-                                        role: 'Human Resource',
-                                        status: 'pending',
-                                        comment: 'Leave request needs to be reviewed',
-                                        estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }
-                                ];
-                            }
-                        }
-                    } else {
-                        console.log(
-                            'Insufficient paternity leave days and leave taken reach maximum for the requested duration'
-                        );
-
-                        res.render('home', {
-                            user: user,
-                            notifications: notifications,
-                            uuid: uuidv4(),
-                            userDepartment: userDepartmentHome,
-                            otherTasks: otherTaskHome,
-                            otherActivities: otherActivitiesHome,
-                            // all data
-                            allUser: allUser,
-                            allUserLeave: allUserLeave,
-                            allLeave: allLeave,
-                            userLeave: userLeave,
-                            leave: leaveHome,
-                            tasks: taskHome,
-                            files: fileHome,
-                            activities: activitiesHome,
-                            selectedNames: '',
-                            // toast
-                            show: 'show',
-                            alert:
-                                'Exceed 3 days leave or reached maximum 6 times taken for the requested paternity leave'
-                        });
-                    }
-                } else if (type === 'Marriage Leave') {
-                    leaveAmount = userLeave.marriage.leave;
-                    leaveTaken = userLeave.marriage.taken;
-
-                    if (leaveAmount >= numberOfDays && leaveTaken <= 1) {
-                        console.log(
-                            'Sufficient marriage leave days and leave taken for the requested duration'
-                        );
-
-                        if (user.isOfficer === true) {
-                            if (headOfSection) {
-                                approvals = [
-                                    {
-                                        recipient: user._id,
-                                        role: 'Staff',
-                                        status: 'submitted',
-                                        comment: 'Submitted leave request',
-                                        timestamp: new Date(),
-                                        estimated: ''
-                                    },
-                                    ...(assignee && assignee.length > 0
-                                        ? assignee.map(assigneeItem => ({
-                                            recipient: assigneeItem._id,
-                                            role: 'Temporary Replacement',
-                                            status: 'pending',
-                                            comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                            estimated: new Date(
-                                                Date.now() + 1 * 24 * 60 * 60 * 1000
-                                            ),
-                                            timestamp: ''
-                                        }))
-                                        : []),
-                                    {
-                                        recipient: headOfSection._id,
-                                        role: 'Head of Section',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: headOfDepartment._id,
-                                        role: 'Head of Department',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: adminHR._id,
-                                        role: 'Human Resource',
-                                        status: 'pending',
-                                        comment: 'Leave request needs to be reviewed',
-                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }
-                                ];
-                            } else {
-                                approvals = [
-                                    {
-                                        recipient: user._id,
-                                        role: 'Staff',
-                                        status: 'submitted',
-                                        comment: 'Submitted leave request',
-                                        timestamp: new Date(),
-                                        estimated: ''
-                                    },
-                                    ...(assignee && assignee.length > 0
-                                        ? assignee.map(assigneeItem => ({
-                                            recipient: assigneeItem._id,
-                                            role: 'Temporary Replacement',
-                                            status: 'pending',
-                                            comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                            estimated: new Date(
-                                                Date.now() + 1 * 24 * 60 * 60 * 1000
-                                            ),
-                                            timestamp: ''
-                                        }))
-                                        : []),
-                                    {
-                                        recipient: headOfDepartment._id,
-                                        role: 'Head of Department',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: adminHR._id,
-                                        role: 'Human Resource',
-                                        status: 'pending',
-                                        comment: 'Leave request needs to be reviewed',
-                                        estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }
-                                ];
-                            }
-                        } else if (user.isHeadOfSection === true) {
-                            approvals = [
-                                {
-                                    recipient: user._id,
-                                    role: 'Staff',
-                                    status: 'submitted',
-                                    comment: 'Submitted leave request',
-                                    timestamp: new Date(),
-                                    estimated: ''
-                                },
-                                ...(assignee && assignee.length > 0
-                                    ? assignee.map(assigneeItem => ({
-                                        recipient: assigneeItem._id,
-                                        role: 'Temporary Replacement',
-                                        status: 'pending',
-                                        comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }))
-                                    : []),
-                                {
-                                    recipient: headOfDepartment._id,
-                                    role: 'Head of Department',
-                                    status: 'pending',
-                                    comment: 'Leave request needs approval',
-                                    estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                },
-                                {
-                                    recipient: depChiefExec._id,
-                                    role: 'Deputy Chief Executive Officer',
-                                    status: 'pending',
-                                    comment: 'Leave request needs approval',
-                                    estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                },
-                                {
-                                    recipient: adminHR._id,
-                                    role: 'Human Resource',
-                                    status: 'pending',
-                                    comment: 'Leave request needs to be reviewed',
-                                    estimated: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                }
-                            ];
-                        } else if (user.isHeadOfDepartment === true) {
-                            approvals = [
-                                {
-                                    recipient: user._id,
-                                    role: 'Staff',
-                                    status: 'submitted',
-                                    comment: 'Submitted leave request',
-                                    timestamp: new Date(),
-                                    estimated: ''
-                                },
-                                ...(assignee && assignee.length > 0
-                                    ? assignee.map(assigneeItem => ({
-                                        recipient: assigneeItem._id,
-                                        role: 'Temporary Replacement',
-                                        status: 'pending',
-                                        comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }))
-                                    : []),
-                                {
-                                    recipient: depChiefExec._id,
-                                    role: 'Deputy Chief Executive Officer',
-                                    status: 'pending',
-                                    comment: 'Leave request needs approval',
-                                    estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                },
-                                {
-                                    recipient: chiefExec._id,
-                                    role: 'Chief Executive Officer',
-                                    status: 'pending',
-                                    comment: 'Leave request needs approval',
-                                    estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                },
-                                {
-                                    recipient: adminHR._id,
-                                    role: 'Human Resource',
-                                    status: 'pending',
-                                    comment: 'Leave request needs to be reviewed',
-                                    estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                }
-                            ];
-                        } else if (user.isDeputyChiefExec === true) {
-                            approvals = [
-                                {
-                                    recipient: user._id,
-                                    role: 'Staff',
-                                    status: 'submitted',
-                                    comment: 'Submitted leave request',
-                                    timestamp: new Date(),
-                                    estimated: ''
-                                },
-                                ...(assignee && assignee.length > 0
-                                    ? assignee.map(assigneeItem => ({
-                                        recipient: assigneeItem._id,
-                                        role: 'Temporary Replacement',
-                                        status: 'pending',
-                                        comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }))
-                                    : []),
-                                {
-                                    recipient: chiefExec._id,
-                                    role: 'Chief Executive Officer',
-                                    status: 'pending',
-                                    comment: 'Leave request needs approval',
-                                    estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                },
-                                {
-                                    recipient: adminHR._id,
-                                    role: 'Human Resource',
-                                    status: 'pending',
-                                    comment: 'Leave request needs to be reviewed',
-                                    estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                }
-                            ];
-                        } else {
-                            if (headOfSection) {
-                                approvals = [
-                                    {
-                                        recipient: user._id,
-                                        role: 'Staff',
-                                        status: 'submitted',
-                                        comment: 'Submitted leave request',
-                                        timestamp: new Date(),
-                                        estimated: ''
-                                    },
-                                    ...(assignee && assignee.length > 0
-                                        ? assignee.map(assigneeItem => ({
-                                            recipient: assigneeItem._id,
-                                            role: 'Temporary Replacement',
-                                            status: 'pending',
-                                            comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                            estimated: new Date(
-                                                Date.now() + 1 * 24 * 60 * 60 * 1000
-                                            ),
-                                            timestamp: ''
-                                        }))
-                                        : []),
-                                    {
-                                        recipient: headOfSection._id,
-                                        role: 'Head of Section',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: headOfDepartment._id,
-                                        role: 'Head of Department',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: adminHR._id,
-                                        role: 'Human Resource',
-                                        status: 'pending',
-                                        comment: 'Leave request needs to be reviewed',
-                                        estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }
-                                ];
-                            } else {
-                                approvals = [
-                                    {
-                                        recipient: user._id,
-                                        role: 'Staff',
-                                        status: 'submitted',
-                                        comment: 'Submitted leave request',
-                                        timestamp: new Date(),
-                                        estimated: ''
-                                    },
-                                    ...(assignee && assignee.length > 0
-                                        ? assignee.map(assigneeItem => ({
-                                            recipient: assigneeItem._id,
-                                            role: 'Temporary Replacement',
-                                            status: 'pending',
-                                            comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                            estimated: new Date(
-                                                Date.now() + 1 * 24 * 60 * 60 * 1000
-                                            ),
-                                            timestamp: ''
-                                        }))
-                                        : []),
-                                    {
-                                        recipient: headOfDepartment._id,
-                                        role: 'Head of Department',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: adminHR._id,
-                                        role: 'Human Resource',
-                                        status: 'pending',
-                                        comment: 'Leave request needs to be reviewed',
-                                        estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }
-                                ];
-                            }
-                        }
-                    } else {
-                        console.log(
-                            'Insufficient marriage leave days and leave taken reach maximum for the requested duration'
-                        );
-
-                        res.render('home', {
-                            user: user,
-                            notifications: notifications,
-                            uuid: uuidv4(),
-                            userDepartment: userDepartmentHome,
-                            otherTasks: otherTaskHome,
-                            otherActivities: otherActivitiesHome,
-                            // all data
-                            allUser: allUser,
-                            allUserLeave: allUserLeave,
-                            allLeave: allLeave,
-                            userLeave: userLeave,
-                            leave: leaveHome,
-                            tasks: taskHome,
-                            files: fileHome,
-                            activities: activitiesHome,
-                            selectedNames: '',
-                            // toast
-                            show: 'show',
-                            alert:
-                                'Exceed 3 days leave or reached maximum 1 times taken for the requested marriage leave'
-                        });
-                    }
-                } else if (type === 'Hajj Leave') {
-                    leaveAmount = userLeave.hajj.leave;
-                    leaveTaken = userLeave.hajj.taken;
-
-                    if (leaveAmount >= numberOfDays && leaveTaken <= 1) {
-                        console.log(
-                            'Sufficient hajj leave days and leave taken for the requested duration'
-                        );
-
-                        if (user.isOfficer === true) {
-                            if (headOfSection) {
-                                approvals = [
-                                    {
-                                        recipient: user._id,
-                                        role: 'Staff',
-                                        status: 'submitted',
-                                        comment: 'Submitted leave request',
-                                        timestamp: new Date(),
-                                        estimated: ''
-                                    },
-                                    ...(assignee && assignee.length > 0
-                                        ? assignee.map(assigneeItem => ({
-                                            recipient: assigneeItem._id,
-                                            role: 'Temporary Replacement',
-                                            status: 'pending',
-                                            comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                            estimated: new Date(
-                                                Date.now() + 1 * 24 * 60 * 60 * 1000
-                                            ),
-                                            timestamp: ''
-                                        }))
-                                        : []),
-                                    {
-                                        recipient: headOfSection._id,
-                                        role: 'Head of Section',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: headOfDepartment._id,
-                                        role: 'Head of Department',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: adminHR._id,
-                                        role: 'Human Resource',
-                                        status: 'pending',
-                                        comment: 'Leave request needs to be reviewed',
-                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }
-                                ];
-                            } else {
-                                approvals = [
-                                    {
-                                        recipient: user._id,
-                                        role: 'Staff',
-                                        status: 'submitted',
-                                        comment: 'Submitted leave request',
-                                        timestamp: new Date(),
-                                        estimated: ''
-                                    },
-                                    ...(assignee && assignee.length > 0
-                                        ? assignee.map(assigneeItem => ({
-                                            recipient: assigneeItem._id,
-                                            role: 'Temporary Replacement',
-                                            status: 'pending',
-                                            comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                            estimated: new Date(
-                                                Date.now() + 1 * 24 * 60 * 60 * 1000
-                                            ),
-                                            timestamp: ''
-                                        }))
-                                        : []),
-                                    {
-                                        recipient: headOfDepartment._id,
-                                        role: 'Head of Department',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: adminHR._id,
-                                        role: 'Human Resource',
-                                        status: 'pending',
-                                        comment: 'Leave request needs to be reviewed',
-                                        estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }
-                                ];
-                            }
-                        } else if (user.isHeadOfSection === true) {
-                            approvals = [
-                                {
-                                    recipient: user._id,
-                                    role: 'Staff',
-                                    status: 'submitted',
-                                    comment: 'Submitted leave request',
-                                    timestamp: new Date(),
-                                    estimated: ''
-                                },
-                                ...(assignee && assignee.length > 0
-                                    ? assignee.map(assigneeItem => ({
-                                        recipient: assigneeItem._id,
-                                        role: 'Temporary Replacement',
-                                        status: 'pending',
-                                        comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }))
-                                    : []),
-                                {
-                                    recipient: headOfDepartment._id,
-                                    role: 'Head of Department',
-                                    status: 'pending',
-                                    comment: 'Leave request needs approval',
-                                    estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                },
-                                {
-                                    recipient: depChiefExec._id,
-                                    role: 'Deputy Chief Executive Officer',
-                                    status: 'pending',
-                                    comment: 'Leave request needs approval',
-                                    estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                },
-                                {
-                                    recipient: adminHR._id,
-                                    role: 'Human Resource',
-                                    status: 'pending',
-                                    comment: 'Leave request needs to be reviewed',
-                                    estimated: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                }
-                            ];
-                        } else if (user.isHeadOfDepartment === true) {
-                            approvals = [
-                                {
-                                    recipient: user._id,
-                                    role: 'Staff',
-                                    status: 'submitted',
-                                    comment: 'Submitted leave request',
-                                    timestamp: new Date(),
-                                    estimated: ''
-                                },
-                                ...(assignee && assignee.length > 0
-                                    ? assignee.map(assigneeItem => ({
-                                        recipient: assigneeItem._id,
-                                        role: 'Temporary Replacement',
-                                        status: 'pending',
-                                        comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }))
-                                    : []),
-                                {
-                                    recipient: depChiefExec._id,
-                                    role: 'Deputy Chief Executive Officer',
-                                    status: 'pending',
-                                    comment: 'Leave request needs approval',
-                                    estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                },
-                                {
-                                    recipient: chiefExec._id,
-                                    role: 'Chief Executive Officer',
-                                    status: 'pending',
-                                    comment: 'Leave request needs approval',
-                                    estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                },
-                                {
-                                    recipient: adminHR._id,
-                                    role: 'Human Resource',
-                                    status: 'pending',
-                                    comment: 'Leave request needs to be reviewed',
-                                    estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                }
-                            ];
-                        } else if (user.isDeputyChiefExec === true) {
-                            approvals = [
-                                {
-                                    recipient: user._id,
-                                    role: 'Staff',
-                                    status: 'submitted',
-                                    comment: 'Submitted leave request',
-                                    timestamp: new Date(),
-                                    estimated: ''
-                                },
-                                ...(assignee && assignee.length > 0
-                                    ? assignee.map(assigneeItem => ({
-                                        recipient: assigneeItem._id,
-                                        role: 'Temporary Replacement',
-                                        status: 'pending',
-                                        comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }))
-                                    : []),
-                                {
-                                    recipient: chiefExec._id,
-                                    role: 'Chief Executive Officer',
-                                    status: 'pending',
-                                    comment: 'Leave request needs approval',
-                                    estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                },
-                                {
-                                    recipient: adminHR._id,
-                                    role: 'Human Resource',
-                                    status: 'pending',
-                                    comment: 'Leave request needs to be reviewed',
-                                    estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                }
-                            ];
-                        } else {
-                            if (headOfSection) {
-                                approvals = [
-                                    {
-                                        recipient: user._id,
-                                        role: 'Staff',
-                                        status: 'submitted',
-                                        comment: 'Submitted leave request',
-                                        timestamp: new Date(),
-                                        estimated: ''
-                                    },
-                                    ...(assignee && assignee.length > 0
-                                        ? assignee.map(assigneeItem => ({
-                                            recipient: assigneeItem._id,
-                                            role: 'Temporary Replacement',
-                                            status: 'pending',
-                                            comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                            estimated: new Date(
-                                                Date.now() + 1 * 24 * 60 * 60 * 1000
-                                            ),
-                                            timestamp: ''
-                                        }))
-                                        : []),
-                                    {
-                                        recipient: headOfSection._id,
-                                        role: 'Head of Section',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: headOfDepartment._id,
-                                        role: 'Head of Department',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: adminHR._id,
-                                        role: 'Human Resource',
-                                        status: 'pending',
-                                        comment: 'Leave request needs to be reviewed',
-                                        estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }
-                                ];
-                            } else {
-                                approvals = [
-                                    {
-                                        recipient: user._id,
-                                        role: 'Staff',
-                                        status: 'submitted',
-                                        comment: 'Submitted leave request',
-                                        timestamp: new Date(),
-                                        estimated: ''
-                                    },
-                                    ...(assignee && assignee.length > 0
-                                        ? assignee.map(assigneeItem => ({
-                                            recipient: assigneeItem._id,
-                                            role: 'Temporary Replacement',
-                                            status: 'pending',
-                                            comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                            estimated: new Date(
-                                                Date.now() + 1 * 24 * 60 * 60 * 1000
-                                            ),
-                                            timestamp: ''
-                                        }))
-                                        : []),
-                                    {
-                                        recipient: headOfDepartment._id,
-                                        role: 'Head of Department',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: adminHR._id,
-                                        role: 'Human Resource',
-                                        status: 'pending',
-                                        comment: 'Leave request needs to be reviewed',
-                                        estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }
-                                ];
-                            }
-                        }
-                    } else {
-                        console.log(
-                            'Insufficient hajj leave days and leave taken reach maximum for the requested duration'
-                        );
-
-                        res.render('home', {
-                            user: user,
-                            notifications: notifications,
-                            uuid: uuidv4(),
-                            userDepartment: userDepartmentHome,
-                            otherTasks: otherTaskHome,
-                            otherActivities: otherActivitiesHome,
-                            // all data
-                            allUser: allUser,
-                            allUserLeave: allUserLeave,
-                            allLeave: allLeave,
-                            userLeave: userLeave,
-                            leave: leaveHome,
-                            tasks: taskHome,
-                            files: fileHome,
-                            activities: activitiesHome,
-                            selectedNames: '',
-                            // toast
-                            show: 'show',
-                            alert:
-                                'Exceed 40 days leave or reached maximum 1 times taken for the requested hajj leave'
-                        });
-                    }
-                } else if (type === 'Special Leave') {
-                    leaveTaken = userLeave.special.taken;
-
-                    if (leaveTaken <= 10) {
-                        console.log('Sufficient leave taken for the requested duration');
-
-                        if (user.isOfficer === true) {
-                            if (headOfSection) {
-                                approvals = [
-                                    {
-                                        recipient: user._id,
-                                        role: 'Staff',
-                                        status: 'submitted',
-                                        comment: 'Submitted leave request',
-                                        timestamp: new Date(),
-                                        estimated: ''
-                                    },
-                                    ...(assignee && assignee.length > 0
-                                        ? assignee.map(assigneeItem => ({
-                                            recipient: assigneeItem._id,
-                                            role: 'Temporary Replacement',
-                                            status: 'pending',
-                                            comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                            estimated: new Date(
-                                                Date.now() + 1 * 24 * 60 * 60 * 1000
-                                            ),
-                                            timestamp: ''
-                                        }))
-                                        : []),
-                                    {
-                                        recipient: headOfSection._id,
-                                        role: 'Head of Section',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: headOfDepartment._id,
-                                        role: 'Head of Department',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: adminHR._id,
-                                        role: 'Human Resource',
-                                        status: 'pending',
-                                        comment: 'Leave request needs to be reviewed',
-                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }
-                                ];
-                            } else {
-                                approvals = [
-                                    {
-                                        recipient: user._id,
-                                        role: 'Staff',
-                                        status: 'submitted',
-                                        comment: 'Submitted leave request',
-                                        timestamp: new Date(),
-                                        estimated: ''
-                                    },
-                                    ...(assignee && assignee.length > 0
-                                        ? assignee.map(assigneeItem => ({
-                                            recipient: assigneeItem._id,
-                                            role: 'Temporary Replacement',
-                                            status: 'pending',
-                                            comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                            estimated: new Date(
-                                                Date.now() + 1 * 24 * 60 * 60 * 1000
-                                            ),
-                                            timestamp: ''
-                                        }))
-                                        : []),
-                                    {
-                                        recipient: headOfDepartment._id,
-                                        role: 'Head of Department',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: adminHR._id,
-                                        role: 'Human Resource',
-                                        status: 'pending',
-                                        comment: 'Leave request needs to be reviewed',
-                                        estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }
-                                ];
-                            }
-                        } else if (user.isHeadOfSection === true) {
-                            approvals = [
-                                {
-                                    recipient: user._id,
-                                    role: 'Staff',
-                                    status: 'submitted',
-                                    comment: 'Submitted leave request',
-                                    timestamp: new Date(),
-                                    estimated: ''
-                                },
-                                ...(assignee && assignee.length > 0
-                                    ? assignee.map(assigneeItem => ({
-                                        recipient: assigneeItem._id,
-                                        role: 'Temporary Replacement',
-                                        status: 'pending',
-                                        comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }))
-                                    : []),
-                                {
-                                    recipient: headOfDepartment._id,
-                                    role: 'Head of Department',
-                                    status: 'pending',
-                                    comment: 'Leave request needs approval',
-                                    estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                },
-                                {
-                                    recipient: depChiefExec._id,
-                                    role: 'Deputy Chief Executive Officer',
-                                    status: 'pending',
-                                    comment: 'Leave request needs approval',
-                                    estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                },
-                                {
-                                    recipient: adminHR._id,
-                                    role: 'Human Resource',
-                                    status: 'pending',
-                                    comment: 'Leave request needs to be reviewed',
-                                    estimated: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                }
-                            ];
-                        } else if (user.isHeadOfDepartment === true) {
-                            approvals = [
-                                {
-                                    recipient: user._id,
-                                    role: 'Staff',
-                                    status: 'submitted',
-                                    comment: 'Submitted leave request',
-                                    timestamp: new Date(),
-                                    estimated: ''
-                                },
-                                ...(assignee && assignee.length > 0
-                                    ? assignee.map(assigneeItem => ({
-                                        recipient: assigneeItem._id,
-                                        role: 'Temporary Replacement',
-                                        status: 'pending',
-                                        comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }))
-                                    : []),
-                                {
-                                    recipient: depChiefExec._id,
-                                    role: 'Deputy Chief Executive Officer',
-                                    status: 'pending',
-                                    comment: 'Leave request needs approval',
-                                    estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                },
-                                {
-                                    recipient: chiefExec._id,
-                                    role: 'Chief Executive Officer',
-                                    status: 'pending',
-                                    comment: 'Leave request needs approval',
-                                    estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                },
-                                {
-                                    recipient: adminHR._id,
-                                    role: 'Human Resource',
-                                    status: 'pending',
-                                    comment: 'Leave request needs to be reviewed',
-                                    estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                }
-                            ];
-                        } else if (user.isDeputyChiefExec === true) {
-                            approvals = [
-                                {
-                                    recipient: user._id,
-                                    role: 'Staff',
-                                    status: 'submitted',
-                                    comment: 'Submitted leave request',
-                                    timestamp: new Date(),
-                                    estimated: ''
-                                },
-                                ...(assignee && assignee.length > 0
-                                    ? assignee.map(assigneeItem => ({
-                                        recipient: assigneeItem._id,
-                                        role: 'Temporary Replacement',
-                                        status: 'pending',
-                                        comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }))
-                                    : []),
-                                {
-                                    recipient: chiefExec._id,
-                                    role: 'Chief Executive Officer',
-                                    status: 'pending',
-                                    comment: 'Leave request needs approval',
-                                    estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                },
-                                {
-                                    recipient: adminHR._id,
-                                    role: 'Human Resource',
-                                    status: 'pending',
-                                    comment: 'Leave request needs to be reviewed',
-                                    estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                }
-                            ];
-                        } else {
-                            if (headOfSection) {
-                                approvals = [
-                                    {
-                                        recipient: user._id,
-                                        role: 'Staff',
-                                        status: 'submitted',
-                                        comment: 'Submitted leave request',
-                                        timestamp: new Date(),
-                                        estimated: ''
-                                    },
-                                    ...(assignee && assignee.length > 0
-                                        ? assignee.map(assigneeItem => ({
-                                            recipient: assigneeItem._id,
-                                            role: 'Temporary Replacement',
-                                            status: 'pending',
-                                            comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                            estimated: new Date(
-                                                Date.now() + 1 * 24 * 60 * 60 * 1000
-                                            ),
-                                            timestamp: ''
-                                        }))
-                                        : []),
-                                    {
-                                        recipient: headOfSection._id,
-                                        role: 'Head of Section',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: headOfDepartment._id,
-                                        role: 'Head of Department',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: adminHR._id,
-                                        role: 'Human Resource',
-                                        status: 'pending',
-                                        comment: 'Leave request needs to be reviewed',
-                                        estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }
-                                ];
-                            } else {
-                                approvals = [
-                                    {
-                                        recipient: user._id,
-                                        role: 'Staff',
-                                        status: 'submitted',
-                                        comment: 'Submitted leave request',
-                                        timestamp: new Date(),
-                                        estimated: ''
-                                    },
-                                    ...(assignee && assignee.length > 0
-                                        ? assignee.map(assigneeItem => ({
-                                            recipient: assigneeItem._id,
-                                            role: 'Temporary Replacement',
-                                            status: 'pending',
-                                            comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                            estimated: new Date(
-                                                Date.now() + 1 * 24 * 60 * 60 * 1000
-                                            ),
-                                            timestamp: ''
-                                        }))
-                                        : []),
-                                    {
-                                        recipient: headOfDepartment._id,
-                                        role: 'Head of Department',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: adminHR._id,
-                                        role: 'Human Resource',
-                                        status: 'pending',
-                                        comment: 'Leave request needs to be reviewed',
-                                        estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }
-                                ];
-                            }
-                        }
-                    } else {
-                        console.log(
-                            'Insufficient special leave days and leave taken reach maximum for the requested duration'
-                        );
-
-                        res.render('home', {
-                            user: user,
-                            notifications: notifications,
-                            uuid: uuidv4(),
-                            userDepartment: userDepartmentHome,
-                            otherTasks: otherTaskHome,
-                            otherActivities: otherActivitiesHome,
-                            // all data
-                            allUser: allUser,
-                            allUserLeave: allUserLeave,
-                            allLeave: allLeave,
-                            userLeave: userLeave,
-                            leave: leaveHome,
-                            tasks: taskHome,
-                            files: fileHome,
-                            activities: activitiesHome,
-                            selectedNames: '',
-                            // toast
-                            show: 'show',
-                            alert: 'Reached maximum 10 times taken for the requested leave'
-                        });
-                    }
-                } else if (type === 'Unpaid Leave') {
-                    leaveTaken = userLeave.unpaid.taken;
-
-                    if (leaveTaken <= 10) {
-                        console.log(
-                            'Sufficient unpaid leave taken for the requested duration'
-                        );
-
-                        if (user.isOfficer === true) {
-                            if (headOfSection) {
-                                approvals = [
-                                    {
-                                        recipient: user._id,
-                                        role: 'Staff',
-                                        status: 'submitted',
-                                        comment: 'Submitted leave request',
-                                        timestamp: new Date(),
-                                        estimated: ''
-                                    },
-                                    ...(assignee && assignee.length > 0
-                                        ? assignee.map(assigneeItem => ({
-                                            recipient: assigneeItem._id,
-                                            role: 'Temporary Replacement',
-                                            status: 'pending',
-                                            comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                            estimated: new Date(
-                                                Date.now() + 1 * 24 * 60 * 60 * 1000
-                                            ),
-                                            timestamp: ''
-                                        }))
-                                        : []),
-                                    {
-                                        recipient: headOfSection._id,
-                                        role: 'Head of Section',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: headOfDepartment._id,
-                                        role: 'Head of Department',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: adminHR._id,
-                                        role: 'Human Resource',
-                                        status: 'pending',
-                                        comment: 'Leave request needs to be reviewed',
-                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }
-                                ];
-                            } else {
-                                approvals = [
-                                    {
-                                        recipient: user._id,
-                                        role: 'Staff',
-                                        status: 'submitted',
-                                        comment: 'Submitted leave request',
-                                        timestamp: new Date(),
-                                        estimated: ''
-                                    },
-                                    ...(assignee && assignee.length > 0
-                                        ? assignee.map(assigneeItem => ({
-                                            recipient: assigneeItem._id,
-                                            role: 'Temporary Replacement',
-                                            status: 'pending',
-                                            comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                            estimated: new Date(
-                                                Date.now() + 1 * 24 * 60 * 60 * 1000
-                                            ),
-                                            timestamp: ''
-                                        }))
-                                        : []),
-                                    {
-                                        recipient: headOfDepartment._id,
-                                        role: 'Head of Department',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: adminHR._id,
-                                        role: 'Human Resource',
-                                        status: 'pending',
-                                        comment: 'Leave request needs to be reviewed',
-                                        estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }
-                                ];
-                            }
-                        } else if (user.isHeadOfSection === true) {
-                            approvals = [
-                                {
-                                    recipient: user._id,
-                                    role: 'Staff',
-                                    status: 'submitted',
-                                    comment: 'Submitted leave request',
-                                    timestamp: new Date(),
-                                    estimated: ''
-                                },
-                                ...(assignee && assignee.length > 0
-                                    ? assignee.map(assigneeItem => ({
-                                        recipient: assigneeItem._id,
-                                        role: 'Temporary Replacement',
-                                        status: 'pending',
-                                        comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }))
-                                    : []),
-                                {
-                                    recipient: headOfDepartment._id,
-                                    role: 'Head of Department',
-                                    status: 'pending',
-                                    comment: 'Leave request needs approval',
-                                    estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                },
-                                {
-                                    recipient: depChiefExec._id,
-                                    role: 'Deputy Chief Executive Officer',
-                                    status: 'pending',
-                                    comment: 'Leave request needs approval',
-                                    estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                },
-                                {
-                                    recipient: adminHR._id,
-                                    role: 'Human Resource',
-                                    status: 'pending',
-                                    comment: 'Leave request needs to be reviewed',
-                                    estimated: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                }
-                            ];
-                        } else if (user.isHeadOfDepartment === true) {
-                            approvals = [
-                                {
-                                    recipient: user._id,
-                                    role: 'Staff',
-                                    status: 'submitted',
-                                    comment: 'Submitted leave request',
-                                    timestamp: new Date(),
-                                    estimated: ''
-                                },
-                                ...(assignee && assignee.length > 0
-                                    ? assignee.map(assigneeItem => ({
-                                        recipient: assigneeItem._id,
-                                        role: 'Temporary Replacement',
-                                        status: 'pending',
-                                        comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }))
-                                    : []),
-                                {
-                                    recipient: depChiefExec._id,
-                                    role: 'Deputy Chief Executive Officer',
-                                    status: 'pending',
-                                    comment: 'Leave request needs approval',
-                                    estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                },
-                                {
-                                    recipient: chiefExec._id,
-                                    role: 'Chief Executive Officer',
-                                    status: 'pending',
-                                    comment: 'Leave request needs approval',
-                                    estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                },
-                                {
-                                    recipient: adminHR._id,
-                                    role: 'Human Resource',
-                                    status: 'pending',
-                                    comment: 'Leave request needs to be reviewed',
-                                    estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                }
-                            ];
-                        } else if (user.isDeputyChiefExec === true) {
-                            approvals = [
-                                {
-                                    recipient: user._id,
-                                    role: 'Staff',
-                                    status: 'submitted',
-                                    comment: 'Submitted leave request',
-                                    timestamp: new Date(),
-                                    estimated: ''
-                                },
-                                ...(assignee && assignee.length > 0
-                                    ? assignee.map(assigneeItem => ({
-                                        recipient: assigneeItem._id,
-                                        role: 'Temporary Replacement',
-                                        status: 'pending',
-                                        comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }))
-                                    : []),
-                                {
-                                    recipient: chiefExec._id,
-                                    role: 'Chief Executive Officer',
-                                    status: 'pending',
-                                    comment: 'Leave request needs approval',
-                                    estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                },
-                                {
-                                    recipient: adminHR._id,
-                                    role: 'Human Resource',
-                                    status: 'pending',
-                                    comment: 'Leave request needs to be reviewed',
-                                    estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                    timestamp: ''
-                                }
-                            ];
-                        } else {
-                            if (headOfSection) {
-                                approvals = [
-                                    {
-                                        recipient: user._id,
-                                        role: 'Staff',
-                                        status: 'submitted',
-                                        comment: 'Submitted leave request',
-                                        timestamp: new Date(),
-                                        estimated: ''
-                                    },
-                                    ...(assignee && assignee.length > 0
-                                        ? assignee.map(assigneeItem => ({
-                                            recipient: assigneeItem._id,
-                                            role: 'Temporary Replacement',
-                                            status: 'pending',
-                                            comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                            estimated: new Date(
-                                                Date.now() + 1 * 24 * 60 * 60 * 1000
-                                            ),
-                                            timestamp: ''
-                                        }))
-                                        : []),
-                                    {
-                                        recipient: headOfSection._id,
-                                        role: 'Head of Section',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: headOfDepartment._id,
-                                        role: 'Head of Department',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: adminHR._id,
-                                        role: 'Human Resource',
-                                        status: 'pending',
-                                        comment: 'Leave request needs to be reviewed',
-                                        estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }
-                                ];
-                            } else {
-                                approvals = [
-                                    {
-                                        recipient: user._id,
-                                        role: 'Staff',
-                                        status: 'submitted',
-                                        comment: 'Submitted leave request',
-                                        timestamp: new Date(),
-                                        estimated: ''
-                                    },
-                                    ...(assignee && assignee.length > 0
-                                        ? assignee.map(assigneeItem => ({
-                                            recipient: assigneeItem._id,
-                                            role: 'Temporary Replacement',
-                                            status: 'pending',
-                                            comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
-                                            estimated: new Date(
-                                                Date.now() + 1 * 24 * 60 * 60 * 1000
-                                            ),
-                                            timestamp: ''
-                                        }))
-                                        : []),
-                                    {
-                                        recipient: headOfDepartment._id,
-                                        role: 'Head of Department',
-                                        status: 'pending',
-                                        comment: 'Leave request needs approval',
-                                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    },
-                                    {
-                                        recipient: adminHR._id,
-                                        role: 'Human Resource',
-                                        status: 'pending',
-                                        comment: 'Leave request needs to be reviewed',
-                                        estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                                        timestamp: ''
-                                    }
-                                ];
-                            }
-                        }
-                    } else {
-                        console.log(
-                            'Insufficient unpaid leave days and leave taken reach maximum for the requested duration'
-                        );
-
-                        res.render('home', {
-                            user: user,
-                            notifications: notifications,
-                            uuid: uuidv4(),
-                            userDepartment: userDepartmentHome,
-                            otherTasks: otherTaskHome,
-                            otherActivities: otherActivitiesHome,
-                            // all data
-                            allUser: allUser,
-                            allUserLeave: allUserLeave,
-                            allLeave: allLeave,
-                            userLeave: userLeave,
-                            leave: leaveHome,
-                            tasks: taskHome,
-                            files: fileHome,
-                            activities: activitiesHome,
-                            selectedNames: '',
-                            // toast
-                            show: 'show',
-                            alert:
-                                'Reached maximum 10 times taken for the requested unpaid leave'
-                        });
-                    }
-                }
-
-                if (approvals === '') {
-                    console.log('Leave balance not sufficient!');
                 } else {
-                    // set user id to be send
-                    for (const approval of approvals) {
-                        const recipientId = approval.recipient;
+                    console.log(
+                        'Insufficient sick leave balance for the requested duration'
+                    );
 
-                        // Add the recipientId to the sendNoti array if not already present
-                        if (!sendNoti.includes(recipientId)) {
-                            sendNoti.push(recipientId);
-                        }
-
-                        // Fetch the user by recipient ID
-                        const email = await User.findById(recipientId);
-
-                        // Check if the user is found and has an email
-                        if (email && user.email) {
-                            // Add the user's email to sendEmail
-                            sendEmail.push(email.email);
-                        }
-                    }
+                    res.render('home', {
+                        user: user,
+                        notifications: notifications,
+                        uuid: uuidv4(),
+                        userDepartment: userDepartmentHome,
+                        otherTasks: otherTaskHome,
+                        otherActivities: otherActivitiesHome,
+                        // all data
+                        allUser: allUser,
+                        allUserLeave: allUserLeave,
+                        allLeave: allLeave,
+                        userLeave: userLeave,
+                        leave: leaveHome,
+                        tasks: taskHome,
+                        files: fileHome,
+                        activities: activitiesHome,
+                        selectedNames: '',
+                        // toast
+                        show: 'show',
+                        alert:
+                            'Insufficient sick leave balance for the requested duration'
+                    });
                 }
+            } else if (type === 'Sick Leave') {
+                leaveBalance = userLeave.sick.leave - userLeave.sick.taken;
+                const findFile = await File.find({ uuid: uuid });
 
-                const leave = new Leave({
-                    fileId: uuid,
-                    user: user._id,
-                    grade: user.grade,
-                    assignee: assignee,
-                    type: type,
-                    date: newDate,
-                    status: 'submitted',
-                    purpose: purpose,
-                    approvals: approvals
-                });
+                if (leaveBalance >= numberOfDays && numberOfDays > 0) {
+                    if (amountDayRequest >= 3) {
+                        if (findFile.length > 0) {
+                            approvals = generateApprovals(user, headOfSection, headOfDepartment, depChiefExec, chiefExec, adminHR, assignee);
+                        } else {
+                            console.log("There is no file attached for sick leave!");
 
-                Leave.create(leave);
-                console.log('Leave submission has been completed');
+                            res.render('home', {
+                                user: user,
+                                notifications: notifications,
+                                uuid: uuidv4(),
+                                userDepartment: userDepartmentHome,
+                                otherTasks: otherTaskHome,
+                                otherActivities: otherActivitiesHome,
+                                // all data
+                                allUser: allUser,
+                                allUserLeave: allUserLeave,
+                                allLeave: allLeave,
+                                userLeave: userLeave,
+                                leave: leaveHome,
+                                tasks: taskHome,
+                                files: fileHome,
+                                activities: activitiesHome,
+                                selectedNames: '',
+                                // toast
+                                show: 'show',
+                                alert:
+                                    'Document attachment is required for sick leave request'
+                            });
+                        }
+                    } else {
+                        console.log(
+                            'The leave date applied must be more than 3 days from today'
+                        );
 
-                // notifications save has been turn off
-                if (sendNoti.length > 0) {
-                    for (const recipientId of sendNoti) {
-                        const newNotification = new Notification({
-                            sender: user._id,
-                            recipient: new mongoose.Types.ObjectId(recipientId),
-                            type: 'Leave',
-                            url: '/leave/details/' + uuid,
-                            message: 'Leave request needs approval.'
+                        res.render('home', {
+                            user: user,
+                            notifications: notifications,
+                            uuid: uuidv4(),
+                            userDepartment: userDepartmentHome,
+                            otherTasks: otherTaskHome,
+                            otherActivities: otherActivitiesHome,
+                            // all data
+                            allUser: allUser,
+                            allUserLeave: allUserLeave,
+                            allLeave: allLeave,
+                            userLeave: userLeave,
+                            leave: leaveHome,
+                            tasks: taskHome,
+                            files: fileHome,
+                            activities: activitiesHome,
+                            selectedNames: '',
+                            // toast
+                            show: 'show',
+                            alert:
+                                'The leave date applied must be more than 3 days from today'
                         });
+                    }
+                } else {
+                    console.log(
+                        'Insufficient sick leave balance for the requested duration'
+                    );
 
-                        // newNotification.save();
+                    res.render('home', {
+                        user: user,
+                        notifications: notifications,
+                        uuid: uuidv4(),
+                        userDepartment: userDepartmentHome,
+                        otherTasks: otherTaskHome,
+                        otherActivities: otherActivitiesHome,
+                        // all data
+                        allUser: allUser,
+                        allUserLeave: allUserLeave,
+                        allLeave: allLeave,
+                        userLeave: userLeave,
+                        leave: leaveHome,
+                        tasks: taskHome,
+                        files: fileHome,
+                        activities: activitiesHome,
+                        selectedNames: '',
+                        // toast
+                        show: 'show',
+                        alert:
+                            'Insufficient sick leave balance for the requested duration'
+                    });
+                }
+            } else if (type === 'Extended Sick Leave') {
+                leaveBalance = userLeave.sickExtended.leave - userLeave.sickExtended.taken;
+                const findFile = await File.find({ uuid: uuid });
+
+                if (leaveBalance >= numberOfDays && numberOfDays > 0) {
+                    if (amountDayRequest >= 3) {
+                        if (findFile.length > 0) {
+                            approvals = generateApprovals(user, headOfSection, headOfDepartment, depChiefExec, chiefExec, adminHR, assignee);
+                        } else {
+                            console.log("There is no file attached for sick extended leave!");
+
+                            res.render('home', {
+                                user: user,
+                                notifications: notifications,
+                                uuid: uuidv4(),
+                                userDepartment: userDepartmentHome,
+                                otherTasks: otherTaskHome,
+                                otherActivities: otherActivitiesHome,
+                                // all data
+                                allUser: allUser,
+                                allUserLeave: allUserLeave,
+                                allLeave: allLeave,
+                                userLeave: userLeave,
+                                leave: leaveHome,
+                                tasks: taskHome,
+                                files: fileHome,
+                                activities: activitiesHome,
+                                selectedNames: '',
+                                // toast
+                                show: 'show',
+                                alert:
+                                    'Document attachment is required for sick extended leave request'
+                            });
+                        }
+                    } else {
+                        console.log(
+                            'The leave date applied must be more than 3 days from today'
+                        );
+
+                        res.render('home', {
+                            user: user,
+                            notifications: notifications,
+                            uuid: uuidv4(),
+                            userDepartment: userDepartmentHome,
+                            otherTasks: otherTaskHome,
+                            otherActivities: otherActivitiesHome,
+                            // all data
+                            allUser: allUser,
+                            allUserLeave: allUserLeave,
+                            allLeave: allLeave,
+                            userLeave: userLeave,
+                            leave: leaveHome,
+                            tasks: taskHome,
+                            files: fileHome,
+                            activities: activitiesHome,
+                            selectedNames: '',
+                            // toast
+                            show: 'show',
+                            alert:
+                                'The leave date applied must be more than 3 days from today'
+                        });
+                    }
+                } else {
+                    console.log(
+                        'Insufficient sick extended leave balance for the requested duration'
+                    );
+
+                    res.render('home', {
+                        user: user,
+                        notifications: notifications,
+                        uuid: uuidv4(),
+                        userDepartment: userDepartmentHome,
+                        otherTasks: otherTaskHome,
+                        otherActivities: otherActivitiesHome,
+                        // all data
+                        allUser: allUser,
+                        allUserLeave: allUserLeave,
+                        allLeave: allLeave,
+                        userLeave: userLeave,
+                        leave: leaveHome,
+                        tasks: taskHome,
+                        files: fileHome,
+                        activities: activitiesHome,
+                        selectedNames: '',
+                        // toast
+                        show: 'show',
+                        alert:
+                            'Insufficient sick leave balance for the requested duration'
+                    });
+                }
+            } else if (type === 'Emergency Leave') {
+                const findFile = await File.find({ uuid: uuid });
+
+                if (0 <= numberOfDays <= 5) {
+                    if (findFile.length > 0) {
+                        approvals = generateApprovals(user, headOfSection, headOfDepartment, depChiefExec, chiefExec, adminHR, assignee);
+                    } else {
+                        console.log("There is no file attached for emergency leave");
+
+                        res.render('home', {
+                            user: user,
+                            notifications: notifications,
+                            uuid: uuidv4(),
+                            userDepartment: userDepartmentHome,
+                            otherTasks: otherTaskHome,
+                            otherActivities: otherActivitiesHome,
+                            // all data
+                            allUser: allUser,
+                            allUserLeave: allUserLeave,
+                            allLeave: allLeave,
+                            userLeave: userLeave,
+                            leave: leaveHome,
+                            tasks: taskHome,
+                            files: fileHome,
+                            activities: activitiesHome,
+                            selectedNames: '',
+                            // toast
+                            show: 'show',
+                            alert:
+                                'Document attachment is required for emergency leave request'
+                        });
+                    }
+                } else {
+                    console.log(
+                        'Insufficient emergency leave days and leave taken reach maximum for the requested duration'
+                    );
+
+                    res.render('home', {
+                        user: user,
+                        notifications: notifications,
+                        uuid: uuidv4(),
+                        userDepartment: userDepartmentHome,
+                        otherTasks: otherTaskHome,
+                        otherActivities: otherActivitiesHome,
+                        // all data
+                        allUser: allUser,
+                        allUserLeave: allUserLeave,
+                        allLeave: allLeave,
+                        userLeave: userLeave,
+                        leave: leaveHome,
+                        tasks: taskHome,
+                        files: fileHome,
+                        activities: activitiesHome,
+                        selectedNames: '',
+                        // toast
+                        show: 'show',
+                        alert:
+                            'Exceed 3 days leave or reached maximum 7 times taken for the requested emergency leave'
+                    });
+                }
+            } else if (type === 'Attend Exam Leave') {
+                leaveBalance = userLeave.attendExam.leave - userLeave.attendExam.taken;
+                const findFile = await File.find({ uuid: uuid });
+
+                if (leaveBalance >= numberOfDays && numberOfDays > 0) {
+                    if (amountDayRequest >= 3) {
+                        if (findFile.length > 0) {
+                            approvals = generateApprovals(user, headOfSection, headOfDepartment, depChiefExec, chiefExec, adminHR, assignee);
+                        } else {
+                            console.log("There is no file attached for attend exam leave!");
+
+                            res.render('home', {
+                                user: user,
+                                notifications: notifications,
+                                uuid: uuidv4(),
+                                userDepartment: userDepartmentHome,
+                                otherTasks: otherTaskHome,
+                                otherActivities: otherActivitiesHome,
+                                // all data
+                                allUser: allUser,
+                                allUserLeave: allUserLeave,
+                                allLeave: allLeave,
+                                userLeave: userLeave,
+                                leave: leaveHome,
+                                tasks: taskHome,
+                                files: fileHome,
+                                activities: activitiesHome,
+                                selectedNames: '',
+                                // toast
+                                show: 'show',
+                                alert:
+                                    'Document attachment is required for attend exam leave request'
+                            });
+                        }
+                    } else {
+                        console.log(
+                            'The leave date applied must be more than 3 days from today'
+                        );
+
+                        res.render('home', {
+                            user: user,
+                            notifications: notifications,
+                            uuid: uuidv4(),
+                            userDepartment: userDepartmentHome,
+                            otherTasks: otherTaskHome,
+                            otherActivities: otherActivitiesHome,
+                            // all data
+                            allUser: allUser,
+                            allUserLeave: allUserLeave,
+                            allLeave: allLeave,
+                            userLeave: userLeave,
+                            leave: leaveHome,
+                            tasks: taskHome,
+                            files: fileHome,
+                            activities: activitiesHome,
+                            selectedNames: '',
+                            // toast
+                            show: 'show',
+                            alert:
+                                'The leave date applied must be more than 3 days from today'
+                        });
+                    }
+                } else {
+                    console.log(
+                        'Insufficient attend exam leave balance for the requested duration'
+                    );
+
+                    res.render('home', {
+                        user: user,
+                        notifications: notifications,
+                        uuid: uuidv4(),
+                        userDepartment: userDepartmentHome,
+                        otherTasks: otherTaskHome,
+                        otherActivities: otherActivitiesHome,
+                        // all data
+                        allUser: allUser,
+                        allUserLeave: allUserLeave,
+                        allLeave: allLeave,
+                        userLeave: userLeave,
+                        leave: leaveHome,
+                        tasks: taskHome,
+                        files: fileHome,
+                        activities: activitiesHome,
+                        selectedNames: '',
+                        // toast
+                        show: 'show',
+                        alert:
+                            'Insufficient attend exam leave balance for the requested duration'
+                    });
+                }
+            } else if (type === 'Paternity Leave') {
+                leaveBalance = userLeave.paternity.leave
+                leaveTaken = userLeave.paternity.taken;
+                const findFile = await File.find({ uuid: uuid });
+
+                if (leaveBalance >= numberOfDays && numberOfDays > 0 && leaveTaken <= 6 && user.gender === 'Male') {
+                    if (amountDayRequest >= 1) {
+                        if (findFile.length > 0) {
+                            approvals = generateApprovals(user, headOfSection, headOfDepartment, depChiefExec, chiefExec, adminHR, assignee);
+                        } else {
+                            console.log("There is no file attached for paternity leave!");
+
+                            res.render('home', {
+                                user: user,
+                                notifications: notifications,
+                                uuid: uuidv4(),
+                                userDepartment: userDepartmentHome,
+                                otherTasks: otherTaskHome,
+                                otherActivities: otherActivitiesHome,
+                                // all data
+                                allUser: allUser,
+                                allUserLeave: allUserLeave,
+                                allLeave: allLeave,
+                                userLeave: userLeave,
+                                leave: leaveHome,
+                                tasks: taskHome,
+                                files: fileHome,
+                                activities: activitiesHome,
+                                selectedNames: '',
+                                // toast
+                                show: 'show',
+                                alert:
+                                    'Document attachment is required for paternity leave request'
+                            });
+                        }
+                    } else {
+                        console.log(
+                            'The leave date applied must be more than 3 days from today'
+                        );
+
+                        res.render('home', {
+                            user: user,
+                            notifications: notifications,
+                            uuid: uuidv4(),
+                            userDepartment: userDepartmentHome,
+                            otherTasks: otherTaskHome,
+                            otherActivities: otherActivitiesHome,
+                            // all data
+                            allUser: allUser,
+                            allUserLeave: allUserLeave,
+                            allLeave: allLeave,
+                            userLeave: userLeave,
+                            leave: leaveHome,
+                            tasks: taskHome,
+                            files: fileHome,
+                            activities: activitiesHome,
+                            selectedNames: '',
+                            // toast
+                            show: 'show',
+                            alert:
+                                'The leave date applied must be more than 3 days from today'
+                        });
+                    }
+                } else {
+                    console.log(
+                        'Insufficient paternity leave balance for the requested duration'
+                    );
+
+                    res.render('home', {
+                        user: user,
+                        notifications: notifications,
+                        uuid: uuidv4(),
+                        userDepartment: userDepartmentHome,
+                        otherTasks: otherTaskHome,
+                        otherActivities: otherActivitiesHome,
+                        // all data
+                        allUser: allUser,
+                        allUserLeave: allUserLeave,
+                        allLeave: allLeave,
+                        userLeave: userLeave,
+                        leave: leaveHome,
+                        tasks: taskHome,
+                        files: fileHome,
+                        activities: activitiesHome,
+                        selectedNames: '',
+                        // toast
+                        show: 'show',
+                        alert:
+                            'Insufficient paternity balance for the requested duration'
+                    });
+                }
+            } else if (type === 'Maternity Leave') {
+                leaveBalance = userLeave.maternity.leave;
+                const findFile = await File.find({ uuid: uuid });
+
+                if (leaveBalance >= numberOfDays && numberOfDays > 0 && user.gender === 'Female') {
+                    if (amountDayRequest >= 1) {
+                        if (findFile.length > 0) {
+                            approvals = generateApprovals(user, headOfSection, headOfDepartment, depChiefExec, chiefExec, adminHR, assignee);
+                        } else {
+                            console.log("There is no file attached for maternity leave!");
+
+                            res.render('home', {
+                                user: user,
+                                notifications: notifications,
+                                uuid: uuidv4(),
+                                userDepartment: userDepartmentHome,
+                                otherTasks: otherTaskHome,
+                                otherActivities: otherActivitiesHome,
+                                // all data
+                                allUser: allUser,
+                                allUserLeave: allUserLeave,
+                                allLeave: allLeave,
+                                userLeave: userLeave,
+                                leave: leaveHome,
+                                tasks: taskHome,
+                                files: fileHome,
+                                activities: activitiesHome,
+                                selectedNames: '',
+                                // toast
+                                show: 'show',
+                                alert:
+                                    'Document attachment is required for maternity leave request'
+                            });
+                        }
+                    } else {
+                        console.log(
+                            'The leave date applied must be more than 3 days from today'
+                        );
+
+                        res.render('home', {
+                            user: user,
+                            notifications: notifications,
+                            uuid: uuidv4(),
+                            userDepartment: userDepartmentHome,
+                            otherTasks: otherTaskHome,
+                            otherActivities: otherActivitiesHome,
+                            // all data
+                            allUser: allUser,
+                            allUserLeave: allUserLeave,
+                            allLeave: allLeave,
+                            userLeave: userLeave,
+                            leave: leaveHome,
+                            tasks: taskHome,
+                            files: fileHome,
+                            activities: activitiesHome,
+                            selectedNames: '',
+                            // toast
+                            show: 'show',
+                            alert:
+                                'The leave date applied must be more than 3 days from today'
+                        });
+                    }
+                } else {
+                    console.log(
+                        'Insufficient maternity leave balance for the requested duration'
+                    );
+
+                    res.render('home', {
+                        user: user,
+                        notifications: notifications,
+                        uuid: uuidv4(),
+                        userDepartment: userDepartmentHome,
+                        otherTasks: otherTaskHome,
+                        otherActivities: otherActivitiesHome,
+                        // all data
+                        allUser: allUser,
+                        allUserLeave: allUserLeave,
+                        allLeave: allLeave,
+                        userLeave: userLeave,
+                        leave: leaveHome,
+                        tasks: taskHome,
+                        files: fileHome,
+                        activities: activitiesHome,
+                        selectedNames: '',
+                        // toast
+                        show: 'show',
+                        alert:
+                            'Insufficient maternity balance for the requested duration'
+                    });
+                }
+            } else if (type === 'Marriage Leave') {
+                leaveBalance = userLeave.marriage.leave
+                leaveTaken = userLeave.marriage.taken;
+                const findFile = await File.find({ uuid: uuid });
+
+                if (leaveBalance >= numberOfDays && numberOfDays > 0 && leaveTaken <= 1) {
+                    if (amountDayRequest >= 3) {
+                        if (findFile.length > 0) {
+                            approvals = generateApprovals(user, headOfSection, headOfDepartment, depChiefExec, chiefExec, adminHR, assignee);
+                        } else {
+                            console.log("There is no file attached for marriage leave!");
+
+                            res.render('home', {
+                                user: user,
+                                notifications: notifications,
+                                uuid: uuidv4(),
+                                userDepartment: userDepartmentHome,
+                                otherTasks: otherTaskHome,
+                                otherActivities: otherActivitiesHome,
+                                // all data
+                                allUser: allUser,
+                                allUserLeave: allUserLeave,
+                                allLeave: allLeave,
+                                userLeave: userLeave,
+                                leave: leaveHome,
+                                tasks: taskHome,
+                                files: fileHome,
+                                activities: activitiesHome,
+                                selectedNames: '',
+                                // toast
+                                show: 'show',
+                                alert:
+                                    'Document attachment is required for marriage leave request'
+                            });
+                        }
+                    } else {
+                        console.log(
+                            'The leave date applied must be more than 3 days from today'
+                        );
+
+                        res.render('home', {
+                            user: user,
+                            notifications: notifications,
+                            uuid: uuidv4(),
+                            userDepartment: userDepartmentHome,
+                            otherTasks: otherTaskHome,
+                            otherActivities: otherActivitiesHome,
+                            // all data
+                            allUser: allUser,
+                            allUserLeave: allUserLeave,
+                            allLeave: allLeave,
+                            userLeave: userLeave,
+                            leave: leaveHome,
+                            tasks: taskHome,
+                            files: fileHome,
+                            activities: activitiesHome,
+                            selectedNames: '',
+                            // toast
+                            show: 'show',
+                            alert:
+                                'The leave date applied must be more than 3 days from today'
+                        });
+                    }
+                } else {
+                    console.log(
+                        'Insufficient marriage leave balance for the requested duration'
+                    );
+
+                    res.render('home', {
+                        user: user,
+                        notifications: notifications,
+                        uuid: uuidv4(),
+                        userDepartment: userDepartmentHome,
+                        otherTasks: otherTaskHome,
+                        otherActivities: otherActivitiesHome,
+                        // all data
+                        allUser: allUser,
+                        allUserLeave: allUserLeave,
+                        allLeave: allLeave,
+                        userLeave: userLeave,
+                        leave: leaveHome,
+                        tasks: taskHome,
+                        files: fileHome,
+                        activities: activitiesHome,
+                        selectedNames: '',
+                        // toast
+                        show: 'show',
+                        alert:
+                            'Insufficient marriage balance for the requested duration'
+                    });
+                }
+            } else if (type === 'Hajj Leave') {
+                leaveBalance = userLeave.hajj.leave
+                leaveTaken = userLeave.hajj.taken;
+                const findFile = await File.find({ uuid: uuid });
+
+                if (leaveBalance >= numberOfDays && numberOfDays > 0 && leaveTaken <= 1) {
+                    if (amountDayRequest >= 3) {
+                        if (findFile.length > 0) {
+                            approvals = generateApprovals(user, headOfSection, headOfDepartment, depChiefExec, chiefExec, adminHR, assignee);
+                        } else {
+                            console.log("There is no file attached for paternity leave!");
+
+                            res.render('home', {
+                                user: user,
+                                notifications: notifications,
+                                uuid: uuidv4(),
+                                userDepartment: userDepartmentHome,
+                                otherTasks: otherTaskHome,
+                                otherActivities: otherActivitiesHome,
+                                // all data
+                                allUser: allUser,
+                                allUserLeave: allUserLeave,
+                                allLeave: allLeave,
+                                userLeave: userLeave,
+                                leave: leaveHome,
+                                tasks: taskHome,
+                                files: fileHome,
+                                activities: activitiesHome,
+                                selectedNames: '',
+                                // toast
+                                show: 'show',
+                                alert:
+                                    'Document attachment is required for paternity leave request'
+                            });
+                        }
+                    } else {
+                        console.log(
+                            'The leave date applied must be more than 3 days from today'
+                        );
+
+                        res.render('home', {
+                            user: user,
+                            notifications: notifications,
+                            uuid: uuidv4(),
+                            userDepartment: userDepartmentHome,
+                            otherTasks: otherTaskHome,
+                            otherActivities: otherActivitiesHome,
+                            // all data
+                            allUser: allUser,
+                            allUserLeave: allUserLeave,
+                            allLeave: allLeave,
+                            userLeave: userLeave,
+                            leave: leaveHome,
+                            tasks: taskHome,
+                            files: fileHome,
+                            activities: activitiesHome,
+                            selectedNames: '',
+                            // toast
+                            show: 'show',
+                            alert:
+                                'The leave date applied must be more than 3 days from today'
+                        });
+                    }
+                } else {
+                    console.log(
+                        'Insufficient paternity leave balance for the requested duration'
+                    );
+
+                    res.render('home', {
+                        user: user,
+                        notifications: notifications,
+                        uuid: uuidv4(),
+                        userDepartment: userDepartmentHome,
+                        otherTasks: otherTaskHome,
+                        otherActivities: otherActivitiesHome,
+                        // all data
+                        allUser: allUser,
+                        allUserLeave: allUserLeave,
+                        allLeave: allLeave,
+                        userLeave: userLeave,
+                        leave: leaveHome,
+                        tasks: taskHome,
+                        files: fileHome,
+                        activities: activitiesHome,
+                        selectedNames: '',
+                        // toast
+                        show: 'show',
+                        alert:
+                            'Insufficient paternity balance for the requested duration'
+                    });
+                }
+            } else if (type === 'Special Leave') {
+                leaveBalance = userLeave.special.leave
+                leaveTaken = userLeave.special.taken;
+                const findFile = await File.find({ uuid: uuid });
+
+                if (leaveBalance >= numberOfDays && numberOfDays > 0 && leaveTaken <= 10) {
+                    if (amountDayRequest >= 1) {
+                        if (findFile.length > 0) {
+                            approvals = generateApprovals(user, headOfSection, headOfDepartment, depChiefExec, chiefExec, adminHR, assignee);
+                        } else {
+                            console.log("There is no file attached for special leave!");
+
+                            res.render('home', {
+                                user: user,
+                                notifications: notifications,
+                                uuid: uuidv4(),
+                                userDepartment: userDepartmentHome,
+                                otherTasks: otherTaskHome,
+                                otherActivities: otherActivitiesHome,
+                                // all data
+                                allUser: allUser,
+                                allUserLeave: allUserLeave,
+                                allLeave: allLeave,
+                                userLeave: userLeave,
+                                leave: leaveHome,
+                                tasks: taskHome,
+                                files: fileHome,
+                                activities: activitiesHome,
+                                selectedNames: '',
+                                // toast
+                                show: 'show',
+                                alert:
+                                    'Document attachment is required for special leave request'
+                            });
+                        }
+                    } else {
+                        console.log(
+                            'The leave date applied must be more than 3 days from today'
+                        );
+
+                        res.render('home', {
+                            user: user,
+                            notifications: notifications,
+                            uuid: uuidv4(),
+                            userDepartment: userDepartmentHome,
+                            otherTasks: otherTaskHome,
+                            otherActivities: otherActivitiesHome,
+                            // all data
+                            allUser: allUser,
+                            allUserLeave: allUserLeave,
+                            allLeave: allLeave,
+                            userLeave: userLeave,
+                            leave: leaveHome,
+                            tasks: taskHome,
+                            files: fileHome,
+                            activities: activitiesHome,
+                            selectedNames: '',
+                            // toast
+                            show: 'show',
+                            alert:
+                                'The leave date applied must be more than 3 days from today'
+                        });
+                    }
+                } else {
+                    console.log(
+                        'Insufficient special leave balance for the requested duration'
+                    );
+
+                    res.render('home', {
+                        user: user,
+                        notifications: notifications,
+                        uuid: uuidv4(),
+                        userDepartment: userDepartmentHome,
+                        otherTasks: otherTaskHome,
+                        otherActivities: otherActivitiesHome,
+                        // all data
+                        allUser: allUser,
+                        allUserLeave: allUserLeave,
+                        allLeave: allLeave,
+                        userLeave: userLeave,
+                        leave: leaveHome,
+                        tasks: taskHome,
+                        files: fileHome,
+                        activities: activitiesHome,
+                        selectedNames: '',
+                        // toast
+                        show: 'show',
+                        alert:
+                            'Insufficient special leave balance for the requested duration'
+                    });
+                }
+            } else if (type === 'Unpaid Leave') {
+                approvals = generateApprovals(user, headOfSection, headOfDepartment, depChiefExec, chiefExec, adminHR);
+            }
+
+            if (approvals === '') {
+                console.log('Leave balance not sufficient!');
+            } else {
+                // set user id to be send
+                for (const approval of approvals) {
+                    const recipientId = approval.recipient;
+
+                    // Add the recipientId to the sendNoti array if not already present
+                    if (!sendNoti.includes(recipientId)) {
+                        sendNoti.push(recipientId);
                     }
 
-                    console.log('Done send notifications!');
+                    // Fetch the user by recipient ID
+                    const email = await User.findById(recipientId);
+
+                    // Check if the user is found and has an email
+                    if (email && user.email) {
+                        // Add the user's email to sendEmail
+                        sendEmail.push(email.email);
+                    }
+                }
+            }
+
+            const leave = new Leave({
+                fileId: uuid,
+                user: user._id,
+                grade: user.grade,
+                assignee: assignee,
+                type: type,
+                date: newDate,
+                status: 'submitted',
+                purpose: purpose,
+                approvals: approvals
+            });
+
+            Leave.create(leave);
+            console.log('Leave submission has been completed');
+
+            // notifications save has been turn off
+            if (sendNoti.length > 0) {
+                for (const recipientId of sendNoti) {
+                    const newNotification = new Notification({
+                        sender: user._id,
+                        recipient: new mongoose.Types.ObjectId(recipientId),
+                        type: 'Leave',
+                        url: '/leave/details/' + uuid,
+                        message: 'Leave request needs approval.'
+                    });
+
+                    // newNotification.save();
                 }
 
-                // turn off the email notications
-                // send email to the recipient
-                // let mailOptions = {
-                //     from: 'shrrshazni@gmail.com',
-                //     to: sendEmail,
-                //     subject: 'lakmnsportal - Approval Leave Request',
-                //     html: `
-                //       <html>
-                //         <head>
-                //           <style>
-                //             body {
-                //               font-family: 'Arial', sans-serif;
-                //               background-color: #f4f4f4;
-                //               color: #333;
-                //             }
-                //             p {
-                //               margin-bottom: 20px;
-                //             }
-                //             a {
-                //               color: #3498db;
-                //             }
-                //           </style>
-                //         </head>
-                //         <body>
-                //           <h1>Leave Request</h1>
-                //           <p>${user.fullname} has requested ${type} from, ${startDate} until ${returnDate}</p>
-                //           <p>Please do check your notification at <a href="http://localhost:5002/">lakmnsportal</a></p>
-                //         </body>
-                //       </html>
-                //     `
-                // };
-
-                // transporter.sendMail(mailOptions, (error, info) => {
-                //     if (error) {
-                //         return console.log(error);
-                //     }
-                //     console.log('Message %s sent: %s', info.messageId, info.response);
-                // });
-
-                res.render('home', {
-                    user: user,
-                    notifications: notifications,
-                    uuid: uuidv4(),
-                    userDepartment: userDepartmentHome,
-                    otherTasks: otherTaskHome,
-                    otherActivities: otherActivitiesHome,
-                    // all data
-                    allUser: allUser,
-                    allUserLeave: allUserLeave,
-                    allLeave: allLeave,
-                    userLeave: userLeave,
-                    leave: leaveHome,
-                    tasks: taskHome,
-                    files: fileHome,
-                    activities: activitiesHome,
-                    selectedNames: '',
-                    // toast
-                    show: 'show',
-                    alert:
-                        'Leave requested submitted, please wait it to be approved in 3 days'
-                });
+                console.log('Done send notifications!');
             }
+
+            // turn off the email notications
+            // send email to the recipient
+            // let mailOptions = {
+            //     from: 'shrrshazni@gmail.com',
+            //     to: sendEmail,
+            //     subject: 'lakmnsportal - Approval Leave Request',
+            //     html: `
+            //       <html>
+            //         <head>
+            //           <style>
+            //             body {
+            //               font-family: 'Arial', sans-serif;
+            //               background-color: #f4f4f4;
+            //               color: #333;
+            //             }
+            //             p {
+            //               margin-bottom: 20px;
+            //             }
+            //             a {
+            //               color: #3498db;
+            //             }
+            //           </style>
+            //         </head>
+            //         <body>
+            //           <h1>Leave Request</h1>
+            //           <p>${user.fullname} has requested ${type} from, ${startDate} until ${returnDate}</p>
+            //           <p>Please do check your notification at <a href="http://localhost:5002/">lakmnsportal</a></p>
+            //         </body>
+            //       </html>
+            //     `
+            // };
+
+            // transporter.sendMail(mailOptions, (error, info) => {
+            //     if (error) {
+            //         return console.log(error);
+            //     }
+            //     console.log('Message %s sent: %s', info.messageId, info.response);
+            // });
+
+            res.render('home', {
+                user: user,
+                notifications: notifications,
+                uuid: uuidv4(),
+                userDepartment: userDepartmentHome,
+                otherTasks: otherTaskHome,
+                otherActivities: otherActivitiesHome,
+                // all data
+                allUser: allUser,
+                allUserLeave: allUserLeave,
+                allLeave: allLeave,
+                userLeave: userLeave,
+                leave: leaveHome,
+                tasks: taskHome,
+                files: fileHome,
+                activities: activitiesHome,
+                selectedNames: '',
+                // toast
+                show: 'show',
+                alert:
+                    'Leave requested submitted, please wait it to be approved in 3 days'
+            });
+
         }
     });
 
@@ -4777,26 +2318,27 @@ app.get('/leave/:approval/:id', async function (req, res) {
                     var daysDifference = '';
 
                     // Calculate the difference in hours between the two dates
-                    if (
-                        checkLeave.type === 'Annual Leave' ||
-                        checkLeave.type === 'Sick Leave'
-                    ) {
+                    if (type === 'Annual Leave' || type === 'Sick Leave') {
                         daysDifference = calculateBusinessDays(startDate, returnDate);
-                    } else if (checkLeave.type === 'Emergency Leave') {
-                        daysDifference = calculateBusinessDays(startDate, returnDate);
+                    } else if (type === 'Half Day Leave') {
+                        numberOfDays = calculateBusinessDays(startDate, returnDate) / 2;
+                    } else if (type === 'Emergency Leave') {
+                        daysDifference = calculateBusinessDays(startDate, today);
                     } else if (
-                        checkLeave.type === 'Marriage Leave' ||
-                        checkLeave.type === 'Paternity Leave' ||
-                        checkLeave.type === 'Study Leave' ||
-                        checkLeave.type === 'Hajj Leave' ||
-                        checkLeave.type === 'Unpaid Leave' ||
-                        checkLeave.type === 'Special Leave'
+                        type === 'Marriage Leave' ||
+                        type === 'Paternity Leave' ||
+                        type === 'Maternity Leave' ||
+                        type === 'Attend Exam Leave' ||
+                        type === 'Hajj Leave' ||
+                        type === 'Unpaid Leave' ||
+                        type === 'Special Leave' ||
+                        type === 'Extended Sick Leave'
                     ) {
                         timeDifference = returnDate.getTime() - startDate.getTime();
-
                         // Convert milliseconds to days
                         daysDifference = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
                     }
+
 
                     switch (checkLeave.type) {
                         case 'Annual Leave':
@@ -4809,16 +2351,33 @@ app.get('/leave/:approval/:id', async function (req, res) {
                             userLeave.sick.taken = Math.max(0, userLeave.sick.taken);
                             break;
 
-                        case 'Emergency Leave':
-                            userLeave.annual.taken += daysDifference;
-                            userLeave.emergency.taken = userLeave.emergency.taken + 1;
+                        case 'Sick Extended Leave':
+                            userLeave.sickExtended.taken += daysDifference;
+                            userLeave.sickExtended.taken = Math.max(0, userLeave.sickExtended.taken);
                             break;
 
-                        case 'Study Leave':
-                            userLeave.study.taken = userLeave.study.taken + 1;
+                        case 'Emergency Leave':
+                            userLeave.annual.taken += daysDifference;
+                            userLeave.annual.taken = Math.max(0, userLeave.annual.taken);
+                            userLeave.emergency.taken += daysDifference;
+                            userLeave.emergency.taken = Math.max(0, userLeave.emergency.taken);
+                            break;
+
+                        case 'Attend Exam Leave':
+                            userLeave.attendExam.leave -= daysDifference;
+                            userLeave.attendExam.leave = Math.max(0, userLeave.attendExam.leave);
+                            userLeave.attendExam.taken = userLeave.attendExam.taken + 1;
+                            break;
+
+                        case 'Maternity Leave':
+                            userLeave.maternity.leave -= daysDifference;
+                            userLeave.maternity.leave = Math.max(0, userLeave.maternity.leave);
+                            userLeave.maternity.taken = userLeave.maternity.taken + 1;
                             break;
 
                         case 'Paternity Leave':
+                            userLeave.paternity.leave -= daysDifference;
+                            userLeave.paternity.leave = Math.max(0, userLeave.paternity.leave);
                             userLeave.paternity.taken = userLeave.paternity.taken + 1;
                             break;
 
@@ -5007,7 +2566,8 @@ app.get('/leave/:approval/:id', async function (req, res) {
                 switch (checkLeave.type) {
                     case 'Emergency Leave':
                         userLeave.unpaid.taken = userLeave.unpaid.taken + 1;
-                        userLeave.emergency.taken = userLeave.emergency.taken + 1;
+                        userLeave.emergency.taken += daysDifference;
+                        userLeave.emergency.taken = Math.max(0, userLeave.emergency.taken);
                         break;
 
                     default:
@@ -5471,6 +3031,318 @@ isPublicHoliday = function (date, publicHolidays) {
 
 formatDate = function (date) {
     return date.toISOString().split('T')[0];
+};
+
+// GENERATES APPROVALS
+generateApprovals = function (user, headOfSection, headOfDepartment, depChiefExec, chiefExec, adminHR, assignee) {
+    let approvals;
+
+    if (user.isOfficer === true) {
+        if (headOfSection) {
+            approvals = [
+                {
+                    recipient: user._id,
+                    role: 'Staff',
+                    status: 'submitted',
+                    comment: 'Submitted leave request',
+                    timestamp: new Date(),
+                    estimated: ''
+                },
+                ...(assignee && assignee.length > 0
+                    ? assignee.map(assigneeItem => ({
+                        recipient: assigneeItem._id,
+                        role: 'Temporary Replacement',
+                        status: 'pending',
+                        comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
+                        estimated: new Date(
+                            Date.now() + 1 * 24 * 60 * 60 * 1000
+                        ),
+                        timestamp: ''
+                    }))
+                    : []),
+                {
+                    recipient: headOfSection._id,
+                    role: 'Head of Section',
+                    status: 'pending',
+                    comment: 'Leave request needs approval',
+                    estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                    timestamp: ''
+                },
+                {
+                    recipient: headOfDepartment._id,
+                    role: 'Head of Department',
+                    status: 'pending',
+                    comment: 'Leave request needs approval',
+                    estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                    timestamp: ''
+                },
+                {
+                    recipient: adminHR._id,
+                    role: 'Human Resource',
+                    status: 'pending',
+                    comment: 'Leave request needs to be reviewed',
+                    estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                    timestamp: ''
+                }
+            ];
+        } else {
+            approvals = [
+                {
+                    recipient: user._id,
+                    role: 'Staff',
+                    status: 'submitted',
+                    comment: 'Submitted leave request',
+                    timestamp: new Date(),
+                    estimated: ''
+                },
+                ...(assignee && assignee.length > 0
+                    ? assignee.map(assigneeItem => ({
+                        recipient: assigneeItem._id,
+                        role: 'Temporary Replacement',
+                        status: 'pending',
+                        comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
+                        estimated: new Date(
+                            Date.now() + 1 * 24 * 60 * 60 * 1000
+                        ),
+                        timestamp: ''
+                    }))
+                    : []),
+                {
+                    recipient: headOfDepartment._id,
+                    role: 'Head of Department',
+                    status: 'pending',
+                    comment: 'Leave request needs approval',
+                    estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                    timestamp: ''
+                },
+                {
+                    recipient: adminHR._id,
+                    role: 'Human Resource',
+                    status: 'pending',
+                    comment: 'Leave request needs to be reviewed',
+                    estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+                    timestamp: ''
+                }
+            ];
+        }
+    } else if (user.isHeadOfSection === true) {
+        approvals = [
+            {
+                recipient: user._id,
+                role: 'Staff',
+                status: 'submitted',
+                comment: 'Submitted leave request',
+                timestamp: new Date(),
+                estimated: ''
+            },
+            ...(assignee && assignee.length > 0
+                ? assignee.map(assigneeItem => ({
+                    recipient: assigneeItem._id,
+                    role: 'Temporary Replacement',
+                    status: 'pending',
+                    comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
+                    estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                    timestamp: ''
+                }))
+                : []),
+            {
+                recipient: headOfDepartment._id,
+                role: 'Head of Department',
+                status: 'pending',
+                comment: 'Leave request needs approval',
+                estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                timestamp: ''
+            },
+            {
+                recipient: depChiefExec._id,
+                role: 'Deputy Chief Executive Officer',
+                status: 'pending',
+                comment: 'Leave request needs approval',
+                estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+                timestamp: ''
+            },
+            {
+                recipient: adminHR._id,
+                role: 'Human Resource',
+                status: 'pending',
+                comment: 'Leave request needs to be reviewed',
+                estimated: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
+                timestamp: ''
+            }
+        ];
+    } else if (user.isHeadOfDepartment === true) {
+        approvals = [
+            {
+                recipient: user._id,
+                role: 'Staff',
+                status: 'submitted',
+                comment: 'Submitted leave request',
+                timestamp: new Date(),
+                estimated: ''
+            },
+            ...(assignee && assignee.length > 0
+                ? assignee.map(assigneeItem => ({
+                    recipient: assigneeItem._id,
+                    role: 'Temporary Replacement',
+                    status: 'pending',
+                    comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
+                    estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                    timestamp: ''
+                }))
+                : []),
+            {
+                recipient: depChiefExec._id,
+                role: 'Deputy Chief Executive Officer',
+                status: 'pending',
+                comment: 'Leave request needs approval',
+                estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                timestamp: ''
+            },
+            {
+                recipient: chiefExec._id,
+                role: 'Chief Executive Officer',
+                status: 'pending',
+                comment: 'Leave request needs approval',
+                estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                timestamp: ''
+            },
+            {
+                recipient: adminHR._id,
+                role: 'Human Resource',
+                status: 'pending',
+                comment: 'Leave request needs to be reviewed',
+                estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+                timestamp: ''
+            }
+        ];
+    } else if (user.isDeputyChiefExec === true) {
+        approvals = [
+            {
+                recipient: user._id,
+                role: 'Staff',
+                status: 'submitted',
+                comment: 'Submitted leave request',
+                timestamp: new Date(),
+                estimated: ''
+            },
+            ...(assignee && assignee.length > 0
+                ? assignee.map(assigneeItem => ({
+                    recipient: assigneeItem._id,
+                    role: 'Temporary Replacement',
+                    status: 'pending',
+                    comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
+                    estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                    timestamp: ''
+                }))
+                : []),
+            {
+                recipient: chiefExec._id,
+                role: 'Chief Executive Officer',
+                status: 'pending',
+                comment: 'Leave request needs approval',
+                estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                timestamp: ''
+            },
+            {
+                recipient: adminHR._id,
+                role: 'Human Resource',
+                status: 'pending',
+                comment: 'Leave request needs to be reviewed',
+                estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+                timestamp: ''
+            }
+        ];
+    } else {
+        if (headOfSection) {
+            approvals = [
+                {
+                    recipient: user._id,
+                    role: 'Staff',
+                    status: 'submitted',
+                    comment: 'Submitted leave request',
+                    timestamp: new Date(),
+                    estimated: ''
+                },
+                ...(assignee && assignee.length > 0
+                    ? assignee.map(assigneeItem => ({
+                        recipient: assigneeItem._id,
+                        role: 'Temporary Replacement',
+                        status: 'pending',
+                        comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
+                        estimated: new Date(
+                            Date.now() + 1 * 24 * 60 * 60 * 1000
+                        ),
+                        timestamp: ''
+                    }))
+                    : []),
+                {
+                    recipient: headOfSection._id,
+                    role: 'Head of Section',
+                    status: 'pending',
+                    comment: 'Leave request needs approval',
+                    estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                    timestamp: ''
+                },
+                {
+                    recipient: headOfDepartment._id,
+                    role: 'Head of Department',
+                    status: 'pending',
+                    comment: 'Leave request needs approval',
+                    estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                    timestamp: ''
+                },
+                {
+                    recipient: adminHR._id,
+                    role: 'Human Resource',
+                    status: 'pending',
+                    comment: 'Leave request needs to be reviewed',
+                    estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+                    timestamp: ''
+                }
+            ];
+        } else {
+            approvals = [
+                {
+                    recipient: user._id,
+                    role: 'Staff',
+                    status: 'submitted',
+                    comment: 'Submitted leave request',
+                    timestamp: new Date(),
+                    estimated: ''
+                },
+                ...(assignee && assignee.length > 0
+                    ? assignee.map(assigneeItem => ({
+                        recipient: assigneeItem._id,
+                        role: 'Temporary Replacement',
+                        status: 'pending',
+                        comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
+                        estimated: new Date(
+                            Date.now() + 1 * 24 * 60 * 60 * 1000
+                        ),
+                        timestamp: ''
+                    }))
+                    : []),
+                {
+                    recipient: headOfDepartment._id,
+                    role: 'Head of Department',
+                    status: 'pending',
+                    comment: 'Leave request needs approval',
+                    estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                    timestamp: ''
+                },
+                {
+                    recipient: adminHR._id,
+                    role: 'Human Resource',
+                    status: 'pending',
+                    comment: 'Leave request needs to be reviewed',
+                    estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+                    timestamp: ''
+                }
+            ];
+        }
+    }
+
+    return approvals;
 };
 
 // PORT INITIALIZATION ON CLOUD OR LOCAL (5001)

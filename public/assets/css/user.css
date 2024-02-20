@@ -51,7 +51,7 @@
   }
   .dashboard-carousel .carousel-indicators button {
     width: 12px;
-    height: 3px;
+    height: 4px;
     border-radius: 0.5rem;
     border: 0;
     -webkit-transition: width 0.5s;
