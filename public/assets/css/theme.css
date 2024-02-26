@@ -26890,8 +26890,10 @@ pre[class*='language-'] {
   max-width: 32px !important;
   border-radius: 0.25rem;
 }
-.flatpickr-day.weekend-days {
-  color: var(--phoenix-flatpickr-weekend-days-color);
+.flatpickr-day:nth-child(7n), /* 7th child corresponds to Saturday */
+.flatpickr-day:nth-child(7n-1) /* 1st child corresponds to Sunday */ {
+    color: var(--phoenix-flatpickr-weekend-days-color);
+    /* Add any other styling properties as needed */
 }
 .flatpickr-day.prevMonthDay,
 .flatpickr-day.nextMonthDay {

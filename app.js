@@ -354,7 +354,7 @@ app.get('/', isAuthenticated, async function (req, res) {
     const allUser = await User.find();
     const allLeave = await Leave.find();
     const allUserLeave = await UserLeave.find();
-    const userLeave = await UserLeave.findOne({ user: user._id });
+    const userLeave = await UserLeave.findOne({ user: user._id }).populate('user').exec();
     const leave = await Leave.find({ user: user._id });
     const task = await Task.find({ assignee: { $in: [user._id] } })
         .sort({ timestamp: -1 })
@@ -1018,7 +1018,7 @@ app
 
         if (user) {
             const currentLeave = await Leave.find({ user: user._id });
-            const userLeave = await UserLeave.findOne({ user: user._id });
+            const userLeave = await UserLeave.findOne({ user: user._id }).populate('user').exec();
 
             res.render('leave-request', {
                 user: user,
@@ -2201,7 +2201,7 @@ app.get('/leave/history', isAuthenticated, async function (req, res) {
         const leave = await Leave.find({ user: user._id }).sort({
             'date.start': -1
         });
-        const userLeave = await UserLeave.findOne({ user: user._id });
+        const userLeave = await UserLeave.findOne({ user: user._id }).populate('user').exec();
 
         res.render('leave-history', {
             user: user,

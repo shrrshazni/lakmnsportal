@@ -74,7 +74,7 @@
 
     <!-- leave form -->
     <form class="row g-3 mb-6" action="/leave/request" method="post" id="leaveForm">
-        
+
       <div class="col-sm-6 col-md-12">
         <div class="form-floating">
           <select class="form-select" id="floatingSelectTask" required aria-label="leave selection" name="type">
@@ -87,7 +87,7 @@
             <option value="Marriage Leave">Marriage Leave</option>
             <option value="Hajj Leave">Hajj Leave</option>
             <option value="Paternity Leave">Paternity Leave</option>
-            <option value="Unpaid Leave">Without Record Leave</option>
+            <option value="Attend Exam Leave">Attend Exam Leave</option>
             <option value="Unpaid Leave">Unpaid Leave</option>
             <option value="Special Leave">Special Leave</option>
           </select>
@@ -105,7 +105,7 @@
 
       <div class="col-sm-6 col-md-6">
         <div class="form-floating">
-          <input type="text" class="form-control datetimepicker flatpickr-input" id="floatingInputStartDate" placeholder="" name="startDate" data-options='{"disableMobile":true,"allowInput":true}' required>
+          <input type="text" class="form-control datetimepicker flatpickr-input" id="floatingInputStartDate" placeholder="" name="startDate" data-options='{"disableMobile":true,"allowInput":true, "locale" : { "firstDayOfWeek" : 1}}' required>
           <label for="floatingInputStartDate"><span class="fa-regular fa-calendar-xmark me-2"></span>Start date</label>
           <div class="invalid-feedback">
             Please select a start date
@@ -113,15 +113,40 @@
         </div>
       </div>
 
-      <div class="col-sm-6 col-md-6">
-        <div class="form-floating">
-          <input type="text" class="form-control datetimepicker flatpickr-input" id="floatingInputReturnDate" placeholder="" name="returnDate" data-options='{"disableMobile":true,"allowInput":true}' required>
-          <label for="floatingInputReturnDate"><span class="fa-regular fa-calendar-check me-2"></span>Return date</label>
-          <div class="invalid-feedback">
-            Please select a return date
-          </div>
-        </div>
-      </div>
+      <script>
+        document.getElementById('floatingSelectTask').addEventListener('change', function() {
+          var selectedLeaveType = this.value;
+
+          // Add logic to determine the minDate based on the selectedLeaveType
+          var minDate;
+
+          if (selectedLeaveType === 'Annual Leave') {
+            minDate = '2024-01-01'; // Update with your logic
+          } else if (selectedLeaveType === 'Half Day Leave') {
+            minDate = '2024-03-01'; // Update with your logic
+          } else if (selectedLeaveType === 'Sick Leave') {
+            minDate = '2024-03-05'; // Update with your logic
+          }
+          // Add more conditions for other leave types as needed...
+
+          // Update the data-options attribute of the flatpickr-input
+          var flatpickrInput = document.getElementById('floatingInputStartDate');
+          var flatpickrOptions = {
+            "disableMobile": true,
+            "allowInput": true,
+            "locale": {
+              "firstDayOfWeek": 1
+            }
+          };
+
+          // Set minDate if available
+          if (minDate) {
+            flatpickrOptions.minDate = minDate;
+          }
+
+          flatpickrInput.setAttribute('data-options', JSON.stringify(flatpickrOptions));
+        });
+      </script>
 
       <div class="col-12 col-md-8 mb-0">
         <div id="selectedNames" class="d-flex flex-wrap border border-300 rounded-3 px-2" style="min-height: 3rem"></div>
@@ -129,7 +154,7 @@
 
       <div class="col-6 col-md-4 mb-3">
         <div class="form-floating">
-          <input type="text" name="query" id="queryInput" class="form-control" placeholder="Search staff name" required/>
+          <input type="text" name="query" id="queryInput" class="form-control" placeholder="Search staff name" required />
           <label class="form-label" for="queryInput">Search Relief Staff</label>
           <div class="invalid-feedback">
             Please select relief staff
@@ -138,7 +163,7 @@
         <div id="results" class="mt-3 mb-3 col-12"></div>
       </div>
 
-      <input type="hidden" id="selectedNamesInput" name="selectedNames" value="<%= Array.isArray(selectedNames) ? selectedNames.join(',') : '' %>"/>
+      <input type="hidden" id="selectedNamesInput" name="selectedNames" value="<%= Array.isArray(selectedNames) ? selectedNames.join(',') : '' %>" />
 
       <div class="col-12 gy-6 mt-0">
         <div class="form-floating">
@@ -315,18 +340,59 @@
 
             function updateLeaveTypeChart(fetchLeaveTypeData, echartsId) {
 
+              var genderFemale = '';
+              if (fetchLeaveTypeData.user.gender === 'Male') {
+                genderFemale = 60;
+              } else if (fetchLeaveTypeData.user.gender === 'Female' && fetchLeaveTypeData.maternity.taken > 0) {
+                genderFemale = 60;
+              } else {
+                genderFemale = 0;
+              }
+
+              var genderMale = '';
+              if (fetchLeaveTypeData.user.gender === 'Female' || fetchLeaveTypeData.paternity.taken > 6) {
+                genderMale = 3;
+              } else {
+                genderMale = 0;
+              }
+
+              var marriage = '';
+              if (fetchLeaveTypeData.marriage.taken > 0) {
+                marriage = 3;
+              } else {
+                marriage = 0;
+              }
+
+              var hajj = '';
+              if (fetchLeaveTypeData.hajj.taken > 0) {
+                hajj = 40;
+              } else {
+                hajj = 0;
+              }
+
+              var special = '';
+              if (fetchLeaveTypeData.special.taken > 7) {
+                special = 3;
+              } else {
+                special = 0;
+              }
+
               var leaveTypeData = {
-                labels: ['Annual Leave Balance', 'Sick Leave Balance', 'Emergency Leave Taken', 'Special Leave Taken', 'Unpaid Leave Taken'],
+                labels: ['Annual Leave', 'Sick Leave', 'Sick Extended Leave', 'Emergency Leave Taken', 'Marriage Leave', 'Paternity Leave', 'Maternity Leave', 'Attend Exam Leave', 'Hajj Leave', 'Unpaid Leave Taken', 'Special Leave'],
                 data: [
                   fetchLeaveTypeData.annual.leave - fetchLeaveTypeData.annual.taken,
                   fetchLeaveTypeData.sick.leave - fetchLeaveTypeData.sick.taken,
+                  fetchLeaveTypeData.sickExtended.leave - fetchLeaveTypeData.sickExtended.taken,
                   fetchLeaveTypeData.emergency.taken,
-                  fetchLeaveTypeData.paternity.taken + fetchLeaveTypeData.marriage.taken + fetchLeaveTypeData.bereavement.taken + fetchLeaveTypeData.study.taken + fetchLeaveTypeData.hajj.taken + fetchLeaveTypeData.special.taken,
+                  fetchLeaveTypeData.marriage.leave - marriage,
+                  fetchLeaveTypeData.paternity.leave - genderMale,
+                  fetchLeaveTypeData.maternity.leave - genderFemale,
+                  fetchLeaveTypeData.attendExam.leave - fetchLeaveTypeData.attendExam.taken,
+                  fetchLeaveTypeData.hajj.leave - hajj,
                   fetchLeaveTypeData.unpaid.taken,
-                  fetchLeaveTypeData.special.taken,
+                  fetchLeaveTypeData.special.leave - special,
                 ],
               };
-
               // Initialize ECharts instance
               var leaveTypeChart = echarts.init(document.getElementById(echartsId), null, {
                 devicePixelRatio: window.devicePixelRatio > 1 ? 2 : 1,
@@ -336,7 +402,10 @@
               });
 
               var option = {
-                color: [getColor('bg-info-light', 'background-color'), getColor('bg-warning-light', 'background-color'), getColor('bg-danger-light', 'background-color'), getColor('bg-success-light', 'background-color'), getColor('bg-primary', 'background-color')],
+                color: [getColor('bg-info-light', 'background-color'), getColor('bg-warning-darker', 'background-color'),
+                  getColor('bg-warning-light', 'background-color'), getColor('bg-danger-light', 'background-color'), getColor('bg-danger-dark', 'background-color'), getColor('bg-success-light', 'background-color'),
+                  getColor('bg-success-dark', 'background-color'), getColor('bg-info-dark', 'background-color'), getColor('bg-info-lighter', 'background-color'), getColor('bg-primary', 'background-color'), getColor('bg-warning-lighter', 'background-color')
+                ],
                 series: [{
                   name: 'Tasks assigned to me',
                   type: 'pie',
@@ -366,6 +435,10 @@
                       show: true
                     }
                   },
+                  // itemStyle: {
+                  //   borderWidth: 1, 
+                  //   borderColor: getColor('bg-body', 'background-color'), 
+                  // },
                   labelLine: {
                     show: false
                   },
@@ -398,16 +471,47 @@
           </script>
 
           <% 
-           const annual = ((userLeave.annual.leave - userLeave.annual.taken)/ userLeave.annual.leave) * 100;
-           const sick = ((userLeave.sick.leave - userLeave.sick.taken)/ userLeave.sick.leave) * 100;
-           const emergency = ((userLeave.emergency.taken)/ 7) * 100;
-           const marriage = (userLeave.marriage.taken/1) * 100;
-           const paternity = (userLeave.paternity.taken/3) * 100;
-           const study = (userLeave.study.taken/3) * 100;
-           const bereavement = (userLeave.bereavement.taken/3) * 100;
-           const hajj = (userLeave.hajj.taken/1) * 100;
-           const unpaid = (userLeave.unpaid.taken/10) * 100;
-          %>
+                 const annual = ((userLeave.annual.leave - userLeave.annual.taken)/ userLeave.annual.leave) * 100;
+                 const sick = ((userLeave.sick.leave - userLeave.sick.taken)/ userLeave.sick.leave) * 100;
+                 const sickExtended = ((userLeave.sickExtended.leave - userLeave.sickExtended.taken)/ userLeave.sickExtended.leave) * 100;
+                 const attendExam = ((userLeave.attendExam.leave - userLeave.attendExam.taken)/userLeave.attendExam.leave) * 100;
+      
+                 var showMarriage = '';
+                 var showPaternity = '';
+                 var showMaternity = '';
+                 var showHajj = '';
+                 var showSpecial = '';
+      
+                 if(userLeave.user.gender === 'Male'){
+                  showMaternity = 'd-none';
+                 }else{
+                  showMaternity = '';
+                 }
+      
+                 if(userLeave.user.gender == 'Female' || userLeave.paternity.taken > 6){
+                  showPaternity = 'd-none';
+                 }else{
+                  showPaternity = '';
+                 }
+      
+                 if(userLeave.marriage.taken > 0){
+                  showMarriage = 'd-none';
+                 }else{
+                  showMarriage = '';
+                 }
+      
+                 if(userLeave.hajj.taken > 0){
+                  showHajj = 'd-none';
+                 }else{
+                  showHajj = '';
+                 }
+      
+                 if(userLeave.special.taken > 7){
+                  showSpecial = 'd-none';
+                 }else{
+                  showSpecial = '';
+                 }
+              %>
 
           <div class="align-items-center justify-content-between d-flex mb-0">
 
@@ -431,8 +535,8 @@
           <div class="align-items-center justify-content-between d-flex mb-0 mt-n2">
 
             <div class="d-flex align-items-center mb-1">
-              <span class="d-inline-block bg-warning-light bullet-item me-2"></span>
-              <p class="mb-0 fw-semibold text-body lh-sm flex-1">Sick Leave Balance</p>
+              <span class="d-inline-block bg-warning-darker bullet-item me-2"></span>
+              <p class="mb-0 fw-semibold text-body lh-sm flex-1">Sick Leave</p>
             </div>
 
             <div style="position: relative;">
@@ -451,12 +555,31 @@
           <div class="align-items-center justify-content-between d-flex mb-0 mt-n2">
 
             <div class="d-flex align-items-center mb-1">
+              <span class="d-inline-block bg-warning-light bullet-item me-2"></span>
+              <p class="mb-0 fw-semibold text-body lh-sm flex-1">Sick Extended</p>
+            </div>
+
+            <div style="position: relative;">
+              <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:<%= sickExtended %>">
+                <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
+                  <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
+                  <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
+                </svg>
+              </div>
+              <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(-10%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.sickExtended.leave - userLeave.sickExtended.taken %></span>
+            </div>
+
+          </div>
+
+          <div class="align-items-center justify-content-between d-flex mb-0 mt-n2">
+
+            <div class="d-flex align-items-center mb-1">
               <span class="d-inline-block bg-danger-light bullet-item me-2"></span>
               <p class="mb-0 fw-semibold text-body lh-sm flex-1">Emergency Leave Taken</p>
             </div>
 
             <div style="position: relative;">
-              <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:<%= emergency %>">
+              <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:100">
                 <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
                   <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
                   <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
@@ -467,21 +590,59 @@
 
           </div>
 
-          <div class="align-items-center justify-content-between d-flex mb-0 mt-n2">
+          <div class="align-items-center justify-content-between d-flex mb-0 mt-n2 <%= showMarriage %>">
 
             <div class="d-flex align-items-center mb-1">
-              <span class="d-inline-block bg-success-light bullet-item me-2"></span>
-              <p class="mb-0 fw-semibold text-body lh-sm flex-1">Marriage Leave Taken</p>
+              <span class="d-inline-block bg-danger-dark bullet-item me-2"></span>
+              <p class="mb-0 fw-semibold text-body lh-sm flex-1">Marriage Leave</p>
             </div>
 
             <div style="position: relative;">
-              <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:<%= marriage %>">
+              <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:100">
                 <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
                   <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
                   <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
                 </svg>
               </div>
-              <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.marriage.taken %></span>
+              <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.marriage.leave %></span>
+            </div>
+
+          </div>
+
+          <div class="align-items-center justify-content-between d-flex mb-0 mt-n2 <%= showPaternity %>">
+
+            <div class="d-flex align-items-center mb-1">
+              <span class="d-inline-block bg-success-light bullet-item me-2"></span>
+              <p class="mb-0 fw-semibold text-body lh-sm flex-1">Paternity Leave</p>
+            </div>
+
+            <div style="position: relative;">
+              <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:100">
+                <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
+                  <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
+                  <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
+                </svg>
+              </div>
+              <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.paternity.leave %></span>
+            </div>
+
+          </div>
+
+          <div class="align-items-center justify-content-between d-flex mb-0 mt-n2 <%= showMaternity %>">
+
+            <div class="d-flex align-items-center mb-1">
+              <span class="d-inline-block bg-success-dark bullet-item me-2"></span>
+              <p class="mb-0 fw-semibold text-body lh-sm flex-1">Maternity Leave</p>
+            </div>
+
+            <div style="position: relative;">
+              <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:100">
+                <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
+                  <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
+                  <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
+                </svg>
+              </div>
+              <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(-10%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.maternity.leave %></span>
             </div>
 
           </div>
@@ -489,80 +650,42 @@
           <div class="align-items-center justify-content-between d-flex mb-0 mt-n2">
 
             <div class="d-flex align-items-center mb-1">
-              <span class="d-inline-block bg-success-light bullet-item me-2"></span>
-              <p class="mb-0 fw-semibold text-body lh-sm flex-1">Paternity Leave Taken</p>
+              <span class="d-inline-block bg-info-dark bullet-item me-2"></span>
+              <p class="mb-0 fw-semibold text-body lh-sm flex-1">Attend Exam Leave</p>
             </div>
 
             <div style="position: relative;">
-              <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:<%= paternity %>">
+              <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:<%= attendExam %>">
                 <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
                   <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
                   <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
                 </svg>
               </div>
-              <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.paternity.taken %></span>
+              <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.attendExam.leave - userLeave.attendExam.taken %></span>
             </div>
 
           </div>
 
-          <div class="align-items-center justify-content-between d-flex mb-0 mt-n2">
+          <div class="align-items-center justify-content-between d-flex mb-0 mt-n2 <%= showHajj %>">
 
             <div class="d-flex align-items-center mb-1">
-              <span class="d-inline-block bg-success-light bullet-item me-2"></span>
-              <p class="mb-0 fw-semibold text-body lh-sm flex-1">Study Leave Taken</p>
+              <span class="d-inline-block bg-info-lighter bullet-item me-2"></span>
+              <p class="mb-0 fw-semibold text-body lh-sm flex-1">Hajj Leave</p>
             </div>
 
             <div style="position: relative;">
-              <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:<%= study %>">
+              <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:100">
                 <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
                   <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
                   <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
                 </svg>
               </div>
-              <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.study.taken %></span>
+              <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(-10%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.hajj.leave %></span>
             </div>
 
           </div>
 
-          <div class="align-items-center justify-content-between d-flex mb-0 mt-n2">
-
-            <div class="d-flex align-items-center mb-1">
-              <span class="d-inline-block bg-success-light bullet-item me-2"></span>
-              <p class="mb-0 fw-semibold text-body lh-sm flex-1">Hajj Leave Taken</p>
-            </div>
-
-            <div style="position: relative;">
-              <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:<%= hajj %>">
-                <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
-                  <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
-                  <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
-                </svg>
-              </div>
-              <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.hajj.taken %></span>
-            </div>
-
-          </div>
-
-          <div class="align-items-center justify-content-between d-flex mb-0 mt-n2">
-
-            <div class="d-flex align-items-center mb-1">
-              <span class="d-inline-block bg-success-light bullet-item me-2"></span>
-              <p class="mb-0 fw-semibold text-body lh-sm flex-1">Bereavement Leave Taken</p>
-            </div>
-
-            <div style="position: relative;">
-              <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:<%= bereavement %>">
-                <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
-                  <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
-                  <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
-                </svg>
-              </div>
-              <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.bereavement.taken %></span>
-            </div>
-
-          </div>
-
-          <div class="align-items-center justify-content-between d-flex mb-0 mt-n2">
+          <div class="align-items-center justify-content-between d-flex mb-0">
 
             <div class="d-flex align-items-center mb-1">
               <span class="d-inline-block bg-primary bullet-item me-2"></span>
@@ -570,13 +693,32 @@
             </div>
 
             <div style="position: relative;">
-              <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:<%= unpaid %>">
+              <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:100">
                 <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
                   <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
                   <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
                 </svg>
               </div>
               <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.unpaid.taken %></span>
+            </div>
+
+          </div>
+
+          <div class="align-items-center justify-content-between d-flex mb-0 <%= showSpecial %>">
+
+            <div class="d-flex align-items-center mb-1">
+              <span class="d-inline-block bg-warning-lighter bullet-item me-2"></span>
+              <p class="mb-0 fw-semibold text-body lh-sm flex-1">Special Leave</p>
+            </div>
+
+            <div style="position: relative;">
+              <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:100">
+                <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
+                  <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
+                  <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
+                </svg>
+              </div>
+              <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.special.leave %></span>
             </div>
 
           </div>
