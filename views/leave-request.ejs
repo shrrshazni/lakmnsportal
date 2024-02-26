@@ -105,10 +105,20 @@
 
       <div class="col-sm-6 col-md-6">
         <div class="form-floating">
-          <input type="text" class="form-control datetimepicker flatpickr-input" id="floatingInputStartDate" placeholder="" name="startDate" data-options='{"disableMobile":true,"allowInput":true, "locale" : { "firstDayOfWeek" : 1}}' required>
+          <input type="text" class="form-control datetimepicker flatpickr-input" id="floatingInputStartDate" placeholder="" name="startDate" data-options='{"disableMobile":true,"allowInput":true, "locale" : { "firstDayOfWeek" : 1} }' required>
           <label for="floatingInputStartDate"><span class="fa-regular fa-calendar-xmark me-2"></span>Start date</label>
           <div class="invalid-feedback">
             Please select a start date
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-md-6">
+        <div class="form-floating">
+          <input type="text" class="form-control datetimepicker flatpickr-input" id="floatingInputReturnDate" placeholder="" name="returnDate" data-options='{"disableMobile":true,"allowInput":true, "locale" : { "firstDayOfWeek" : 1}}' required>
+          <label for="floatingInputReturnDate"><span class="fa-regular fa-calendar-check me-2"></span>Return date</label>
+          <div class="invalid-feedback">
+            Please select a return date
           </div>
         </div>
       </div>
@@ -129,21 +139,10 @@
           }
           // Add more conditions for other leave types as needed...
 
-          // Update the data-options attribute of the flatpickr-input
+          // Update the minDate in the Flatpickr options
           var flatpickrInput = document.getElementById('floatingInputStartDate');
-          var flatpickrOptions = {
-            "disableMobile": true,
-            "allowInput": true,
-            "locale": {
-              "firstDayOfWeek": 1
-            }
-          };
-
-          // Set minDate if available
-          if (minDate) {
-            flatpickrOptions.minDate = minDate;
-          }
-
+          var flatpickrOptions = JSON.parse(flatpickrInput.getAttribute('data-options'));
+          flatpickrOptions.minDate = minDate;
           flatpickrInput.setAttribute('data-options', JSON.stringify(flatpickrOptions));
         });
       </script>
