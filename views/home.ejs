@@ -105,15 +105,13 @@
   </script>
 </div>
 
-<div class="row gy-3 mb-6 justify-content-between mt-0">
+<div class="row gy-3 mb-6 justify-content-between d-flex mt-0">
   <div class="col-md-9 col-auto">
     <h2 class="mb-2 text-body-emphasis">Dashboard</h2>
     <h5 class="text-body-tertiary fw-semibold">Real-time data visualization for informed decision-making</h5>
   </div>
-  <div class="col-md-3 col-auto">
-    <div class="flatpickr-input-container d-none">
-      <input class="form-control ps-6 datetimepicker" id="datepicker" type="text" data-options='{"dateFormat":"M j, Y","disableMobile":true,"defaultDate":"Mar 1, 2022"}' /><span class="uil uil-calendar-alt flatpickr-icon text-body-tertiary"></span>
-    </div>
+  <div class="col-md-3 col-auto row g-3">
+    <div class=" col-12 btn btn-phoenix-secondary my-auto">Announcements</div>
   </div>
 </div>
 
@@ -1467,22 +1465,22 @@
 
 </div>
 
-<div class="mb-6 row g-3">
+<div class="mb-3 row g-3">
   <div class="col-12">
-    <div class="card px-2 pt-7 min-vh-50">
+    <div class="card pt-3 min-vh-50">
       <div class="card-body">
-        <div id="leave-approvals" data-list='{"valueNames":["type","staff","startdate","returndate","latestapproval","status"],"page":5,"pagination":true}'>
+        <div id="leave-approvals" data-list='{"valueNames":["type","staff","startdate","returndate","latestapproval","status"],"page":10,"pagination":true}'>
           <div class="row align-items-end justify-content-between pb-4 g-3">
 
             <div class="col-auto">
               <h3>Leave Approvals</h3>
-              <p class="text-body-tertiary lh-sm mb-0">Request, review, approve, track, communicate, record</p>
+              <p class="text-body-tertiary lh-sm mb-0">Permission granted, absence authorized, leave request accepted.</p>
             </div>
 
-            <div class="col-auto">
-              <div class="search-box">
+            <div class="col-12 col-md-auto">
+              <div class="search-box px-lg-0 pe-4">
                 <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
-                  <input class="form-control search-input search form-control-sm" type="search" placeholder="Search leave approvals" aria-label="Search" />
+                  <input class="form-control search-input search form-control-sm" type="search" placeholder="Search leave approval" aria-label="Search" />
                   <span class="fas fa-search search-box-icon"></span>
                 </form>
               </div>
@@ -1493,51 +1491,50 @@
             <table class="table fs-9 mb-0 border-top border-translucent">
               <thead>
                 <tr>
-                  <th class="sort white-space-nowrap align-middle ps-0" scope="col" data-sort="type" style="width:10%; min-width: 100px;">LEAVE TYPE</th>
-                  <th class="sort align-middle ps-3 fw-semibold" scope="col" data-sort="staff" style="width:15%;min-width: 150px;">STAFF</th>
-                  <th class="sort align-middle ps-3" scope="col" data-sort="startdate" style="width:10%;min-width: 100px;">START DATE</th>
-                  <th class="sort align-middle ps-3" scope="col" data-sort="returndate" style="width:10%;min-width: 100px;">RETURN DATE</th>
-                  <th class="sort align-middle ps-3" scope="col" data-sort="latestapproval" style="width:25%;min-width: 200px;">LATEST APPROVAL</th>
-                  <th class="sort align-middle ps-8" scope="col" data-sort="status" style="width:10%;min-width: 100px;">STATUS</th>
+                  <th class="sort white-space-nowrap align-middle ps-0" scope="col" data-sort="type" style="width:15%;">TYPE</th>
+                  <th class="sort align-middle ps-3" scope="col" data-sort="staff" style="width:10%;">STAFF</th>
+                  <th class="sort align-middle ps-3" scope="col" data-sort="startdate" style="width:10%;">START DATE</th>
+                  <th class="sort align-middle ps-3" scope="col" data-sort="returndate" style="width:10%;">RETURN DATE</th>
+                  <th class="sort align-middle ps-8" scope="col" data-sort="latestapproval" style="width:20%;">LATEST APPROVAL</th>
+                  <th class="sort align-middle ps-8" scope="col" data-sort="status" style="width:5%;">STATUS</th>
                   <th class="sort align-middle text-end" scope="col" style="width:10%;"></th>
                 </tr>
               </thead>
 
               <% 
-              function formatDate(inputDate) {
-                const day = String(inputDate.getDate()).padStart(2, '0');
-                const month = String(inputDate.getMonth() + 1).padStart(2, '0');
-                const year = inputDate.getFullYear();
+                  function formatDate(inputDate) {
+                    const day = String(inputDate.getDate()).padStart(2, '0');
+                    const month = String(inputDate.getMonth() + 1).padStart(2, '0');
+                    const year = inputDate.getFullYear();
+                  
+                    return `${day}/${month}/${year}`;
+                  }
               
-                return `${day}/${month}/${year}`;
-              }
+                  const filteredApprovalLeaves = allLeave.filter(leave => {
+                    return leave.user.toString() != user._id.toString() && leave.approvals.some(approval => approval.recipient.toString() == user._id.toString())
+                  });
+              
+                  %>
 
-              const filteredApprovalLeaves = allLeave.filter(leave => {
-                return leave.user.toString() != user._id.toString() && leave.approvals.some(approval => approval.recipient.toString() == user._id.toString())
-              });
-
-              %>
-
-              <!-- table content -->
-              <tbody class="approval-list" id="project-list-table-body">
+              <tbody class="list" id="leave-approvals-table">
                 <% if (filteredApprovalLeaves && filteredApprovalLeaves.length > 0) { %>
                 <!-- table item -->
                 <% filteredApprovalLeaves.forEach(function(leaves) { %>
 
                 <% 
-
-                var statusApprovalColor = '';
-                if (leaves.status == "pending"){
-                    statusApprovalColor = 'info';
-                } else if(leaves.status == "approved" || leaves.status == "submitted") {
-                    statusApprovalColor = 'success';
-                } else if(leaves.status == "denied" ||  leaves.status == "cancelled") {
-                    statusApprovalColor = 'danger';
-                }else if (leaves.status == "invalid"){
-                    statusApprovalColor = 'warning';
-                } 
-                        
-                %>
+                      
+                            var statusApprovalColor = '';
+                            if (leaves.status == "pending"){
+                                statusApprovalColor = 'info';
+                            } else if(leaves.status == "approved" || leaves.status == "submitted") {
+                                statusApprovalColor = 'success';
+                            } else if(leaves.status == "denied" ||  leaves.status == "cancelled") {
+                                statusApprovalColor = 'danger';
+                            }else if (leaves.status == "invalid"){
+                                statusApprovalColor = 'warning';
+                            } 
+                                    
+                            %>
                 <tr class="position-static">
                   <td class="align-middle white-space-nowrap ps-0 type py-4">
                     <a class="fw-bold fs-8" href="/leave/details/<%= leaves._id %>"><%= leaves.type %></a>
@@ -1552,15 +1549,15 @@
                   <td class="align-middle white-space-nowrap returndate ps-3 py-4">
                     <p class="mb-0 fs-9 text-900"><%= formatDate(leaves.date.return) %></p>
                   </td>
-                  <td class="align-middle activity ps-3 py-4">
+                  <td class="align-middle latestapproval ps-3 py-4">
                     <% const latestApproval = leaves.approvals.reduce((latest, approval) => approval.timestamp > latest.timestamp ? approval : latest, leaves.approvals[0]); %>
                     <p class="fs-9 fw-semibold text-body-highlight mb-0">
                       <%= latestApproval.role %> has <%= latestApproval.status %> this <%= leaves.type %> at <%= latestApproval.timestamp.toLocaleDateString('en-UK', { 
-                        year: 'numeric', 
-                        month: 'long', 
-                        day: 'numeric', 
-                        timeZone: 'Asia/Kuala_Lumpur' 
-                      }); %>
+                                    year: 'numeric', 
+                                    month: 'long', 
+                                    day: 'numeric', 
+                                    timeZone: 'Asia/Kuala_Lumpur' 
+                                  }); %>
                     </p>
                   </td>
                   <td class="align-middle white-space-nowrap text-center status">
@@ -1585,6 +1582,7 @@
                 </tr>
                 <% } %>
               </tbody>
+
             </table>
           </div>
           <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
@@ -1598,6 +1596,112 @@
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="mb-6 row g-3">
+
+  <div class="col-12 col-xxl-6">
+    <div class="card pt-3 vh-50">
+      <div class="card-body">
+        <div id="staff-on-leave" data-list='{"valueNames":["staff","type","startdate","returndate"],"page":10,"pagination":true}'>
+
+          <div class="row align-items-end justify-content-between pb-4 g-3">
+
+            <div class="col-auto">
+              <h3>Staff on leave today</h3>
+              <p class="text-body-tertiary lh-sm mb-0">Employees absent today, leave granted.</p>
+            </div>
+
+            <div class="col-12 col-md-auto">
+              <div class="search-box px-lg-0 pe-4">
+                <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
+                  <input class="form-control search-input search form-control-sm" type="search" placeholder="Search leave approval" aria-label="Search" />
+                  <span class="fas fa-search search-box-icon"></span>
+                </form>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="table-responsive ms-n1 ps-1 scrollbar h-100">
+            <table class="table fs-9 mb-0 border-top border-translucent">
+              <thead>
+                <tr>
+                  <th class="sort white-space-nowrap align-middle ps-0" scope="col" data-sort="staff" style="width:15%;">STAFF</th>
+                  <th class="sort align-middle ps-3" scope="col" data-sort="type" style="width:15%;">TYPE</th>
+                  <th class="sort align-middle ps-3" scope="col" data-sort="startdate" style="width:10%;">START DATE</th>
+                  <th class="sort align-middle ps-3" scope="col" data-sort="returndate" style="width:10%;">RETURN DATE</th>
+                </tr>
+              </thead>
+
+              <% 
+              function formatDate(inputDate) {
+                const day = String(inputDate.getDate()).padStart(2, '0');
+                const month = String(inputDate.getMonth() + 1).padStart(2, '0');
+                const year = inputDate.getFullYear();
+              
+                return `${day}/${month}/${year}`;
+              }
+              %>
+              <tbody class="list" id="project-summary-table-body">
+                <% if(staffOnLeave && staffOnLeave.length>0){ %>
+                <% staffOnLeave.forEach(onLeave => { %>
+
+                <tr class="position-static">
+
+                  <td class="align-middle text-body white-space-nowrap ps-0 staff">
+                    <% const staff = allUser.find(staff => staff._id.toString() === onLeave.user.toString()); %>
+                    <a class="mb-0 ms-0 fw-bold fs-8" href="/staff/details/<%= onLeave.user %>"><%= staff.fullname %></a>
+                  </td>
+
+
+                  <td class="align-middle text-body white-space-nowrap ps-0 type">
+                    <a class="mb-0 ms-3 fw-bold fs-8" href="/leave/details/<%= onLeave._id %>"><%= onLeave.type %></a>
+                  </td>
+
+                  <td class="align-middle text-body white-space-nowrap ps-0 startdate">
+                    <p class="mb-0 ms-3 fs-9 text-900"><%= formatDate(onLeave.date.start) %></p>
+                  </td>
+
+                  <td class="align-middle text-body white-space-nowrap ps-0 startdate">
+                    <p class="mb-0 ms-3 fs-9 text-900"><%= formatDate(onLeave.date.return) %></p>
+                  </td>
+                </tr>
+                <% }); %>
+                <% }else { %>
+                <tr class="position-static">
+                  <td class="align-middle text-body white-space-nowrap">
+                    <p class="mb-0 ms-3 fs-9">No staff on leave today</p>
+                  </td>
+                </tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+          <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
+            <div class="col-auto d-flex">
+              <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p><a class="fw-semibold" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semibold d-none" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
+            </div>
+            <div class="col-auto d-flex">
+              <button class="page-link" data-list-pagination="prev"><span class="fas fa-chevron-left"></span></button>
+              <ul class="mb-0 pagination"></ul>
+              <button class="page-link pe-0" data-list-pagination="next"><span class="fas fa-chevron-right"></span></button>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-xxl-6">
+    <div class="card pt-7 vh-50">
+      <div class="card-body">
+
       </div>
     </div>
   </div>

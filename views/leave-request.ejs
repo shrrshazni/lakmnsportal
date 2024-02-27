@@ -73,12 +73,20 @@
     </div>
 
     <!-- leave form -->
-    <form class="row g-3 mb-6" action="/leave/request" method="post" id="leaveForm">
+    <form class="row g-3 mb-6 has-validation" action="/leave/request" method="post" id="leaveForm">
 
       <div class="col-sm-6 col-md-12">
+        <%
+          var defaultOptions = '';
+          if(type === ''){
+            defaultOptions = 'Select leave type';
+          }else {
+            defaultOptions = type;
+          }  
+        %>
         <div class="form-floating">
           <select class="form-select" id="floatingSelectTask" required aria-label="leave selection" name="type">
-            <option value="">Select leave type</option>
+            <option value="<%= type %>"><%= defaultOptions %></option>
             <option value="Annual Leave">Annual Leave</option>
             <option value="Half Day Leave">Half Day Leave</option>
             <option value="Sick Leave">Sick Leave</option>
@@ -96,34 +104,27 @@
         </div>
       </div>
 
-      <div class="col-sm-6 col-md-4 d-none">
-        <div class="form-floating">
-          <input class="form-control" id="floatingInputGrid" type="hidden" name="username" placeholder="" value="<%= user.username %>" disabled />
-          <label for="floatingInputGrid">Username</label>
-        </div>
-      </div>
-
       <div class="col-sm-6 col-md-6">
         <div class="form-floating">
-          <input type="text" class="form-control datetimepicker flatpickr-input" id="floatingInputStartDate" placeholder="" name="startDate" data-options='{"disableMobile":true,"allowInput":true, "locale" : { "firstDayOfWeek" : 1} }' required>
+          <input type="text" class="form-control datetimepicker flatpickr-input <%= validationStartDate %>" id="floatingInputStartDate" placeholder="" name="startDate" data-options='{"disableMobile":true,"allowInput":true, "locale" : { "firstDayOfWeek" : 1} }' value="<%= startDate %>" required>
           <label for="floatingInputStartDate"><span class="fa-regular fa-calendar-xmark me-2"></span>Start date</label>
           <div class="invalid-feedback">
-            Please select a start date
+            <%= startDateFeedback %>
           </div>
         </div>
       </div>
 
       <div class="col-sm-6 col-md-6">
         <div class="form-floating">
-          <input type="text" class="form-control datetimepicker flatpickr-input" id="floatingInputReturnDate" placeholder="" name="returnDate" data-options='{"disableMobile":true,"allowInput":true, "locale" : { "firstDayOfWeek" : 1}}' required>
+          <input type="text" class="form-control datetimepicker flatpickr-input <%= validationReturnDate %>" id="floatingInputReturnDate" placeholder="" name="returnDate" data-options='{"disableMobile":true,"allowInput":true, "locale" : { "firstDayOfWeek" : 1}}' value="<%= returnDate %>" required>
           <label for="floatingInputReturnDate"><span class="fa-regular fa-calendar-check me-2"></span>Return date</label>
           <div class="invalid-feedback">
-            Please select a return date
+            <%= returnDateFeedback %>
           </div>
         </div>
       </div>
 
-      <script>
+      <!-- <script>
         document.getElementById('floatingSelectTask').addEventListener('change', function() {
           var selectedLeaveType = this.value;
 
@@ -145,7 +146,7 @@
           flatpickrOptions.minDate = minDate;
           flatpickrInput.setAttribute('data-options', JSON.stringify(flatpickrOptions));
         });
-      </script>
+      </script> -->
 
       <div class="col-12 col-md-8 mb-0">
         <div id="selectedNames" class="d-flex flex-wrap border border-300 rounded-3 px-2" style="min-height: 3rem"></div>
@@ -166,7 +167,7 @@
 
       <div class="col-12 gy-6 mt-0">
         <div class="form-floating">
-          <textarea class="form-control scrollbar" id="floatingProjectOverview" name="purpose" placeholder="State your purpose here" style="height: 125px" required></textarea>
+          <textarea class="form-control scrollbar" id="floatingProjectOverview" name="purpose" placeholder="State your purpose here" style="height: 125px" required><%= purpose %></textarea>
           <div class="invalid-feedback">
             Please state the purpose of leave
           </div>
@@ -194,6 +195,7 @@
     <script>
       document.getElementById('leaveForm').addEventListener('click', function() {
         this.classList.add('was-validated');
+        this.classList.remove('has-validated');
       });
     </script>
 

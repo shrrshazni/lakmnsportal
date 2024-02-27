@@ -383,6 +383,43 @@ app.get('/', isAuthenticated, async function (req, res) {
     const otherTask = await Task.find({ assignee: { $ne: [user._id] } });
     const otherActivities = await Activity.find();
 
+    // find staff on leave today
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const dayOfWeek = today.getDay();
+
+    // Calculate the first date of the week (Monday)
+    const firstDayOfWeek = new Date(today);
+    firstDayOfWeek.setDate(today.getDate() - (dayOfWeek + 6) % 7 + 1);
+
+    // Calculate the last date of the week (Sunday)
+    const lastDayOfWeek = new Date(today);
+    lastDayOfWeek.setDate(today.getDate() + (7 - dayOfWeek));
+
+    let todayLeaves = [];
+    var staffOnLeave = '';
+    if (user.isAdmin || user.isChiefExec || user.isDeputyChiefExec) {
+        staffOnLeave = await Leave.find({
+            'date.start': { $lte: today },
+            'date.return': { $gte: today },
+            user: { $ne: user._id },
+            status: 'approved'
+        });
+    } else {
+        staffOnLeave = await Leave.find({
+            status: 'approved'
+        });
+
+        staffOnLeave.forEach(leave => {
+            if (leave.date.start >= today && today <= leave.date.return) {
+                todayLeaves.push(leave);
+            } else if(leave.date.start >= firstDayOfWeek && lastDayOfWeek <= leave.date.start){
+
+            }
+        });
+    }
+
     // const newUserLeave = new UserLeave({
     //     user: '65b1b953bf237e83aa5a7f27', // Replace with the actual user ID
     //     annual: { leave: 14, taken: 0 },
@@ -410,6 +447,7 @@ app.get('/', isAuthenticated, async function (req, res) {
             userDepartment: userDepartment,
             otherTasks: otherTask,
             otherActivities: otherActivities,
+            staffOnLeave: todayLeaves,
             // all data
             allUser: allUser,
             allUserLeave: allUserLeave,
@@ -1027,6 +1065,18 @@ app
                 leave: currentLeave,
                 userLeave: userLeave,
                 selectedNames: '',
+                // data
+                type: '',
+                startDate: '',
+                returnDate: '',
+                purpose: '',
+                // validation
+                validationType: '',
+                validationStartDate: '',
+                validationReturnDate: '',
+                validitionPurpose: '',
+                startDateFeedback: 'Please select a start date',
+                returnDateFeedback: 'Please select a return date',
                 // toast
                 show: '',
                 alert: ''
@@ -1051,7 +1101,11 @@ app
                 ? req.body.selectedNames.split(',')
                 : [];
 
-            console.log(uuid);
+            //validation if the leave request encounter error
+            var validationType = '';
+            var validationStartDate = '';
+            var validationReturnDate = '';
+            var validationPurpose = '';
 
             // init to submit the leave req
             var leaveBalance = '';
@@ -1072,39 +1126,11 @@ app
                 isAdmin: true,
                 department: 'Human Resource'
             });
-            const userLeave = await UserLeave.findOne({ user: user._id });
+            const userLeave = await UserLeave.findOne({ user: user._id }).populate('user').exec();
             // find assignee
             const assignee = await User.find({ fullname: { $in: selectedNames } });
-
-            // for home dashboard
-            const leaveHome = await Leave.find({ user: user._id });
-            const allUser = await User.find();
-            const allLeave = await Leave.find();
-            const allUserLeave = await UserLeave.find();
-            const taskHome = await Task.find({ assignee: { $in: [user._id] } })
-                .sort({ timestamp: -1 })
-                .populate('assignee')
-                .exec();
-            const fileHome = await File.find();
-            const sevenDaysAgo = new Date();
-            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-            const activitiesHome = await Activity.find({
-                department: user.department,
-                date: { $gte: sevenDaysAgo }
-            })
-                .populate({
-                    path: 'user'
-                })
-                .sort({ date: -1 })
-                .exec();
-            const userDepartmentHome = await User.find({
-                department: user.department,
-                _id: { $ne: user._id }
-            });
-            const otherTaskHome = await Task.find({
-                assignee: { $ne: [user._id] }
-            });
-            const otherActivitiesHome = await Activity.find();
+            // leave for the user
+            const leave = await Leave.find({ user: user._id });
 
             const newDate = {
                 start: new Date(startDate),
@@ -1143,6 +1169,8 @@ app
                 numberOfDays = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
             }
 
+            let renderDataError = {};
+
             // set approval based on role
             if (type === 'Annual Leave') {
                 leaveBalance = userLeave.annual.leave - userLeave.annual.taken;
@@ -1161,56 +1189,16 @@ app
                             'The leave date applied must be more than 3 days from today'
                         );
 
-                        res.render('home', {
-                            user: user,
-                            notifications: notifications,
-                            uuid: uuidv4(),
-                            userDepartment: userDepartmentHome,
-                            otherTasks: otherTaskHome,
-                            otherActivities: otherActivitiesHome,
-                            // all data
-                            allUser: allUser,
-                            allUserLeave: allUserLeave,
-                            allLeave: allLeave,
-                            userLeave: userLeave,
-                            leave: leaveHome,
-                            tasks: taskHome,
-                            files: fileHome,
-                            activities: activitiesHome,
-                            selectedNames: '',
-                            // toast
-                            show: 'show',
-                            alert:
-                                'The leave date applied must be more than 3 days from today'
-                        });
+                        renderDataError.show = 'show';
+                        renderDataError.alert = 'The leave date applied must be more than 3 days from today';
                     }
                 } else {
                     console.log(
                         'Insufficient annual leave balance for the requested duration'
                     );
 
-                    res.render('home', {
-                        user: user,
-                        notifications: notifications,
-                        uuid: uuidv4(),
-                        userDepartment: userDepartmentHome,
-                        otherTasks: otherTaskHome,
-                        otherActivities: otherActivitiesHome,
-                        // all data
-                        allUser: allUser,
-                        allUserLeave: allUserLeave,
-                        allLeave: allLeave,
-                        userLeave: userLeave,
-                        leave: leaveHome,
-                        tasks: taskHome,
-                        files: fileHome,
-                        activities: activitiesHome,
-                        selectedNames: '',
-                        // toast
-                        show: 'show',
-                        alert:
-                            'Insufficient annual leave balance for the requested duration'
-                    });
+                    renderDataError.show = 'show';
+                    renderDataError.alert = 'Insufficient sick leave balance for the requested duration';
                 }
 
             } else if (type === 'Half Day Leave') {
@@ -2068,8 +2056,47 @@ app
                 approvals = generateApprovals(user, headOfSection, headOfDepartment, depChiefExec, chiefExec, adminHR);
             }
 
-            if (approvals === '') {
-                console.log('Leave balance not sufficient!');
+            if (approvals.length === 0) {
+                console.log('Leave request requirements have not met');
+
+                const filesToDelete = await File.find({ uuid: uuid });
+                const deletedFiles = await File.deleteMany({ uuid: uuid });
+
+                if (deletedFiles.deletedCount > 0) {
+                    console.log(`${deletedFiles.deletedCount} files are deleted!`);
+
+                    for (const deletedFile of filesToDelete) {
+                        const filePath = __dirname + '/public/uploads/' + deletedFile.name;
+                        await fs.unlink(filePath);
+                    }
+                } else {
+                    console.log('No files found or there was an error deleting files.');
+                }
+
+                res.render('leave-request', {
+                    user: user,
+                    uuid: uuid,
+                    notifications: notifications,
+                    leave: leave,
+                    userLeave: userLeave,
+                    selectedNames: '',
+                    // data
+                    type: type,
+                    startDate: startDate,
+                    returnDate: returnDate,
+                    purpose: purpose,
+                    // validation
+                    validationType: '',
+                    validationStartDate: 'is-invalid',
+                    validationReturnDate: 'is-invalid',
+                    validationPurpose: '',
+                    startDateFeedback: 'Please enter a valid start date',
+                    returnDateFeedback: 'Please select valid return date',
+                    // toast
+                    show: renderDataError.show,
+                    alert: renderDataError.alert
+                });
+
             } else {
                 // set user id to be send
                 for (const approval of approvals) {
@@ -2089,102 +2116,150 @@ app
                         sendEmail.push(email.email);
                     }
                 }
-            }
 
-            const leave = new Leave({
-                fileId: uuid,
-                user: user._id,
-                grade: user.grade,
-                assignee: assignee,
-                type: type,
-                date: newDate,
-                status: 'submitted',
-                purpose: purpose,
-                approvals: approvals
-            });
+                const leave = new Leave({
+                    fileId: uuid,
+                    user: user._id,
+                    grade: user.grade,
+                    assignee: assignee,
+                    type: type,
+                    date: newDate,
+                    status: 'submitted',
+                    purpose: purpose,
+                    approvals: approvals
+                });
 
-            Leave.create(leave);
-            console.log('Leave submission has been completed');
+                Leave.create(leave);
+                console.log('Leave request submitted');
 
-            // notifications save has been turn off
-            if (sendNoti.length > 0) {
-                for (const recipientId of sendNoti) {
-                    const newNotification = new Notification({
-                        sender: user._id,
-                        recipient: new mongoose.Types.ObjectId(recipientId),
-                        type: 'Leave',
-                        url: '/leave/details/' + uuid,
-                        message: 'Leave request needs approval.'
-                    });
+                // notifications save has been turn off
+                if (sendNoti.length > 0) {
+                    for (const recipientId of sendNoti) {
+                        const newNotification = new Notification({
+                            sender: user._id,
+                            recipient: new mongoose.Types.ObjectId(recipientId),
+                            type: 'Leave',
+                            url: '/leave/details/' + uuid,
+                            message: 'Leave request needs approval.'
+                        });
 
-                    // newNotification.save();
+                        // newNotification.save();
+                    }
+
+                    console.log('Done send notifications!');
                 }
 
-                console.log('Done send notifications!');
+                // turn off the email notications
+                // send email to the recipient
+                // let mailOptions = {
+                //     from: 'shrrshazni@gmail.com',
+                //     to: sendEmail,
+                //     subject: 'lakmnsportal - Approval Leave Request',
+                //     html: `
+                //       <html>
+                //         <head>
+                //           <style>
+                //             body {
+                //               font-family: 'Arial', sans-serif;
+                //               background-color: #f4f4f4;
+                //               color: #333;
+                //             }
+                //             p {
+                //               margin-bottom: 20px;
+                //             }
+                //             a {
+                //               color: #3498db;
+                //             }
+                //           </style>
+                //         </head>
+                //         <body>
+                //           <h1>Leave Request</h1>
+                //           <p>${user.fullname} has requested ${type} from, ${startDate} until ${returnDate}</p>
+                //           <p>Please do check your notification at <a href="http://localhost:5002/">lakmnsportal</a></p>
+                //         </body>
+                //       </html>
+                //     `
+                // };
+
+                // transporter.sendMail(mailOptions, (error, info) => {
+                //     if (error) {
+                //         return console.log(error);
+                //     }
+                //     console.log('Message %s sent: %s', info.messageId, info.response);
+                // });
+
+                // for home dashboard
+                const allUser = await User.find();
+                const allLeave = await Leave.find();
+                const allUserLeave = await UserLeave.find();
+                const taskHome = await Task.find({ assignee: { $in: [user._id] } })
+                    .sort({ timestamp: -1 })
+                    .populate('assignee')
+                    .exec();
+                const fileHome = await File.find();
+                const sevenDaysAgo = new Date();
+                sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+                const activitiesHome = await Activity.find({
+                    department: user.department,
+                    date: { $gte: sevenDaysAgo }
+                })
+                    .populate({
+                        path: 'user'
+                    })
+                    .sort({ date: -1 })
+                    .exec();
+                const userDepartmentHome = await User.find({
+                    department: user.department,
+                    _id: { $ne: user._id }
+                });
+                const otherTaskHome = await Task.find({
+                    assignee: { $ne: [user._id] }
+                });
+                const otherActivitiesHome = await Activity.find();
+
+                var staffOnLeave = '';
+                if (user.isAdmin || user.isChiefExec || user.isDeputyChiefExec) {
+                    staffOnLeave = await Leave.find({
+                        'date.start': { $lte: today },
+                        'date.return': { $gte: today },
+                        'date.start': { $lte: today },     // Leave start date should be less than or equal to today
+                        'date.return': { $gte: today },
+                        user: { $ne: user._id },
+                        status: 'approved'
+                    });
+                } else {
+                    staffOnLeave = await Leave.find({
+                        'date.start': { $lte: today },     // Leave start date should be less than or equal to today
+                        'date.return': { $gte: today },
+                        user: { $ne: user._id },
+                        status: 'approved'
+                    });
+                }
+
+                const renderDataSuccess = {
+                    user: user,
+                    uuid: uuidv4(),
+                    notifications: notifications,
+                    userDepartment: userDepartmentHome,
+                    otherTasks: otherTaskHome,
+                    otherActivities: otherActivitiesHome,
+                    staffOnLeave: staffOnLeave,
+                    // all data
+                    allUser: allUser,
+                    allUserLeave: allUserLeave,
+                    allLeave: allLeave,
+                    userLeave: userLeave,
+                    leave: leave,
+                    tasks: taskHome,
+                    files: fileHome,
+                    activities: activitiesHome,
+                    selectedNames: '',
+                    show: 'show',
+                    alert: 'Leave request submitted, please wait for approval 3 days from now'
+                };
+
+                res.render('home', renderDataSuccess);
             }
-
-            // turn off the email notications
-            // send email to the recipient
-            // let mailOptions = {
-            //     from: 'shrrshazni@gmail.com',
-            //     to: sendEmail,
-            //     subject: 'lakmnsportal - Approval Leave Request',
-            //     html: `
-            //       <html>
-            //         <head>
-            //           <style>
-            //             body {
-            //               font-family: 'Arial', sans-serif;
-            //               background-color: #f4f4f4;
-            //               color: #333;
-            //             }
-            //             p {
-            //               margin-bottom: 20px;
-            //             }
-            //             a {
-            //               color: #3498db;
-            //             }
-            //           </style>
-            //         </head>
-            //         <body>
-            //           <h1>Leave Request</h1>
-            //           <p>${user.fullname} has requested ${type} from, ${startDate} until ${returnDate}</p>
-            //           <p>Please do check your notification at <a href="http://localhost:5002/">lakmnsportal</a></p>
-            //         </body>
-            //       </html>
-            //     `
-            // };
-
-            // transporter.sendMail(mailOptions, (error, info) => {
-            //     if (error) {
-            //         return console.log(error);
-            //     }
-            //     console.log('Message %s sent: %s', info.messageId, info.response);
-            // });
-
-            res.render('home', {
-                user: user,
-                notifications: notifications,
-                uuid: uuidv4(),
-                userDepartment: userDepartmentHome,
-                otherTasks: otherTaskHome,
-                otherActivities: otherActivitiesHome,
-                // all data
-                allUser: allUser,
-                allUserLeave: allUserLeave,
-                allLeave: allLeave,
-                userLeave: userLeave,
-                leave: leaveHome,
-                tasks: taskHome,
-                files: fileHome,
-                activities: activitiesHome,
-                selectedNames: '',
-                // toast
-                show: 'show',
-                alert:
-                    'Leave requested submitted, please wait it to be approved in 3 days'
-            });
-
         }
     });
 
