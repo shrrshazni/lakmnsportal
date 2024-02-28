@@ -1603,10 +1603,20 @@
 
 <div class="mb-6 row g-3">
 
+  <% 
+  function formatDate(inputDate) {
+    const day = String(inputDate.getDate()).padStart(2, '0');
+    const month = String(inputDate.getMonth() + 1).padStart(2, '0');
+    const year = inputDate.getFullYear();
+  
+    return `${day}/${month}/${year}`;
+  }
+  %>
+
   <div class="col-12 col-xxl-6">
     <div class="card pt-3 vh-50">
       <div class="card-body">
-        <div id="staff-on-leave" data-list='{"valueNames":["staff","type","startdate","returndate"],"page":10,"pagination":true}'>
+        <div id="today-on-leave" class="leave-section" data-list='{"valueNames":["staff","type","startdate","returndate"],"page":5,"pagination":true}'>
 
           <div class="row align-items-end justify-content-between pb-4 g-3">
 
@@ -1636,19 +1646,9 @@
                   <th class="sort align-middle ps-3" scope="col" data-sort="returndate" style="width:10%;">RETURN DATE</th>
                 </tr>
               </thead>
-
-              <% 
-              function formatDate(inputDate) {
-                const day = String(inputDate.getDate()).padStart(2, '0');
-                const month = String(inputDate.getMonth() + 1).padStart(2, '0');
-                const year = inputDate.getFullYear();
-              
-                return `${day}/${month}/${year}`;
-              }
-              %>
               <tbody class="list" id="project-summary-table-body">
-                <% if(staffOnLeave && staffOnLeave.length>0){ %>
-                <% staffOnLeave.forEach(onLeave => { %>
+                <% if(todayLeaves && todayLeaves.length>0){ %>
+                <% todayLeaves.forEach(onLeave => { %>
 
                 <tr class="position-static">
 
@@ -1694,18 +1694,244 @@
 
         </div>
 
+        <div id="week-on-leave" class="leave-section" data-list='{"valueNames":["staff","type","startdate","returndate"],"page":5,"pagination":true}'>
+
+          <div class="row align-items-end justify-content-between pb-4 g-3">
+
+            <div class="col-auto">
+              <h3>Staff on leave this week</h3>
+              <p class="text-body-tertiary lh-sm mb-0">Employees absent today, leave granted.</p>
+            </div>
+
+            <div class="col-12 col-md-auto">
+              <div class="search-box px-lg-0 pe-4">
+                <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
+                  <input class="form-control search-input search form-control-sm" type="search" placeholder="Search leave approval" aria-label="Search" />
+                  <span class="fas fa-search search-box-icon"></span>
+                </form>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="table-responsive ms-n1 ps-1 scrollbar h-100">
+            <table class="table fs-9 mb-0 border-top border-translucent">
+              <thead>
+                <tr>
+                  <th class="sort white-space-nowrap align-middle ps-0" scope="col" data-sort="staff" style="width:15%;">STAFF</th>
+                  <th class="sort align-middle ps-3" scope="col" data-sort="type" style="width:15%;">TYPE</th>
+                  <th class="sort align-middle ps-3" scope="col" data-sort="startdate" style="width:10%;">START DATE</th>
+                  <th class="sort align-middle ps-3" scope="col" data-sort="returndate" style="width:10%;">RETURN DATE</th>
+                </tr>
+              </thead>
+              <tbody class="list" id="project-summary-table-body">
+                <% if(weekLeaves && weekLeaves.length>0){ %>
+                <% weekLeaves.forEach(onLeave => { %>
+
+                <tr class="position-static">
+
+                  <td class="align-middle text-body white-space-nowrap ps-0 staff">
+                    <% const staff = allUser.find(staff => staff._id.toString() === onLeave.user.toString()); %>
+                    <a class="mb-0 ms-0 fw-bold fs-8" href="/staff/details/<%= onLeave.user %>"><%= staff.fullname %></a>
+                  </td>
+
+
+                  <td class="align-middle text-body white-space-nowrap ps-0 type">
+                    <a class="mb-0 ms-3 fw-bold fs-8" href="/leave/details/<%= onLeave._id %>"><%= onLeave.type %></a>
+                  </td>
+
+                  <td class="align-middle text-body white-space-nowrap ps-0 startdate">
+                    <p class="mb-0 ms-3 fs-9 text-900"><%= formatDate(onLeave.date.start) %></p>
+                  </td>
+
+                  <td class="align-middle text-body white-space-nowrap ps-0 startdate">
+                    <p class="mb-0 ms-3 fs-9 text-900"><%= formatDate(onLeave.date.return) %></p>
+                  </td>
+                </tr>
+                <% }); %>
+                <% }else { %>
+                <tr class="position-static">
+                  <td class="align-middle text-body white-space-nowrap">
+                    <p class="mb-0 ms-3 fs-9">No staff on leave today</p>
+                  </td>
+                </tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+          <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
+            <div class="col-auto d-flex">
+              <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p><a class="fw-semibold" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semibold d-none" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
+            </div>
+            <div class="col-auto d-flex">
+              <button class="page-link" data-list-pagination="prev"><span class="fas fa-chevron-left"></span></button>
+              <ul class="mb-0 pagination"></ul>
+              <button class="page-link pe-0" data-list-pagination="next"><span class="fas fa-chevron-right"></span></button>
+            </div>
+          </div>
+
+        </div>
+
+        <div id="month-on-leave" class="leave-section" data-list='{"valueNames":["staff","type","startdate","returndate"],"page":5,"pagination":true}'>
+
+          <div class="row align-items-end justify-content-between pb-4 g-3">
+
+            <div class="col-auto">
+              <h3>Staff on leave this month</h3>
+              <p class="text-body-tertiary lh-sm mb-0">Employees absent today, leave granted.</p>
+            </div>
+
+            <div class="col-12 col-md-auto">
+              <div class="search-box px-lg-0 pe-4">
+                <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
+                  <input class="form-control search-input search form-control-sm" type="search" placeholder="Search leave approval" aria-label="Search" />
+                  <span class="fas fa-search search-box-icon"></span>
+                </form>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="table-responsive ms-n1 ps-1 scrollbar h-100">
+            <table class="table fs-9 mb-0 border-top border-translucent">
+              <thead>
+                <tr>
+                  <th class="sort white-space-nowrap align-middle ps-0" scope="col" data-sort="staff" style="width:15%;">STAFF</th>
+                  <th class="sort align-middle ps-3" scope="col" data-sort="type" style="width:15%;">TYPE</th>
+                  <th class="sort align-middle ps-3" scope="col" data-sort="startdate" style="width:10%;">START DATE</th>
+                  <th class="sort align-middle ps-3" scope="col" data-sort="returndate" style="width:10%;">RETURN DATE</th>
+                </tr>
+              </thead>
+              <tbody class="list" id="project-summary-table-body">
+                <% if(monthLeaves && monthLeaves.length>0){ %>
+                <% monthLeaves.forEach(onLeave => { %>
+
+                <tr class="position-static">
+
+                  <td class="align-middle text-body white-space-nowrap ps-0 staff">
+                    <% const staff = allUser.find(staff => staff._id.toString() === onLeave.user.toString()); %>
+                    <a class="mb-0 ms-0 fw-bold fs-8" href="/staff/details/<%= onLeave.user %>"><%= staff.fullname %></a>
+                  </td>
+
+
+                  <td class="align-middle text-body white-space-nowrap ps-0 type">
+                    <a class="mb-0 ms-3 fw-bold fs-8" href="/leave/details/<%= onLeave._id %>"><%= onLeave.type %></a>
+                  </td>
+
+                  <td class="align-middle text-body white-space-nowrap ps-0 startdate">
+                    <p class="mb-0 ms-3 fs-9 text-900"><%= formatDate(onLeave.date.start) %></p>
+                  </td>
+
+                  <td class="align-middle text-body white-space-nowrap ps-0 startdate">
+                    <p class="mb-0 ms-3 fs-9 text-900"><%= formatDate(onLeave.date.return) %></p>
+                  </td>
+                </tr>
+                <% }); %>
+                <% }else { %>
+                <tr class="position-static">
+                  <td class="align-middle text-body white-space-nowrap">
+                    <p class="mb-0 ms-3 fs-9">No staff on leave today</p>
+                  </td>
+                </tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+          <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
+            <div class="col-auto d-flex">
+              <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p><a class="fw-semibold" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semibold d-none" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
+            </div>
+            <div class="col-auto d-flex">
+              <button class="page-link" data-list-pagination="prev"><span class="fas fa-chevron-left"></span></button>
+              <ul class="mb-0 pagination"></ul>
+              <button class="page-link pe-0" data-list-pagination="next"><span class="fas fa-chevron-right"></span></button>
+            </div>
+          </div>
+
+        </div>
       </div>
     </div>
   </div>
 
   <div class="col-12 col-xxl-6">
-    <div class="card pt-7 vh-50">
+    <div class="card pt-3 vh-50">
       <div class="card-body">
+        <div class="d-flex mb-6">
+          <div class="btn btn-phoenix-primary py-2 px-2 active" onclick="toggleSection('today-on-leave', this)">Today</div>
+          <div class="btn btn-phoenix-primary py-2 px-2" onclick="toggleSection('week-on-leave', this)">Week</div>
+          <div class="btn btn-phoenix-primary py-2 px-2" onclick="toggleSection('month-on-leave', this)">Month</div>
+        </div>
+
+        <div id="current-leave-bar-charts" style="height: 300px;"></div>
 
       </div>
     </div>
   </div>
 </div>
+
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Set the initial state to show "Today's Leave" section and make the corresponding button active
+    toggleSection('today-on-leave', document.querySelector('.btn-phoenix-primary.active'));
+
+    updateBarCharts('<%= todayLeaves.length %>', '<%= weekLeaves.length %>', '<%= monthLeaves.length %>');
+  });
+
+  function toggleSection(sectionId, button) {
+    // Hide all leave sections
+    document.querySelectorAll('.leave-section').forEach(section => {
+      section.style.display = 'none';
+    });
+
+    // Show the selected leave section
+    document.getElementById(sectionId).style.display = 'block';
+
+    // Remove active class from all buttons
+    document.querySelectorAll('.btn-phoenix-primary').forEach(btn => {
+      btn.classList.remove('active');
+    });
+
+    // Add active class to the clicked button
+    button.classList.add('active');
+  }
+
+  function updateBarCharts(today, week, month) {
+    const leaveBarCharts = echarts.init(document.getElementById('current-leave-bar-charts'));
+
+    // Process the data and create series for bar charts
+    const todayCount = today;
+    const weekCount = week;
+    const monthCount = month;
+
+    const option = {
+      tooltip: {},
+      legend: {
+        data: ['Today', 'This Week', 'This Month'],
+      },
+      xAxis: {
+        data: ['Today', 'This Week', 'This Month'],
+      },
+      yAxis: {
+        show: false, // Set show to false to hide y-axis
+      },
+      series: [{
+        name: 'Leave Count',
+        type: 'bar',
+        data: [todayCount, weekCount, monthCount],
+        barWidth: '10px',
+        showBackground: false,
+        symbol: 'none',
+        itemStyle: {
+          borderRadius: 10
+        },
+      }],
+    };
+
+    // Set the option and render the chart
+    leaveBarCharts.setOption(option);
+  }
+</script>
 
 
 <% if (user.isAdmin === true || user.isChiefExec === true || user.isDeputyChiefExec === true) { %>
