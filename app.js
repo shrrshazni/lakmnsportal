@@ -245,8 +245,6 @@ const approvalSchema = new mongoose.Schema({
 const leaveSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, required: true },
   grade: { type: String, required: true },
-  department: { type: String },
-  section: { type: String },
   fileId: { type: String, unique: true },
   type: { type: String },
   assignee: [{ type: mongoose.Schema.Types.ObjectId }],
@@ -370,20 +368,6 @@ app.get('/', isAuthenticated, async function (req, res) {
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-  const activities = await Activity.find({
-    department: user.department,
-    date: { $gte: sevenDaysAgo }
-  })
-    .populate({
-      path: 'user'
-    })
-    .sort({ date: -1 })
-    .exec();
-
-  const userDepartment = await User.find({
-    department: user.department,
-    _id: { $ne: user._id }
-  });
   const otherTask = await Task.find({ assignee: { $ne: [user._id] } });
   const otherActivities = await Activity.find();
 
@@ -411,7 +395,8 @@ app.get('/', isAuthenticated, async function (req, res) {
   let todayLeaves = [];
   let weekLeaves = [];
   let monthLeaves = [];
-  var staffOnLeave = '';
+  let staffOnLeave = '';
+
   if (user.isAdmin || user.isChiefExec || user.isDeputyChiefExec) {
     staffOnLeave = await Leave.find({
       user: { $ne: user._id },
@@ -471,12 +456,47 @@ app.get('/', isAuthenticated, async function (req, res) {
     });
   }
 
-  // const newUserLeave = new UserLeave({
+  let userTeamMembers = '';
+  let activities = '';
+
+  if (user.isChiefExec || user.isDeputyChiefExec) {
+    userTeamMembers = await User.find({
+      isManagement: true,
+      _id: { $ne: user._id }
+    });
+
+    activities = await Activity.find({
+      isManagement: true,
+      date: { $gte: sevenDaysAgo }
+    })
+      .populate({
+        path: 'user'
+      })
+      .sort({ date: -1 })
+      .exec();
+  } else {
+    userTeamMembers = await User.find({
+      department: user.department,
+      _id: { $ne: user._id }
+    });
+
+    activities = await Activity.find({
+      department: user.department,
+      date: { $gte: sevenDaysAgo }
+    })
+      .populate({
+        path: 'user'
+      })
+      .sort({ date: -1 })
+      .exec();
+  }
+
+  //   const newUserLeave = new UserLeave({
   //     user: '65b1b953bf237e83aa5a7f27', // Replace with the actual user ID
   //     annual: { leave: 14, taken: 0 },
   //     sick: { leave: 14, taken: 0 },
   //     sickExtended: { leave: 60, taken: 0 },
-  //     emergency: { leave: 0, taken:0 },
+  //     emergency: { leave: 0, taken: 0 },
   //     paternity: { leave: 3, taken: 0 },
   //     maternity: { leave: 60, taken: 0 },
   //     bereavement: { leave: 3, taken: 0 }, // will be removed later
@@ -485,8 +505,8 @@ app.get('/', isAuthenticated, async function (req, res) {
   //     attendExam: { leave: 5, taken: 0 },
   //     hajj: { leave: 40, taken: 0 },
   //     unpaid: { taken: 0 },
-  //     special: { leave: 7, taken: 0 }
-  // });
+  //     special: { leave: 3, taken: 0 }
+  //   });
 
   // newUserLeave.save();
 
@@ -495,12 +515,10 @@ app.get('/', isAuthenticated, async function (req, res) {
       user: user,
       notifications: notifications,
       uuid: uuidv4(),
-      userDepartment: userDepartment,
+      userTeamMembers: userTeamMembers,
       otherTasks: otherTask,
       otherActivities: otherActivities,
-      todayLeaves: todayLeaves,
-      weekLeaves: weekLeaves,
-      monthLeaves: monthLeaves,
+      staffOnLeave: todayLeaves,
       // all data
       allUser: allUser,
       allUserLeave: allUserLeave,
@@ -847,7 +865,12 @@ app
       !req.body.fullname ||
       !req.body.username ||
       !req.body.email ||
-      !req.body.password
+      !req.body.password ||
+      !req.body.position ||
+      !req.body.grade ||
+      !req.body.department ||
+      !req.body.section ||
+      !req.body.gender
     ) {
       return res.status(400).json({ error: 'All fields are required.' });
     }
@@ -861,12 +884,12 @@ app
       profile: '',
       age: 0,
       address: '',
-      birthdate: '',
-      department: '',
-      section: '',
-      gender: '',
-      grade: 0,
-      position: '',
+      birthdate: '1974-07-04T00:00:00.000+00:00',
+      department: req.body.department,
+      section: req.body.section,
+      gender: req.body.gender,
+      grade: req.body.grade,
+      position: req.body.position,
       education: '',
       marital: 'single',
       classification: 'permanent',
@@ -874,7 +897,8 @@ app
       isDeputyChiefExec: false,
       isHeadOfDepartment: false,
       isHeadOfSection: false,
-      isAdmin: false
+      isAdmin: false,
+      isManagement: false
     });
 
     User.register(newUser, req.body.password, function (err, user) {
@@ -884,15 +908,19 @@ app
       } else {
         const newUserLeave = new UserLeave({
           user: user._id,
-          annual: 14,
-          sick: 14,
-          emergency: 0,
-          paternity: 3,
-          marriage: 3,
-          bereavement: 3,
-          unpaid: 0,
-          hajj: 40,
-          special: 0
+          annual: { leave: 14, taken: 0 },
+          sick: { leave: 14, taken: 0 },
+          sickExtended: { leave: 60, taken: 0 },
+          emergency: { leave: 0, taken: 0 },
+          paternity: { leave: 3, taken: 0 },
+          maternity: { leave: 60, taken: 0 },
+          bereavement: { leave: 3, taken: 0 },
+          study: { leave: 3, taken: 0 },
+          marriage: { leave: 3, taken: 0 },
+          attendExam: { leave: 5, taken: 0 },
+          hajj: { leave: 40, taken: 0 },
+          unpaid: { taken: 0 },
+          special: { leave: 3, taken: 0 }
         });
         newUserLeave.save();
 
@@ -1157,6 +1185,12 @@ app
       const selectedNames = req.body.selectedNames
         ? req.body.selectedNames.split(',')
         : [];
+
+      //validation if the leave request encounter error
+      var validationType = '';
+      var validationStartDate = '';
+      var validationReturnDate = '';
+      var validationPurpose = '';
 
       // init to submit the leave req
       var leaveBalance = '';
@@ -2282,8 +2316,6 @@ app
           fileId: uuid,
           user: user._id,
           grade: user.grade,
-          department: user.department,
-          section: user.section,
           assignee: assignee,
           type: type,
           date: newDate,
@@ -2380,33 +2412,116 @@ app
         });
         const otherActivitiesHome = await Activity.find();
 
-        var staffOnLeave = '';
+        let todayLeaves = [];
+        let weekLeaves = [];
+        let monthLeaves = [];
+        let staffOnLeave = '';
+
         if (user.isAdmin || user.isChiefExec || user.isDeputyChiefExec) {
           staffOnLeave = await Leave.find({
-            'date.start': { $lte: today },
-            'date.return': { $gte: today },
-            'date.start': { $lte: today }, // Leave start date should be less than or equal to today
-            'date.return': { $gte: today },
             user: { $ne: user._id },
             status: 'approved'
+          });
+
+          staffOnLeave = await Leave.find({
+            status: 'approved',
+            user: { $ne: user._id },
+            department: user.department
+          });
+
+          staffOnLeave.forEach(leave => {
+            if (leave.date.start >= today && today <= leave.date.return) {
+              todayLeaves.push(leave);
+            }
+
+            if (
+              leave.date.start <= lastDayOfWeek &&
+              leave.date.return >= firstDayOfWeek
+            ) {
+              weekLeaves.push(leave);
+            }
+
+            if (
+              leave.date.start <= lastDayOfMonth &&
+              leave.date.return >= firstDayOfMonth
+            ) {
+              monthLeaves.push(leave);
+            }
           });
         } else {
           staffOnLeave = await Leave.find({
-            'date.start': { $lte: today }, // Leave start date should be less than or equal to today
-            'date.return': { $gte: today },
+            status: 'approved',
             user: { $ne: user._id },
-            status: 'approved'
+            department: user.department
           });
+
+          staffOnLeave.forEach(leave => {
+            if (leave.date.start >= today && today <= leave.date.return) {
+              todayLeaves.push(leave);
+            }
+
+            if (
+              leave.date.start <= lastDayOfWeek &&
+              leave.date.return >= firstDayOfWeek
+            ) {
+              weekLeaves.push(leave);
+            }
+
+            if (
+              leave.date.start <= lastDayOfMonth &&
+              leave.date.return >= firstDayOfMonth
+            ) {
+              monthLeaves.push(leave);
+            }
+          });
+        }
+
+        let userTeamMembers = '';
+        let activities = '';
+
+        if (user.isChiefExec || user.isDeputyChiefExec) {
+          userTeamMembers = await User.find({
+            isManagement: true,
+            _id: { $ne: user._id }
+          });
+
+          activities = await Activity.find({
+            isManagement: true,
+            date: { $gte: sevenDaysAgo }
+          })
+            .populate({
+              path: 'user'
+            })
+            .sort({ date: -1 })
+            .exec();
+        } else {
+          userTeamMembers = await User.find({
+            department: user.department,
+            _id: { $ne: user._id }
+          });
+
+          activities = await Activity.find({
+            department: user.department,
+            date: { $gte: sevenDaysAgo }
+          })
+            .populate({
+              path: 'user'
+            })
+            .sort({ date: -1 })
+            .exec();
         }
 
         const renderDataSuccess = {
           user: user,
           uuid: uuidv4(),
           notifications: notifications,
-          userDepartment: userDepartmentHome,
+          userTeamMembers: userTeamMembers,
           otherTasks: otherTaskHome,
           otherActivities: otherActivitiesHome,
           staffOnLeave: staffOnLeave,
+          todayLeaves,
+          weekLeaves,
+          monthLeaves,
           // all data
           allUser: allUser,
           allUserLeave: allUserLeave,
