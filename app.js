@@ -1184,12 +1184,6 @@ app
         ? req.body.selectedNames.split(',')
         : [];
 
-      //validation if the leave request encounter error
-      var validationType = '';
-      var validationStartDate = '';
-      var validationReturnDate = '';
-      var validationPurpose = '';
-
       // init to submit the leave req
       var leaveBalance = '';
       var approvals = '';
@@ -2517,9 +2511,9 @@ app
           otherTasks: otherTaskHome,
           otherActivities: otherActivitiesHome,
           staffOnLeave: staffOnLeave,
-          todayLeaves,
-          weekLeaves,
-          monthLeaves,
+          todayLeaves :todayLeaves,
+          weekLeaves: weekLeaves,
+          monthLeaves : monthLeaves,
           // all data
           allUser: allUser,
           allUserLeave: allUserLeave,
