@@ -878,6 +878,7 @@ app
       fullname: req.body.fullname,
       username: req.body.username,
       email: req.body.email,
+      nric : '',
       phone: '',
       profile: '',
       age: 0,
