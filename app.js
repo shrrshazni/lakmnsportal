@@ -518,7 +518,9 @@ app.get('/', isAuthenticated, async function (req, res) {
       userTeamMembers: userTeamMembers,
       otherTasks: otherTask,
       otherActivities: otherActivities,
-      staffOnLeave: todayLeaves,
+      todayLeaves: todayLeaves,
+      weekLeaves : weekLeaves,
+      monthLeaves: monthLeaves,
       // all data
       allUser: allUser,
       allUserLeave: allUserLeave,
