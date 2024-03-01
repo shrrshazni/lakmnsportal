@@ -83,7 +83,7 @@ const userSchema = new mongoose.Schema({
   fullname: { type: String, required: true },
   username: { type: String, required: true, unique: true },
   email: { type: String, required: true, unique: true },
-  nric: { type: String, required: true, unique: true },
+  nric: { type: String, unique: true },
   phone: String,
   officePhone: String,
   profile: String,
@@ -869,7 +869,6 @@ app
       !req.body.position ||
       !req.body.grade ||
       !req.body.department ||
-      !req.body.section ||
       !req.body.gender
     ) {
       return res.status(400).json({ error: 'All fields are required.' });
@@ -879,8 +878,7 @@ app
       fullname: req.body.fullname,
       username: req.body.username,
       email: req.body.email,
-      nric: req.body.nric,
-      phone: req.body.phone,
+      phone: '',
       profile: '',
       age: 0,
       address: '',
