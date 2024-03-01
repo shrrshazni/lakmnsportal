@@ -111,6 +111,7 @@ const userSchema = new mongoose.Schema({
   isHeadOfSection: { type: Boolean, default: false },
   isAdmin: { type: Boolean, default: false },
   isOfficer: { type: Boolean, default: false },
+  isManagement : {type: Boolean, default :false},
   dateEmployed: { type: Date },
   birthdate: { type: Date }
 });
