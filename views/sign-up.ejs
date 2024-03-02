@@ -9,16 +9,16 @@
   </div>
   <div class="col-lg-6">
     <div class="row flex-center h-100 g-0 px-4 px-sm-0">
-      <div class="col col-sm-6 col-lg-7 col-xl-6"><a class="d-flex flex-center text-decoration-none mb-4" href="../../../index.html">
+      <div class="col col-sm-6 col-lg-7 col-xl-6"><a class="d-flex flex-center text-decoration-none mb-2" href="../../../index.html">
           <div class="d-flex align-items-center fw-bolder fs-3 d-inline-block"><img src="../../../assets/img/icons/logo.png" alt="phoenix" width="58" />
           </div>
         </a>
-        <div class="text-center mb-7">
+        <div class="text-center mb-3">
           <h3 class="text-body-highlight">Sign Up</h3>
           <p class="text-body-tertiary">Create your account today</p>
         </div>
 
-        <form action="/sign-up" method="post" class="needs-validation" novalidate="novalidate">
+        <form action="/sign-up" method="post" class="needs-validation row g-3" novalidate="novalidate">
           <div class="mb-3 text-start">
             <label class="form-label" for="username">Username</label>
             <div class="input-group">
@@ -29,11 +29,11 @@
             </div>
           </div>
 
-          <div class="position-relative mt-4">
+          <div class="position-relative mt-2">
             <hr class="bg-200" />
           </div>
 
-          <div class="mb-3 text-start">
+          <div class="text-start">
             <label class="form-label" for="name">Full Name</label>
             <input class="form-control" id="name" name="fullname" type="text" placeholder="Name" required="" />
             <!-- validations -->
@@ -41,64 +41,80 @@
             <div class="invalid-feedback">This is required</div>
           </div>
 
-          <div class="mb-3 text-start">
+          <div class=" text-start">
             <label class="form-label" for="email">Email address</label>
             <input class="form-control" id="email" type="email" name="email" placeholder="name@example.com" required="" />
             <div class="valid-feedback">Looks good!</div>
             <div class="invalid-feedback">This is required</div>
           </div>
-          
-          <div class="row g-3 mb-3">
-            <div class="col-sm-12">
-              <label class="form-label" for="password">Password</label>
+
+          <div class="col-sm-12">
+            <label class="form-label" for="password">Password</label>
+
+            <div class="container px-0">
               <input class="form-control form-icon-input" id="password" name="password" type="password" placeholder="Password" required="" />
-              <div class="valid-feedback">Looks good!</div>
-              <div class="invalid-feedback">This is required</div>
+              <span type="button" class="position-absolute end-0 top-0 mt-2 me-2" id="togglePassword">
+                <i class="fa fa-eye-slash" aria-hidden="true" width="15" height="15"></i>
+              </span>
             </div>
-          </div>
-          <div class="row g-3 mb-3">
-            <div class="col-sm-12">
-              <label class="form-label" for="grade">Grade</label>
-              <input class="form-control form-icon-input" id="phoneNumber" name="grade" type="text" placeholder="Grade" required="" />
-              <div class="valid-feedback">Looks good!</div>
-              <div class="invalid-feedback">This is required</div>
-            </div>
+
+            <div class="valid-feedback">Looks good!</div>
+            <div class="invalid-feedback">This is required</div>
+
+            <script>
+              document.getElementById("togglePassword").addEventListener("click", function() {
+                var passwordInput = document.getElementById("password");
+                if (passwordInput.type === "password") {
+                  passwordInput.type = "text";
+                  this.innerHTML = '<i class="fa fa-eye" aria-hidden="true"  width="15" height="15"></i>';
+                } else {
+                  passwordInput.type = "password";
+                  this.innerHTML = '<i class="fa fa-eye-slash" aria-hidden="true"  width="15" height="15"></i>';
+                }
+              });
+            </script>
           </div>
 
-          <div class="row g-3 mb-3">
-            <div class="col-sm-12">
-              <label class="form-label" for="phone">Position</label>
-              <input class="form-control form-icon-input" id="phoneNumber" name="position" type="text" placeholder="Position" required="" />
-              <div class="valid-feedback">Looks good!</div>
-              <div class="invalid-feedback">This is required</div>
-            </div>
+          <div class="col-sm-6">
+            <label class="form-label" for="grade">Grade</label>
+            <input class="form-control form-icon-input" id="grade" name="grade" type="text" placeholder="Grade" required="" />
+            <div class="valid-feedback">Looks good!</div>
+            <div class="invalid-feedback">This is required</div>
           </div>
 
-          <div class="row g-3 mb-3">
-            <div class="col-sm-12">
-              <label class="form-label" for="phone">Department</label>
-              <input class="form-control form-icon-input" id="phoneNumber" name="department" type="text" placeholder="Department" required="" />
-              <div class="valid-feedback">Looks good!</div>
-              <div class="invalid-feedback">This is required</div>
-            </div>
+          <div class="col-sm-6">
+            <label class="form-label" for="class">Classification</label>
+            <input class="form-control form-icon-input" id="class" name="class" type="text" placeholder="Enter classification" required="" />
+            <div class="valid-feedback">Looks good!</div>
+            <div class="invalid-feedback">This is required</div>
           </div>
 
-          <div class="row g-3 mb-3">
-            <div class="col-sm-12">
-              <label class="form-label" for="phone">Section</label>
-              <input class="form-control form-icon-input" id="phoneNumber" name="section" type="text" placeholder="Section" />
-              <div class="valid-feedback">Looks good!</div>
-              <div class="invalid-feedback">This is required</div>
-            </div>
+          <div class="col-sm-6">
+            <label class="form-label" for="phone">Department</label>
+            <input class="form-control form-icon-input" id="department" name="department" type="text" placeholder="Department" required="" />
+            <div class="valid-feedback">Looks good!</div>
+            <div class="invalid-feedback">This is required</div>
           </div>
 
-          <div class="row g-3 mb-3">
-            <div class="col-sm-12">
-              <label class="form-label" for="phone">Gender</label>
-              <input class="form-control form-icon-input" id="phoneNumber" name="gender" type="text" placeholder="Gender" required="" />
-              <div class="valid-feedback">Looks good!</div>
-              <div class="invalid-feedback">This is required</div>
-            </div>
+          <div class="col-sm-6">
+            <label class="form-label" for="phone">Section</label>
+            <input class="form-control form-icon-input" id="section" name="section" type="text" placeholder="Section" />
+            <div class="valid-feedback">Looks good!</div>
+            <div class="invalid-feedback">This is required</div>
+          </div>
+
+          <div class="col-sm-6 mb-4">
+            <label class="form-label" for="phone">Position</label>
+            <input class="form-control form-icon-input" id="position" name="position" type="text" placeholder="Position" required="" />
+            <div class="valid-feedback">Looks good!</div>
+            <div class="invalid-feedback">This is required</div>
+          </div>
+
+          <div class="col-sm-6 mb-4">
+            <label class="form-label" for="phone">Gender</label>
+            <input class="form-control form-icon-input" id="gender" name="gender" type="text" placeholder="Gender" required="" />
+            <div class="valid-feedback">Looks good!</div>
+            <div class="invalid-feedback">This is required</div>
           </div>
 
           <button class="btn btn-primary w-100 mb-3" type="submit" name="submit">Sign up</button>
