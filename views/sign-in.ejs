@@ -35,12 +35,32 @@
           <div class="mb-3 text-start">
             <label class="form-label" for="password">Password</label>
             <div class="form-icon-container">
-              <input class="form-control <%= validationPassword %> form-icon-input" id="password" type="password" name="password" value="<%= password %>" placeholder="Password" /><span class="fas fa-key text-900 fs--1 form-icon"></span>
+              <div class="container px-0">
+                <div>
+                  <input class="form-control <%= validationPassword %> form-icon-input" id="password" type="password" name="password" value="<%= password %>" placeholder="Password" /><span class="fas fa-key text-900 fs--1 form-icon"></span>
+                </div>
+                <span type="button" class="position-absolute end-0 top-0 mt-2 me-3" id="togglePassword">
+                  <i class="fa fa-eye-slash" aria-hidden="true" width="15" height="15"></i>
+                </span>
+              </div>
               <div class="valid-feedback">Looks good!</div>
               <div class="invalid-feedback">
                 Required, at least 1 digit with minimum 4 character
               </div>
             </div>
+
+            <script>
+              document.getElementById("togglePassword").addEventListener("click", function() {
+                var passwordInput = document.getElementById("password");
+                if (passwordInput.type === "password") {
+                  passwordInput.type = "text";
+                  this.innerHTML = '<i class="fa fa-eye" aria-hidden="true"  width="15" height="15"></i>';
+                } else {
+                  passwordInput.type = "password";
+                  this.innerHTML = '<i class="fa fa-eye-slash" aria-hidden="true"  width="16.5" height="16.5"></i>';
+                }
+              });
+            </script>
           </div>
 
           <div class="row flex-between-center mb-7">
@@ -86,14 +106,14 @@
 </div>
 
 <!-- theme button -->
-<div class="btn btn-phoenix-primary position-absolute top-0 end-0 m-4 shadow-lg rounded-5 d-flex px-2 py-1">
-  <p class="my-auto mx-2">Theme</p>
+<div class="position-absolute top-0 end-0 m-4 d-flex px-2 py-1">
   <div class="theme-control-toggle fa-icon-wait px-2">
     <input class="form-check-input ms-0 theme-control-toggle-input" type="checkbox" data-theme-control="phoenixTheme" value="dark" id="themeControlToggle" />
     <label class="mb-0 theme-control-toggle-label theme-control-toggle-light" for="themeControlToggle" data-bs-toggle="tooltip" data-bs-placement="left" title="Switch theme"><span class="icon" data-feather="moon"></span></label>
     <label class="mb-0 theme-control-toggle-label theme-control-toggle-dark" for="themeControlToggle" data-bs-toggle="tooltip" data-bs-placement="left" title="Switch theme"><span class="icon" data-feather="sun"></span></label>
   </div>
 </div>
+
 
 
 <%- include("partials/public-footer.ejs") %>

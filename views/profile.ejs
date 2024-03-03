@@ -35,7 +35,7 @@
             const timestamp = user.dateEmployed; // Replace with your timestamp variable
             const date = new Date(timestamp + 8 * 60 * 60 * 1000); // Adjust to Malaysian Standard Time (UTC+8)
             const options = { day: 'numeric', month: 'long', year: 'numeric' };
-            const formattedDate = date.toLocaleDateString(undefined, options);
+            const formattedDate = date.toLocaleDateString(date, options);
             %>
             <div class="col-12 col-sm-auto flex-1">
               <h3><%= user.fullname %></h3>
@@ -157,7 +157,7 @@
               <% }else{ %>
               <tr class="position-static">
                 <td class="align-middle white-space-nowrap border-bottom-0">
-                  <p>No activity detected from <span class="fw-bold text-primary"><%= otherUser.fullname %></span></p>
+                  <p>No activity detected from <span class="fw-bold text-primary"><%= user.fullname %></span></p>
                 </td>
               </tr>
               <% } %>
@@ -266,7 +266,7 @@
               <%  }); %> <% } else { %>
               <tr class="position-static">
                 <td class="align-middle time white-space-nowrap ps-0 border-bottom-0">
-                  <p>No leave submitted from <span class="fw-bold text-primary"><%= otherUser.fullname %></span></p>
+                  <p>No leave submitted from <span class="fw-bold text-primary"><%= user.fullname %></span></p>
                 </td>
               </tr>
               <% } %>

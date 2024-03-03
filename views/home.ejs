@@ -413,7 +413,11 @@
           </tr>
           <% }); %>
           <% }else { %>
-          <p>There is no user found in your department</p>
+          <tr class="position-static">
+            <td class="mb-0 fs-9 text-body">
+              <p>There is no user found in your department</p>
+            </td>
+          </tr>
           <% } %>
         </tbody>
       </table>
@@ -1653,8 +1657,8 @@
                 <tr class="position-static">
 
                   <td class="align-middle text-body white-space-nowrap ps-0 staff">
-                    <% const staff = allUser.find(staff => staff._id.toString() === onLeave.user.toString()); %>
-                    <a class="mb-0 ms-0 fw-bold fs-8" href="/staff/details/<%= onLeave.user %>"><%= staff.fullname %></a>
+                    <% const staffToday = allUser.find(staff => staff._id.toString() === onLeave.user.toString()); %>
+                    <a class="mb-0 ms-0 fw-bold fs-8" href="/staff/details/<%= onLeave.user %>"><%= staffToday.fullname %></a>
                   </td>
 
 
@@ -1731,8 +1735,8 @@
                 <tr class="position-static">
 
                   <td class="align-middle text-body white-space-nowrap ps-0 staff">
-                    <% const staff = allUser.find(staff => staff._id.toString() === onLeave.user.toString()); %>
-                    <a class="mb-0 ms-0 fw-bold fs-8" href="/staff/details/<%= onLeave.user %>"><%= staff.fullname %></a>
+                    <% const staffWeek = allUser.find(staff => staff._id.toString() === onLeave.user.toString()); %>
+                    <a class="mb-0 ms-0 fw-bold fs-8" href="/staff/details/<%= onLeave.user %>"><%= staffWeek %></a>
                   </td>
 
 
@@ -1809,8 +1813,8 @@
                 <tr class="position-static">
 
                   <td class="align-middle text-body white-space-nowrap ps-0 staff">
-                    <% const staff = allUser.find(staff => staff._id.toString() === onLeave.user.toString()); %>
-                    <a class="mb-0 ms-0 fw-bold fs-8" href="/staff/details/<%= onLeave.user %>"><%= staff.fullname %></a>
+                    <% const staffMonth = allUser.find(staff => staff._id.toString() === onLeave.user.toString());%>
+                    <a class="mb-0 ms-0 fw-bold fs-8" href="/staff/details/<%= onLeave.user %>"><%= staffMonth %></a>
                   </td>
 
 

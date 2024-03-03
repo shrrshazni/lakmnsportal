@@ -54,7 +54,7 @@
 
             <div class="container px-0">
               <input class="form-control form-icon-input" id="password" name="password" type="password" placeholder="Password" required="" />
-              <span type="button" class="position-absolute end-0 top-0 mt-2 me-2" id="togglePassword">
+              <span type="button" class="position-absolute end-0 top-0 mt-2 me-3" id="togglePassword">
                 <i class="fa fa-eye-slash" aria-hidden="true" width="15" height="15"></i>
               </span>
             </div>
@@ -70,7 +70,7 @@
                   this.innerHTML = '<i class="fa fa-eye" aria-hidden="true"  width="15" height="15"></i>';
                 } else {
                   passwordInput.type = "password";
-                  this.innerHTML = '<i class="fa fa-eye-slash" aria-hidden="true"  width="15" height="15"></i>';
+                  this.innerHTML = '<i class="fa fa-eye-slash" aria-hidden="true"  width="16.5" height="16.5"></i>';
                 }
               });
             </script>
@@ -85,7 +85,13 @@
 
           <div class="col-sm-6">
             <label class="form-label" for="class">Classification</label>
-            <input class="form-control form-icon-input" id="class" name="class" type="text" placeholder="Enter classification" required="" />
+            <select class="form-select" id="class" required aria-label="leave selection" name="class">
+              <option value="">Select classification</option>
+              <option value="permanent">Permanent</option>
+              <option value="contract">Contract</option>
+              <option value="trainee">Trainee</option>
+              <option value="intern">Intern</option>
+            </select>
             <div class="valid-feedback">Looks good!</div>
             <div class="invalid-feedback">This is required</div>
           </div>
@@ -112,8 +118,12 @@
           </div>
 
           <div class="col-sm-6 mb-4">
-            <label class="form-label" for="phone">Gender</label>
-            <input class="form-control form-icon-input" id="gender" name="gender" type="text" placeholder="Gender" required="" />
+            <label class="form-label" for="gender">Gender</label>
+            <select class="form-select" id="gender" required aria-label="leave selection" name="gender">
+              <option value="">Select gender</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+            </select>
             <div class="valid-feedback">Looks good!</div>
             <div class="invalid-feedback">This is required</div>
           </div>
@@ -124,6 +134,32 @@
           </div>
         </form>
 
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- theme button -->
+<div class="position-absolute top-0 end-0 m-4 d-flex px-2 py-1">
+  <div class="theme-control-toggle fa-icon-wait px-2">
+    <input class="form-check-input ms-0 theme-control-toggle-input" type="checkbox" data-theme-control="phoenixTheme" value="dark" id="themeControlToggle" />
+    <label class="mb-0 theme-control-toggle-label theme-control-toggle-light" for="themeControlToggle" data-bs-toggle="tooltip" data-bs-placement="left" title="Switch theme"><span class="icon" data-feather="moon"></span></label>
+    <label class="mb-0 theme-control-toggle-label theme-control-toggle-dark" for="themeControlToggle" data-bs-toggle="tooltip" data-bs-placement="left" title="Switch theme"><span class="icon" data-feather="sun"></span></label>
+  </div>
+</div>
+
+<!-- toast alert submission -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 5">
+  <div class="d-flex">
+    <div class="toast <%= show %> align-items-center text-white border-0" role="alert" data-bs-autohide="false" aria-live="assertive" aria-atomic="true">
+      <div class="d-flex justify-content-between">
+        <div class="toast-body px-0 py-3">
+          <code class="text-primary"><%= alert %></code>
+        </div>
+
+        <button class="btn ms-2 p-0" type="button" data-bs-dismiss="toast" aria-label="Close">
+          <span class="uil uil-times fs-7"></span>
+        </button>
       </div>
     </div>
   </div>
