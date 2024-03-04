@@ -534,6 +534,50 @@ app.get(
     }
 );
 
+app.get('/api/abc', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+
+    if (user) {
+        const month = 'March';
+
+        try {
+            // Retrieve leave records for the selected month
+            const leaveRecords = await Leave.find({
+                'date.start': {
+                    $gte: new Date(`${month} 1, 2024`),
+                    $lt: new Date(`${month} 1, 2024`).setMonth(new Date(`${month} 1, 2024`).getMonth() + 1)
+                }
+            });
+
+            // Initialize count object for each day
+            const leaveCounts = {};
+
+            // Iterate through leave records and count approved and denied leaves for each day
+            leaveRecords.forEach(record => {
+                const day = record.date.start.getDate();
+                const status = record.status;
+
+                if (!leaveCounts[day]) {
+                    leaveCounts[day] = { approved: 0, denied: 0 };
+                }
+
+                if (status === 'approved') {
+                    leaveCounts[day].approved++;
+                } else if (status === 'denied') {
+                    leaveCounts[day].denied++;
+                }
+            });
+
+            res.json(leaveCounts);
+            console.log(leaveCounts);
+        } catch (error) {
+            console.error('Error fetching leave data:', error);
+            res.status(500).json({ error: 'Internal Server Error' });
+        }
+    }
+});
+
 // STAFF DETAILS
 
 app.get('/staff/details/:id', isAuthenticated, async function (req, res) {
