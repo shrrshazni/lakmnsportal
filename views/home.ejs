@@ -1736,7 +1736,7 @@
 
                   <td class="align-middle text-body white-space-nowrap ps-0 staff">
                     <% const staffWeek = allUser.find(staff => staff._id.toString() === onLeave.user.toString()); %>
-                    <a class="mb-0 ms-0 fw-bold fs-8" href="/staff/details/<%= onLeave.user %>"><%= staffWeek %></a>
+                    <a class="mb-0 ms-0 fw-bold fs-8" href="/staff/details/<%= onLeave.user %>"><%= staffWeek.fullname %></a>
                   </td>
 
 
@@ -1814,7 +1814,7 @@
 
                   <td class="align-middle text-body white-space-nowrap ps-0 staff">
                     <% const staffMonth = allUser.find(staff => staff._id.toString() === onLeave.user.toString());%>
-                    <a class="mb-0 ms-0 fw-bold fs-8" href="/staff/details/<%= onLeave.user %>"><%= staffMonth %></a>
+                    <a class="mb-0 ms-0 fw-bold fs-8" href="/staff/details/<%= onLeave.user %>"><%= staffMonth.fullname %></a>
                   </td>
 
 
@@ -2758,6 +2758,157 @@
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis pt-7 pb-3 border-y mb-6">
+  <div id="all-staff" data-list='{"valueNames":["staff","position","department","section","grade","status"],"page":10,"pagination":true}'>
+    <div class="row align-items-end justify-content-between pb-4 g-3">
+
+      <div class="col-auto">
+        <h3>All Staff</h3>
+        <p class="text-body-tertiary lh-sm mb-0">Every team member contributes to organizational success.</p>
+      </div>
+
+      <div class="col-12 col-md-auto">
+        <div class="search-box">
+          <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
+            <input class="form-control search-input search form-control-sm" type="search" placeholder="Search staffs" aria-label="Search" />
+            <span class="fas fa-search search-box-icon"></span>
+          </form>
+        </div>
+      </div>
+
+    </div>
+    <div class="table-responsive ms-n1 ps-1 scrollbar">
+      <table class="table fs-9 mb-0 border-top border-translucent">
+        <thead>
+          <tr>
+            <th class="sort white-space-nowrap align-middle ps-0" scope="col" data-sort="member" style="width:15%;"></th>
+            <th class="sort align-middle ps-3" scope="col" data-sort="position" style="width:10%;"></th>
+            <th class="sort align-middle ps-3" scope="col" data-sort="activity" style="width:25%;"></th>
+            <th class="sort align-middle ps-3" scope="col" data-sort="when" style="width:10%;"></th>
+            <th class="sort align-middle ps-3" scope="col" data-sort="taskprogress" style="width:5%;"></th>
+            <th class="sort align-middle ps-8" scope="col" data-sort="status" style="width:5%;">STATUS</th>
+            <th class="sort align-middle text-end" scope="col" style="width:10%;"></th>
+          </tr>
+        </thead>
+        <tbody class="list" id="project-summary-table-body">
+          <% if(userTeamMembers && userTeamMembers.length>0){ %>
+          <% userTeamMembers.forEach(department => { %>
+
+          <tr class="position-static">
+            <td class="align-middle text-body white-space-nowrap ps-0 member">
+              <div class="avatar avatar-l">
+                <div class="avatar-name rounded-circle"><span><%= department.fullname.split(' ').map(part => part[0].toUpperCase()).join('').slice(0, 2) %></span></div>
+              </div>
+              <a class="mb-0 ms-3 fw-bold fs-8" href="/staff/details/<%= department._id %>"><%= department.fullname %></a>
+            </td>
+            <td class="align-middle white-space-nowrap position ps-3">
+              <p class="mb-0 fs-9 text-body"><%= department.position %></p>
+            </td>
+
+
+            <% const userActivities = otherActivities.filter(activity => activity.user.toString() === department._id.toString()); %>
+
+            <% if (userActivities && userActivities.length > 0) { %>
+            <% const latestActivity = userActivities.reduce((latest, activity) => activity.date > latest.date ? activity : latest, userActivities[0]); %>
+            <td class="align-middle activity ps-3">
+              <p class="fs-9 fw-semibold text-body-highlight mb-0">
+                <%= latestActivity.description %>
+              </p>
+            </td>
+            <td class="align-middle white-space-nowrap when ps-3">
+              <p class="fw-bold text-body-emphasis fs-9 mb-0">
+                <%= latestActivity.date.toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %>
+              </p>
+            </td>
+
+            <% } else { %>
+            <td class="align-middle white-space-nowrap ps-3 text-start taskprogress">
+              <p class="text-body-secondary fs-10 mb-0">No activities</p>
+            </td>
+
+            <td class="align-middle white-space-nowrap ps-3 text-start taskprogress">
+              <p class="text-body-secondary fs-10 mb-0">No activities</p>
+            </td>
+            <% } %>
+
+            <%
+              const userTasks = otherTasks.filter(task => {
+                return task.assignee && Array.isArray(task.assignee) &&
+                       task.assignee.some(assignee => assignee._id && assignee._id.toString() === department._id.toString());
+              });
+              %>
+
+
+            <% if (userTasks && userTasks.length > 0) { %>
+            <% const doneTasks = userTasks.filter(task => task.status === 'done').length; %>
+            <% const cancelledTasks = userTasks.filter(task => task.status === 'cancelled').length; %>
+            <% const urgentTasks = userTasks.filter(task => task.status === 'urgent').length; %>
+            <% const processTasks = userTasks.filter(task => task.status === 'process').length; %>
+
+            <% const totalTasks = userTasks.length - cancelledTasks; %>
+            <% const completionPercentage1 = (doneTasks / totalTasks) * 100; %>
+            <% const completionPercentage2 = (cancelledTasks / totalTasks) * 100; %>
+            <% const completionPercentage3 = (urgentTasks / totalTasks) * 100; %>
+            <% const completionPercentage4 = (processTasks / totalTasks) * 100; %>
+
+            <td class="align-middle white-space-nowrap ps-3 taskprogress">
+              <p class="text-body-secondary fs-10 mb-0"><%= `${doneTasks} / ${totalTasks}` %></p>
+              <div class="progress" style="height:3px;">
+                <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar bg-success" style="width: <%= completionPercentage1 %>%" aria-valuenow="<%= completionPercentage1 %>" aria-valuemin="0" aria-valuemax="100" role="progressbar"></div>
+              </div>
+            </td>
+
+            <td class="align-middle white-space-nowrap ps-8 status">
+              <div class="progress progress-stack mt-3" style="height:3px;">
+                <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar bg-info" style="width:<%= completionPercentage4 %>%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100" role="progressbar"></div>
+                <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar bg-success" style="width:<%= completionPercentage1 %>%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100" data-bs-toggle="tooltip" data-bs-placement="top" title="5% Damage" role="progressbar"></div>
+                <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar bg-warning" style="width:<%= completionPercentage3 %>%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100" data-bs-toggle="tooltip" data-bs-placement="top" title="45% Damage" role="progressbar"></div>
+                <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar bg-danger" style="width:<%= completionPercentage2 %>%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100" data-bs-toggle="tooltip" data-bs-placement="top" title="15% Damage" role="progressbar"></div>
+              </div>
+            </td>
+            <% } else { %>
+            <td class="align-middle white-space-nowrap ps-3 text-start taskprogress">
+              <p class="text-body-secondary fs-10 mb-0">No tasks</p>
+            </td>
+
+            <td class="align-middle white-space-nowrap ps-3 text-center status">
+              <p class="text-body-secondary fs-10 mb-0">No tasks</p>
+            </td>
+            <% } %>
+
+            <td class="align-middle text-end white-space-nowrap pe-0 action">
+              <div class="btn-reveal-trigger position-static">
+                <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs-10" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fas fa-ellipsis-h fs-10"></span></button>
+                <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item" href="/staff/details/<%= department._id %>">View</a><a class="dropdown-item d-none" href="#!">Export</a>
+                  <div class="dropdown-divider d-none"></div><a class="dropdown-item text-danger d-none" href="#!">Remove</a>
+                </div>
+              </div>
+            </td>
+          </tr>
+          <% }); %>
+          <% }else { %>
+          <tr class="position-static">
+            <td class="mb-0 fs-9 text-body">
+              <p>There is no user found in your department</p>
+            </td>
+          </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+    <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
+      <div class="col-auto d-flex">
+        <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p><a class="fw-semibold" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semibold d-none" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
+      </div>
+      <div class="col-auto d-flex">
+        <button class="page-link" data-list-pagination="prev"><span class="fas fa-chevron-left"></span></button>
+        <ul class="mb-0 pagination"></ul>
+        <button class="page-link pe-0" data-list-pagination="next"><span class="fas fa-chevron-right"></span></button>
       </div>
     </div>
   </div>

@@ -246,6 +246,7 @@ const approvalSchema = new mongoose.Schema({
 const leaveSchema = new mongoose.Schema({
     user: { type: mongoose.Schema.Types.ObjectId, required: true },
     grade: { type: String, required: true },
+    department: { type: String },
     fileId: { type: String, unique: true },
     type: { type: String },
     assignee: [{ type: mongoose.Schema.Types.ObjectId }],
@@ -396,22 +397,15 @@ app.get('/', isAuthenticated, async function (req, res) {
     let todayLeaves = [];
     let weekLeaves = [];
     let monthLeaves = [];
-    let staffOnLeave = '';
+    let staffOnLeave = [];
 
     if (user.isAdmin || user.isChiefExec || user.isDeputyChiefExec) {
         staffOnLeave = await Leave.find({
-            user: { $ne: user._id },
             status: 'approved'
         });
 
-        staffOnLeave = await Leave.find({
-            status: 'approved',
-            user: { $ne: user._id },
-            department: user.department
-        });
-
         staffOnLeave.forEach(leave => {
-            if (leave.date.start >= today && today <= leave.date.return) {
+            if (isDateInRange(leave.date.start, leave.date.return)) {
                 todayLeaves.push(leave);
             }
 
@@ -432,12 +426,11 @@ app.get('/', isAuthenticated, async function (req, res) {
     } else {
         staffOnLeave = await Leave.find({
             status: 'approved',
-            user: { $ne: user._id },
             department: user.department
         });
 
         staffOnLeave.forEach(leave => {
-            if (leave.date.start >= today && today <= leave.date.return) {
+            if (isDateInRange(leave.date.start, leave.date.return)) {
                 todayLeaves.push(leave);
             }
 
@@ -491,25 +484,6 @@ app.get('/', isAuthenticated, async function (req, res) {
             .sort({ date: -1 })
             .exec();
     }
-
-    //   const newUserLeave = new UserLeave({
-    //     user: '65b1b953bf237e83aa5a7f27', // Replace with the actual user ID
-    //     annual: { leave: 14, taken: 0 },
-    //     sick: { leave: 14, taken: 0 },
-    //     sickExtended: { leave: 60, taken: 0 },
-    //     emergency: { leave: 0, taken: 0 },
-    //     paternity: { leave: 3, taken: 0 },
-    //     maternity: { leave: 60, taken: 0 },
-    //     bereavement: { leave: 3, taken: 0 }, // will be removed later
-    //     study: { leave: 3, taken: 0 }, // will be removed later
-    //     marriage: { leave: 3, taken: 0 },
-    //     attendExam: { leave: 5, taken: 0 },
-    //     hajj: { leave: 40, taken: 0 },
-    //     unpaid: { taken: 0 },
-    //     special: { leave: 3, taken: 0 }
-    //   });
-
-    // newUserLeave.save();
 
     if (user) {
         res.render('home', {
@@ -1943,6 +1917,7 @@ app
                 const leave = new Leave({
                     fileId: uuid,
                     user: user._id,
+                    department: user.department,
                     grade: user.grade,
                     assignee: assignee,
                     type: type,
@@ -2981,19 +2956,15 @@ app.get('/test', isAuthenticated, async function (req, res) {
     const username = req.user.username;
     const user = await User.findOne({ username: username });
 
-    const userLeave = await UserLeave.findOne({ user: user._id });
+    // Example usage:
+    const startDate = '2024-03-04';  // Replace with your start date
+    const endDate = '2024-03-10';    // Replace with your end date
 
-    const checkLeave = await Leave.findOne({ _id: '65e43ad2abf417f03e2c521a' });
-
-    const indexOfRecipient = checkLeave.approvals.findIndex(approval =>
-        approval.recipient.equals(user._id)
-    );
-
-    console.log('indexOfRecipient:', indexOfRecipient);
-
-    const firstRecipientId = checkLeave.approvals[0].recipient;
-
-    console.log('firstRecipientId:', firstRecipientId);
+    if (isDateInRange(startDate, endDate)) {
+        console.log('The current date is within the specified range.');
+    } else {
+        console.log('The current date is outside the specified range.');
+    }
 
     res.redirect('/');
 });
@@ -3389,6 +3360,22 @@ generateApprovals = function (
     }
 
     return approvals;
+};
+
+// CHECK DATE TODAY BETWEEN TWO DATES IN RANGE
+isDateInRange = function (startDate, endDate) {
+    const currentDate = new Date();
+
+    // Convert start and end dates to Date objects
+    const startDateObj = new Date(startDate);
+    const endDateObj = new Date(endDate);
+
+    // Set time component to 00:00:00 for both start and end dates
+    startDateObj.setHours(0, 0, 0, 0);
+    endDateObj.setHours(23, 59, 59, 999);
+
+    // Check if the current date is between the start and end dates
+    return startDateObj <= currentDate && currentDate <= endDateObj;
 };
 
 // PORT INITIALIZATION ON CLOUD OR LOCAL (5001)
