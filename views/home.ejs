@@ -13,7 +13,11 @@
     bg_primary_subtle: style.getPropertyValue('--phoenix-primary-bg-subtle'),
     tertiary: style.getPropertyPriority('--phoenix-tertiary-color'),
     light: style.getPropertyValue('--phoenix-light'),
-    dark: style.getPropertyValue('--phoenix-dark')
+    dark: style.getPropertyValue('--phoenix-dark'),
+    secondary_subtle: style.getPropertyValue('--phoenix-secondary-border-subtle'),
+    cyan: style.getPropertyValue('--phoenix-cyan'),
+    gray_100: style.getPropertyValue('--phoenix-gray-100')
+
   };
 
   //   take css class color based on their property color/bg-colour for echarts
@@ -254,19 +258,6 @@
                   .then(response => response.json())
                   .then(fetchLeaveTypeData1 => {
                     updateLeaveTypeChart(fetchLeaveTypeData1, 'leave-type-chart-carousel');
-                  })
-                  .catch(error => {
-                    console.error('Error fetching user leave data:', error);
-                  });
-              </script>
-
-              <script>
-                const leaveTypeURL2 = '/api/abc';
-
-                fetch(leaveTypeURL2)
-                  .then(response => response.json())
-                  .then(data => {
-                    console.log('success');
                   })
                   .catch(error => {
                     console.error('Error fetching user leave data:', error);
@@ -1970,7 +1961,8 @@
       <div class="row align-items-center g-4">
         <div class="col-12 col-md-3">
           <div class="d-flex align-items-center"><span class="fa-stack" style="min-height: 46px;min-width: 46px;"><span class="fa-solid fa-square fa-stack-2x dark__text-opacity-50 text-success-light" data-fa-transform="down-4 rotate--10 left-4"></span><span class="fa-solid fa-circle fa-stack-2x stack-circle text-stats-circle-success" data-fa-transform="up-4 right-3 grow-2"></span><span class="fa-stack-1x fa-solid fa-star text-success " data-fa-transform="shrink-2 up-8 right-6"></span></span>
-            <div class="ms-3" <h4 class="mb-0"><%= submittedLeaves.length %> Submit</h4>
+            <div class="ms-3">
+              <h4 class="mb-0"><%= submittedLeaves.length %> Submit</h4>
               <p class="text-body-secondary fs-9 mb-0">Proceed Request</p>
             </div>
           </div>
@@ -2003,7 +1995,7 @@
       <hr class="bg-body-secondary mb-6 mt-4" />
       <div class="row flex-between-center mb-4 g-3">
         <div class="col-auto">
-          <h3>Total leaves</h3>
+          <h3>Total leaves ( <span id="totalLeaves" class="fw-normal fs-7 "></span> )</h3>
           <p class="text-body-tertiary lh-sm mb-0">Leaves across all of department in one calendar</p>
         </div>
         <div class="col-8 col-sm-4">
@@ -2022,185 +2014,222 @@
             <option>December</option>
           </select>
         </div>
+
+        <script>
+          function handleMonthChangeWithTotalLeaves() {
+            // Get the selected option value
+            const selectedOption = document.getElementById('select-month');
+            const selectedMonth = selectedOption.options[selectedOption.selectedIndex].text;
+
+            // Update the URL with the selected month and use the new API endpoint
+            const leaveTotalCountURL = `/api/leave/totalcount?month=${selectedMonth}`;
+
+            // Fetch data for total leave count
+            fetch(leaveTotalCountURL)
+              .then(response => response.json())
+              .then(data => {
+                // Display the total leave count (assuming you have an element with id 'totalLeaves')
+                document.getElementById('totalLeaves').innerText = `${data.totalLeaveCount}`;
+              })
+              .catch(error => {
+                // Handle errors
+                console.error('Error:', error);
+              });
+          }
+
+          // Attach the event listener to the select element
+          document.getElementById('select-month').addEventListener('change', handleMonthChangeWithTotalLeaves);
+
+          // Initial call to handleMonthChangeWithTotalLeaves to load data for the default selected month
+          handleMonthChangeWithTotalLeaves();
+        </script>
+
       </div>
-      <div id="total-leave-chart" style="min-height:320px;"></div>
+      <div id="selected-month-leave-chart" style="min-height:320px;"></div>
 
       <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        function handleMonthChange() {
+          // Get the selected option value
+          var selectedOption = document.getElementById('select-month');
+          var month = selectedOption.options[selectedOption.selectedIndex].text;
 
-          // Function to update chart based on selected month
-          function updateChart(leaveData) {
+          // Update the URL with the selected month
+          const leaveSelectedMonthURL = `/api/leave/selectedmonth?month=${month}`;
 
-            // Initialize ECharts chart
-            var leaveChart = echarts.init(document.getElementById('total-leave-chart'), null, {
-              devicePixelRatio: window.devicePixelRatio > 1 ? 2 : 1,
-              renderer: 'canvas',
-              width: 'auto',
-              height: 'auto'
-            });
-
-            if (leaveData) {
-              var daysInMonth = new Date(new Date().getFullYear(), new Date(selectedMonth + " 1, 2000").getMonth() + 1, 0).getDate();;
-              var xAxisData = Array.from({
-                length: daysInMonth
-              }, (_, i) => i + 1);
-
-              var option = {
-                responsive: true,
-                color: [theme.primary, '#0097eb'],
-                tooltip: {
-                  trigger: 'axis',
-                  padding: 10,
-                  backgroundColor: '#eff2f6',
-                  borderColor: '#cbd0dd',
-                  textStyle: {
-                    color: '#141824'
-                  },
-                  borderWidth: 1,
-                  transitionDuration: 0,
-                  axisPointer: {
-                    type: 'none'
-                  },
-                },
-                xAxis: [{
-                    type: 'category',
-                    data: xAxisData,
-                    axisLabel: {
-                      formatter: function(value) {
-                        return `Day ${value}`;
-                      },
-                      interval: 13,
-                      showMinLabel: true,
-                      showMaxLabel: false,
-                      color: '#3e465b',
-                      align: 'left',
-                      fontFamily: 'Nunito Sans',
-                      fontWeight: 600,
-                      fontSize: 12.8
-                    },
-                    axisLine: {
-                      show: true,
-                      lineStyle: {
-                        color: '#525b75',
-                        opacity: 0.5
-                      }
-                    },
-                    axisTick: {
-                      show: false
-                    },
-                    splitLine: {
-                      show: true,
-                      interval: 0,
-                      lineStyle: {
-                        color: '#525b75',
-                        opacity: 0.3
-                      }
-                    },
-                    boundaryGap: false
-                  },
-                  {
-                    type: 'category',
-                    position: 'bottom',
-                    data: xAxisData,
-                    axisLabel: {
-                      formatter: function(value) {
-                        return `Day ${value}`;
-                      },
-                      interval: 130,
-                      showMaxLabel: true,
-                      showMinLabel: false,
-                      color: '#3e465b',
-                      align: 'right',
-                      fontFamily: 'Nunito Sans',
-                      fontWeight: 600,
-                      fontSize: 12.8
-                    },
-                    axisLine: {
-                      show: false
-                    },
-                    axisTick: {
-                      show: false
-                    },
-                    splitLine: {
-                      show: false
-                    },
-                    boundaryGap: false
-                  }
-                ],
-                yAxis: {
-                  position: 'right',
-                  axisPointer: {
-                    type: 'none'
-                  },
-                  axisTick: 'none',
-                  splitLine: {
-                    show: false
-                  },
-                  axisLine: {
-                    show: false
-                  },
-                  axisLabel: {
-                    show: false
-                  }
-                },
-                series: [{
-                    name: 'Approved',
-                    type: 'line',
-                    data: leaveData.approved,
-                    showSymbol: false,
-                    symbol: 'circle',
-                  },
-                  {
-                    name: 'Denied',
-                    type: 'line',
-                    data: leaveData.denied,
-                    lineStyle: {
-                      type: 'dashed',
-                      width: 1,
-                      color: '#0097eb',
-                      opacity: 0.5,
-                    },
-                    showSymbol: false,
-                    symbol: 'circle',
-                  },
-                ],
-                grid: {
-                  right: 2,
-                  left: 5,
-                  bottom: '20px',
-                  top: '2%',
-                  containLabel: false
-                }
-              };
-
-              // Set chart option and render
-              leaveChart.setOption(option);
-            }
-
-            window.addEventListener('resize', function() {
-              leaveChart.resize();
-            });
-          }
-          // Fetch data from the server
-          const leaveTypeURL = '/api/leave-data-example/';
-          fetch(leaveTypeURL)
+          // Fetch data or perform any other actions with the updated URL
+          // For example:
+          fetch(leaveSelectedMonthURL)
             .then(response => response.json())
-            .then(fetchLeaveTypeData => {
-              updateChart(fetchLeaveTypeData['January']);
+            .then(data => {
+              // Call the function to render the line chart with the fetched data
+              renderLineChart(data);
             })
             .catch(error => {
-              console.error('Error fetching user leave data:', error);
+              // Handle errors
+              console.error('Error:', error);
             });
+        }
 
-          // Event listener for select change
-          document.getElementById('select-month').addEventListener('change', function() {
-            // This part remains unchanged as before
-            var selectedMonth = this.value;
-            updateChart(fetchLeaveTypeData[selectedMonth]);
+        // Attach the event listener to the select element
+        document.getElementById('select-month').addEventListener('change', handleMonthChange);
+
+        // Initial call to handleMonthChange to load data for the default selected month
+        handleMonthChange();
+
+
+        function renderLineChart(data) {
+          // Extract data for the line chart
+          const days = Object.keys(data);
+          const approved = Object.values(data).map(dayData => dayData.approved);
+          const denied = Object.values(data).map(dayData => dayData.denied);
+
+          // Create the ECharts chart
+          const lineChart = echarts.init(document.getElementById('selected-month-leave-chart'), null, {
+            devicePixelRatio: window.devicePixelRatio > 1 ? 2 : 1,
+            renderer: 'canvas',
+            width: 'auto',
+            height: 'auto'
           });
-        });
-      </script>
 
+          // Specify the chart options
+          const options = {
+            responsive: true,
+            color: [theme.primary, theme.cyan],
+            tooltip: {
+              trigger: 'axis',
+              padding: 10,
+              backgroundColor: getColor('bg-body', 'background-color'),
+              borderColor: theme.secondary_subtle,
+              textStyle: {
+                color: getColor('link-primary', 'color')
+              },
+              borderWidth: 1,
+              transitionDuration: 0,
+              axisPointer: {
+                type: 'none'
+              },
+            },
+            xAxis: [{
+                type: 'category',
+                data: days,
+                axisLabel: {
+                  formatter: function(value) {
+                    return `Day ${value}`;
+                  },
+                  interval: 13,
+                  showMinLabel: true,
+                  showMaxLabel: false,
+                  color: '#3e465b',
+                  align: 'left',
+                  fontFamily: 'Nunito Sans',
+                  fontWeight: 600,
+                  fontSize: 12.8
+                },
+                axisLine: {
+                  show: true,
+                  lineStyle: {
+                    color: '#525b75',
+                    opacity: 0.5
+                  }
+                },
+                axisTick: {
+                  show: false
+                },
+                splitLine: {
+                  show: true,
+                  interval: 0,
+                  lineStyle: {
+                    color: '#525b75',
+                    opacity: 0.3
+                  }
+                },
+                boundaryGap: false
+              },
+              {
+                type: 'category',
+                position: 'bottom',
+                data: days,
+                axisLabel: {
+                  formatter: function(value) {
+                    return `Day ${value}`;
+                  },
+                  interval: 130,
+                  showMaxLabel: true,
+                  showMinLabel: false,
+                  color: '#3e465b',
+                  align: 'right',
+                  fontFamily: 'Nunito Sans',
+                  fontWeight: 600,
+                  fontSize: 12.8
+                },
+                axisLine: {
+                  show: false
+                },
+                axisTick: {
+                  show: false
+                },
+                splitLine: {
+                  show: false
+                },
+                boundaryGap: false
+              }
+            ],
+            yAxis: {
+              position: 'right',
+              axisPointer: {
+                type: 'none'
+              },
+              axisTick: 'none',
+              splitLine: {
+                show: false
+              },
+              axisLine: {
+                show: false
+              },
+              axisLabel: {
+                show: false
+              }
+            },
+            series: [{
+                name: 'Approved',
+                type: 'line',
+                data: approved,
+                smooth: true,
+                showSymbol: false,
+                symbol: 'circle',
+              },
+              {
+                name: 'Denied',
+                type: 'line',
+                data: denied,
+                smooth: true,
+                lineStyle: {
+                  type: 'dashed',
+                  width: 1,
+                  color: '#0097eb',
+                  opacity: 0.5,
+                },
+                showSymbol: false,
+                symbol: 'circle',
+              },
+            ],
+            grid: {
+              right: 2,
+              left: 5,
+              bottom: '20px',
+              top: '2%',
+              containLabel: false
+            }
+          };
+
+          // Set the options and render the chart
+          lineChart.setOption(options);
+
+          window.addEventListener('resize', function() {
+            lineChart.resize();
+          });
+        }
+      </script>
     </div>
 
     <div class="col-12 col-xxl-6">
@@ -2210,149 +2239,138 @@
             <div class="card-body">
               <div class="d-flex justify-content-between">
                 <div>
-                  <h5 class="mb-1">Total approved<span class="badge badge-phoenix badge-phoenix-success rounded-pill fs-9 ms-2"><span class="badge-label">+6.8%</span></span></h5>
+                  <h5 class="mb-1">Total pending<span class="badge badge-phoenix badge-phoenix-success rounded-pill fs-9 ms-2"><span class="badge-label" id="differencepending"></span></span></h5>
                   <h6 class="text-body-tertiary">Last 7 days</h6>
                 </div>
-                <h4>12</h4>
+                <h4 id="totalpending"></h4>
               </div>
               <div class="d-flex justify-content-center px-4 py-6">
-                <div id="leave-status-chart" style="height:85px;width:115px"></div>
+                <div id="leave-status-chart" style="height:100px;width:200px"></div>
               </div>
 
               <!-- JavaScript code for ECharts -->
               <script>
                 document.addEventListener('DOMContentLoaded', function() {
 
-                  // Initialize ECharts chart
-                  var leaveStatusChart = echarts.init(document.getElementById('leave-status-chart'));
+                  const leavePendingInvalidURL = `/api/leave/pending-invalid`;
 
-                  // Sample data for the last 7 days
-                  var data = [{
-                      date: '2022-01-17',
-                      pending: 5,
-                      invalid: 2
-                    },
-                    {
-                      date: '2022-01-18',
-                      pending: 8,
-                      invalid: 3
-                    },
-                    {
-                      date: '2022-01-19',
-                      pending: 10,
-                      invalid: 1
-                    },
-                    {
-                      date: '2022-01-20',
-                      pending: 6,
-                      invalid: 4
-                    },
-                    {
-                      date: '2022-01-21',
-                      pending: 12,
-                      invalid: 2
-                    },
-                    {
-                      date: '2022-01-22',
-                      pending: 7,
-                      invalid: 3
-                    },
-                    {
-                      date: '2022-01-23',
-                      pending: 9,
-                      invalid: 1
-                    }
-                  ];
+                  // Fetch data or perform any other actions with the updated URL
+                  // For example:
+                  fetch(leavePendingInvalidURL)
+                    .then(response => response.json())
+                    .then(data => {
+                      renderBarVSCharts(data.dateCounts);
 
-                  // Extract x-axis labels and series data
-                  var xAxisData = data.map(function(entry) {
-                    return entry.date;
-                  });
+                      document.getElementById('differencepending').innerText = `${data.formattedDifferencePending}%`;
+                      document.getElementById('totalpending').innerText = `${data.totalPending}`;
+                      document.getElementById('totalpercentagepending').innerText = `${data.totalPercentagePending}%`;
+                      document.getElementById('totalpercentageinvalid').innerText = `${data.totalPercentageInvalid}%`;
+                    })
+                    .catch(error => {
+                      // Handle errors
+                      console.error('Error:', error);
+                    });
 
-                  var pendingData = data.map(function(entry) {
-                    return entry.pending;
-                  });
+                  function renderBarVSCharts(dateCounts) {
+                    var leaveStatusChart = echarts.init(document.getElementById('leave-status-chart'));
 
-                  var invalidData = data.map(function(entry) {
-                    return entry.invalid;
-                  });
+                    var xAxisData = Object.keys(dateCounts);
 
-                  // Chart options
-                  var option = {
-                    color: theme.primary,
-                    tooltip: {
-                      trigger: 'item',
-                      padding: [7, 10],
-                      backgroundColor: '#eff2f6',
-                      borderColor: '#373e53',
-                      textStyle: {
-                        color: '#141824'
-                      },
-                    },
-                    xAxis: {
-                      type: 'category',
-                      data: xAxisData,
-                      show: true,
-                      boundaryGap: false,
-                      axisLine: {
-                        show: true,
-                        lineStyle: {
-                          color: '#e3e6ed'
+                    var submittedData = Object.values(dateCounts).map(function(entry) {
+                      return entry.percentage;
+                    });
+
+                    var invalidData = Object.values(dateCounts).map(function(entry) {
+                      return entry.invalid;
+                    });
+
+                    // Chart options
+                    var option = {
+                      color: theme.primary,
+                      tooltip: {
+                        trigger: 'item',
+                        padding: [7, 10],
+                        backgroundColor: getColor('bg-body', 'background-color'),
+                        borderColor: theme.secondary_subtle,
+                        textStyle: {
+                          color: getColor('link-primary', 'color')
+                        },
+                        borderWidth: 1,
+                        transitionDuration: 0,
+                        axisPointer: {
+                          type: 'none'
+                        },
+                        formatter: function(params) {
+                          return `${params.name} (${params.value}%)`;
                         }
                       },
-                      axisTick: {
-                        show: false
+                      xAxis: {
+                        type: 'category',
+                        data: xAxisData,
+                        show: true,
+                        boundaryGap: false,
+                        axisLine: {
+                          show: true,
+                          lineStyle: {
+                            color: '#e3e6ed'
+                          }
+                        },
+                        axisTick: {
+                          show: false
+                        },
+                        axisLabel: {
+                          interval: 6,
+                          showMinLabel: true,
+                          showMaxLabel: true,
+                          color: '#949db5'
+                        }
                       },
-                      axisLabel: {
-                        interval: 6,
-                        showMinLabel: true,
-                        showMaxLabel: true,
-                        color: '#949db5'
-                      }
-                    },
-                    yAxis: {
-                      show: false,
-                      type: 'value',
-                      boundaryGap: false
-                    },
-                    series: [{
-                      type: 'bar',
-                      barWidth: '5px',
-                      data: [120, 200, 150, 80, 70, 110, 120],
-                      showBackground: true,
-                      symbol: 'none',
-                      itemStyle: {
-                        borderRadius: 10
+                      yAxis: {
+                        show: false,
+                        type: 'value',
+                        max: 100,
+                        boundaryGap: false
                       },
-                      backgroundStyle: {
-                        borderRadius: 10,
-                        color: theme.bg_primary_subtle,
-                        opacity: 0.2
+                      series: [{
+                        type: 'bar',
+                        barWidth: '5px',
+                        data: submittedData,
+                        showBackground: true,
+                        symbol: 'none',
+                        itemStyle: {
+                          borderRadius: 10
+                        },
+                        backgroundStyle: {
+                          borderRadius: 10,
+                          color: theme.bg_primary_subtle,
+                          opacity: 1.0
+                        }
+                      }],
+                      grid: {
+                        right: 10,
+                        left: 10,
+                        bottom: 0,
+                        top: 0
                       }
-                    }],
-                    grid: {
-                      right: 10,
-                      left: 10,
-                      bottom: 0,
-                      top: 0
-                    }
-                  };
+                    };
 
-                  // Set chart option and render
-                  leaveStatusChart.setOption(option);
+                    // Set chart option and render
+                    leaveStatusChart.setOption(option);
+                  }
+
                 });
               </script>
 
               <div class="mt-2">
                 <div class="d-flex align-items-center mb-2">
                   <div class="bullet-item me-2 bg-primary"></div>
-                  <h6 class="text-body fw-semibold flex-1 mb-0">Approved</h6>
-                  <h6 class="text-body fw-semibold mb-0">52%</h6>
+                  <h6 class="text-body fw-semibold flex-1 mb-0">Pending</h6>
+                  <h6 class="text-body fw-semibold mb-0" id="totalpercentagepending"></h6>
                 </div>
                 <div class="d-flex align-items-center">
                   <div class="bullet-item bg-primary-subtle me-2"></div>
-                  <h6 class="text-body fw-semibold flex-1 mb-0">Denied</h6>
-                  <h6 class="text-body fw-semibold mb-0">48%</h6>
+                  <h6 class="text-body fw-semibold flex-1 mb-0">Invalid</h6>
+                  <h6 class="text-body fw-semibold mb-0" id="totalpercentageinvalid"></h6>
                 </div>
               </div>
             </div>
@@ -2366,140 +2384,144 @@
                   <h5 class="mb-1">New submission<span class="badge badge-phoenix badge-phoenix-success rounded-pill fs-9 ms-2"> <span class="badge-label">+26.5%</span></span></h5>
                   <h6 class="text-body-tertiary">Last 7 days</h6>
                 </div>
-                <h4>56</h4>
+                <h4 id="totalsubmitted"></h4>
               </div>
               <div class="pb-0 pt-4">
-                <div id="line-chart" style="height:180px;width:100%;"></div>
+                <div id="leave-submitted-chart" style="height:180px;width:100%;"></div>
               </div>
 
               <script>
                 document.addEventListener('DOMContentLoaded', function() {
-                  // Initialize ECharts chart
-                  var lineChart = echarts.init(document.getElementById('line-chart'));
 
-                  // Sample data for testing
-                  var data = {
-                    'Last Month': [10, 15, 8, 12, 20, 18, 14],
-                    'This Month': [5, 10, 6, 8, 15, 12, 10]
-                  };
+                  const leaveSubmittedURL = `/api/leave/submmitted`;
 
-                  // X-axis data for seven days
-                  var days = ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7'];
+                  // Fetch data or perform any other actions with the updated URL
+                  // For example:
+                  fetch(leaveSubmittedURL)
+                    .then(response => response.json())
+                    .then(data => {
+                      renderLineChartSubmitted(data);
 
-                  var option = {
-                    tooltip: {
-                      trigger: 'axis',
-                      padding: 10,
-                      backgroundColor: '#eff2f6',
-                      borderColor: '#cbd0dd,',
-                      textStyle: {
-                        color: '#141824'
-                      },
-                      borderWidth: 1,
-                      transitionDuration: 0,
-                      axisPointer: {
-                        type: 'none'
-                      }
-                    },
-                    xAxis: [{
-                        type: 'category',
-                        data: days,
-                        show: true,
-                        boundaryGap: false,
-                        axisLine: {
-                          show: true,
-                          lineStyle: {
-                            color: '#525b75',
-                            opacity: 0.5
-                          }
+                      document.getElementById('totalsubmitted').innerText = `${data.totalSubmitted}`;
+                    })
+                    .catch(error => {
+                      // Handle errors
+                      console.error('Error:', error);
+                    });
+
+                  function renderLineChartSubmitted(submittedCounts) {
+                    var leaveSubmittedChart = echarts.init(document.getElementById('leave-submitted-chart'));
+
+                    // Extract x-axis labels and series data
+                    var xAxisData = Object.keys(submittedCounts.submittedCountsLast7Days);
+                    var submittedData = Object.values(submittedCounts.submittedCountsLast7Days);
+
+                    // Chart options
+                    var option = {
+                      color: theme.primary,
+                      tooltip: {
+                        trigger: 'axis',
+                        padding: 10,
+                        backgroundColor: getColor('bg-body', 'background-color'),
+                        borderColor: theme.secondary_subtle,
+                        textStyle: {
+                          color: getColor('link-primary', 'color')
                         },
-                        axisTick: {
-                          show: false
+                        borderWidth: 1,
+                        transitionDuration: 0,
+                        axisPointer: {
+                          type: 'none'
                         },
-                        axisLabel: {
-                          showMinLabel: true,
-                          showMaxLabel: false,
-                          color: '#525b75',
-                          opacity: 0.75,
-                          align: 'left',
-                          interval: 5,
-                          fontFamily: 'Nunito Sans',
-                          fontWeight: 600,
-                          fontSize: 12.8
+                        formatter: function(params) {
+                          // Customize tooltip content
+                          var date = params[0].name;
+                          var submittedCount = params[0].value;
+
+                          return `Date: ${date}<br/>Submitted Count: ${submittedCount}`;
                         }
                       },
-                      {
-                        type: 'category',
-                        position: 'bottom',
-                        show: true,
-                        data: days,
-                        axisLabel: {
-                          interval: 130,
-                          showMaxLabel: true,
-                          showMinLabel: false,
-                          color: '#525b75',
-                          opacity: 0.75,
-                          align: 'right',
-                          fontFamily: 'Nunito Sans',
-                          fontWeight: 600,
-                          fontSize: 12.8
+                      xAxis: [{
+                          type: 'category',
+                          data: xAxisData,
+                          show: true,
+                          boundaryGap: false,
+                          axisLine: {
+                            show: true,
+                            lineStyle: {
+                              color: getColor('bg-text-primary', 'color'),
+                              opacity: 0.5
+                            }
+                          },
+                          axisTick: {
+                            show: false
+                          },
+                          axisLabel: {
+                            showMinLabel: true,
+                            showMaxLabel: false,
+                            color: getColor('bg-text-primary', 'color'),
+                            opacity: 1,
+                            align: 'left',
+                            interval: 5,
+                            fontFamily: 'Nunito Sans',
+                            fontWeight: 600,
+                            fontSize: 12.8
+                          }
                         },
-                        axisLine: {
-                          show: false
-                        },
-                        axisTick: {
-                          show: false
-                        },
-                        splitLine: {
-                          show: false
-                        },
+                        {
+                          type: 'category',
+                          position: 'bottom',
+                          show: true,
+                          data: xAxisData,
+                          axisLabel: {
+                            interval: 130,
+                            showMaxLabel: true,
+                            showMinLabel: false,
+                            color: getColor('bg-text-primary', 'color'),
+                            opacity: 1,
+                            align: 'right',
+                            fontFamily: 'Nunito Sans',
+                            fontWeight: 600,
+                            fontSize: 12.8
+                          },
+                          axisLine: {
+                            show: false
+                          },
+                          axisTick: {
+                            show: false
+                          },
+                          splitLine: {
+                            show: false
+                          },
+                          boundaryGap: false
+                        }
+                      ],
+                      yAxis: {
+                        show: false,
+                        type: 'value',
                         boundaryGap: false
-                      }
-                    ],
-                    yAxis: {
-                      show: false,
-                      type: 'value',
-                      boundaryGap: false
-                    },
-                    series: [{
-                        name: 'Last Month',
+                      },
+                      series: [{
                         type: 'line',
-                        data: data['Last Month'],
-                        showSymbol: false,
+                        data: submittedData,
                         symbol: 'circle',
                         lineStyle: {
-                          width: 2,
-                          color: '#525b75',
-                          opacity: 0.15,
+                          color: theme.primary
                         },
-                        emphasis: {
-                          lineStyle: {
-                            color: '#525b75'
-                          }
+                        itemStyle: {
+                          color: theme.primary
                         }
-                      },
-                      {
-                        name: 'This Month',
-                        type: 'line',
-                        data: data['This Month'],
-                        lineStyle: {
-                          width: 2,
-                          color: '#3874ff',
-                        },
-                        showSymbol: false,
-                        symbol: 'circle'
+                      }],
+                      grid: {
+                        left: 0,
+                        right: 0,
+                        top: 5,
+                        bottom: 20
                       }
-                    ],
-                    grid: {
-                      left: 0,
-                      right: 0,
-                      top: 5,
-                      bottom: 20
-                    }
-                  };
+                    };
 
-                  // Set chart option and render
-                  lineChart.setOption(option);
+                    // Set chart option and render
+                    leaveSubmittedChart.setOption(option);
+                  }
                 });
               </script>
 

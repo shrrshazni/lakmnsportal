@@ -534,45 +534,259 @@ app.get(
     }
 );
 
-app.get('/api/abc', isAuthenticated, async function (req, res) {
+app.get('/api/leave/selectedmonth', isAuthenticated, async function (req, res) {
     const username = req.user.username;
     const user = await User.findOne({ username: username });
 
     if (user) {
-        const month = 'March';
-
         try {
+            const selectedMonth = req.query.month;
+
+            // Determine the start and end dates of the selected month
+            const startOfMonth = moment(`${selectedMonth} 1, 2024`, 'MMMM D, YYYY');
+            const endOfMonth = startOfMonth.clone().endOf('month');
+
             // Retrieve leave records for the selected month
             const leaveRecords = await Leave.find({
                 'date.start': {
-                    $gte: new Date(`${month} 1, 2024`),
-                    $lt: new Date(`${month} 1, 2024`).setMonth(new Date(`${month} 1, 2024`).getMonth() + 1)
+                    $gte: startOfMonth.toDate(),
+                    $lt: endOfMonth.toDate()
                 }
             });
+
 
             // Initialize count object for each day
             const leaveCounts = {};
 
-            // Iterate through leave records and count approved and denied leaves for each day
-            leaveRecords.forEach(record => {
-                const day = record.date.start.getDate();
-                const status = record.status;
+            // Iterate through each day of the month
+            for (let day = 1; day <= endOfMonth.date(); day++) {
+                leaveCounts[day] = { approved: 0, denied: 0 };
 
-                if (!leaveCounts[day]) {
-                    leaveCounts[day] = { approved: 0, denied: 0 };
-                }
+                // Check if there are leave records for the current day
+                const recordsForDay = leaveRecords.filter(record =>
+                    moment(record.date.start).date() === day
+                );
 
-                if (status === 'approved') {
-                    leaveCounts[day].approved++;
-                } else if (status === 'denied') {
-                    leaveCounts[day].denied++;
-                }
-            });
+                // Count approved and denied leaves for the current day
+                recordsForDay.forEach(record => {
+                    const status = record.status;
+
+                    if (status === 'approved') {
+                        leaveCounts[day].approved++;
+                    } else if (status === 'denied') {
+                        leaveCounts[day].denied++;
+                    }
+                });
+            }
 
             res.json(leaveCounts);
-            console.log(leaveCounts);
         } catch (error) {
             console.error('Error fetching leave data:', error);
+            res.status(500).json({ error: 'Internal Server Error' });
+        }
+    }
+});
+
+app.get('/api/leave/totalcount', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+
+    if (user) {
+        try {
+
+            const selectedMonth = req.query.month;
+
+            // Determine the start and end dates of the selected month
+            const startOfMonth = moment(`${selectedMonth} 1, 2024`, 'MMMM D, YYYY');
+            const endOfMonth = startOfMonth.clone().endOf('month');
+
+            // Retrieve leave records for the selected month with 'approved' status
+            const leaveRecords = await Leave.find({
+                'date.start': {
+                    $gte: startOfMonth.toDate(),
+                    $lt: endOfMonth.toDate()
+                },
+                'status': 'approved'
+            });
+
+            // Calculate the total approved leave count
+            const totalApprovedLeave = leaveRecords.length;
+
+            // Return the result
+            res.json({ totalLeaveCount: totalApprovedLeave });
+            console.log(totalApprovedLeave);
+
+        } catch (error) {
+            console.error('Error fetching total leave count:', error);
+            res.status(500).json({ error: 'Internal Server Error' });
+        }
+    }
+});
+
+app.get('/api/leave/pending-invalid', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+
+    if (user) {
+        const currentDate = new Date();
+        const sevenDaysAgo = new Date(currentDate);
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+        // Assuming 'Leave' is your Mongoose model
+        const leaveData = await Leave.find({
+            'date.start': {
+                $gte: sevenDaysAgo,
+                $lte: currentDate
+            }
+        }).select('date.start status invalid');
+
+        // Create an object to store counts for each date
+        const dateCounts = {};
+
+        // Initialize counts for all dates in the range
+        let currentDatePointer = new Date(sevenDaysAgo);
+        while (currentDatePointer <= currentDate) {
+            const formattedDate = currentDatePointer.toISOString().split('T')[0];
+            dateCounts[formattedDate] = { pending: 0, invalid: 0, percentage: 0 };
+            currentDatePointer.setDate(currentDatePointer.getDate() + 1);
+        }
+
+        // Process the retrieved data
+        leaveData.forEach(entry => {
+            const formattedDate = entry.date.start.toISOString().split('T')[0];
+
+            // Update counts for the date
+            dateCounts[formattedDate].pending += entry.status === 'pending' ? 1 : 0;
+            dateCounts[formattedDate].invalid += entry.status === 'invalid' ? 1 : 0;
+        });
+
+        // Calculate percentage for each date
+        Object.keys(dateCounts).forEach(date => {
+            const total = dateCounts[date].pending + dateCounts[date].invalid;
+            dateCounts[date].percentage = total > 0 ? (dateCounts[date].pending / total) * 100 : 0;
+        });
+
+        let totalPending = 0;
+        let totalInvalid = 0;
+
+        Object.keys(dateCounts).forEach(date => {
+            totalPending += dateCounts[date].pending;
+            totalInvalid += dateCounts[date].invalid;
+        });
+
+        const totalPercentagePending = totalPending + totalInvalid > 0 ? (totalPending / (totalPending + totalInvalid)) * 100 : 0;
+        const totalPercentageInvalid = 100 - totalPercentagePending;
+
+        // find previous 7 days 
+
+        const fourteenDaysAgo = new Date(currentDate);
+        fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+
+        const leaveDataPrevious7Days = await Leave.find({
+            'date.start': {
+                $gte: fourteenDaysAgo,
+                $lt: sevenDaysAgo
+            }
+        }).select('date.start status invalid');
+
+        const dateCountsPrevious7Days = {};
+
+        let currentDatePointerPrevious7Days = new Date(fourteenDaysAgo);
+        while (currentDatePointerPrevious7Days < sevenDaysAgo) {
+            const formattedDate = currentDatePointerPrevious7Days.toISOString().split('T')[0];
+            dateCountsPrevious7Days[formattedDate] = { pending: 0, invalid: 0, percentage: 0 };
+            currentDatePointerPrevious7Days.setDate(currentDatePointerPrevious7Days.getDate() + 1);
+        }
+
+        leaveDataPrevious7Days.forEach(entry => {
+            const formattedDate = entry.date.start.toISOString().split('T')[0];
+
+            // Update counts for the date
+            dateCountsPrevious7Days[formattedDate].pending += entry.status === 'pending' ? 1 : 0;
+            dateCountsPrevious7Days[formattedDate].invalid += entry.status === 'invalid' ? 1 : 0;
+        });
+
+        Object.keys(dateCountsPrevious7Days).forEach(date => {
+            const total = dateCountsPrevious7Days[date].pending + dateCountsPrevious7Days[date].invalid;
+            dateCountsPrevious7Days[date].percentage = total > 0 ? (dateCountsPrevious7Days[date].pending / total) * 100 : 0;
+        });
+
+        let totalPendingPrevious7Days = 0;
+        let totalInvalidPrevious7Days = 0;
+
+        Object.keys(dateCountsPrevious7Days).forEach(date => {
+            totalPendingPrevious7Days += dateCountsPrevious7Days[date].pending;
+            totalInvalidPrevious7Days += dateCountsPrevious7Days[date].invalid;
+        });
+
+        const totalPercentagePendingPrevious7Days = totalPendingPrevious7Days + totalInvalidPrevious7Days > 0 ?
+            (totalPendingPrevious7Days / (totalPendingPrevious7Days + totalInvalidPrevious7Days)) * 100 : 0;
+
+        const differencePending = totalPercentagePending - totalPercentagePendingPrevious7Days;
+
+        const formattedDifferencePending = (differencePending >= 0 ? '+' : '-') + Math.abs(differencePending).toFixed(2);
+
+        const responseData = {
+            dateCounts,
+            totalPercentagePending,
+            totalPercentageInvalid,
+            totalPending,
+            formattedDifferencePending
+        };
+
+        res.json(responseData);
+    }
+});
+
+app.get('/api/leave/submmitted', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+
+    if (user) {
+        try {
+            const currentDate = new Date();
+            const sevenDaysAgo = new Date(currentDate);
+            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+            // Assuming 'Leave' is your Mongoose model
+            const leaveDataLast7Days = await Leave.find({
+                timestamp: {
+                    $gte: sevenDaysAgo,
+                    $lte: currentDate
+                },
+                status: 'submitted'
+            }).select('date.start');
+
+            // Create an object to store submitted counts for each day
+            const submittedCountsLast7Days = {};
+
+            // Initialize counts for all dates in the range
+            let currentDatePointerLast7Days = new Date(sevenDaysAgo);
+            while (currentDatePointerLast7Days <= currentDate) {
+                const formattedDate = currentDatePointerLast7Days.toISOString().split('T')[0];
+                submittedCountsLast7Days[formattedDate] = 0;
+                currentDatePointerLast7Days.setDate(currentDatePointerLast7Days.getDate() + 1);
+            }
+
+            // Process the retrieved data for the last 7 days
+            leaveDataLast7Days.forEach(entry => {
+                const formattedDate = entry.date.start.toISOString().split('T')[0];
+
+                // Update submitted counts for the date
+                submittedCountsLast7Days[formattedDate]++;
+            });
+            
+            const totalSubmitted = leaveDataLast7Days.length;
+
+            // Create a single JSON object to send as the response
+            const responseDataSubmittedCountsLast7Days = {
+                submittedCountsLast7Days,
+                totalSubmitted
+            };
+
+            res.json(responseDataSubmittedCountsLast7Days);
+        } catch (error) {
+            console.error('Error:', error);
             res.status(500).json({ error: 'Internal Server Error' });
         }
     }
