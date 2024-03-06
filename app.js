@@ -112,6 +112,7 @@ const userSchema = new mongoose.Schema({
     isAdmin: { type: Boolean, default: false },
     isOfficer: { type: Boolean, default: false },
     isManagement: { type: Boolean, default: false },
+    isPersonalAssitant : {type: Boolean, default : false},
     dateEmployed: { type: Date },
     birthdate: { type: Date }
 });
@@ -469,21 +470,53 @@ app.get('/', isAuthenticated, async function (req, res) {
             .sort({ date: -1 })
             .exec();
     } else {
-        userTeamMembers = await User.find({
-            department: user.department,
-            _id: { $ne: user._id }
-        });
+        if (user.isHeadOfDepartment) {
+            userTeamMembers = await User.find({
+                department: user.department,
+                _id: { $ne: user._id }
+            });
 
-        activities = await Activity.find({
-            department: user.department,
-            date: { $gte: sevenDaysAgo }
-        })
-            .populate({
-                path: 'user'
+            activities = await Activity.find({
+                department: user.department,
+                date: { $gte: sevenDaysAgo }
             })
-            .sort({ date: -1 })
-            .exec();
+                .populate({
+                    path: 'user'
+                })
+                .sort({ date: -1 })
+                .exec();
+        } else {
+            userTeamMembers = await User.find({
+                section: user.section,
+                _id: { $ne: user._id }
+            });
+
+            activities = await Activity.find({
+                section: user.section,
+                date: { $gte: sevenDaysAgo }
+            })
+                .populate({
+                    path: 'user'
+                })
+                .sort({ date: -1 })
+                .exec();
+        }
     }
+
+    // leave approvals
+    let filteredApprovalLeaves;
+
+    if (user.isAdmin) {
+        // If the user is an admin, show all leave approvals except for 'approved' and 'denied'
+        filteredApprovalLeaves = allLeave.filter(leave => leave.status !== 'approved' && leave.status !== 'denied');
+    } else {
+        // If the user is not an admin, show leave approvals based on your existing logic
+        filteredApprovalLeaves = allLeave.filter(leave => {
+            return leave.user.toString() !== user._id.toString() && leave.approvals.some(approval => approval.recipient.toString() === user._id.toString() && (leave.status !== 'approved' && leave.status !== 'denied'));
+        });
+    }
+
+    console.log(filteredApprovalLeaves.length);
 
     if (user) {
         res.render('home', {
@@ -496,6 +529,7 @@ app.get('/', isAuthenticated, async function (req, res) {
             todayLeaves: todayLeaves,
             weekLeaves: weekLeaves,
             monthLeaves: monthLeaves,
+            filteredApprovalLeaves: filteredApprovalLeaves,
             // all data
             allUser: allUser,
             allUserLeave: allUserLeave,
@@ -614,8 +648,6 @@ app.get('/api/leave/totalcount', isAuthenticated, async function (req, res) {
 
             // Return the result
             res.json({ totalLeaveCount: totalApprovedLeave });
-            console.log(totalApprovedLeave);
-
         } catch (error) {
             console.error('Error fetching total leave count:', error);
             res.status(500).json({ error: 'Internal Server Error' });
@@ -745,10 +777,21 @@ app.get('/api/leave/submmitted', isAuthenticated, async function (req, res) {
     if (user) {
         try {
             const currentDate = new Date();
+            const fourteenDaysAgo = new Date(currentDate);
+            fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+
             const sevenDaysAgo = new Date(currentDate);
             sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
             // Assuming 'Leave' is your Mongoose model
+            const leaveDataLast14Days = await Leave.find({
+                timestamp: {
+                    $gte: fourteenDaysAgo,
+                    $lte: sevenDaysAgo
+                },
+                status: 'submitted'
+            }).select('date.start');
+
             const leaveDataLast7Days = await Leave.find({
                 timestamp: {
                     $gte: sevenDaysAgo,
@@ -758,15 +801,32 @@ app.get('/api/leave/submmitted', isAuthenticated, async function (req, res) {
             }).select('date.start');
 
             // Create an object to store submitted counts for each day
+            const submittedCountsLast14Days = {};
             const submittedCountsLast7Days = {};
 
             // Initialize counts for all dates in the range
+            let currentDatePointerLast14Days = new Date(fourteenDaysAgo);
             let currentDatePointerLast7Days = new Date(sevenDaysAgo);
+
+            while (currentDatePointerLast14Days <= currentDate) {
+                const formattedDate = currentDatePointerLast14Days.toISOString().split('T')[0];
+                submittedCountsLast14Days[formattedDate] = 0;
+                currentDatePointerLast14Days.setDate(currentDatePointerLast14Days.getDate() + 1);
+            }
+
             while (currentDatePointerLast7Days <= currentDate) {
                 const formattedDate = currentDatePointerLast7Days.toISOString().split('T')[0];
                 submittedCountsLast7Days[formattedDate] = 0;
                 currentDatePointerLast7Days.setDate(currentDatePointerLast7Days.getDate() + 1);
             }
+
+            // Process the retrieved data for the last 14 days
+            leaveDataLast14Days.forEach(entry => {
+                const formattedDate = entry.date.start.toISOString().split('T')[0];
+
+                // Update submitted counts for the date
+                submittedCountsLast14Days[formattedDate]++;
+            });
 
             // Process the retrieved data for the last 7 days
             leaveDataLast7Days.forEach(entry => {
@@ -775,13 +835,20 @@ app.get('/api/leave/submmitted', isAuthenticated, async function (req, res) {
                 // Update submitted counts for the date
                 submittedCountsLast7Days[formattedDate]++;
             });
-            
+
+            const totalSubmittedLast14Days = leaveDataLast14Days.length;
             const totalSubmitted = leaveDataLast7Days.length;
+
+            const totalPercentageLast7 = (totalSubmitted / (totalSubmitted + totalSubmittedLast14Days)) * 100;
+            const totalPercentageLast14 = (totalSubmittedLast14Days / (totalSubmitted + totalSubmittedLast14Days)) * 100;
+            const differencePercentage = totalPercentageLast7 - totalPercentageLast14;
+            const formattedDifference = (differencePercentage >= 0 ? '+' : '-') + Math.abs(differencePercentage).toFixed(2);
 
             // Create a single JSON object to send as the response
             const responseDataSubmittedCountsLast7Days = {
                 submittedCountsLast7Days,
-                totalSubmitted
+                totalSubmitted,
+                formattedDifference
             };
 
             res.json(responseDataSubmittedCountsLast7Days);
@@ -789,6 +856,75 @@ app.get('/api/leave/submmitted', isAuthenticated, async function (req, res) {
             console.error('Error:', error);
             res.status(500).json({ error: 'Internal Server Error' });
         }
+    }
+});
+
+app.get('/api/leave/status', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+
+    if (user) {
+        const currentDate = new Date();
+        const sevenDaysAgo = new Date(currentDate);
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+        // Assuming 'Leave' is your Mongoose model
+        const leaveDataLast7Days = await Leave.find({
+            'date.start': {
+                $gte: sevenDaysAgo,
+                $lte: currentDate
+            }
+        }).select('status');
+
+        // Initialize counts for each status
+        let submittedCount = 0;
+        let pendingCount = 0;
+        let invalidCount = 0;
+        let deniedCount = 0;
+        let approvedCount = 0;
+
+        // Process the retrieved data for the last 7 days
+        leaveDataLast7Days.forEach(entry => {
+            switch (entry.status) {
+                case 'submitted':
+                    submittedCount++;
+                    break;
+                case 'pending':
+                    pendingCount++;
+                    break;
+                case 'invalid':
+                    invalidCount++;
+                    break;
+                case 'denied':
+                    deniedCount++;
+                    break;
+                case 'approved':
+                    approvedCount++;
+                    break;
+                // Add more cases if there are other status values
+            }
+        });
+
+        // Calculate percentages
+        const totalLeaves = leaveDataLast7Days.length;
+        const percentageSubmitted = ((submittedCount / totalLeaves) * 100).toFixed(0);
+        const percentagePending = ((pendingCount / totalLeaves) * 100).toFixed(0);
+        const percentageInvalid = ((invalidCount / totalLeaves) * 100).toFixed(0);
+        const percentageDenied = ((deniedCount / totalLeaves) * 100).toFixed(0);
+        const percentageApproved = ((approvedCount / totalLeaves) * 100).toFixed(0);
+
+        // Create a single JSON object to send as the response
+        const responseDataLast7Days = {
+            percentageSubmitted,
+            percentagePending,
+            percentageInvalid,
+            percentageDenied,
+            percentageApproved,
+            totalLeaves
+        };
+
+        // Respond with the data
+        res.json(responseDataLast7Days);
     }
 });
 
@@ -1067,10 +1203,30 @@ app.get('/search/task/assignee', isAuthenticated, async function (req, res) {
     try {
         let results;
         if (query && query.trim() !== '') {
-            results = await User.find({
-                department: user.department,
-                fullname: { $regex: query, $options: 'i' }
-            });
+
+            if (user.isChiefExec) {
+                results = await User.find({
+                    isDeputyChiefExec: true,
+                    fullname: { $regex: query, $options: 'i' }
+                });
+            } else if (user.isDeputyChiefExec) {
+                results = await User.find({
+                    isHeadOfDepartment: true,
+                    fullname: { $regex: query, $options: 'i' }
+                });
+            } else if (user.isHeadOfDepartment) {
+                results = await User.find({
+                    department: user.department,
+                    fullname: { $regex: query, $options: 'i' }
+                });
+            } else {
+                results = await User.find({
+                    section: user.section,
+                    fullname: { $regex: query, $options: 'i' }
+                });
+            }
+
+
         } else {
             results = [];
         }

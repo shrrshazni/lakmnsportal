@@ -326,8 +326,8 @@
 
           <tr class="position-static">
             <td class="align-middle text-body white-space-nowrap ps-0 member">
-              <div class="avatar avatar-l">
-                <div class="avatar-name rounded-circle"><span><%= department.fullname.split(' ').map(part => part[0].toUpperCase()).join('').slice(0, 2) %></span></div>
+              <div class="avatar avatar-xl">
+                <div class="avatar-name rounded-circle"><span><%= department && department.fullname ? department.fullname[0].toUpperCase() : '' %></span></div>
               </div>
               <a class="mb-0 ms-3 fw-bold fs-8" href="/staff/details/<%= department._id %>"><%= department.fullname %></a>
             </td>
@@ -1473,489 +1473,20 @@
 
 </div>
 
-<div class="mb-3 row g-3">
-  <div class="col-12">
-    <div class="card pt-3 min-vh-50">
-      <div class="card-body">
-        <div id="leave-approvals" data-list='{"valueNames":["type","staff","startdate","returndate","latestapproval","status"],"page":10,"pagination":true}'>
-          <div class="row align-items-end justify-content-between pb-4 g-3">
-
-            <div class="col-auto">
-              <h3>Leave Approvals</h3>
-              <p class="text-body-tertiary lh-sm mb-0">Permission granted, absence authorized, leave request accepted.</p>
-            </div>
-
-            <div class="col-12 col-md-auto">
-              <div class="search-box px-lg-0 pe-4">
-                <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
-                  <input class="form-control search-input search form-control-sm" type="search" placeholder="Search leave approval" aria-label="Search" />
-                  <span class="fas fa-search search-box-icon"></span>
-                </form>
-              </div>
-            </div>
-
-          </div>
-          <div class="table-responsive ms-n1 ps-1 scrollbar">
-            <table class="table fs-9 mb-0 border-top border-translucent">
-              <thead>
-                <tr>
-                  <th class="sort white-space-nowrap align-middle ps-0" scope="col" data-sort="type" style="width:15%;">TYPE</th>
-                  <th class="sort align-middle ps-3" scope="col" data-sort="staff" style="width:10%;">STAFF</th>
-                  <th class="sort align-middle ps-3" scope="col" data-sort="startdate" style="width:10%;">START DATE</th>
-                  <th class="sort align-middle ps-3" scope="col" data-sort="returndate" style="width:10%;">RETURN DATE</th>
-                  <th class="sort align-middle ps-8" scope="col" data-sort="latestapproval" style="width:20%;">LATEST APPROVAL</th>
-                  <th class="sort align-middle ps-8" scope="col" data-sort="status" style="width:5%;">STATUS</th>
-                  <th class="sort align-middle text-end" scope="col" style="width:10%;"></th>
-                </tr>
-              </thead>
-
-              <% 
-                  function formatDate(inputDate) {
-                    const day = String(inputDate.getDate()).padStart(2, '0');
-                    const month = String(inputDate.getMonth() + 1).padStart(2, '0');
-                    const year = inputDate.getFullYear();
-                  
-                    return `${day}/${month}/${year}`;
-                  }
-              
-                  const filteredApprovalLeaves = allLeave.filter(leave => {
-                    return leave.user.toString() != user._id.toString() && leave.approvals.some(approval => approval.recipient.toString() == user._id.toString())
-                  });
-              
-                  %>
-
-              <tbody class="list" id="leave-approvals-table">
-                <% if (filteredApprovalLeaves && filteredApprovalLeaves.length > 0) { %>
-                <!-- table item -->
-                <% filteredApprovalLeaves.forEach(function(leaves) { %>
-
-                <% 
-                      
-                            var statusApprovalColor = '';
-                            if (leaves.status == "pending"){
-                                statusApprovalColor = 'info';
-                            } else if(leaves.status == "approved" || leaves.status == "submitted") {
-                                statusApprovalColor = 'success';
-                            } else if(leaves.status == "denied" ||  leaves.status == "cancelled") {
-                                statusApprovalColor = 'danger';
-                            }else if (leaves.status == "invalid"){
-                                statusApprovalColor = 'warning';
-                            } 
-                                    
-                            %>
-                <tr class="position-static">
-                  <td class="align-middle white-space-nowrap ps-0 type py-4">
-                    <a class="fw-bold fs-8" href="/leave/details/<%= leaves._id %>"><%= leaves.type %></a>
-                  </td>
-                  <td class="align-middle white-space-nowrap ps-3 staff py-4">
-                    <% const userApproval = allUser.find(userapp => userapp._id.toString() === leaves.user.toString()); %>
-                    <a class="fw-bold fs-8" href="/staff/details/<%= leaves.user %>"><%= userApproval.fullname %></a>
-                  </td>
-                  <td class="align-middle white-space-nowrap startdate ps-3 py-4">
-                    <p class="mb-0 fs-9 text-900"><%= formatDate(leaves.date.start) %></p>
-                  </td>
-                  <td class="align-middle white-space-nowrap returndate ps-3 py-4">
-                    <p class="mb-0 fs-9 text-900"><%= formatDate(leaves.date.return) %></p>
-                  </td>
-                  <td class="align-middle latestapproval ps-3 py-4">
-                    <% const latestApproval = leaves.approvals.reduce((latest, approval) => approval.timestamp > latest.timestamp ? approval : latest, leaves.approvals[0]); %>
-                    <p class="fs-9 fw-semibold text-body-highlight mb-0">
-                      <%= latestApproval.role %> has <%= latestApproval.status %> this <%= leaves.type %> at <%= latestApproval.timestamp.toLocaleDateString('en-UK', { 
-                                    year: 'numeric', 
-                                    month: 'long', 
-                                    day: 'numeric', 
-                                    timeZone: 'Asia/Kuala_Lumpur' 
-                                  }); %>
-                    </p>
-                  </td>
-                  <td class="align-middle white-space-nowrap text-center status">
-                    <span class="badge badge-phoenix fs-10 badge-phoenix-<%= statusApprovalColor %>"><%= leaves.status %></span>
-                  </td>
-                  <td class="align-middle text-end white-space-nowrap pe-0 action">
-                    <div class="font-sans-serif btn-reveal-trigger position-static">
-                      <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs--2" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
-                        <span class="fas fa-ellipsis-h fs-9"></span>
-                      </button>
-                      <div class="dropdown-menu dropdown-menu-end py-2">
-                        <a class="dropdown-item" href="/leave/details/<%= leaves._id %>">View</a>
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-                <%  }); %> <% } else { %>
-                <tr>
-                  <td>
-                    <p class="align-middle fs-9">No approvals leave submitted.</p>
-                  </td>
-                </tr>
-                <% } %>
-              </tbody>
-
-            </table>
-          </div>
-          <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
-            <div class="col-auto d-flex">
-              <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p><a class="fw-semibold" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semibold d-none" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
-            </div>
-            <div class="col-auto d-flex">
-              <button class="page-link" data-list-pagination="prev"><span class="fas fa-chevron-left"></span></button>
-              <ul class="mb-0 pagination"></ul>
-              <button class="page-link pe-0" data-list-pagination="next"><span class="fas fa-chevron-right"></span></button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="mb-6 row g-3">
-
-  <% 
-  function formatDate(inputDate) {
-    const day = String(inputDate.getDate()).padStart(2, '0');
-    const month = String(inputDate.getMonth() + 1).padStart(2, '0');
-    const year = inputDate.getFullYear();
-  
-    return `${day}/${month}/${year}`;
-  }
-  %>
-
-  <div class="col-12 col-xxl-6">
-    <div class="card pt-3 vh-50">
-      <div class="card-body">
-        <div id="today-on-leave" class="leave-section" data-list='{"valueNames":["staff","type","startdate","returndate"],"page":5,"pagination":true}'>
-
-          <div class="row align-items-end justify-content-between pb-4 g-3">
-
-            <div class="col-auto">
-              <h3>Staff on leave today</h3>
-              <p class="text-body-tertiary lh-sm mb-0">Employees absent today, leave granted.</p>
-            </div>
-
-            <div class="col-12 col-md-auto">
-              <div class="search-box px-lg-0 pe-4">
-                <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
-                  <input class="form-control search-input search form-control-sm" type="search" placeholder="Search leave approval" aria-label="Search" />
-                  <span class="fas fa-search search-box-icon"></span>
-                </form>
-              </div>
-            </div>
-
-          </div>
-
-          <div class="table-responsive ms-n1 ps-1 scrollbar h-100">
-            <table class="table fs-9 mb-0 border-top border-translucent">
-              <thead>
-                <tr>
-                  <th class="sort white-space-nowrap align-middle ps-0" scope="col" data-sort="staff" style="width:15%;">STAFF</th>
-                  <th class="sort align-middle ps-3" scope="col" data-sort="type" style="width:15%;">TYPE</th>
-                  <th class="sort align-middle ps-3" scope="col" data-sort="startdate" style="width:10%;">START DATE</th>
-                  <th class="sort align-middle ps-3" scope="col" data-sort="returndate" style="width:10%;">RETURN DATE</th>
-                </tr>
-              </thead>
-              <tbody class="list" id="project-summary-table-body">
-                <% if(todayLeaves && todayLeaves.length>0){ %>
-                <% todayLeaves.forEach(onLeave => { %>
-
-                <tr class="position-static">
-
-                  <td class="align-middle text-body white-space-nowrap ps-0 staff">
-                    <% const staffToday = allUser.find(staff => staff._id.toString() === onLeave.user.toString()); %>
-                    <a class="mb-0 ms-0 fw-bold fs-8" href="/staff/details/<%= onLeave.user %>"><%= staffToday.fullname %></a>
-                  </td>
-
-
-                  <td class="align-middle text-body white-space-nowrap ps-0 type">
-                    <a class="mb-0 ms-3 fw-bold fs-8" href="/leave/details/<%= onLeave._id %>"><%= onLeave.type %></a>
-                  </td>
-
-                  <td class="align-middle text-body white-space-nowrap ps-0 startdate">
-                    <p class="mb-0 ms-3 fs-9 text-900"><%= formatDate(onLeave.date.start) %></p>
-                  </td>
-
-                  <td class="align-middle text-body white-space-nowrap ps-0 startdate">
-                    <p class="mb-0 ms-3 fs-9 text-900"><%= formatDate(onLeave.date.return) %></p>
-                  </td>
-                </tr>
-                <% }); %>
-                <% }else { %>
-                <tr class="position-static">
-                  <td class="align-middle text-body white-space-nowrap">
-                    <p class="mb-0 ms-3 fs-9">No staff on leave today</p>
-                  </td>
-                </tr>
-                <% } %>
-              </tbody>
-            </table>
-          </div>
-          <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
-            <div class="col-auto d-flex">
-              <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p><a class="fw-semibold" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semibold d-none" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
-            </div>
-            <div class="col-auto d-flex">
-              <button class="page-link" data-list-pagination="prev"><span class="fas fa-chevron-left"></span></button>
-              <ul class="mb-0 pagination"></ul>
-              <button class="page-link pe-0" data-list-pagination="next"><span class="fas fa-chevron-right"></span></button>
-            </div>
-          </div>
-
-        </div>
-
-        <div id="week-on-leave" class="leave-section" data-list='{"valueNames":["staff","type","startdate","returndate"],"page":5,"pagination":true}'>
-
-          <div class="row align-items-end justify-content-between pb-4 g-3">
-
-            <div class="col-auto">
-              <h3>Staff on leave this week</h3>
-              <p class="text-body-tertiary lh-sm mb-0">Employees absent today, leave granted.</p>
-            </div>
-
-            <div class="col-12 col-md-auto">
-              <div class="search-box px-lg-0 pe-4">
-                <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
-                  <input class="form-control search-input search form-control-sm" type="search" placeholder="Search leave approval" aria-label="Search" />
-                  <span class="fas fa-search search-box-icon"></span>
-                </form>
-              </div>
-            </div>
-
-          </div>
-
-          <div class="table-responsive ms-n1 ps-1 scrollbar h-100">
-            <table class="table fs-9 mb-0 border-top border-translucent">
-              <thead>
-                <tr>
-                  <th class="sort white-space-nowrap align-middle ps-0" scope="col" data-sort="staff" style="width:15%;">STAFF</th>
-                  <th class="sort align-middle ps-3" scope="col" data-sort="type" style="width:15%;">TYPE</th>
-                  <th class="sort align-middle ps-3" scope="col" data-sort="startdate" style="width:10%;">START DATE</th>
-                  <th class="sort align-middle ps-3" scope="col" data-sort="returndate" style="width:10%;">RETURN DATE</th>
-                </tr>
-              </thead>
-              <tbody class="list" id="project-summary-table-body">
-                <% if(weekLeaves && weekLeaves.length>0){ %>
-                <% weekLeaves.forEach(onLeave => { %>
-
-                <tr class="position-static">
-
-                  <td class="align-middle text-body white-space-nowrap ps-0 staff">
-                    <% const staffWeek = allUser.find(staff => staff._id.toString() === onLeave.user.toString()); %>
-                    <a class="mb-0 ms-0 fw-bold fs-8" href="/staff/details/<%= onLeave.user %>"><%= staffWeek.fullname %></a>
-                  </td>
-
-
-                  <td class="align-middle text-body white-space-nowrap ps-0 type">
-                    <a class="mb-0 ms-3 fw-bold fs-8" href="/leave/details/<%= onLeave._id %>"><%= onLeave.type %></a>
-                  </td>
-
-                  <td class="align-middle text-body white-space-nowrap ps-0 startdate">
-                    <p class="mb-0 ms-3 fs-9 text-900"><%= formatDate(onLeave.date.start) %></p>
-                  </td>
-
-                  <td class="align-middle text-body white-space-nowrap ps-0 startdate">
-                    <p class="mb-0 ms-3 fs-9 text-900"><%= formatDate(onLeave.date.return) %></p>
-                  </td>
-                </tr>
-                <% }); %>
-                <% }else { %>
-                <tr class="position-static">
-                  <td class="align-middle text-body white-space-nowrap">
-                    <p class="mb-0 ms-3 fs-9">No staff on leave today</p>
-                  </td>
-                </tr>
-                <% } %>
-              </tbody>
-            </table>
-          </div>
-          <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
-            <div class="col-auto d-flex">
-              <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p><a class="fw-semibold" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semibold d-none" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
-            </div>
-            <div class="col-auto d-flex">
-              <button class="page-link" data-list-pagination="prev"><span class="fas fa-chevron-left"></span></button>
-              <ul class="mb-0 pagination"></ul>
-              <button class="page-link pe-0" data-list-pagination="next"><span class="fas fa-chevron-right"></span></button>
-            </div>
-          </div>
-
-        </div>
-
-        <div id="month-on-leave" class="leave-section" data-list='{"valueNames":["staff","type","startdate","returndate"],"page":5,"pagination":true}'>
-
-          <div class="row align-items-end justify-content-between pb-4 g-3">
-
-            <div class="col-auto">
-              <h3>Staff on leave this month</h3>
-              <p class="text-body-tertiary lh-sm mb-0">Employees absent today, leave granted.</p>
-            </div>
-
-            <div class="col-12 col-md-auto">
-              <div class="search-box px-lg-0 pe-4">
-                <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
-                  <input class="form-control search-input search form-control-sm" type="search" placeholder="Search leave approval" aria-label="Search" />
-                  <span class="fas fa-search search-box-icon"></span>
-                </form>
-              </div>
-            </div>
-
-          </div>
-
-          <div class="table-responsive ms-n1 ps-1 scrollbar h-100">
-            <table class="table fs-9 mb-0 border-top border-translucent">
-              <thead>
-                <tr>
-                  <th class="sort white-space-nowrap align-middle ps-0" scope="col" data-sort="staff" style="width:15%;">STAFF</th>
-                  <th class="sort align-middle ps-3" scope="col" data-sort="type" style="width:15%;">TYPE</th>
-                  <th class="sort align-middle ps-3" scope="col" data-sort="startdate" style="width:10%;">START DATE</th>
-                  <th class="sort align-middle ps-3" scope="col" data-sort="returndate" style="width:10%;">RETURN DATE</th>
-                </tr>
-              </thead>
-              <tbody class="list" id="project-summary-table-body">
-                <% if(monthLeaves && monthLeaves.length>0){ %>
-                <% monthLeaves.forEach(onLeave => { %>
-
-                <tr class="position-static">
-
-                  <td class="align-middle text-body white-space-nowrap ps-0 staff">
-                    <% const staffMonth = allUser.find(staff => staff._id.toString() === onLeave.user.toString());%>
-                    <a class="mb-0 ms-0 fw-bold fs-8" href="/staff/details/<%= onLeave.user %>"><%= staffMonth.fullname %></a>
-                  </td>
-
-
-                  <td class="align-middle text-body white-space-nowrap ps-0 type">
-                    <a class="mb-0 ms-3 fw-bold fs-8" href="/leave/details/<%= onLeave._id %>"><%= onLeave.type %></a>
-                  </td>
-
-                  <td class="align-middle text-body white-space-nowrap ps-0 startdate">
-                    <p class="mb-0 ms-3 fs-9 text-900"><%= formatDate(onLeave.date.start) %></p>
-                  </td>
-
-                  <td class="align-middle text-body white-space-nowrap ps-0 startdate">
-                    <p class="mb-0 ms-3 fs-9 text-900"><%= formatDate(onLeave.date.return) %></p>
-                  </td>
-                </tr>
-                <% }); %>
-                <% }else { %>
-                <tr class="position-static">
-                  <td class="align-middle text-body white-space-nowrap">
-                    <p class="mb-0 ms-3 fs-9">No staff on leave today</p>
-                  </td>
-                </tr>
-                <% } %>
-              </tbody>
-            </table>
-          </div>
-          <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
-            <div class="col-auto d-flex">
-              <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p><a class="fw-semibold" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semibold d-none" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
-            </div>
-            <div class="col-auto d-flex">
-              <button class="page-link" data-list-pagination="prev"><span class="fas fa-chevron-left"></span></button>
-              <ul class="mb-0 pagination"></ul>
-              <button class="page-link pe-0" data-list-pagination="next"><span class="fas fa-chevron-right"></span></button>
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="col-12 col-xxl-6">
-    <div class="card pt-3 vh-50">
-      <div class="card-body">
-        <div class="d-flex mb-6">
-          <div class="btn btn-phoenix-primary py-2 px-2 active" onclick="toggleSection('today-on-leave', this)">Today</div>
-          <div class="btn btn-phoenix-primary py-2 px-2" onclick="toggleSection('week-on-leave', this)">Week</div>
-          <div class="btn btn-phoenix-primary py-2 px-2" onclick="toggleSection('month-on-leave', this)">Month</div>
-        </div>
-
-        <div id="current-leave-bar-charts" style="height: 300px;"></div>
-
-      </div>
-    </div>
-  </div>
-</div>
-
-
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    // Set the initial state to show "Today's Leave" section and make the corresponding button active
-    toggleSection('today-on-leave', document.querySelector('.btn-phoenix-primary.active'));
-
-    updateBarCharts('<%= todayLeaves.length %>', '<%= weekLeaves.length %>', '<%= monthLeaves.length %>');
-  });
-
-  function toggleSection(sectionId, button) {
-    // Hide all leave sections
-    document.querySelectorAll('.leave-section').forEach(section => {
-      section.style.display = 'none';
-    });
-
-    // Show the selected leave section
-    document.getElementById(sectionId).style.display = 'block';
-
-    // Remove active class from all buttons
-    document.querySelectorAll('.btn-phoenix-primary').forEach(btn => {
-      btn.classList.remove('active');
-    });
-
-    // Add active class to the clicked button
-    button.classList.add('active');
-  }
-
-  function updateBarCharts(today, week, month) {
-    const leaveBarCharts = echarts.init(document.getElementById('current-leave-bar-charts'));
-
-    // Process the data and create series for bar charts
-    const todayCount = today;
-    const weekCount = week;
-    const monthCount = month;
-
-    const option = {
-      tooltip: {},
-      legend: {
-        data: ['Today', 'This Week', 'This Month'],
-      },
-      xAxis: {
-        data: ['Today', 'This Week', 'This Month'],
-      },
-      yAxis: {
-        show: false, // Set show to false to hide y-axis
-      },
-      series: [{
-        name: 'Leave Count',
-        type: 'bar',
-        data: [todayCount, weekCount, monthCount],
-        barWidth: '10px',
-        showBackground: false,
-        symbol: 'none',
-        itemStyle: {
-          borderRadius: 10
-        },
-      }],
-    };
-
-    // Set the option and render the chart
-    leaveBarCharts.setOption(option);
-  }
-</script>
-
-
 <% if (user.isAdmin === true || user.isChiefExec === true || user.isDeputyChiefExec === true) { %>
 <%
-    const submittedLeaves = allLeave.filter(leave => leave.status === 'submitted');
-    const deniedLeaves = allLeave.filter(leave => leave.status === 'denied');
-    const pendingLeaves = allLeave.filter(leave => leave.status === 'pending');
-    const invalidLeaves = allLeave.filter(leave => leave.status === 'invalid');
-    const approvedLeaves = allLeave.filter(leave => leave.status === 'approved');   
-%>
+        const submittedLeaves = allLeave.filter(leave => leave.status === 'submitted');
+        const deniedLeaves = allLeave.filter(leave => leave.status === 'denied');
+        const pendingLeaves = allLeave.filter(leave => leave.status === 'pending');
+        const invalidLeaves = allLeave.filter(leave => leave.status === 'invalid');
+        const approvedLeaves = allLeave.filter(leave => leave.status === 'approved');   
+    %>
 <div class="pb-5">
   <div class="row g-4">
 
     <div class="col-12 col-xxl-6">
       <div class="mb-8">
-        <h2 class="mb-2">Leave</h2>
+        <h2 class="mb-2">Leave Stats</h2>
         <h5 class="text-body-tertiary fw-semibold">Temporary absence for personal reasons</h5>
       </div>
       <div class="row align-items-center g-4">
@@ -1995,7 +1526,7 @@
       <hr class="bg-body-secondary mb-6 mt-4" />
       <div class="row flex-between-center mb-4 g-3">
         <div class="col-auto">
-          <h3>Total leaves ( <span id="totalLeaves" class="fw-normal fs-7 "></span> )</h3>
+          <h3>Total leaves ( <span id="totalLeaves" class="fw-normal fs-7"></span> )</h3>
           <p class="text-body-tertiary lh-sm mb-0">Leaves across all of department in one calendar</p>
         </div>
         <div class="col-8 col-sm-4">
@@ -2272,7 +1803,12 @@
                     });
 
                   function renderBarVSCharts(dateCounts) {
-                    var leaveStatusChart = echarts.init(document.getElementById('leave-status-chart'));
+                    var leaveStatusChart = echarts.init(document.getElementById('leave-status-chart'), null, {
+                      devicePixelRatio: window.devicePixelRatio > 1 ? 2 : 1,
+                      renderer: 'canvas',
+                      width: 'auto',
+                      height: 'auto'
+                    });
 
                     var xAxisData = Object.keys(dateCounts);
 
@@ -2356,6 +1892,10 @@
 
                     // Set chart option and render
                     leaveStatusChart.setOption(option);
+
+                    window.addEventListener('resize', function() {
+                      leaveStatusChart.resize();
+                    });
                   }
 
                 });
@@ -2381,7 +1921,7 @@
             <div class="card-body">
               <div class="d-flex justify-content-between">
                 <div>
-                  <h5 class="mb-1">New submission<span class="badge badge-phoenix badge-phoenix-success rounded-pill fs-9 ms-2"> <span class="badge-label">+26.5%</span></span></h5>
+                  <h5 class="mb-1">New submission<span class="badge badge-phoenix badge-phoenix-success rounded-pill fs-9 ms-2"> <span class="badge-label" id="submissionpercentage">+26.5%</span></span></h5>
                   <h6 class="text-body-tertiary">Last 7 days</h6>
                 </div>
                 <h4 id="totalsubmitted"></h4>
@@ -2403,6 +1943,7 @@
                       renderLineChartSubmitted(data);
 
                       document.getElementById('totalsubmitted').innerText = `${data.totalSubmitted}`;
+                      document.getElementById('submissionpercentage').innerText = `${data.formattedDifference}`;
                     })
                     .catch(error => {
                       // Handle errors
@@ -2410,7 +1951,12 @@
                     });
 
                   function renderLineChartSubmitted(submittedCounts) {
-                    var leaveSubmittedChart = echarts.init(document.getElementById('leave-submitted-chart'));
+                    var leaveSubmittedChart = echarts.init(document.getElementById('leave-submitted-chart'), null, {
+                      devicePixelRatio: window.devicePixelRatio > 1 ? 2 : 1,
+                      renderer: 'canvas',
+                      width: 'auto',
+                      height: 'auto'
+                    });
 
                     // Extract x-axis labels and series data
                     var xAxisData = Object.keys(submittedCounts.submittedCountsLast7Days);
@@ -2521,6 +2067,10 @@
 
                     // Set chart option and render
                     leaveSubmittedChart.setOption(option);
+
+                    window.addEventListener('resize', function() {
+                      leaveSubmittedChart.resize();
+                    });
                   }
                 });
               </script>
@@ -2528,235 +2078,304 @@
             </div>
           </div>
         </div>
-        <div class="col-12 col-md-6">
+        <div class="col-12 col-md-12">
           <div class="card h-100">
+
             <div class="card-body">
               <div class="d-flex justify-content-between">
                 <div>
-                  <h5 class="mb-2">Total status</h5>
+                  <h5 class="mb-2">Leave status</h5>
                   <h6 class="text-body-tertiary">Last 7 days</h6>
                 </div>
-              </div>
-              <div class="pb-4 pt-3">
-                <div id="pie-chart" style="height:130px;width:100%;"></div>
+                <h4 id="totalstatus"></h4>
               </div>
 
-              <script>
-                document.addEventListener('DOMContentLoaded', function() {
-                  // Initialize ECharts chart
-                  var lineChart = echarts.init(document.getElementById('pie-chart'));
+              <div class="row g-3">
+                <div class="col-12 col-md-7">
+                  <div class="pb-3 pt-3">
+                    <div id="leave-status-pie-chart" style="height:150px;width:100%;"></div>
+                  </div>
 
-                  var option = {
-                    color: [
-                      '#3874ff',
-                      '#adc5ff',
-                      '#0080c7'
-                    ],
+                  <script>
+                    document.addEventListener('DOMContentLoaded', function() {
 
-                    tooltip: {
-                      trigger: 'item',
-                      padding: [7, 10],
-                      backgroundColor: '#eff2f6',
-                      borderColor: '#cbd0dd',
-                      textStyle: {
-                        color: '#141824'
-                      },
-                      borderWidth: 1,
-                      transitionDuration: 0,
-                      position(pos, params, el, elRect, size) {
-                        const obj = {
-                          top: pos[1] - 35
-                        }; // set tooltip position over 35px from pointer
-                        if (window.innerWidth > 540) {
-                          if (pos[0] <= size.viewSize[0] / 2) {
-                            obj.left = pos[0] + 20; // 'move in right';
-                          } else {
-                            obj.left = pos[0] - size.contentSize[0] - 20;
-                          }
-                        } else {
-                          obj[pos[0] < size.viewSize[0] / 2 ? 'left' : 'right'] = 0;
-                        }
-                        return obj;
-                      },
-                      formatter: params => {
-                        return `<strong>${params.data.name}:</strong> ${params.percent}%`;
+                      const leaveStatusURL = `/api/leave/status`;
+
+                      // Fetch data or perform any other actions with the updated URL
+                      // For example:
+                      fetch(leaveStatusURL)
+                        .then(response => response.json())
+                        .then(data => {
+                          renderPieChartLeaveStatus(data);
+
+                          document.getElementById('totalstatus').innerText = `${data.totalLeaves}`;
+                          document.getElementById('statuspercentagesubmitted').innerText = `${data.percentageSubmitted}%`;
+                          document.getElementById('statuspercentageapproved').innerText = `${data.percentageApproved}%`;
+                          document.getElementById('statuspercentagedenied').innerText = `${data.percentageDenied}%`;
+                          document.getElementById('statuspercentagepending').innerText = `${data.percentagePending}%`;
+                          document.getElementById('statuspercentageinvalid').innerText = `${data.percentageInvalid}%`;
+                        })
+                        .catch(error => {
+                          // Handle errors
+                          console.error('Error:', error);
+                        });
+
+
+                      function renderPieChartLeaveStatus(data) {
+
+                        // Create a pie chart instance
+                        const leaveStatusPieChart = echarts.init(document.getElementById('leave-status-pie-chart'), null, {
+                          devicePixelRatio: window.devicePixelRatio > 1 ? 2 : 1,
+                          renderer: 'canvas',
+                          width: 'auto',
+                          height: 'auto'
+                        });
+
+                        const ringPieChartData = [{
+                            value: data.percentageSubmitted,
+                            name: 'Submitted'
+                          },
+                          {
+                            value: data.percentageApproved,
+                            name: 'Approved'
+                          },
+                          {
+                            value: data.percentageDenied,
+                            name: 'Denied'
+                          },
+                          {
+                            value: data.percentagePending,
+                            name: 'Pending'
+                          },
+                          {
+                            value: data.percentageInvalid,
+                            name: 'Invalid'
+                          },
+
+                        ];
+
+                        // Set up options for the pie chart
+                        const option = {
+                          color: [
+                            getColor('bg-primary-lighter', 'background-color'),
+                            getColor('bg-secondary', 'background-color'),
+                            getColor('bg-warning-lighter', 'background-color'),
+                            getColor('bg-info-lighter', 'background-color'),
+                            getColor('bg-success-lighter', 'background-color')
+                          ],
+                          tooltip: {
+                            trigger: 'item',
+                            padding: [7, 10],
+                            backgroundColor: getColor('bg-body', 'background-color'),
+                            borderColor: theme.secondary_subtle,
+                            textStyle: {
+                              color: getColor('link-primary', 'color')
+                            },
+                            borderWidth: 1,
+                            transitionDuration: 0,
+                            axisPointer: {
+                              type: 'none'
+                            },
+                            formatter: function(params) {
+                              return `${params.name} (${params.value}%)`;
+                            }
+                          },
+                          series: [{
+                            type: 'pie',
+                            radius: ['99%', '85%'],
+                            avoidLabelOverlap: false,
+                            label: {
+                              show: false,
+                              position: 'center'
+                            },
+                            emphasis: {
+                              scale: false,
+                              itemStyle: {
+                                color: 'inherit'
+                              }
+                            },
+                            itemStyle: {
+                              borderWidth: 1,
+                              borderColor: getColor('bg-body', 'background-color'),
+                            },
+                            data: ringPieChartData
+                          }]
+                        };
+
+                        // Set chart options and render
+                        leaveStatusPieChart.setOption(option);
+
+                        window.addEventListener('resize', function() {
+                          leaveStatusPieChart.resize();
+                        });
                       }
-                    },
-                    legend: {
-                      show: false
-                    },
-                    series: [{
-                      name: '72%',
-                      type: 'pie',
-                      radius: ['99%', '87%'],
-                      avoidLabelOverlap: false,
-                      emphasis: {
-                        scale: false,
-                        itemStyle: {
-                          color: 'inherit'
-                        }
-                      },
-                      itemStyle: {
-                        borderWidth: 1,
-                        borderColor: '#e3e6ed',
-                      },
-                      label: {
-                        show: true,
-                        position: 'center',
-                        formatter: '{a}',
-                        fontSize: 23,
-                        color: '#3e465b'
-                      },
-                      data: [{
-                          value: 7200000,
-                          name: 'Approved/Denied'
-                        },
-                        {
-                          value: 1800000,
-                          name: 'Pending'
-                        },
-                        {
-                          value: 1000000,
-                          name: 'Invalid'
-                        }
-                      ]
-                    }],
-                    grid: {
-                      containLabel: true
-                    }
-                  };
-
-                  // Set chart option and render
-                  lineChart.setOption(option);
-                });
-              </script>
-
-              <div>
-                <div class="d-flex align-items-center mb-2">
-                  <div class="bullet-item me-2" style="background-color: #3874ff;"></div>
-                  <h6 class="text-body fw-semibold flex-1 mb-0">Approved/Denied</h6>
-                  <h6 class="text-body fw-semibold mb-0">72%</h6>
+                    });
+                  </script>
                 </div>
-                <div class="d-flex align-items-center mb-2">
-                  <div class="bullet-item me-2" style="background-color: #adc5ff;"></div>
-                  <h6 class="text-body fw-semibold flex-1 mb-0">Pending</h6>
-                  <h6 class="text-body fw-semibold mb-0">18%</h6>
-                </div>
-                <div class="d-flex align-items-center">
-                  <div class="bullet-item me-2" style="background-color: #0080c7;"></div>
-                  <h6 class="text-body fw-semibold flex-1 mb-0">Invalid</h6>
-                  <h6 class="text-body fw-semibold mb-0">10%</h6>
+
+                <div class="col-12 col-md-5 my-auto">
+                  <div class="d-flex align-items-center mb-1">
+                    <div class="bullet-item me-2 bg-primary-lighter"></div>
+                    <h6 class="text-body fw-semibold flex-1 mb-0">Submitted</h6>
+                    <h6 class="text-body fw-semibold mb-0" id="statuspercentagesubmitted"></h6>
+                  </div>
+                  <div class="d-flex align-items-center mb-1">
+                    <div class="bullet-item me-2 bg-secondary"></div>
+                    <h6 class="text-body fw-semibold flex-1 mb-0">Approved</h6>
+                    <h6 class="text-body fw-semibold mb-0" id="statuspercentageapproved"></h6>
+                  </div>
+                  <div class="d-flex align-items-center mb-1">
+                    <div class="bullet-item me-2 bg-warning-lighter"></div>
+                    <h6 class="text-body fw-semibold flex-1 mb-0">Denied</h6>
+                    <h6 class="text-body fw-semibold mb-0" id="statuspercentagedenied"></h6>
+                  </div>
+                  <div class="d-flex align-items-center mb-1">
+                    <div class="bullet-item me-2 bg-info-lighter"></div>
+                    <h6 class="text-body fw-semibold flex-1 mb-0">Pending</h6>
+                    <h6 class="text-body fw-semibold mb-0" id="statuspercentagepending"></h6>
+                  </div>
+                  <div class="d-flex align-items-center">
+                    <div class="bullet-item me-2 bg-success-lighter"></div>
+                    <h6 class="text-body fw-semibold flex-1 mb-0">Invalid</h6>
+                    <h6 class="text-body fw-semibold mb-0" id="statuspercentageinvalid"></h6>
+                  </div>
                 </div>
               </div>
+
             </div>
+
           </div>
         </div>
-        <div class="col-12 col-md-6">
-          <div class="card h-100">
-            <div class="card-body d-flex flex-column">
-              <div class="d-flex justify-content-between">
-                <div>
-                  <h5 class="mb-2">Pending vs Invalid</h5>
-                  <h6 class="text-body-tertiary">Last 7 days</h6>
-                </div>
+      </div>
+    </div>
+  </div>
+</div>
+<% } %>
+
+<div class="mb-3 row g-3">
+  <div class="col-12">
+    <div class="card pt-3 min-vh-25">
+      <div class="card-body">
+        <div id="leave-approvals" data-list='{"valueNames":["type","staff","startdate","returndate","latestapproval","status"],"page":10,"pagination":true}'>
+          <div class="row align-items-end justify-content-between pb-4 g-3">
+
+            <div class="col-auto">
+              <h3>Leave Approvals</h3>
+              <p class="text-body-tertiary lh-sm mb-0">Permission granted, absence authorized, leave request accepted.</p>
+            </div>
+
+            <div class="col-12 col-md-auto">
+              <div class="search-box px-lg-0 pe-4">
+                <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
+                  <input class="form-control search-input search form-control-sm" type="search" placeholder="Search leave approval" aria-label="Search" />
+                  <span class="fas fa-search search-box-icon"></span>
+                </form>
               </div>
-              <div class="d-flex justify-content-center pt-3 flex-1">
-                <div id="gauge-chart" style="height:100%;width:100%;"></div>
-              </div>
+            </div>
 
-              <script>
-                document.addEventListener('DOMContentLoaded', function() {
-                  // Initialize ECharts chart
-                  var gaugeChart = echarts.init(document.getElementById('gauge-chart'));
+          </div>
+          <div class="table-responsive ms-n1 ps-1 scrollbar">
+            <table class="table fs-9 mb-0 border-top border-translucent">
+              <thead>
+                <tr>
+                  <th class="sort white-space-nowrap align-middle ps-0" scope="col" data-sort="type" style="width:15%;">TYPE</th>
+                  <th class="sort align-middle ps-3" scope="col" data-sort="staff" style="width:10%;">STAFF</th>
+                  <th class="sort align-middle ps-3" scope="col" data-sort="startdate" style="width:10%;">START DATE</th>
+                  <th class="sort align-middle ps-3" scope="col" data-sort="returndate" style="width:10%;">RETURN DATE</th>
+                  <th class="sort align-middle ps-8" scope="col" data-sort="latestapproval" style="width:20%;">LATEST APPROVAL</th>
+                  <th class="sort align-middle ps-8" scope="col" data-sort="status" style="width:5%;">STATUS</th>
+                  <th class="sort align-middle text-end" scope="col" style="width:10%;"></th>
+                </tr>
+              </thead>
 
-                  var option = {
-                    tooltip: {
-                      trigger: 'item',
-                      padding: [7, 10],
-                      backgroundColor: '#eff2f6',
-                      borderColor: '#cbd0dd',
-                      textStyle: {
-                        color: '#333'
-                      },
-                      borderWidth: 1,
-                      formatter: function(params) {
-                        return `<strong>${params.seriesName}:</strong> ${params.value}%<br>`;
-                      }
-                    },
-                    legend: {
-                      show: false
-                    },
-                    series: [{
-                      type: 'gauge',
-                      center: ['50%', '60%'],
-                      name: 'Pending', // Sample series name
-                      startAngle: 180,
-                      endAngle: 0,
-                      min: 0,
-                      max: 100,
-                      splitNumber: 12,
-                      itemStyle: {
-                        color: '#3874ff'
-                      },
-                      progress: {
-                        show: true,
-                        roundCap: true,
-                        width: 12,
-                        itemStyle: {
-                          shadowBlur: 0,
-                          shadowColor: '#0000'
-                        }
-                      },
-                      pointer: {
-                        show: false
-                      },
-                      axisLine: {
-                        roundCap: true,
-                        lineStyle: {
-                          width: 12,
-                          color: [
-                            [1, 'rgba(159, 166, 188, 0.2)'],
-                          ]
-                        }
-                      },
-                      axisTick: {
-                        show: false
-                      },
-                      splitLine: {
-                        show: false
-                      },
-                      axisLabel: {
-                        show: false
-                      },
-                      title: {
-                        show: false
-                      },
-                      detail: {
-                        show: false
-                      },
-                      data: [{
-                        value: 30
-                      }]
-                    }]
-                  };
+              <% 
+                  function formatDate(inputDate) {
+                    const day = String(inputDate.getDate()).padStart(2, '0');
+                    const month = String(inputDate.getMonth() + 1).padStart(2, '0');
+                    const year = inputDate.getFullYear();
+                  
+                    return `${day}/${month}/${year}`;
+                  }
+              %>
 
-                  // Set chart option and render
-                  gaugeChart.setOption(option);
-                });
-              </script>
+              <tbody class="list" id="leave-approvals-table">
+                <% if (filteredApprovalLeaves && filteredApprovalLeaves.length > 0) { %>
+                <!-- table item -->
+                <% filteredApprovalLeaves.forEach(function(leaves) { %>
 
-              <div class="mt-3">
-                <div class="d-flex align-items-center mb-2">
-                  <div class="bullet-item me-2" style="background-color: #3874ff;"></div>
-                  <h6 class="text-body fw-semibold flex-1 mb-0">Pending</h6>
-                  <h6 class="text-body fw-semibold mb-0">30%</h6>
-                </div>
-                <div class="d-flex align-items-center">
-                  <div class="bullet-item bg-primary-subtle me-2"></div>
-                  <h6 class="text-body fw-semibold flex-1 mb-0">Invalid</h6>
-                  <h6 class="text-body fw-semibold mb-0">70%</h6>
-                </div>
-              </div>
+                <% 
+                      
+                var statusApprovalColor = '';
+                if (leaves.status == "pending"){
+                    statusApprovalColor = 'info';
+                } else if(leaves.status == "approved" || leaves.status == "submitted") {
+                    statusApprovalColor = 'success';
+                } else if(leaves.status == "denied" ||  leaves.status == "cancelled") {
+                    statusApprovalColor = 'danger';
+                }else if (leaves.status == "invalid"){
+                    statusApprovalColor = 'warning';
+                } 
+                                    
+                %>
+
+                <tr class="position-static">
+                  <td class="align-middle white-space-nowrap ps-0 type py-4">
+                    <a class="fw-bold fs-8" href="/leave/details/<%= leaves._id %>"><%= leaves.type %></a>
+                  </td>
+                  <td class="align-middle white-space-nowrap ps-3 staff py-4">
+                    <% const userApproval = allUser.find(userapp => userapp._id.toString() === leaves.user.toString()); %>
+                    <a class="fw-bold fs-8" href="/staff/details/<%= leaves.user %>"><%= userApproval.fullname %></a>
+                  </td>
+                  <td class="align-middle white-space-nowrap startdate ps-3 py-4">
+                    <p class="mb-0 fs-9 text-900"><%= formatDate(leaves.date.start) %></p>
+                  </td>
+                  <td class="align-middle white-space-nowrap returndate ps-3 py-4">
+                    <p class="mb-0 fs-9 text-900"><%= formatDate(leaves.date.return) %></p>
+                  </td>
+                  <td class="align-middle latestapproval ps-3 py-4">
+                    <% const latestApproval = leaves.approvals.reduce((latest, approval) => approval.timestamp > latest.timestamp ? approval : latest, leaves.approvals[0]); %>
+                    <p class="fs-9 fw-semibold text-body-highlight mb-0">
+                      <%= latestApproval.role %> has <%= latestApproval.status %> this <%= leaves.type %> at <%= latestApproval.timestamp.toLocaleDateString('en-UK', { 
+                                    year: 'numeric', 
+                                    month: 'long', 
+                                    day: 'numeric', 
+                                    timeZone: 'Asia/Kuala_Lumpur' 
+                                  }); %>
+                    </p>
+                  </td>
+                  <td class="align-middle white-space-nowrap text-center status">
+                    <span class="badge badge-phoenix fs-10 badge-phoenix-<%= statusApprovalColor %>"><%= leaves.status %></span>
+                  </td>
+                  <td class="align-middle text-end white-space-nowrap pe-0 action">
+                    <div class="font-sans-serif btn-reveal-trigger position-static">
+                      <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs--2" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
+                        <span class="fas fa-ellipsis-h fs-9"></span>
+                      </button>
+                      <div class="dropdown-menu dropdown-menu-end py-2">
+                        <a class="dropdown-item" href="/leave/details/<%= leaves._id %>">View</a>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+                <%  }); %> <% } else { %>
+                <tr>
+                  <td>
+                    <p class="align-middle fs-9">No approvals leave submitted.</p>
+                  </td>
+                </tr>
+                <% } %>
+              </tbody>
+
+            </table>
+          </div>
+          <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
+            <div class="col-auto d-flex">
+              <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p><a class="fw-semibold" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semibold d-none" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
+            </div>
+            <div class="col-auto d-flex">
+              <button class="page-link" data-list-pagination="prev"><span class="fas fa-chevron-left"></span></button>
+              <ul class="mb-0 pagination"></ul>
+              <button class="page-link pe-0" data-list-pagination="next"><span class="fas fa-chevron-right"></span></button>
             </div>
           </div>
         </div>
@@ -2765,8 +2384,363 @@
   </div>
 </div>
 
+<div class="mb-6 row g-3">
+
+  <% 
+  function formatDate(inputDate) {
+    const day = String(inputDate.getDate()).padStart(2, '0');
+    const month = String(inputDate.getMonth() + 1).padStart(2, '0');
+    const year = inputDate.getFullYear();
+  
+    return `${day}/${month}/${year}`;
+  }
+  %>
+
+  <div class="col-12 col-xxl-6">
+    <div class="card pt-3" style="min-height: 35vh;">
+      <div class="card-body">
+        <div id="today-on-leave" class="leave-section" data-list='{"valueNames":["staff","type","startdate","returndate"],"page":4,"pagination":true}'>
+
+          <div class="row align-items-end justify-content-between pb-4 g-3">
+
+            <div class="col-auto">
+              <h3>Staff on leave today</h3>
+              <p class="text-body-tertiary lh-sm mb-0">Employees absent today, leave granted.</p>
+            </div>
+
+            <div class="col-12 col-md-auto">
+              <div class="search-box px-lg-0 pe-4">
+                <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
+                  <input class="form-control search-input search form-control-sm" type="search" placeholder="Search leave approval" aria-label="Search" />
+                  <span class="fas fa-search search-box-icon"></span>
+                </form>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="table-responsive ms-n1 ps-1 scrollbar h-100">
+            <table class="table fs-9 mb-0 border-top border-translucent">
+              <thead>
+                <tr>
+                  <th class="sort white-space-nowrap align-middle ps-0" scope="col" data-sort="staff" style="width:15%;">STAFF</th>
+                  <th class="sort align-middle ps-3" scope="col" data-sort="type" style="width:15%;">TYPE</th>
+                  <th class="sort align-middle ps-3" scope="col" data-sort="startdate" style="width:10%;">START DATE</th>
+                  <th class="sort align-middle ps-3" scope="col" data-sort="returndate" style="width:10%;">RETURN DATE</th>
+                </tr>
+              </thead>
+              <tbody class="list" id="project-summary-table-body">
+                <% if(todayLeaves && todayLeaves.length>0){ %>
+                <% todayLeaves.forEach(onLeave => { %>
+
+                <tr class="position-static">
+
+                  <td class="align-middle text-body white-space-nowrap ps-0 staff">
+                    <% const staffToday = allUser.find(staff => staff._id.toString() === onLeave.user.toString()); %>
+                    <a class="mb-0 ms-0 fw-bold fs-8" href="/staff/details/<%= onLeave.user %>"><%= staffToday.fullname %></a>
+                  </td>
+
+
+                  <td class="align-middle text-body white-space-nowrap ps-0 type">
+                    <a class="mb-0 ms-3 fw-bold fs-8" href="/leave/details/<%= onLeave._id %>"><%= onLeave.type %></a>
+                  </td>
+
+                  <td class="align-middle text-body white-space-nowrap ps-0 startdate">
+                    <p class="mb-0 ms-3 fs-9 text-900"><%= formatDate(onLeave.date.start) %></p>
+                  </td>
+
+                  <td class="align-middle text-body white-space-nowrap ps-0 startdate">
+                    <p class="mb-0 ms-3 fs-9 text-900"><%= formatDate(onLeave.date.return) %></p>
+                  </td>
+                </tr>
+                <% }); %>
+                <% }else { %>
+                <tr class="position-static">
+                  <td class="align-middle text-body white-space-nowrap">
+                    <p class="mb-0 ms-3 fs-9">No staff on leave today</p>
+                  </td>
+                </tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+          <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
+            <div class="col-auto d-flex">
+              <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p><a class="fw-semibold" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semibold d-none" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
+            </div>
+            <div class="col-auto d-flex">
+              <button class="page-link" data-list-pagination="prev"><span class="fas fa-chevron-left"></span></button>
+              <ul class="mb-0 pagination"></ul>
+              <button class="page-link pe-0" data-list-pagination="next"><span class="fas fa-chevron-right"></span></button>
+            </div>
+          </div>
+
+        </div>
+
+        <div id="week-on-leave" class="leave-section" data-list='{"valueNames":["staff","type","startdate","returndate"],"page":4,"pagination":true}'>
+
+          <div class="row align-items-end justify-content-between pb-4 g-3">
+
+            <div class="col-auto">
+              <h3>Staff on leave this week</h3>
+              <p class="text-body-tertiary lh-sm mb-0">Employees absent today, leave granted.</p>
+            </div>
+
+            <div class="col-12 col-md-auto">
+              <div class="search-box px-lg-0 pe-4">
+                <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
+                  <input class="form-control search-input search form-control-sm" type="search" placeholder="Search leave approval" aria-label="Search" />
+                  <span class="fas fa-search search-box-icon"></span>
+                </form>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="table-responsive ms-n1 ps-1 scrollbar h-100">
+            <table class="table fs-9 mb-0 border-top border-translucent">
+              <thead>
+                <tr>
+                  <th class="sort white-space-nowrap align-middle ps-0" scope="col" data-sort="staff" style="width:15%;">STAFF</th>
+                  <th class="sort align-middle ps-3" scope="col" data-sort="type" style="width:15%;">TYPE</th>
+                  <th class="sort align-middle ps-3" scope="col" data-sort="startdate" style="width:10%;">START DATE</th>
+                  <th class="sort align-middle ps-3" scope="col" data-sort="returndate" style="width:10%;">RETURN DATE</th>
+                </tr>
+              </thead>
+              <tbody class="list" id="project-summary-table-body">
+                <% if(weekLeaves && weekLeaves.length>0){ %>
+                <% weekLeaves.forEach(onLeave => { %>
+
+                <tr class="position-static">
+
+                  <td class="align-middle text-body white-space-nowrap ps-0 staff">
+                    <% const staffWeek = allUser.find(staff => staff._id.toString() === onLeave.user.toString()); %>
+                    <a class="mb-0 ms-0 fw-bold fs-8" href="/staff/details/<%= onLeave.user %>"><%= staffWeek.fullname %></a>
+                  </td>
+
+
+                  <td class="align-middle text-body white-space-nowrap ps-0 type">
+                    <a class="mb-0 ms-3 fw-bold fs-8" href="/leave/details/<%= onLeave._id %>"><%= onLeave.type %></a>
+                  </td>
+
+                  <td class="align-middle text-body white-space-nowrap ps-0 startdate">
+                    <p class="mb-0 ms-3 fs-9 text-900"><%= formatDate(onLeave.date.start) %></p>
+                  </td>
+
+                  <td class="align-middle text-body white-space-nowrap ps-0 startdate">
+                    <p class="mb-0 ms-3 fs-9 text-900"><%= formatDate(onLeave.date.return) %></p>
+                  </td>
+                </tr>
+                <% }); %>
+                <% }else { %>
+                <tr class="position-static">
+                  <td class="align-middle text-body white-space-nowrap">
+                    <p class="mb-0 ms-3 fs-9">No staff on leave today</p>
+                  </td>
+                </tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+          <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
+            <div class="col-auto d-flex">
+              <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p><a class="fw-semibold" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semibold d-none" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
+            </div>
+            <div class="col-auto d-flex">
+              <button class="page-link" data-list-pagination="prev"><span class="fas fa-chevron-left"></span></button>
+              <ul class="mb-0 pagination"></ul>
+              <button class="page-link pe-0" data-list-pagination="next"><span class="fas fa-chevron-right"></span></button>
+            </div>
+          </div>
+
+        </div>
+
+        <div id="month-on-leave" class="leave-section" data-list='{"valueNames":["staff","type","startdate","returndate"],"page":4,"pagination":true}'>
+
+          <div class="row align-items-end justify-content-between pb-4 g-3">
+
+            <div class="col-auto">
+              <h3>Staff on leave this month</h3>
+              <p class="text-body-tertiary lh-sm mb-0">Employees absent today, leave granted.</p>
+            </div>
+
+            <div class="col-12 col-md-auto">
+              <div class="search-box px-lg-0 pe-4">
+                <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
+                  <input class="form-control search-input search form-control-sm" type="search" placeholder="Search leave approval" aria-label="Search" />
+                  <span class="fas fa-search search-box-icon"></span>
+                </form>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="table-responsive ms-n1 ps-1 scrollbar h-100">
+            <table class="table fs-9 mb-0 border-top border-translucent">
+              <thead>
+                <tr>
+                  <th class="sort white-space-nowrap align-middle ps-0" scope="col" data-sort="staff" style="width:15%;">STAFF</th>
+                  <th class="sort align-middle ps-3" scope="col" data-sort="type" style="width:15%;">TYPE</th>
+                  <th class="sort align-middle ps-3" scope="col" data-sort="startdate" style="width:10%;">START DATE</th>
+                  <th class="sort align-middle ps-3" scope="col" data-sort="returndate" style="width:10%;">RETURN DATE</th>
+                </tr>
+              </thead>
+              <tbody class="list" id="project-summary-table-body">
+                <% if(monthLeaves && monthLeaves.length>0){ %>
+                <% monthLeaves.forEach(onLeave => { %>
+
+                <tr class="position-static">
+
+                  <td class="align-middle text-body white-space-nowrap ps-0 staff">
+                    <% const staffMonth = allUser.find(staff => staff._id.toString() === onLeave.user.toString());%>
+                    <a class="mb-0 ms-0 fw-bold fs-8" href="/staff/details/<%= onLeave.user %>"><%= staffMonth.fullname %></a>
+                  </td>
+
+
+                  <td class="align-middle text-body white-space-nowrap ps-0 type">
+                    <a class="mb-0 ms-3 fw-bold fs-8" href="/leave/details/<%= onLeave._id %>"><%= onLeave.type %></a>
+                  </td>
+
+                  <td class="align-middle text-body white-space-nowrap ps-0 startdate">
+                    <p class="mb-0 ms-3 fs-9 text-900"><%= formatDate(onLeave.date.start) %></p>
+                  </td>
+
+                  <td class="align-middle text-body white-space-nowrap ps-0 startdate">
+                    <p class="mb-0 ms-3 fs-9 text-900"><%= formatDate(onLeave.date.return) %></p>
+                  </td>
+                </tr>
+                <% }); %>
+                <% }else { %>
+                <tr class="position-static">
+                  <td class="align-middle text-body white-space-nowrap">
+                    <p class="mb-0 ms-3 fs-9">No staff on leave today</p>
+                  </td>
+                </tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+          <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
+            <div class="col-auto d-flex">
+              <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p><a class="fw-semibold" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semibold d-none" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
+            </div>
+            <div class="col-auto d-flex">
+              <button class="page-link" data-list-pagination="prev"><span class="fas fa-chevron-left"></span></button>
+              <ul class="mb-0 pagination"></ul>
+              <button class="page-link pe-0" data-list-pagination="next"><span class="fas fa-chevron-right"></span></button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-xxl-6">
+    <div class="card pt-3" style="min-height: 35vh;">
+      <div class="card-body">
+        <div class="d-flex mb-6">
+          <div class="btn btn-phoenix-primary py-2 px-2 active" onclick="toggleSection('today-on-leave', this)">Today</div>
+          <div class="btn btn-phoenix-primary py-2 px-2" onclick="toggleSection('week-on-leave', this)">Week</div>
+          <div class="btn btn-phoenix-primary py-2 px-2" onclick="toggleSection('month-on-leave', this)">Month</div>
+        </div>
+
+        <div id="current-leave-bar-charts" style="height: 300px;"></div>
+
+        <script>
+          document.addEventListener('DOMContentLoaded', function() {
+            // Set the initial state to show "Today's Leave" section and make the corresponding button active
+            toggleSection('today-on-leave', document.querySelector('.btn-phoenix-primary.active'));
+
+            updateBarCharts('<%= todayLeaves.length %>', '<%= weekLeaves.length %>', '<%= monthLeaves.length %>');
+          });
+
+          function toggleSection(sectionId, button) {
+            // Hide all leave sections
+            document.querySelectorAll('.leave-section').forEach(section => {
+              section.style.display = 'none';
+            });
+
+            // Show the selected leave section
+            document.getElementById(sectionId).style.display = 'block';
+
+            // Remove active class from all buttons
+            document.querySelectorAll('.btn-phoenix-primary').forEach(btn => {
+              btn.classList.remove('active');
+            });
+
+            // Add active class to the clicked button
+            button.classList.add('active');
+          }
+
+          function updateBarCharts(today, week, month) {
+            const leaveBarCharts = echarts.init(document.getElementById('current-leave-bar-charts'), null, {
+              devicePixelRatio: window.devicePixelRatio > 1 ? 2 : 1,
+              renderer: 'canvas',
+              width: 'auto',
+              height: 'auto'
+            });
+
+            // Process the data and create series for bar charts
+            const todayCount = today;
+            const weekCount = week;
+            const monthCount = month;
+
+            const option = {
+              tooltip: {
+                trigger: 'item',
+                padding: [7, 10],
+                backgroundColor: getColor('bg-body', 'background-color'),
+                borderColor: theme.secondary_subtle,
+                textStyle: {
+                  color: getColor('link-primary', 'color')
+                },
+                borderWidth: 1,
+                transitionDuration: 0,
+                axisPointer: {
+                  type: 'none'
+                },
+                formatter: function(params) {
+                  return `${params.name} (${params.value})`;
+                }
+              },
+              xAxis: {
+                data: ['Today', 'This Week', 'This Month'],
+              },
+              yAxis: {
+                show: false, // Set show to false to hide y-axis
+              },
+              series: [{
+                name: 'Leave Count',
+                type: 'bar',
+                data: [todayCount, weekCount, monthCount],
+                barWidth: '10px',
+                showBackground: false,
+                symbol: 'none',
+                itemStyle: {
+                  borderRadius: 10
+                },
+              }],
+            };
+
+            // Set the option and render the chart
+            leaveBarCharts.setOption(option);
+
+            window.addEventListener('resize', function() {
+              leaveBarCharts.resize();
+            });
+          }
+        </script>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<% if (user.isAdmin === true || user.isChiefExec === true || user.isDeputyChiefExec === true) { %>
+
 <div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis pt-7 pb-3 border-y mb-6">
-  <div id="all-staff" data-list='{"valueNames":["staff","position","department","section","grade","status"],"page":10,"pagination":true}'>
+  <div id="all-staff" data-list='{"valueNames":["staff","position","department","section","grade","classification"],"page":10,"pagination":true}'>
 
     <div class="mb-3">
       <h3>All Staff</h3>
@@ -2799,8 +2773,7 @@
             <th class="sort align-middle ps-3" scope="col" data-sort="department" style="width:15%;">DEPARTMENT</th>
             <th class="sort align-middle ps-3" scope="col" data-sort="section" style="width:15%;">SECTION</th>
             <th class="sort align-middle ps-3" scope="col" data-sort="grade" style="width:5%;">GRADE</th>
-            <th class="sort align-middle ps-8" scope="col" data-sort="status" style="width:10%;">STATUS</th>
-            <th class="sort align-middle text-end" scope="col" style="width:10%;"></th>
+            <th class="sort align-middle ps-8" scope="col" data-sort="classification" style="width:10%;">CLASSIFICATION</th>
           </tr>
         </thead>
         <tbody class="list" id="project-summary-table-body">
@@ -2808,7 +2781,7 @@
           <% allUser.forEach(staff => { %>
 
           <tr class="position-static">
-            <td class="align-middle text-body white-space-nowrap ps-0 member">
+            <td class="align-middle text-body white-space-nowrap ps-0 staff">
               <div class="avatar avatar-xl">
                 <div class="avatar-name rounded-circle"><span><%= staff && staff.fullname ? staff.fullname[0].toUpperCase() : '' %></span></div>
               </div>
@@ -2819,11 +2792,11 @@
               <p class="mb-0 fs-9 text-body"><%= staff.position %></p>
             </td>
 
-            <td class="align-middle white-space-nowrap department ps-3">
+            <td class="align-middle department ps-3">
               <p class="mb-0 fs-9 text-body"><%= staff.department %></p>
             </td>
 
-            <td class="align-middle white-space-nowrap section ps-3">
+            <td class="align-middle section ps-3">
               <p class="mb-0 fs-9 text-body"><%= staff.section %></p>
             </td>
 
@@ -2831,7 +2804,11 @@
               <p class="mb-0 fs-9 text-body"><%= staff.grade %></p>
             </td>
 
-            <td class="align-middle text-end white-space-nowrap pe-0">
+            <td class="align-middle text-center white-space-nowrap classification ps-3">
+              <p class="mb-0 fs-9 text-body"><%= staff.classification.charAt(0).toUpperCase() + staff.classification.slice(1) %></p>
+            </td>
+
+            <td class="align-middle text-end white-space-nowrap pe-0 d-none">
               <div class="btn-reveal-trigger position-static">
                 <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs-10" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fas fa-ellipsis-h fs-10"></span></button>
                 <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item" href="/staff/details/<%= staff._id %>">View</a><a class="dropdown-item d-none" href="#!">Export</a>
