@@ -112,7 +112,7 @@ const userSchema = new mongoose.Schema({
     isAdmin: { type: Boolean, default: false },
     isOfficer: { type: Boolean, default: false },
     isManagement: { type: Boolean, default: false },
-    isPersonalAssitant : {type: Boolean, default : false},
+    isPersonalAssitant: { type: Boolean, default: false },
     dateEmployed: { type: Date },
     birthdate: { type: Date }
 });
@@ -516,7 +516,23 @@ app.get('/', isAuthenticated, async function (req, res) {
         });
     }
 
-    console.log(filteredApprovalLeaves.length);
+    const uniqueDepartments = new Set();
+    const uniqueSection = new Set();
+
+    allUser.forEach(user => {
+        if (user.department) {
+            uniqueDepartments.add(user.department);
+        }
+    });
+
+    allUser.forEach(user => {
+        if (user.section) {
+            uniqueSection.add(user.section);
+        }
+    });
+
+    const departments = Array.from(uniqueDepartments);
+    const sections = Array.from(uniqueSection);
 
     if (user) {
         res.render('home', {
@@ -530,6 +546,8 @@ app.get('/', isAuthenticated, async function (req, res) {
             weekLeaves: weekLeaves,
             monthLeaves: monthLeaves,
             filteredApprovalLeaves: filteredApprovalLeaves,
+            departments: departments,
+            sections: sections,
             // all data
             allUser: allUser,
             allUserLeave: allUserLeave,
@@ -928,6 +946,69 @@ app.get('/api/leave/status', isAuthenticated, async function (req, res) {
     }
 });
 
+app.get('/api/staff/overview/department-section', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+
+    if (user) {
+        const allUser = await User.find();
+
+        // Create Sets to store unique departments and sections
+        const uniqueDepartments = new Set();
+        const uniqueSections = new Set();
+
+        // Iterate through the users and add their departments and sections to the sets
+        allUser.forEach(user => {
+            if (user.department) {
+                uniqueDepartments.add(user.department);
+            }
+
+            if (user.section) {
+                uniqueSections.add(user.section);
+            }
+        });
+
+        // Convert Sets to Arrays
+        const departments = Array.from(uniqueDepartments);
+        const sections = Array.from(uniqueSections);
+
+        // Create objects to store user counts for each department and section
+        const userCountByDepartment = {};
+        const userCountBySection = {};
+
+        // Initialize counts to zero for each department and section
+        departments.forEach(department => {
+            userCountByDepartment[department] = 0;
+        });
+
+        sections.forEach(section => {
+            userCountBySection[section] = 0;
+        });
+
+        // Update counts based on user data
+        allUser.forEach(user => {
+            if (user.department) {
+                userCountByDepartment[user.department]++;
+            }
+
+            if (user.section) {
+                userCountBySection[user.section]++;
+            }
+        });
+
+        console.log("User counts by department:", userCountByDepartment);
+
+        console.log("User counts by section:", userCountBySection);
+
+        const responseData = {
+            userCountByDepartment,
+            userCountBySection
+        }
+
+        res.json(responseData);
+    }
+});
+
 // STAFF DETAILS
 
 app.get('/staff/details/:id', isAuthenticated, async function (req, res) {
@@ -1195,7 +1276,7 @@ app.get('/delete/:content/:id', isAuthenticated, async function (req, res) {
 });
 
 // SEARCH STAFF IN SAME DEPARTMENT
-app.get('/search/task/assignee', isAuthenticated, async function (req, res) {
+app.get('/search/staff/assignee-relief', isAuthenticated, async function (req, res) {
     const username = req.user.username;
     const user = await User.findOne({ username: username });
     const query = req.query.query;
@@ -1205,20 +1286,48 @@ app.get('/search/task/assignee', isAuthenticated, async function (req, res) {
         if (query && query.trim() !== '') {
 
             if (user.isChiefExec) {
-                results = await User.find({
+                const deputyChiefExecQuery = {
                     isDeputyChiefExec: true,
                     fullname: { $regex: query, $options: 'i' }
-                });
+                };
+
+                const managementQuery = {
+                    isManagement: true,
+                    fullname: { $regex: query, $options: 'i' }
+                };
+
+                const personalAssistant = {
+                    isPersonalAssistant: true,
+                    fullname: { $regex: query, $options: 'i' }
+                };
+
+                results = await User.find({ $or: [deputyChiefExecQuery, managementQuery, personalAssistant] });
+
             } else if (user.isDeputyChiefExec) {
-                results = await User.find({
+
+                const managementQuery = {
+                    isManagement: true,
+                    fullname: { $regex: query, $options: 'i' }
+                };
+
+                const personalAssistant = {
+                    isPersonalAssistant: true,
+                    fullname: { $regex: query, $options: 'i' }
+                };
+
+                const headOfDepartment = {
                     isHeadOfDepartment: true,
                     fullname: { $regex: query, $options: 'i' }
-                });
+                };
+
+                results = await User.find({ $or: [headOfDepartment, managementQuery, personalAssistant] });
             } else if (user.isHeadOfDepartment) {
                 results = await User.find({
                     department: user.department,
                     fullname: { $regex: query, $options: 'i' }
                 });
+            } else if (user.isPersonalAssitant) {
+
             } else {
                 results = await User.find({
                     section: user.section,
@@ -2537,21 +2646,69 @@ app
                         .sort({ date: -1 })
                         .exec();
                 } else {
-                    userTeamMembers = await User.find({
-                        department: user.department,
-                        _id: { $ne: user._id }
-                    });
+                    if (user.isHeadOfDepartment) {
+                        userTeamMembers = await User.find({
+                            department: user.department,
+                            _id: { $ne: user._id }
+                        });
 
-                    activities = await Activity.find({
-                        department: user.department,
-                        date: { $gte: sevenDaysAgo }
-                    })
-                        .populate({
-                            path: 'user'
+                        activities = await Activity.find({
+                            department: user.department,
+                            date: { $gte: sevenDaysAgo }
                         })
-                        .sort({ date: -1 })
-                        .exec();
+                            .populate({
+                                path: 'user'
+                            })
+                            .sort({ date: -1 })
+                            .exec();
+                    } else {
+                        userTeamMembers = await User.find({
+                            section: user.section,
+                            _id: { $ne: user._id }
+                        });
+
+                        activities = await Activity.find({
+                            section: user.section,
+                            date: { $gte: sevenDaysAgo }
+                        })
+                            .populate({
+                                path: 'user'
+                            })
+                            .sort({ date: -1 })
+                            .exec();
+                    }
                 }
+
+                // leave approvals
+                let filteredApprovalLeaves;
+
+                if (user.isAdmin) {
+                    // If the user is an admin, show all leave approvals except for 'approved' and 'denied'
+                    filteredApprovalLeaves = allLeave.filter(leave => leave.status !== 'approved' && leave.status !== 'denied');
+                } else {
+                    // If the user is not an admin, show leave approvals based on your existing logic
+                    filteredApprovalLeaves = allLeave.filter(leave => {
+                        return leave.user.toString() !== user._id.toString() && leave.approvals.some(approval => approval.recipient.toString() === user._id.toString() && (leave.status !== 'approved' && leave.status !== 'denied'));
+                    });
+                }
+
+                const uniqueDepartments = new Set();
+                const uniqueSection = new Set();
+
+                allUser.forEach(user => {
+                    if (user.department) {
+                        uniqueDepartments.add(user.department);
+                    }
+                });
+
+                allUser.forEach(user => {
+                    if (user.section) {
+                        uniqueSection.add(user.section);
+                    }
+                });
+
+                const departments = Array.from(uniqueDepartments);
+                const sections = Array.from(uniqueSection);
 
                 const renderDataSuccess = {
                     user: user,
@@ -2564,6 +2721,9 @@ app
                     todayLeaves: todayLeaves,
                     weekLeaves: weekLeaves,
                     monthLeaves: monthLeaves,
+                    filteredApprovalLeaves: filteredApprovalLeaves,
+                    departments: departments,
+                    sections: sections,
                     // all data
                     allUser: allUser,
                     allUserLeave: allUserLeave,

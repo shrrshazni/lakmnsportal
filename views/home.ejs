@@ -2739,11 +2739,144 @@
 
 <% if (user.isAdmin === true || user.isChiefExec === true || user.isDeputyChiefExec === true) { %>
 
+<div class="px-3 mb-6">
+
+  <div class="mb-8">
+    <h2 class="mb-2">Staff Overview</h2>
+    <h5 class="text-body-tertiary fw-semibold">Comprehensive insight into staff dynamics</h5>
+  </div>
+
+  <div class="row justify-content-between mb-6">
+    <div class="col-6 col-md-4 col-xxl-2 text-center border-translucent border-start-xxl border-end-xxl-0 border-bottom-xxl-0 border-end border-bottom pb-4 pb-xxl-0 "><span class="uil fs-5 lh-1 fa-solid fa-users-line text-primary"></span>
+      <h1 class="fs-5 pt-3"><%= allUser.length %></h1>
+      <p class="fs-9 mb-0">Total Staff</p>
+    </div>
+    <div class="col-6 col-md-4 col-xxl-2 text-center border-translucent border-start-xxl border-end-xxl-0 border-bottom-xxl-0 border-end-md border-bottom pb-4 pb-xxl-0"><span class="uil fs-5 lh-1 fa-solid fa-desktop text-info"></span>
+      <h1 class="fs-5 pt-3"><%= allUser.filter(user => user.grade >= 25).length %></h1>
+      <p class="fs-9 mb-0">Total Executive</p>
+    </div>
+    <div class="col-6 col-md-4 col-xxl-2 text-center border-translucent border-start-xxl border-bottom-xxl-0 border-bottom border-end border-end-md-0 pb-4 pb-xxl-0 pt-4 pt-md-0"><span class="uil fs-5 lh-1 fa-solid fa-laptop text-primary"></span>
+      <h1 class="fs-5 pt-3"><%= allUser.filter(user => user.grade <= 25).length %></h1>
+      <p class="fs-9 mb-0">Total Non-Executive</p>
+    </div>
+    <div class="col-6 col-md-4 col-xxl-2 text-center border-translucent border-start-xxl border-end-md border-end-xxl-0 border-bottom border-bottom-md-0 pb-4 pb-xxl-0 pt-4 pt-xxl-0"><span class="uil fs-5 lh-1 fa-solid fa-user-plus text-info"></span>
+      <h1 class="fs-5 pt-3"><%= allUser.filter(user => user.classification === 'trainee').length %></h1>
+      <p class="fs-9 mb-0">Total Trainee Staff</p>
+    </div>
+    <div class="col-6 col-md-4 col-xxl-2 text-center border-translucent border-start-xxl border-end border-end-xxl-0 pb-md-4 pb-xxl-0 pt-4 pt-xxl-0"><span class="uil fs-5 lh-1 fa-solid fa-divide text-success"></span>
+      <h1 class="fs-5 pt-3"><%= sections.length %></h1>
+      <p class="fs-9 mb-0">Total Section</p>
+    </div>
+    <div class="col-6 col-md-4 col-xxl-2 text-center border-translucent border-start-xxl border-end-xxl pb-md-4 pb-xxl-0 pt-4 pt-xxl-0"><span class="uil fs-5 lh-1 fa-solid fa-building text-danger"></span>
+      <h1 class="fs-5 pt-3"><%= departments.length %></h1>
+      <p class="fs-9 mb-0">Total Department</p>
+    </div>
+
+  </div>
+
+  <div class="row g-3">
+    <div class="col-12 col-xxl-6">
+      <div class="card">
+        <div class="card-body" style="min-height: 35vh;">
+          <div id="departmentChart" style="width: 100%; height: 400px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-xxl-6">
+      <div class="card">
+        <div class="card-body" style="min-height: 35vh;">
+          <div id="sectionChart" style="width: 100%; height: 400px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        const staffOverviewSectionURL = `/api/staff/overview/department-section`;
+
+        fetch(staffOverviewSectionURL)
+          .then(response => response.json())
+          .then(data => {
+            renderBarLineChart(data, 'department');
+            renderBarLineChart(data, 'section'); // You can change the second argument to 'section' for the section chart
+          })
+          .catch(error => {
+            // Handle errors
+            console.error('Error:', error);
+          });
+
+        function renderBarLineChart(data, chartType) {
+
+          const userCounts = chartType === 'department' ? data.userCountByDepartment : data.userCountBySection;
+
+          const chartOption = {
+            tooltip: {
+              trigger: 'axis',
+              axisPointer: {
+                type: 'shadow'
+              }
+            },
+            xAxis: {
+              type: 'category',
+              data: Object.keys(userCounts),
+            },
+            yAxis: {
+              type: 'value',
+            },
+            series: [{
+              name: 'User Count',
+              type: 'bar',
+              data: Object.values(userCounts),
+              barWidth: '60%', // Adjust the width of the bars
+              label: {
+                show: true,
+                position: 'top',
+                color: 'black', // You can adjust the label color
+              },
+            }, {
+              name: 'Line',
+              type: 'line',
+              data: Object.values(userCounts),
+              symbol: 'circle', // Set the symbol for data points
+              symbolSize: 8, // Adjust the size of the symbols
+              lineStyle: {
+                color: 'red', // Adjust the color of the line
+              },
+            }],
+          };
+
+          // Create ECharts instance and set the option
+          const chart = echarts.init(document.getElementById(`${chartType}Chart`));
+          chart.setOption(chartOption);
+        }
+
+      });
+    </script>
+
+    <div class="col-12 col-xxl-6">
+      <div class="card">
+        <div class="card-body" style="min-height: 35vh;">
+
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-xxl-6">
+      <div class="card">
+        <div class="card-body" style="min-height: 35vh;">
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis pt-7 pb-3 border-y mb-6">
   <div id="all-staff" data-list='{"valueNames":["staff","position","department","section","grade","classification"],"page":10,"pagination":true}'>
 
     <div class="mb-3">
-      <h3>All Staff</h3>
+      <h3>Full Team Members</h3>
       <p class="text-body-tertiary lh-sm mb-0">Every team member contributes to organizational success.</p>
     </div>
 
@@ -2783,7 +2916,7 @@
           <tr class="position-static">
             <td class="align-middle text-body white-space-nowrap ps-0 staff">
               <div class="avatar avatar-xl">
-                <div class="avatar-name rounded-circle"><span><%= staff && staff.fullname ? staff.fullname[0].toUpperCase() : '' %></span></div>
+                <div class="avatar-name rounded-circle fs-9"><span><%= staff.username %></span></div>
               </div>
               <a class="mb-0 ms-3 fw-bold fs-8" href="/staff/details/<%= staff._id %>"><%= staff.fullname %></a>
             </td>
