@@ -212,7 +212,7 @@
           const query = $(this).val();
           if (query.trim() !== '') {
             $.ajax({
-              url: `/search/task/assignee?query=${query}`,
+              url: `/search/staff/assignee-relief?query=${query}`,
               method: 'GET',
               success: function(results) {
                 displayResults(results);

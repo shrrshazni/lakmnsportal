@@ -990,7 +990,7 @@
                       const query = $(this).val();
                       if (query.trim() !== '') {
                         $.ajax({
-                          url: `/search/task/assignee?query=${query}`,
+                          url: `/search/staff/assignee-relief?query=${query}`,
                           method: 'GET',
                           success: function(results) {
                             displayResults(results);
@@ -2778,6 +2778,7 @@
     <div class="col-12 col-xxl-6">
       <div class="card">
         <div class="card-body" style="min-height: 35vh;">
+          <h5 class="mb-3">Department stats</h5>
           <div id="departmentChart" style="width: 100%; height: 400px;"></div>
         </div>
       </div>
@@ -2786,6 +2787,7 @@
     <div class="col-12 col-xxl-6">
       <div class="card">
         <div class="card-body" style="min-height: 35vh;">
+          <h5 class="mb-3">Section stats</h5>
           <div id="sectionChart" style="width: 100%; height: 400px;"></div>
         </div>
       </div>
@@ -2810,38 +2812,86 @@
 
           const userCounts = chartType === 'department' ? data.userCountByDepartment : data.userCountBySection;
 
+          const barColors = [
+            getColor('bg-primary', 'background-color'),
+            getColor('bg-secondary', 'background-color'),
+            getColor('bg-success', 'background-color'),
+            getColor('bg-info', 'background-color'),
+            getColor('bg-warning', 'background-color'),
+            getColor('bg-danger', 'background-color'),
+            getColor('bg-light', 'background-color'),
+            getColor('bg-dark', 'background-color'),
+            getColor('bg-gray-100', 'background-color'),
+            getColor('bg-gray-400', 'background-color'),
+            getColor('bg-primary-lighter', 'background-color'),
+            getColor('bg-primary-dark', 'background-color'),
+            getColor('bg-primary-darker', 'background-color'),
+            getColor('bg-secondary-lighter', 'background-color'),
+            getColor('bg-secondary-light', 'background-color'),
+            getColor('bg-secondary-dark', 'background-color'),
+            getColor('bg-secondary-darker', 'background-color'),
+            getColor('bg-warning-lighter', 'background-color'),
+            getColor('bg-warning-light', 'background-color'),
+            getColor('bg-warning-darker', 'background-color'),
+            getColor('bg-danger-lighter', 'background-color'),
+            getColor('bg-danger-light', 'background-color'),
+            getColor('bg-danger-dark', 'background-color'),
+            getColor('bg-success-lighter', 'background-color'),
+          ];
+
           const chartOption = {
             tooltip: {
-              trigger: 'axis',
+              trigger: 'item',
+              padding: [7, 10],
+              backgroundColor: getColor('bg-body', 'background-color'),
+              borderColor: theme.secondary_subtle,
+              textStyle: {
+                color: getColor('link-primary', 'color')
+              },
+              borderWidth: 1,
+              transitionDuration: 0,
               axisPointer: {
-                type: 'shadow'
+                type: 'none'
+              },
+              formatter: function(params) {
+                return `${params.name} (${params.value})`;
               }
             },
             xAxis: {
               type: 'category',
               data: Object.keys(userCounts),
+              axisLabel: {
+                show: false, // Hide x-axis labels
+              }
             },
             yAxis: {
-              type: 'value',
+              show: false, // Set show to false to hide y-axis
             },
             series: [{
               name: 'User Count',
               type: 'bar',
               data: Object.values(userCounts),
-              barWidth: '60%', // Adjust the width of the bars
+              barWidth: '15px',
+              showBackground: false,
+              symbol: 'none',
+              itemStyle: {
+                borderRadius: 5
+              }, // Adjust the width of the bars
               label: {
                 show: true,
                 position: 'top',
-                color: 'black', // You can adjust the label color
+                color: theme.primary, // You can adjust the label color
               },
+              color: barColors,
             }, {
               name: 'Line',
               type: 'line',
               data: Object.values(userCounts),
-              symbol: 'circle', // Set the symbol for data points
-              symbolSize: 8, // Adjust the size of the symbols
+              symbol: 'none', // Adjust the size of the symbols
               lineStyle: {
-                color: 'red', // Adjust the color of the line
+                color: theme.cyan,
+                type: 'dashed',
+                opacity: 0.25 // Adjust the color of the line
               },
             }],
           };
@@ -2854,7 +2904,7 @@
       });
     </script>
 
-    <div class="col-12 col-xxl-6">
+    <div class="col-12 col-xxl-6 d-none">
       <div class="card">
         <div class="card-body" style="min-height: 35vh;">
 
@@ -2862,7 +2912,7 @@
       </div>
     </div>
 
-    <div class="col-12 col-xxl-6">
+    <div class="col-12 col-xxl-6 d-none">
       <div class="card">
         <div class="card-body" style="min-height: 35vh;">
 
