@@ -56,7 +56,7 @@
       userLinkRTL.setAttribute('disabled', true);
     }
   </script>
-  
+
   <link href="/vendors/leaflet/leaflet.css" rel="stylesheet">
   <link href="/vendors/leaflet.markercluster/MarkerCluster.css" rel="stylesheet">
   <link href="/vendors/leaflet.markercluster/MarkerCluster.Default.css" rel="stylesheet">
@@ -80,10 +80,21 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
   <!-- lottie -->
   <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+
 </head>
 
 
 <body>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      // Check if touch events are supported
+      var touchEventsSupported = 'ontouchstart' in window || (window.DocumentTouch && document instanceof DocumentTouch);
+
+      // Use 'touchEventsSupported' as needed in your client-side code
+      console.log('Touch events supported:', touchEventsSupported);
+    });
+  </script>
 
   <!-- ===============================================-->
   <!--    Main Content-->
