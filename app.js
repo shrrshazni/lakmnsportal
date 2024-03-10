@@ -452,7 +452,6 @@ app.get('/', isAuthenticated, async function (req, res) {
     }
 
     let userTeamMembers = '';
-    let activities = '';
 
     if (user.isChiefExec || user.isDeputyChiefExec) {
         userTeamMembers = await User.find({
@@ -460,15 +459,7 @@ app.get('/', isAuthenticated, async function (req, res) {
             _id: { $ne: user._id }
         });
 
-        activities = await Activity.find({
-            isManagement: true,
-            date: { $gte: sevenDaysAgo }
-        })
-            .populate({
-                path: 'user'
-            })
-            .sort({ date: -1 })
-            .exec();
+
     } else {
         if (user.isHeadOfDepartment) {
             userTeamMembers = await User.find({
@@ -476,32 +467,24 @@ app.get('/', isAuthenticated, async function (req, res) {
                 _id: { $ne: user._id }
             });
 
-            activities = await Activity.find({
-                department: user.department,
-                date: { $gte: sevenDaysAgo }
-            })
-                .populate({
-                    path: 'user'
-                })
-                .sort({ date: -1 })
-                .exec();
+
         } else {
             userTeamMembers = await User.find({
                 section: user.section,
                 _id: { $ne: user._id }
             });
-
-            activities = await Activity.find({
-                section: user.section,
-                date: { $gte: sevenDaysAgo }
-            })
-                .populate({
-                    path: 'user'
-                })
-                .sort({ date: -1 })
-                .exec();
         }
     }
+
+
+    const activities = await Activity.find({
+        date: { $gte: sevenDaysAgo }
+    })
+        .populate({
+            path: 'user'
+        })
+        .sort({ date: -1 })
+        .exec();
 
     // leave approvals
     let filteredApprovalLeaves;
@@ -1841,8 +1824,6 @@ app
                 numberOfDays = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
             }
 
-            console.log(numberOfDays);
-
             let renderDataError = {};
 
             // set approval based on role
@@ -2358,9 +2339,11 @@ app
                 for (const approval of approvals) {
                     const recipientId = approval.recipient;
 
-                    // Add the recipientId to the sendNoti array if not already present
-                    if (!sendNoti.includes(recipientId)) {
-                        sendNoti.push(recipientId);
+                    if (i > 0) {
+                        // Add the recipientId to the sendNoti array if not already present
+                        if (!sendNoti.includes(recipientId)) {
+                            sendNoti.push(recipientId);
+                        }
                     }
 
                     // Fetch the user by recipient ID
@@ -2389,18 +2372,31 @@ app
                 Leave.create(leave);
                 console.log('Leave request submitted');
 
+                // activity
+                const activityUser = new Activity({
+                    user: user._id,
+                    date: new Date(),
+                    title: 'Submitted a leave application',
+                    type: 'Leave request',
+                    description: user.fullname + ' has submitted ' + type + ' between ' + startDate + ' and ' + returnDate
+                });
+
+                activityUser.save();
+
+                console.log('New acitivity submitted', activityUser);
+
                 // notifications save has been turn off
                 if (sendNoti.length > 0) {
                     for (const recipientId of sendNoti) {
                         const newNotification = new Notification({
                             sender: user._id,
                             recipient: new mongoose.Types.ObjectId(recipientId),
-                            type: 'Leave',
-                            url: '/leave/details/' + uuid,
+                            type: 'Leave request',
+                            url: '/leave/details/' + leave._id,
                             message: 'Leave request needs approval.'
                         });
 
-                        // newNotification.save();
+                        newNotification.save();
                     }
 
                     console.log('Done send notifications!');
@@ -2456,15 +2452,6 @@ app
                 const fileHome = await File.find();
                 const sevenDaysAgo = new Date();
                 sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-                const activitiesHome = await Activity.find({
-                    department: user.department,
-                    date: { $gte: sevenDaysAgo }
-                })
-                    .populate({
-                        path: 'user'
-                    })
-                    .sort({ date: -1 })
-                    .exec();
                 const otherTaskHome = await Task.find({
                     assignee: { $ne: [user._id] }
                 });
@@ -2562,9 +2549,7 @@ app
                         }
                     });
                 }
-
                 let userTeamMembers = '';
-                let activities = '';
 
                 if (user.isChiefExec || user.isDeputyChiefExec) {
                     userTeamMembers = await User.find({
@@ -2572,15 +2557,7 @@ app
                         _id: { $ne: user._id }
                     });
 
-                    activities = await Activity.find({
-                        isManagement: true,
-                        date: { $gte: sevenDaysAgo }
-                    })
-                        .populate({
-                            path: 'user'
-                        })
-                        .sort({ date: -1 })
-                        .exec();
+
                 } else {
                     if (user.isHeadOfDepartment) {
                         userTeamMembers = await User.find({
@@ -2588,32 +2565,24 @@ app
                             _id: { $ne: user._id }
                         });
 
-                        activities = await Activity.find({
-                            department: user.department,
-                            date: { $gte: sevenDaysAgo }
-                        })
-                            .populate({
-                                path: 'user'
-                            })
-                            .sort({ date: -1 })
-                            .exec();
+
                     } else {
                         userTeamMembers = await User.find({
                             section: user.section,
                             _id: { $ne: user._id }
                         });
-
-                        activities = await Activity.find({
-                            section: user.section,
-                            date: { $gte: sevenDaysAgo }
-                        })
-                            .populate({
-                                path: 'user'
-                            })
-                            .sort({ date: -1 })
-                            .exec();
                     }
                 }
+
+
+                const activitiesHome = await Activity.find({
+                    date: { $gte: sevenDaysAgo }
+                })
+                    .populate({
+                        path: 'user'
+                    })
+                    .sort({ date: -1 })
+                    .exec();
 
                 // leave approvals
                 let filteredApprovalLeaves;
@@ -2938,7 +2907,18 @@ app.get('/leave/:approval/:id', async function (req, res) {
                         message: 'Your leave request have been approved'
                     });
 
-                    // newNotification.save();
+                    newNotification.save();
+
+                    // activity
+                    const activityUser = new Activity({
+                        user: user._id,
+                        date: new Date(),
+                        title: 'Leave application approved',
+                        type: 'Leave request',
+                        description: 'Approved a leave request'
+                    });
+
+                    activityUser.save();
 
                     const firstRecipientEmail = await User.findOne({
                         _id: firstRecipientId
@@ -2997,10 +2977,21 @@ app.get('/leave/:approval/:id', async function (req, res) {
                         type: 'Leave',
                         url: '/leave/details/' + id,
                         message:
-                            'Previous approval has been submitted, please do check the leave request'
+                            'Previous approval has been submitted, please do check the leave request for approval'
                     });
 
-                    // newNotification.save();
+                    newNotification.save();
+
+                    // activity
+                    const activityUser = new Activity({
+                        user: user._id,
+                        date: new Date(),
+                        title: 'Leave application approved',
+                        type: 'Leave request',
+                        description: 'Approved a leave request'
+                    });
+
+                    activityUser.save();
 
                     const nextApprovalRecipientEmail = await User.findOne({
                         _id: nextApprovalRecipientId
@@ -3098,26 +3089,38 @@ app.get('/leave/:approval/:id', async function (req, res) {
                 const recipientIds = checkLeave.approvals.map(
                     approval => approval.recipient
                 );
+
                 sendNoti = recipientIds.filter(
                     recipientId => !recipientId.equals(user._id)
                 );
 
-                // // notifications save has been turn off
-                // if (sendNoti.length > 0) {
-                //     for (const recipientId of sendNoti) {
-                //         const newNotification = new Notification({
-                //             sender: user._id,
-                //             recipient: new mongoose.Types.ObjectId(recipientId),
-                //             type: 'Leave',
-                //             url: '/leave/details/' + uuid,
-                //             message: 'Leave request needs approval.'
-                //         });
+                // notifications save has been turn off
+                if (sendNoti.length > 0) {
+                    for (const recipientId of sendNoti) {
+                        const newNotification = new Notification({
+                            sender: user._id,
+                            recipient: new mongoose.Types.ObjectId(recipientId),
+                            type: 'Leave',
+                            url: '/leave/details/' + id,
+                            message: 'Leave request has been denied.'
+                        });
 
-                //         // newNotification.save();
-                //     }
+                        // newNotification.save();
+                    }
 
-                //     console.log('Done send notifications!');
-                // }
+                    console.log('Done send notifications!');
+                }
+
+                // activity
+                const activityUser = new Activity({
+                    user: user._id,
+                    date: new Date(),
+                    title: 'Leave application denied',
+                    type: 'Leave request',
+                    description: 'Denied a leave request'
+                });
+
+                activityUser.save();
 
                 const users = await User.find({ _id: { $in: sendNoti } });
                 sendEmail = users.map(user => user.email);

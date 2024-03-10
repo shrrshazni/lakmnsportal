@@ -443,8 +443,17 @@
                     <div class="d-flex align-items-center justify-content-between position-relative">
                       <div class="d-flex">
                         <div class="avatar avatar-m status-online me-3">
+
+                          <%
+                          var notiProfile = '';
+                          if(notification.sender.profile === ''){
+                            notiProfile = '/assets/img/team/avatar.webp';
+                          }else{
+                            notiProfile = notification.sender.profile;
+                          } 
+                          %>
                           <!-- Use the actual image source from your notification -->
-                          <img class="rounded-circle border border-primary" src="<%= notification.sender.profile %>" alt="" />
+                          <img class="rounded-circle border border-primary" src="<%= notiProfile %>" alt="" />
                         </div>
                         <div class="flex-1 me-sm-3">
                           <h4 class="fs-9 text-body-emphasis"><%= notification.sender.fullname %></h4>
@@ -464,6 +473,7 @@
                         </button>
                         <div class="dropdown-menu dropdown-menu-end py-2">
                           <a class="dropdown-item" href="/markAsRead/<%= notification._id %>">Mark as unread</a>
+                          <a class="dropdown-item" href="<%= notification.url %>">View</a>
                         </div>
                       </div>
                     </div>

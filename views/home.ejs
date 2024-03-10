@@ -194,6 +194,41 @@
                 <a class="btn btn-link p-0 fs-9 fw-normal" role="button" href="/markAllAsRead">Mark all as read</a>
               </div>
 
+
+              <% 
+              function timeAgo(timestamp) {
+                 const now = new Date();
+                 const notificationDate = new Date(timestamp);
+                 const secondsAgo = Math.floor((now - notificationDate) / 1000);
+    
+                 const intervals = [
+                 { label: 'y', seconds: 31536000 },
+                  { label: 'mon', seconds: 2592000 },
+                  { label: 'd', seconds: 86400 },
+                 { label: 'h', seconds: 3600 },
+                  { label: 'm', seconds: 60 },
+                  { label: 's', seconds: 1 }
+                 ];
+    
+                 for (const interval of intervals) {
+                 const intervalValue = Math.floor(secondsAgo / interval.seconds);
+    
+                 if (intervalValue >= 1) {
+                     return intervalValue + (intervalValue === 1 ? interval.label : interval.label);
+                 }
+                }
+
+              return 'Just now';
+              }
+
+              function formatTime(timestamp) {
+                  const options = { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: true };
+                  const formattedTime = new Date(timestamp).toLocaleString(undefined, options);
+                  return formattedTime;
+              }
+              %>
+
+
               <div class="scrollbar-overlay">
                 <% if (notifications.length > 0) { %>
                 <% notifications.forEach(notification => { %>
@@ -201,8 +236,17 @@
                   <div class="d-flex align-items-center justify-content-between position-relative">
                     <div class="d-flex">
                       <div class="avatar avatar-m status-online me-3">
+
+                        <%
+                          var notiProfile = '';
+                          if(notification.sender.profile === ''){
+                            notiProfile = '/assets/img/team/avatar.webp';
+                          }else{
+                            notiProfile = notification.sender.profile;
+                          } 
+                          %>
                         <!-- Use the actual image source from your notification -->
-                        <img class="rounded-circle border border-primary" src="<%= notification.sender.profile %>" alt="" />
+                        <img class="rounded-circle border border-primary" src="<%= notiProfile %>" alt="" />
                       </div>
                       <div class="flex-1 me-sm-3">
                         <h4 class="fs-9 text-body-emphasis"><%= notification.sender.fullname %></h4>
@@ -216,12 +260,12 @@
                         </p>
                       </div>
                     </div>
-                    <div class="d-none d-sm-block">
+                    <div class="d-none d-sm-block btn-group dropstart mb-3">
                       <button class="btn fs-10 btn-sm dropdown-toggle dropdown-caret-none transition-none notification-dropdown-toggle" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
                         <span class="fas fa-ellipsis-h fs-10 text-body"></span>
                       </button>
-                      <div class="dropdown-menu dropdown-menu-end py-2">
-                        <a class="dropdown-item" href="/markAsRead/<%= notification._id %>">Mark as unread</a>
+                      <div class="dropdown-menu py-2">
+                        <a class="dropdown-item" href="<%= notification.url %>">View</a>
                       </div>
                     </div>
                   </div>
@@ -1164,10 +1208,25 @@
             <h3 class="text-body-emphasis">Activity</h3>
           </div>
           <p class="text-body-tertiary mb-4">Recent activity accross your department</p>
+
+          <% 
+
+          var userActivities = '';
+          if(user.isChiefExec || user.isDeputyChiefExec){
+            userActivities = activities.filter(activity => activity.user.isManagement === user.isManagement);
+          } else if (user.isHeadOfDepartment){
+            userActivities = activities.filter(activity => activity.user.department === user.department);
+          } else if (user.isPersonalAssistant){
+            userActivities = activities.filter(activity => activity.isAdmin === user.isAdmin && activity.user.section === user.section);
+          } else {
+            userActivities = activities.filter(activity => activity.user.section === user.section);
+          }
+
+          %>
           <div class="timeline-vertical timeline-with-details">
-            <% if(activities && activities.length >0){%>
-            <% const lastActivitiesIndex = activities.length - 1; %>
-            <% activities.forEach(function(activity, index) { %>
+            <% if(userActivities&& userActivities.length >0){%>
+            <% const lastActivitiesIndex = userActivities.length - 1; %>
+            <% userActivities.forEach(function(activity, index) { %>
 
             <% 
                 var borderActivity = '';
@@ -2049,7 +2108,7 @@
                       series: [{
                         type: 'line',
                         data: submittedData,
-                        smooth : true,
+                        smooth: true,
                         symbol: 'circle',
                         lineStyle: {
                           color: theme.primary
