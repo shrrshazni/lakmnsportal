@@ -1,0 +1,178 @@
+<%- include('partials/private-header.ejs') %>
+
+<div class="px-0 mb-6">
+  <div class="mb-6">
+    <h2 class="mb-2">Leave Staff's Balances</h2>
+    <h5 class="text-body-tertiary fw-semibold">Reviewing and displaying an staff's available leave days.</h5>
+  </div>
+
+  <div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis pt-7 pb-3 border-y mb-6">
+    <div id="all-staff" data-list='{"valueNames":["staff","annual","sick","sickextended","emergency" ,"marriage","paternity","maternity","attendexam","hajj","special","unpaid"],"page":10,"pagination":true}'>
+
+      <div class="row align-items-end justify-content-between pb-4 g-3">
+
+        <div class="col-12 col-md-auto">
+          <div class="search-box">
+            <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
+              <input class="form-control search-input search form-control-sm" type="search" placeholder="Search staffs" aria-label="Search" />
+              <span class="fas fa-search search-box-icon"></span>
+            </form>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-auto d-none">
+          <a class="btn btn-primary my-auto me-2" role="button" href="/"><span class="fa-solid fa-plus me-2"></span>Add new staff</a>
+        </div>
+
+      </div>
+
+      <div class="table-responsive ms-n1 ps-1 scrollbar">
+        <table class="table fs-9 mb-0 border-top border-translucent">
+          <thead>
+            <tr>
+              <th class="sort white-space-nowrap align-middle ps-0" scope="col" data-sort="staff" style="width:15%;">STAFF</th>
+              <th class="sort align-middle ps-3" scope="col" data-sort="annual" style="width:auto;">ANNUAL</th>
+              <th class="sort align-middle ps-3" scope="col" data-sort="sick" style="width:auto;">SICK</th>
+              <th class="sort align-middle ps-3" scope="col" data-sort="sickextended" style="width:auto;">SICK EXTENDED</th>
+              <th class="sort align-middle ps-3" scope="col" data-sort="emergency" style="width:auto;">EMERGENCY</th>
+              <th class="sort align-middle ps-3" scope="col" data-sort="marriage" style="width:auto;">MARRIAGE</th>
+              <th class="sort align-middle ps-3" scope="col" data-sort="paternity" style="width:auto;">PATERNITY</th>
+              <th class="sort align-middle ps-3" scope="col" data-sort="maternity" style="width:auto;">MATERNITY</th>
+              <th class="sort align-middle ps-3" scope="col" data-sort="attendexam" style="width:auto;">ATTEND EXAM</th>
+              <th class="sort align-middle ps-3" scope="col" data-sort="hajj" style="width:auto;">HAJJ</th>
+              <th class="sort align-middle ps-3" scope="col" data-sort="special" style="width:auto;">SPECIAL</th>
+              <th class="sort align-middle ps-3" scope="col" data-sort="unpaid" style="width:auto;">UNPAID</th>
+              <th class="sort align-middle text-end" scope="col" style="width:5%;"></th>
+            </tr>
+          </thead>
+          <tbody class="list" id="project-summary-table-body">
+            <% if(allUserLeave && allUserLeave.length>0){ %>
+            <% allUserLeave.forEach(leave => { %>
+
+            <% 
+                  var marriage = '';
+                  var maternity = '';
+                  var paternity = '';
+                  var attendExam = '';
+                  var hajj = '';
+                  var special = '';
+
+                  const checkUser = allUser.find(check => check._id.toString() === leave.user.toString());
+
+                  if(leave.marriage.taken > 0){
+                    marriage = 0;
+                  }else {
+                    marriage = leave.marriage.leave;
+                  }
+
+                  if(checkUser.gender === 'Male'){
+                    maternity = 0;
+                  }else{
+                    maternity = leave.maternity.leave;
+                  }
+
+                  if(checkUser.gender === 'Female' || leave.paternity.taken > 6){
+                    paternity = 0;
+                  } else {
+                    paternity = leave.paternity.leave;
+                  }
+
+                  if(leave.hajj.taken > 0){
+                    hajj = 0;
+                  }else{
+                    hajj = leave.hajj.leave;
+                  }
+
+                  if(leave.special.taken > 7){
+                    special = 0;
+                  }else {
+                    special = leave.special.leave;
+                  }
+                %>
+
+            <tr class="position-static">
+              <td class="align-middle text-body ps-0 staff">
+                <a class="mb-0 fw-bold fs-8" href="/staff/details/<%= checkUser._id %>"><%= checkUser.fullname %></a>
+              </td>
+
+              <td class="align-middle text-body text-center white-space-nowrap annual ps-0">
+                <p class="mb-0 fs-8 fw-bold"><%= leave.annual.leave - leave.annual.taken %></p>
+              </td>
+
+              <td class="align-middle text-body text-center white-space-nowrap sick ps-0">
+                <p class="mb-0 fs-8 fw-bold"><%= leave.sick.leave - leave.sick.taken %></p>
+              </td>
+
+              <td class="align-middle text-body text-center white-space-nowrap sickextended ps-0">
+                <p class="mb-0 fs-8 fw-bold"><%= leave.sickExtended.leave - leave.sickExtended.taken %></p>
+              </td>
+
+              <td class="align-middle text-body text-center white-space-nowrap emergency ps-0">
+                <p class="mb-0 fs-8 fw-bold"><%= leave.emergency.taken %></p>
+              </td>
+
+              <td class="align-middle text-body text-center white-space-nowrap marriage ps-0">
+                <p class="mb-0 fs-8 fw-bold"><%= marriage %></p>
+              </td>
+
+              <td class="align-middle text-body text-center white-space-nowrap paternity ps-0">
+                <p class="mb-0 fs-8 fw-bold"><%= paternity %></p>
+              </td>
+
+              <td class="align-middle text-body text-center white-space-nowrap maternity ps-0">
+                <p class="mb-0 fs-8 fw-bold"><%= maternity %></p>
+              </td>
+
+              <td class="align-middle text-body text-center white-space-nowrap attendexam ps-0">
+                <p class="mb-0 fs-8 fw-bold"><%= leave.attendExam.leave - leave.attendExam.taken %></p>
+              </td>
+
+              <td class="align-middle text-body text-center white-space-nowrap hajj ps-0">
+                <p class="mb-0 fs-8 fw-bold"><%= hajj %></p>
+              </td>
+
+              <td class="align-middle text-body text-center white-space-nowrap special ps-0">
+                <p class="mb-0 fs-8 fw-bold"><%= special %></p>
+              </td>
+
+              <td class="align-middle text-body text-center white-space-nowrap unpaid ps-0">
+                <p class="mb-0 fs-8 fw-bold"><%= leave.unpaid.taken %></p>
+              </td>
+
+              <td class="align-middle text-end white-space-nowrap pe-0">
+                <div class="btn-reveal-trigger position-static">
+                  <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs-10" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fas fa-ellipsis-h fs-10"></span></button>
+                  <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item" href="/staff/details/<%= leave.user %>">View</a><a class="dropdown-item d-none" href="#!">Export</a>
+                    <div class="dropdown-divider d-none"></div><a class="dropdown-item" href="#!">Edit</a>
+                    <div class="dropdown-divider d-none"></div><a class="dropdown-item d-none text-danger" href="#!">Remove</a>
+                  </div>
+                </div>
+              </td>
+
+            </tr>
+            <% }); %>
+            <% }else { %>
+            <tr class="position-static">
+              <td class="mb-0 fs-9 text-body">
+                <p>There is no user found in your department</p>
+              </td>
+            </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+      <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
+        <div class="col-auto d-flex">
+          <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p><a class="fw-semibold" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semibold d-none" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
+        </div>
+        <div class="col-auto d-flex">
+          <button class="page-link" data-list-pagination="prev"><span class="fas fa-chevron-left"></span></button>
+          <ul class="mb-0 pagination"></ul>
+          <button class="page-link pe-0" data-list-pagination="next"><span class="fas fa-chevron-right"></span></button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+<%- include('partials/private-footer.ejs') %>

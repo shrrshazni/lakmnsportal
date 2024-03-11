@@ -42,27 +42,27 @@
   </div>
 
   <div class="row justify-content-between mb-6">
-    <div class="col-6 col-md-4 col-xxl-2 text-center border-translucent border-start-xxl border-end-xxl-0 border-bottom-xxl-0 border-end border-bottom pb-4 pb-xxl-0 "><span class="uil fs-5 lh-1 fa-solid fa-users-line text-primary"></span>
+    <div class="col-6 col-md-4 col-xxl-2 text-center border-translucent border-start-xxl border-end-xxl-0 border-bottom-xxl-0 border-end border-bottom pb-4 pb-xxl-0 "><span class="uil fs-5 lh-1 fa-solid fa-calendar text-primary"></span>
       <h1 class="fs-5 pt-3"><%= allLeave.length %></h1>
       <p class="fs-9 mb-0">Total All Leave</p>
     </div>
-    <div class="col-6 col-md-4 col-xxl-2 text-center border-translucent border-start-xxl border-end-xxl-0 border-bottom-xxl-0 border-end-md border-bottom pb-4 pb-xxl-0"><span class="uil fs-5 lh-1 fa-solid fa-desktop text-info"></span>
+    <div class="col-6 col-md-4 col-xxl-2 text-center border-translucent border-start-xxl border-end-xxl-0 border-bottom-xxl-0 border-end-md border-bottom pb-4 pb-xxl-0"><span class="uil fs-5 lh-1 fa-solid fa-calendar-day text-info"></span>
       <h1 class="fs-5 pt-3"><%= allLeave.filter(leave => leave.status === 'submitted').length %></h1>
       <p class="fs-9 mb-0">Total Submitted</p>
     </div>
-    <div class="col-6 col-md-4 col-xxl-2 text-center border-translucent border-start-xxl border-bottom-xxl-0 border-bottom border-end border-end-md-0 pb-4 pb-xxl-0 pt-4 pt-md-0"><span class="uil fs-5 lh-1 fa-solid fa-laptop text-primary"></span>
+    <div class="col-6 col-md-4 col-xxl-2 text-center border-translucent border-start-xxl border-bottom-xxl-0 border-bottom border-end border-end-md-0 pb-4 pb-xxl-0 pt-4 pt-md-0"><span class="uil fs-5 lh-1 fa-solid fa-calendar-plus text-primary"></span>
       <h1 class="fs-5 pt-3"><%= allLeave.filter(leave => leave.status === 'pending').length %></h1>
       <p class="fs-9 mb-0">Total Pending</p>
     </div>
-    <div class="col-6 col-md-4 col-xxl-2 text-center border-translucent border-start-xxl border-end-md border-end-xxl-0 border-bottom border-bottom-md-0 pb-4 pb-xxl-0 pt-4 pt-xxl-0"><span class="uil fs-5 lh-1 fa-solid fa-user-plus text-info"></span>
+    <div class="col-6 col-md-4 col-xxl-2 text-center border-translucent border-start-xxl border-end-md border-end-xxl-0 border-bottom border-bottom-md-0 pb-4 pb-xxl-0 pt-4 pt-xxl-0"><span class="uil fs-5 lh-1 fa-solid fa-calendar-minus text-warning"></span>
       <h1 class="fs-5 pt-3"><%= allLeave.filter(leave => leave.status === 'invalid').length %> %></h1>
       <p class="fs-9 mb-0">Total Invalid</p>
     </div>
-    <div class="col-6 col-md-4 col-xxl-2 text-center border-translucent border-start-xxl border-end border-end-xxl-0 pb-md-4 pb-xxl-0 pt-4 pt-xxl-0"><span class="uil fs-5 lh-1 fa-solid fa-divide text-success"></span>
+    <div class="col-6 col-md-4 col-xxl-2 text-center border-translucent border-start-xxl border-end border-end-xxl-0 pb-md-4 pb-xxl-0 pt-4 pt-xxl-0"><span class="uil fs-5 lh-1 fa-solid fa-calendar-check text-success"></span>
       <h1 class="fs-5 pt-3"><%= allLeave.filter(leave => leave.status === 'approved').length %> %></h1>
       <p class="fs-9 mb-0">Total Approved</p>
     </div>
-    <div class="col-6 col-md-4 col-xxl-2 text-center border-translucent border-start-xxl border-end-xxl pb-md-4 pb-xxl-0 pt-4 pt-xxl-0"><span class="uil fs-5 lh-1 fa-solid fa-building text-danger"></span>
+    <div class="col-6 col-md-4 col-xxl-2 text-center border-translucent border-start-xxl border-end-xxl pb-md-4 pb-xxl-0 pt-4 pt-xxl-0"><span class="uil fs-5 lh-1 fa-solid fa-calendar-xmark text-danger"></span>
       <h1 class="fs-5 pt-3"><%= allLeave.filter(leave => leave.status === 'denied').length %> %></h1>
       <p class="fs-9 mb-0">Total Denied</p>
     </div>
@@ -562,11 +562,11 @@
 
       <div class="row flex-between-center mb-4 g-3">
         <div class="col-auto">
-          <h3>Total leaves per month</h3>
+          <h3>Leaves per month</h3>
           <p class="text-body-tertiary lh-sm mb-0">Leaves across all of department in one calendar</p>
         </div>
-        <div class="col-8 col-sm-4">
-          <select class="form-select form-select-sm" id="select-month">
+        <div class="col-8 col-sm-3">
+          <select class="form-select form-select-sm" id="select-month" onchange="filterTable();">
             <option>January</option>
             <option>February</option>
             <option>March</option>
@@ -613,7 +613,7 @@
 
       </div>
 
-      <div id="selected-month-leave-chart" style="min-height: 350px;"></div>
+      <div id="selected-month-leave-chart" style="min-height: 400px;"></div>
 
       <script>
         function handleMonthChange() {
@@ -808,7 +808,7 @@
   <div id="all-staff" data-list='{"valueNames":["staff","type","startdate","returndate","department","reliefstaff","status"],"page":10,"pagination":true}'>
 
     <div class="mb-3">
-      <h3>All leave per month</h3>
+      <h3 id="selected-month-label">Leave listed for all month</h3>
       <p class="text-body-tertiary lh-sm mb-0">Displaying all approved staff members time-off records monthly</p>
     </div>
 
@@ -862,11 +862,22 @@
 
           <% 
           function formatDate(inputDate) {
-            const day = String(inputDate.getDate()).padStart(2, '0');
-            const month = String(inputDate.getMonth() + 1).padStart(2, '0');
-            const year = inputDate.getFullYear();
-          
-            return `${day}/${month}/${year}`;
+              if (!inputDate) {
+                  return ""; // Return an empty string if inputDate is undefined or null
+              }
+      
+              const dateObject = new Date(inputDate);
+      
+              if (isNaN(dateObject.getTime())) {
+                  console.error("Invalid date format:", inputDate);
+                  return ""; // Return an empty string for invalid dates
+              }
+      
+              const day = String(dateObject.getDate()).padStart(2, '0');
+              const month = String(dateObject.getMonth() + 1).padStart(2, '0');
+              const year = dateObject.getFullYear();
+      
+              return `${day}/${month}/${year}`;
           }
           %>
 
@@ -883,7 +894,7 @@
             </td>
 
             <td class="align-middle white-space-nowrap startdate ps-3">
-              <p class="mb-0 fs-9 text-body"><%= formatDate(leave.date.start) %></p>
+              <p class="mb-0 fs-9 text-body" id="start-date"><%= formatDate(leave.date.start) %></p>
             </td>
 
             <td class="align-middle white-space-nowrap returndate ps-3">
@@ -938,7 +949,94 @@
       </div>
     </div>
   </div>
+
 </div>
 
+<script>
+  function formatDate(inputDate) {
+    if (!inputDate) {
+      return ""; // Return an empty string if inputDate is undefined or null
+    }
+
+    try {
+      // Check if the inputDate is in the "DD/MM/YYYY" format
+      const match = inputDate.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+
+      if (match) {
+        const day = match[1];
+        const month = match[2];
+        const year = match[3];
+
+        // Construct a new date string in the "MM/DD/YYYY" format
+        inputDate = `${month}/${day}/${year}`;
+      }
+
+      const dateObject = new Date(inputDate);
+
+      if (isNaN(dateObject.getTime())) {
+        console.error("Invalid date format:", inputDate);
+        return ""; // Return an empty string for invalid dates
+      }
+
+      const formattedDate = dateObject.toLocaleString('en-us', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      });
+
+      return formattedDate;
+    } catch (error) {
+      console.error("Error formatting date:", inputDate, error);
+      return ""; // Return an empty string in case of an error
+    }
+  }
+
+  function filterTable() {
+    var selectedMonth = document.getElementById("select-month").value;
+    var rows = document.getElementById("project-summary-table-body").getElementsByTagName("tr");
+
+    document.getElementById("selected-month-label").textContent =
+      `Leave listed for ${selectedMonth || "All"}`;
+
+    for (var i = 0; i < rows.length; i++) {
+      var currentRow = rows[i];
+      var startDateCell = currentRow.querySelector("#start-date");
+
+      if (!startDateCell) {
+        console.error("Start date cell not found for row:", currentRow);
+        continue;
+      }
+
+      var startDate = startDateCell.innerText.trim();
+
+      if (!startDate) {
+        console.error("Start date is empty for row:", currentRow);
+        continue;
+      }
+
+      try {
+        // Use the formatted date for comparison
+        var formattedStartDate = formatDate(startDate);
+        var dateObject = new Date(formattedStartDate);
+
+        if (isNaN(dateObject.getTime())) {
+          console.error("Invalid date format for row:", currentRow);
+          continue;
+        }
+      } catch (error) {
+        console.error("Error parsing date for row:", currentRow, error);
+        continue;
+      }
+
+      if (dateObject.toLocaleString('en-us', {
+          month: 'long'
+        }) === selectedMonth) {
+        currentRow.style.display = ""; // Show the row
+      } else {
+        currentRow.style.display = "none"; // Hide the row
+      }
+    }
+  }
+</script>
 
 <%- include('partials/private-footer.ejs') %>
