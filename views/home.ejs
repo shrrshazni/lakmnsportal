@@ -185,9 +185,7 @@
 
         <div class="carousel-item active" style="height: 375px;">
 
-          <div class="card" style="height: 375px;">
-            <div class="bg-holder d-block bg-card" style="background-image:url(/assets/img/spot-illustrations/32.png);background-position: top right;">
-            </div>
+          <div class="card overflow-y-auto scrollbar" style="height: 375px;">
             <div class="card-body">
               <div class="d-flex justify-content-between">
                 <div class="badge badge-phoenix fs-10 badge-phoenix-primary mb-4"><span class="fa-solid fa-bell me-2"></span><span class="fw-bold">Notifications</span></div>
@@ -229,7 +227,7 @@
               %>
 
 
-              <div class="scrollbar-overlay">
+              <div class="">
                 <% if (notifications.length > 0) { %>
                 <% notifications.forEach(notification => { %>
                 <div class="px-2 px-sm-3 py-3 notification-card position-relative read border-bottom">
@@ -278,10 +276,9 @@
                 </div>
                 <% } %>
               </div>
-
-              <div class="p-0 border-top border-translucent border-0 position-absolute start-0 bottom-0 w-100">
-                <div class="my-2 text-center fw-bold fs-10 text-body-tertiary text-opactity-85"><a class="fw-bolder" href="/">Notification history</a></div>
-              </div>
+            </div>
+            <div class="p-0 border-top border-translucent border-0 w-100">
+              <div class="my-2 text-center fw-bold fs-10 text-body-tertiary text-opactity-85"><a class="fw-bolder" href="/">Notification history</a></div>
             </div>
           </div>
 
@@ -1202,7 +1199,7 @@
     </div>
 
     <div class="col-12 col-xl-6 col-xxl-5 mb-3">
-      <div class="card h-100">
+      <div class="card overflow-y-auto scrollbar" style="max-height: 50vh;">
         <div class="card-body">
           <div class="card-title mb-1">
             <h3 class="text-body-emphasis">Activity</h3>
@@ -1829,7 +1826,7 @@
             <div class="card-body">
               <div class="d-flex justify-content-between">
                 <div>
-                  <h5 class="mb-1">Total pending<span class="badge badge-phoenix badge-phoenix-success rounded-pill fs-9 ms-2"><span class="badge-label" id="differencepending"></span></span></h5>
+                  <h5 class="mb-1">Total Pending<span class="badge badge-phoenix badge-phoenix-success rounded-pill fs-9 ms-2"><span class="badge-label" id="differencepending"></span></span></h5>
                   <h6 class="text-body-tertiary">Last 7 days</h6>
                 </div>
                 <h4 id="totalpending"></h4>
@@ -2869,7 +2866,7 @@
   <div class="row g-3">
     <div class="col-12 col-xxl-6">
       <div class="card">
-        <div class="card-body" style="min-height: 35vh;">
+        <div class="card-body" style="min-height: 25vh;">
           <h4 class="mb-0">Department Stats</h4>
           <p class="fs-9 mb-0">Statistics for specific department</p>
 
@@ -2883,7 +2880,7 @@
 
     <div class="col-12 col-xxl-6">
       <div class="card">
-        <div class="card-body" style="min-height: 35vh;">
+        <div class="card-body" style="min-height: 25vh;">
           <h4 class="mb-0">Section Stats</h4>
           <p class="fs-9 mb-0">Statistics for specific sections</p>
 

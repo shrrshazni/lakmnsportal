@@ -26,25 +26,25 @@
   }
 
   var showApproval = 'd-none';
-  if (approvals && approvals.length > 0) {
-        const userApprovalExists = approvals.some(approval => approval.recipient.equals(user._id));
-        const isUserLeaveOwner = user._id.toString() === leave._id.toString();
 
-        if (!isUserLeaveOwner && leave.status !== 'approved' && leave.status !== 'denied') {
-            if (userApprovalExists) {
-                const userApprovalIndex = approvals.findIndex(approval => approval.recipient.equals(user._id));
-                if (userApprovalIndex > 0) {
-                    const previousApprovalStatus = approvals[userApprovalIndex - 1].status;
-                    if (
-                         (previousApprovalStatus === 'approved' || previousApprovalStatus === 'submitted') &&
-                         !(approvals[userApprovalIndex].status === 'approved' || approvals[userApprovalIndex].status === 'denied')
-                       ) {
-                            showApproval = '';
-                         }
-                }
-            }
-        }
-    }
+  if (approvals && approvals.length > 0) {
+      const userApprovalEntries = approvals.filter(approval => approval.recipient.equals(user._id));
+      const isUserLeaveOwner = user._id.toString() === leave._id.toString();
+  
+      if (!isUserLeaveOwner && leave.status !== 'approved' && leave.status !== 'denied') {
+          if (userApprovalEntries.length > 0) {
+              const latestUserApproval = userApprovalEntries[userApprovalEntries.length - 1];
+              
+              if (
+                  (latestUserApproval.status === 'approved' || latestUserApproval.status === 'submitted') &&
+                  !(approvals[approvals.length - 1].status === 'approved' || approvals[approvals.length - 1].status === 'denied')
+              ) {
+                  showApproval = '';
+              }
+          }
+      }
+  }
+
 
     var showLeaveMenu = '';
 
