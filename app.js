@@ -956,8 +956,6 @@ app.get('/api/leave/status', isAuthenticated, async function (req, res) {
             }
         });
 
-        console.log(submittedCount);
-
         // Calculate percentages
         const totalLeaves = leaveDataLast7Days.length;
         const percentageSubmitted = totalLeaves > 0 ? ((submittedCount / totalLeaves) * 100).toFixed(0) : 0;
@@ -975,8 +973,6 @@ app.get('/api/leave/status', isAuthenticated, async function (req, res) {
             percentageApproved,
             totalLeaves
         };
-
-        console.log(responseDataLast7Days)
 
         // Respond with the data
         res.json(responseDataLast7Days);
@@ -1779,7 +1775,8 @@ app
             });
             const adminHR = await User.findOne({
                 isAdmin: true,
-                department: 'Administration and Human Resource Management Division'
+                department: 'Administration and Human Resource Management Division',
+                _id: { $ne: user._id }
             });
             const userLeave = await UserLeave.findOne({ user: user._id })
                 .populate('user')
@@ -3482,23 +3479,68 @@ app.post('/status-update', isAuthenticated, async (req, res) => {
     }
 });
 
-// TESTING PART
-
-app.get('/test', isAuthenticated, async function (req, res) {
+// HUMAN RESOURCES
+app.get('/human-resource/staff-members/overview', isAuthenticated, async function (req, res) {
     const username = req.user.username;
     const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    }).populate('sender');
 
-    // Example usage:
-    const startDate = '2024-03-04'; // Replace with your start date
-    const endDate = '2024-03-10'; // Replace with your end date
+    const allUser = await User.find();
+    const uniqueDepartments = new Set();
+    const uniqueSection = new Set();
 
-    if (isDateInRange(startDate, endDate)) {
-        console.log('The current date is within the specified range.');
-    } else {
-        console.log('The current date is outside the specified range.');
+    allUser.forEach(user => {
+        if (user.department) {
+            uniqueDepartments.add(user.department);
+        }
+    });
+
+    allUser.forEach(user => {
+        if (user.section) {
+            uniqueSection.add(user.section);
+        }
+    });
+
+    const departments = Array.from(uniqueDepartments);
+    const sections = Array.from(uniqueSection);
+
+    if (user) {
+        res.render('hr-staffmembers-overview', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4(),
+            departments: departments,
+            sections: sections,
+            // all data
+            allUser: allUser
+        });
     }
+});
 
-    res.redirect('/');
+app.get('/human-resource/leave/overview', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    }).populate('sender');
+
+    const allLeave = await Leave.find();
+    const allUser = await User.find();
+
+    if (user) {
+        res.render('hr-leave-overview', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4(),
+            // all data
+            allLeave: allLeave,
+            allUser : allUser
+        });
+    }
 });
 
 // FUNCTIONS
