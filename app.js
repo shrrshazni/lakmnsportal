@@ -928,6 +928,8 @@ app.get('/api/leave/status', isAuthenticated, async function (req, res) {
             }
         }).select('status');
 
+        console.log(leaveDataLast7Days);
+
         // Initialize counts for each status
         let submittedCount = 0;
         let pendingCount = 0;
@@ -959,13 +961,11 @@ app.get('/api/leave/status', isAuthenticated, async function (req, res) {
 
         // Calculate percentages
         const totalLeaves = leaveDataLast7Days.length;
-        const percentageSubmitted = ((submittedCount / totalLeaves) * 100).toFixed(
-            0
-        );
-        const percentagePending = ((pendingCount / totalLeaves) * 100).toFixed(0);
-        const percentageInvalid = ((invalidCount / totalLeaves) * 100).toFixed(0);
-        const percentageDenied = ((deniedCount / totalLeaves) * 100).toFixed(0);
-        const percentageApproved = ((approvedCount / totalLeaves) * 100).toFixed(0);
+        const percentageSubmitted = totalLeaves > 0 ? ((submittedCount / totalLeaves) * 100).toFixed(0) : 0;
+        const percentagePending = totalLeaves > 0 ? ((pendingCount / totalLeaves) * 100).toFixed(0) : 0;
+        const percentageInvalid = totalLeaves > 0 ? ((invalidCount / totalLeaves) * 100).toFixed(0) : 0;
+        const percentageDenied = totalLeaves > 0 ? ((deniedCount / totalLeaves) * 100).toFixed(0) : 0;
+        const percentageApproved = totalLeaves > 0 ? ((approvedCount / totalLeaves) * 100).toFixed(0) : 0;
 
         // Create a single JSON object to send as the response
         const responseDataLast7Days = {
@@ -976,6 +976,8 @@ app.get('/api/leave/status', isAuthenticated, async function (req, res) {
             percentageApproved,
             totalLeaves
         };
+
+        console.log(responseDataLast7Days);
 
         // Respond with the data
         res.json(responseDataLast7Days);
@@ -2335,6 +2337,8 @@ app
                     alert: renderDataError.alert
                 });
             } else {
+
+                let i = 0;
                 // set user id to be send
                 for (const approval of approvals) {
                     const recipientId = approval.recipient;
@@ -2354,6 +2358,8 @@ app
                         // Add the user's email to sendEmail
                         sendEmail.push(email.email);
                     }
+
+                    i++;
                 }
 
                 const leave = new Leave({
