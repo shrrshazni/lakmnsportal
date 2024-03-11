@@ -1368,7 +1368,7 @@ app.get(
                         department: user.department,
                         fullname: { $regex: query, $options: 'i' }
                     });
-                } else if (user.isPersonalAssitant) {
+                } else if (user.isPersonalAssistant) {
                     const departmentQuery = {
                         department: user.department,
                         fullname: { $regex: query, $options: 'i' }
