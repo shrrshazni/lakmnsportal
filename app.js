@@ -112,7 +112,7 @@ const userSchema = new mongoose.Schema({
     isAdmin: { type: Boolean, default: false },
     isOfficer: { type: Boolean, default: false },
     isManagement: { type: Boolean, default: false },
-    isPersonalAssitant: { type: Boolean, default: false },
+    isPersonalAssistant: { type: Boolean, default: false },
     dateEmployed: { type: Date },
     birthdate: { type: Date }
 });
