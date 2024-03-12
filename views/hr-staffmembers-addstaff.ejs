@@ -1,0 +1,165 @@
+<%- include('partials/private-header.ejs') %>
+
+<div class="mb-6">
+
+  <div class="mb-6">
+    <h2 class="mb-2">Add new staff</h2>
+    <h5 class="text-body-tertiary fw-semibold">Introduce and onboard new team member.</h5>
+  </div>
+
+  <div class="row g-4 px-sm-0">
+    <div class="col-12 col-xxl-9">
+
+      <form class="row g-3 mb-6 has-validation" action="/human-resource/staff-members/add-staff" method="post" id="leaveForm">
+
+        <div class="col-12 col-md-6">
+          <div class="form-floating">
+            <input type="text" name="username" class="form-control" placeholder="" required />
+            <label class="form-label" for="username">Username</label>
+            <div class="invalid-feedback">
+              Please enter username
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+          <div class="form-floating">
+            <input type="text" name="fullname" class="form-control" placeholder="" required />
+            <label class="form-label" for="fullname">Full Name</label>
+            <div class="invalid-feedback">
+              Please enter full name
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+          <div class="form-floating">
+            <input type="text" name="email" class="form-control" placeholder="" required />
+            <label class="form-label" for="email">Email Address</label>
+            <div class="invalid-feedback">
+              Please enter email address
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+          <div class="form-floating">
+            <input type="text" name="password" class="form-control" placeholder="" required />
+            <label class="form-label" for="password">Password</label>
+            <div class="invalid-feedback">
+              Please enter password
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-4">
+          <div class="form-floating">
+            <select class="form-select" id="floatingSelectTask" name="class">
+              <option selected>Select classification</option>
+              <option value="permanent">Permanent</option>
+              <option value="contract">Contract</option>
+              <option value="trainee">Trainee</option>
+              <option value="intern">Intern</option>
+            </select>
+            <div class="invalid-feedback">Please select a classification type</div>
+            <label for="floatingSelectTask">Classification</label>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-4">
+          <div class="form-floating">
+            <select class="form-select" id="floatingSelectTask" name="gender">
+              <option selected>Select gender</option>
+              <option value="Male">Male</option>
+              <option value="Femalet">Female</option>
+            </select>
+            <div class="invalid-feedback">Please select a gender type</div>
+            <label for="floatingSelectTask">Gender</label>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-4">
+          <div class="form-floating">
+            <input type="text" name="grade" class="form-control" placeholder="" required />
+            <label class="form-label" for="grade">Grade</label>
+            <div class="invalid-feedback">
+              Please enter grade
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-4">
+          <div class="form-floating">
+            <input type="text" name="department" class="form-control" placeholder="" required />
+            <label class="form-label" for="department">Department</label>
+            <div class="invalid-feedback">
+              Please enter a department
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-4">
+          <div class="form-floating">
+            <input type="text" name="section" class="form-control" placeholder="" required />
+            <label class="form-label" for="section">Section</label>
+            <div class="invalid-feedback">
+              Please enter a section
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-4">
+          <div class="form-floating">
+            <input type="text" name="position" class="form-control" placeholder="" required />
+            <label class="form-label" for="position">Position</label>
+            <div class="invalid-feedback">
+              Please enter a position
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 gy-6">
+          <div class="row g-3 justify-content-end">
+            <div class="col-auto">
+              <a role="button" class="btn btn-phoenix-secondary" href="/">Cancel</a>
+            </div>
+            <div class="col-auto">
+              <button class="btn btn-primary w-100 mb-3 loading-button" type="submit" name="submit">
+                <div class="content-button">Add new staff</div>
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </form>
+
+      <script>
+        document.getElementById('leaveForm').addEventListener('click', function() {
+          this.classList.add('was-validated');
+          this.classList.remove('has-validated');
+        });
+      </script>
+
+    </div>
+  </div>
+
+</div>
+
+
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 5">
+  <div class="d-flex">
+    <div class="toast <%= show %> align-items-center text-white border-0" role="alert" data-bs-autohide="false" aria-live="assertive" aria-atomic="true">
+      <div class="d-flex justify-content-between">
+        <div class="toast-body px-0 py-3">
+          <code class="text-primary"><%= alert %></code>
+        </div>
+
+        <button class="btn ms-2 p-0" type="button" data-bs-dismiss="toast" aria-label="Close">
+          <span class="uil uil-times fs-7"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/private-footer.ejs') %>
