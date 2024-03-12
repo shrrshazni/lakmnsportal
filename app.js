@@ -2434,7 +2434,7 @@ app
               message: 'Leave request needs approval.'
             });
 
-            // newNotification.save();
+            newNotification.save();
           }
 
           console.log('Done send notifications!');
