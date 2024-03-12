@@ -171,8 +171,17 @@
               </div>
             </div>
 
+            <% 
+            var showHumanResource = '';
+            if(user.section === 'Administration and Human Resource Management Division' || user.isChiefExec || user.isDeputyChiefExec){
+                showHumanResource = '';
+            }else{
+                showHumanResource = 'd-none';
+            }
+            %>
+
             <!-- Human Resource -->
-            <li class="nav-item">
+            <li class="nav-item <%= showHumanResource %>">
 
               <!-- label-->
               <p class="navbar-vertical-label">Human Resources
