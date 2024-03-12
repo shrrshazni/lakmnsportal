@@ -1780,7 +1780,7 @@ app
             });
             const adminHR = await User.findOne({
                 isAdmin: true,
-                department: 'Administration and Human Resource Management Division',
+                section: 'Administration and Human Resource Management Division',
                 _id: { $ne: user._id }
             });
             const userLeave = await UserLeave.findOne({ user: user._id })
@@ -2311,33 +2311,57 @@ app
                         const filePath = __dirname + '/public/uploads/' + deletedFile.name;
                         await fs.unlink(filePath);
                     }
+
+                    res.render('leave-request', {
+                        user: user,
+                        uuid: uuid,
+                        notifications: notifications,
+                        leave: leave,
+                        userLeave: userLeave,
+                        selectedNames: '',
+                        // data
+                        type: type,
+                        startDate: startDate,
+                        returnDate: returnDate,
+                        purpose: purpose,
+                        // validation
+                        validationType: '',
+                        validationStartDate: 'is-invalid',
+                        validationReturnDate: 'is-invalid',
+                        validationPurpose: '',
+                        startDateFeedback: 'Please enter a valid start date',
+                        returnDateFeedback: 'Please select valid return date',
+                        // toast
+                        show: renderDataError.show,
+                        alert: renderDataError.alert
+                    });
                 } else {
-                    console.log('No files found or there was an error deleting files.');
+                    res.render('leave-request', {
+                        user: user,
+                        uuid: uuid,
+                        notifications: notifications,
+                        leave: leave,
+                        userLeave: userLeave,
+                        selectedNames: '',
+                        // data
+                        type: type,
+                        startDate: startDate,
+                        returnDate: returnDate,
+                        purpose: purpose,
+                        // validation
+                        validationType: '',
+                        validationStartDate: '',
+                        validationReturnDate: '',
+                        validationPurpose: '',
+                        startDateFeedback: 'Please select a start date',
+                        returnDateFeedback: 'Please select a return date',
+                        // toast
+                        show: renderDataError.show,
+                        alert: renderDataError.alert
+                    });
                 }
 
-                res.render('leave-request', {
-                    user: user,
-                    uuid: uuid,
-                    notifications: notifications,
-                    leave: leave,
-                    userLeave: userLeave,
-                    selectedNames: '',
-                    // data
-                    type: type,
-                    startDate: startDate,
-                    returnDate: returnDate,
-                    purpose: purpose,
-                    // validation
-                    validationType: '',
-                    validationStartDate: 'is-invalid',
-                    validationReturnDate: 'is-invalid',
-                    validationPurpose: '',
-                    startDateFeedback: 'Please enter a valid start date',
-                    returnDateFeedback: 'Please select valid return date',
-                    // toast
-                    show: renderDataError.show,
-                    alert: renderDataError.alert
-                });
+
             } else {
                 let i = 0;
                 // set user id to be send

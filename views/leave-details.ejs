@@ -27,24 +27,33 @@
 
   var showApproval = 'd-none';
 
-  if (approvals && approvals.length > 0) {
-      const userApprovalEntries = approvals.filter(approval => approval.recipient.equals(user._id));
-      const isUserLeaveOwner = user._id.toString() === leave._id.toString();
-  
-      if (!isUserLeaveOwner && leave.status !== 'approved' && leave.status !== 'denied') {
-          if (userApprovalEntries.length > 0) {
-              const latestUserApproval = userApprovalEntries[userApprovalEntries.length - 1];
-              
-              if (
-                  (latestUserApproval.status === 'approved' || latestUserApproval.status === 'submitted') &&
-                  !(approvals[approvals.length - 1].status === 'approved' || approvals[approvals.length - 1].status === 'denied')
-              ) {
-                  showApproval = '';
-              }
-          }
-      }
-  }
+  if (user.isAdmin) {
+    // Check if all other approvals are in 'approved' status
+    const allOtherApprovalsApproved = approvals.every(approval => approval.status === 'approved');
 
+    if (allOtherApprovalsApproved) {
+        showApproval = '';
+    }
+
+    } else {
+        if (approvals && approvals.length > 0) {
+            const userApprovalEntries = approvals.filter(approval => approval.recipient.equals(user._id));
+            const isUserLeaveOwner = user._id.toString() === leave._id.toString();
+    
+            if (!isUserLeaveOwner && leave.status !== 'approved' && leave.status !== 'denied') {
+                if (userApprovalEntries.length > 0) {
+                    const latestUserApproval = userApprovalEntries[userApprovalEntries.length - 1];
+    
+                    if (
+                        (latestUserApproval.status === 'approved' || latestUserApproval.status === 'submitted') &&
+                        !(approvals[approvals.length - 1].status === 'approved' || approvals[approvals.length - 1].status === 'denied')
+                    ) {
+                        showApproval = '';
+                    }
+                }
+            }
+        }
+    }
 
     var showLeaveMenu = '';
 
