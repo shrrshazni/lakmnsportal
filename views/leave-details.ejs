@@ -55,6 +55,14 @@
        }
     }
 
+    var showCancel = 'd-none';
+
+    if(leave.status === 'approved' && leave.date.start <= new Date().toISOString()) {
+        if(leave.user.toString() === user._id.toString()){
+            showCancel = '';
+        }
+    }
+
     var showLeaveMenu = '';
 
     if(userReq._id.toString() === user._id.toString()){
