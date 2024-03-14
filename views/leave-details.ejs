@@ -27,16 +27,14 @@
 
   var showApproval = 'd-none';
 
-  if (user.isAdmin) {
-    // Check if all other approvals are in 'approved' status
-    const allOtherApprovalsApproved = approvals
-    .slice(0, approvals.length - 1)
-    .every(approval => approval.status === 'approved');
+  // Check if all other approvals are in 'approved' status
+  const allOtherApprovalsApproved = approvals
+  .slice(0, approvals.length - 1)
+  .every(approval => approval.status === 'approved');
 
+  if (allOtherApprovalsApproved && user.isAdmin) {
 
-    if (allOtherApprovalsApproved) {
-        showApproval = '';
-    }
+    showApproval = '';
 
     } else {
        if (approvals && approvals.length > 0) {
@@ -94,7 +92,7 @@
     <button class="btn px-3 btn-phoenix-secondary <%= showLeaveMenu %>" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fa-solid fa-ellipsis"></span></button>
     <ul class="dropdown-menu dropdown-menu-end p-0" style="z-index: 9999;">
       <li><a class="dropdown-item" href="/leave/history">Leave History</a></li>
-      <li><a class="dropdown-item" href="#!">Cancel Request</a></li>
+      <li><a class="dropdown-item <%= showCancel %>" href="/leave/cancelled/<%= leave._id %>">Cancel Request</a></li>
       <li><a class="dropdown-item" href="#!">Print</a></li>
     </ul>
   </div>
