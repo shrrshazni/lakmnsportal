@@ -27,22 +27,21 @@
 
   var showApproval = 'd-none';
 
-  // Check if all other approvals are in 'approved' status
-  const allOtherApprovalsApproved = approvals
-  .slice(0, approvals.length - 1)
-  .every(approval => approval.status === 'approved');
+  if (user.isAdmin) {
+    const allOtherApprovalsApproved = approvals
+    .slice(0, approvals.length - 1)
+    .every(approval => approval.status === 'approved');
 
-  if (allOtherApprovalsApproved && user.isAdmin) {
-
-    showApproval = '';
-
+    if(allOtherApprovalsApproved){
+        showApproval = '';
+    }
+    
     } else {
        if (approvals && approvals.length > 0) {
         const userApprovalIndex = approvals.findIndex(approval => approval.recipient.equals(user._id));
         const isUserLeaveOwner = user._id.toString() === leave._id.toString();
 
-
-        if (userApprovalIndex && !isUserLeaveOwner && leave.status !== 'approved' && leave.status !== 'denied') {
+        if (userApprovalIndex && !isUserLeaveOwner && leave.status !== 'approved' && leave.status !== 'denied' && leave.status !== 'cancelled') {
             const previousApprovalEntries = approvals[userApprovalIndex-1];
 
             if ((previousApprovalEntries.status === 'approved' || previousApprovalEntries.status === 'submitted') &&
@@ -55,18 +54,29 @@
 
     var showCancel = 'd-none';
 
+    const headDepartmentApprovalIndex = approvals.findIndex(approval => approval.role === 'Head of Department');
+    const headSectionApprovalIndex = approvals.findIndex(approval => approval.role === 'Head of Section');
+    const deputyChiefApprovalIndex = approvals.findIndex(approval => approval.role === 'Deputy Chief Executive Officer');
+    const chiefApprovalIndex = approvals.findIndex(approval => approval.role === 'Chief Executive Officer');
+
+    const anyApprovalIndex = [headDepartmentApprovalIndex, headSectionApprovalIndex, deputyChiefApprovalIndex, chiefApprovalIndex].findIndex(index => index !== -1 && approvals[index].recipient.toString() === user._id);
+
     if(leave.status === 'approved' && leave.date.start <= new Date().toISOString()) {
+
         if(leave.user.toString() === user._id.toString()){
             showCancel = '';
+        }else if(anyApprovalIndex !== -1){
+            showCancel = '';
         }
-    }
 
-    var showLeaveMenu = '';
+    }else if(leave.status === 'pending' || leave.status === 'invalid' || leave.status === 'submitted'){
+            
+        if(leave.user.toString() === user._id.toString()){
+            showCancel = '';
+        }else if(anyApprovalIndex !== -1){
+            showCancel = '';
+        }
 
-    if(userReq._id.toString() === user._id.toString()){
-        showLeaveMenu = '';
-    }else {
-        showLeaveMenu = 'd-none';
     }
 %>
 
@@ -89,9 +99,9 @@
       <a class="btn btn-primary me-2" role="button" href="/leave/approved/<%= leave._id %>">Approve</a>
       <a class="btn btn-outline-danger me-2" role="button" href="/leave/denied/<%= leave._id %>">Deny</a>
     </div>
-    <button class="btn px-3 btn-phoenix-secondary <%= showLeaveMenu %>" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fa-solid fa-ellipsis"></span></button>
+    <button class="btn px-3 btn-phoenix-secondary" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fa-solid fa-ellipsis"></span></button>
     <ul class="dropdown-menu dropdown-menu-end p-0" style="z-index: 9999;">
-      <li><a class="dropdown-item" href="/leave/history">Leave History</a></li>
+      <li><a class="dropdown-item d-none" href="/leave/history">Leave History</a></li>
       <li><a class="dropdown-item <%= showCancel %>" href="/leave/cancelled/<%= leave._id %>">Cancel Request</a></li>
       <li><a class="dropdown-item" href="#!">Print</a></li>
     </ul>
@@ -139,6 +149,22 @@
             <h5><span class="fa-solid fa-pen-nib me-2"></span>Purpose of leave</h5>
             <hr>
             <p class="text-body-highlight"><%= leave.purpose %></p>
+          </div>
+
+          <% 
+          var comment = ''
+
+          if(!leave.comment || leave.comment === ''){
+            comment = 'd-none';
+          }else {
+            comment = '';
+          }
+          %>
+
+          <div class="mb-5 <%= comment %>">
+            <h5><span class="fa-solid fa-comment me-2"></span>Comment</h5>
+            <hr>
+            <p class="text-body-highlight"><%= leave.comment %></p>
           </div>
 
           <%
@@ -429,8 +455,6 @@
     </div>
   </div>
 </div>
-
-
 
 <!-- alert toast upload -->
 <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 5">

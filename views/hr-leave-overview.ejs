@@ -849,15 +849,18 @@
 
           <% 
           var statusApprovalColor = '';
+          
                 if (leave.status == "pending"){
                     statusApprovalColor = 'info';
-                } else if(leave.status == "approved" || leave.status == "submitted") {
+                } else if(leave.status == "approved") {
                     statusApprovalColor = 'success';
                 } else if(leave.status == "denied" ||  leavs.status == "cancelled") {
                     statusApprovalColor = 'danger';
                 }else if (leave.status == "invalid"){
                     statusApprovalColor = 'warning';
-                }  
+                }else if (leave.status == "submitted"){
+                    statusApprovalColor = 'info-lighter';
+                }   
           %>
 
           <% 

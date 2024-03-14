@@ -586,12 +586,14 @@
                         var statusColor = '';
                         if (leaves.status == "pending"){
                             statusColor = 'info';
-                        } else if(leaves.status == "approved" || leaves.status == "submitted") {
+                        } else if(leaves.status == "approved") {
                             statusColor = 'success';
                         } else if(leaves.status == "denied" ||  leaves.status == "cancelled") {
                             statusColor = 'danger';
                         }else if (leaves.status == "invalid"){
                             statusColor = 'warning';
+                        } else if (leaves.status == "submitted"){
+                            statusColor = 'info-lighter';
                         } 
 
                     %>

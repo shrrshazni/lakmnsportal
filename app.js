@@ -2790,9 +2790,6 @@ app.get('/leave/:approval/:id', async function (req, res) {
             approval.recipient.equals(user._id)
         );
 
-        console.log(indexOfRecipient !== -1 &&
-            checkLeave.approvals[indexOfRecipient].status);
-
         if (approval === 'approved') {
             const leave = await Leave.findOneAndUpdate(
                 {
@@ -3212,6 +3209,7 @@ app.get('/leave/:approval/:id', async function (req, res) {
                 res.redirect('/leave/details/' + id);
             }
         } else if (approval === 'cancelled') {
+            
             if (checkLeave.status === 'approved') {
                 const userLeave = await UserLeave.findOne({
                     user: firstRecipientId
@@ -3325,14 +3323,14 @@ app.get('/leave/:approval/:id', async function (req, res) {
                 await userLeave.save();
             }
 
-
             await Leave.findOneAndUpdate(
                 {
                     _id: id
                 },
                 {
                     $set: {
-                        status: 'cancelled'
+                        status: 'cancelled',
+                        comment : 'The request has been cancelled by the ' + checkLeave.approvals[indexOfRecipient].role
                     }
                 },
                 { new: true }

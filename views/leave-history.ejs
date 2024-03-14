@@ -103,13 +103,15 @@ function formatDate(inputDate) {
                 var statusApprovalColor = '';
                 if (leaves.status == "pending"){
                     statusApprovalColor = 'info';
-                } else if(leaves.status == "approved" || leaves.status == "submitted") {
+                } else if(leaves.status == "approved") {
                     statusApprovalColor = 'success';
                 } else if(leaves.status == "denied" ||  leaves.status == "cancelled") {
                     statusApprovalColor = 'danger';
                 }else if (leaves.status == "invalid"){
                     statusApprovalColor = 'warning';
-                } 
+                }else if (leaves.status == "submitted"){
+                    statusApprovalColor = 'info-lighter';
+                }
                         
               %>
               <tr class="position-static">

@@ -109,12 +109,12 @@
   </script>
 </div>
 
-<div class="row gy-3 mb-6 justify-content-between d-flex mt-0">
+<div class="row gy-3 mb-3 justify-content-between d-flex mt-0">
   <div class="col-md-9 col-auto">
     <h2 class="mb-2 text-body-emphasis">Dashboard</h2>
     <h5 class="text-body-tertiary fw-semibold">Real-time data visualization for informed decision-making</h5>
   </div>
-  <div class="col-md-3 col-auto row g-3">
+  <div class="col-md-3 col-auto row g-3 ms-2">
     <div class=" col-12 btn btn-phoenix-secondary my-auto">Announcements</div>
   </div>
 </div>
@@ -122,9 +122,9 @@
 <div class="row gy-6 mb-6">
   <div class="col-12 col-xxl-8 row mb-3 gy-3">
     <div class="d-flex flex-column justify-content-between pb-3">
-      <div class="row g-5 mb-3">
-        <div class="row align-items-center g-5 mb-3 text-center text-md-start col-md-6 ms-2 ms-xxl-0">
-          <div class="col-12 col-sm-auto mb-sm-2">
+      <div class="row g-5 my-auto">
+        <div class="row align-items-center g-3 gx-0 mb-0 text-center text-md-start col-12 col-md-6 ms-2 ms-xxl-0">
+          <div class="col-12 col-md-6 mb-sm-3 ps-lg-7">
             <div class="avatar avatar-5xl"><img class="rounded-circle border border-primary" src="/assets/img/team/avatar.webp" alt="" /></div>
           </div>
 
@@ -135,12 +135,13 @@
                 var showSection = ' in ' + user.section;
             }
           %>
-          <div class="col-12 col-sm-auto flex-1">
-            <h3 class="mx-auto"><%= user.fullname %></h3>
+          <div class="col-12 col-md-6 flex-1">
+            <h3 class="mx-auto white-space-nowrap"><%= user.fullname %></h3>
             <p class="fw-bold"><%= user.position %> <span class="fw-normal fst-italic">of <%= user.department %><%= showSection %></span></p>
             <p class="mx-auto text-primary">"User's status"</p>
           </div>
         </div>
+
         <div class="col-md-6">
 
         </div>
@@ -1585,13 +1586,15 @@
                 var statusApprovalColor = '';
                 if (leaves.status == "pending"){
                     statusApprovalColor = 'info';
-                } else if(leaves.status == "approved" || leaves.status == "submitted") {
+                } else if(leaves.status == "approved") {
                     statusApprovalColor = 'success';
                 } else if(leaves.status == "denied" ||  leaves.status == "cancelled") {
                     statusApprovalColor = 'danger';
                 }else if (leaves.status == "invalid"){
                     statusApprovalColor = 'warning';
-                } 
+                }else if (leaves.status == "submitted"){
+                    statusApprovalColor = 'info-lighter';
+                }
                                     
                 %>
 
@@ -1637,7 +1640,7 @@
                 <%  }); %> <% } else { %>
                 <tr>
                   <td>
-                    <p class="align-middle fs-9">No approvals leave submitted.</p>
+                    <p class="align-middle fs-9 white-space-nowrap">No approvals leave here.</p>
                   </td>
                 </tr>
                 <% } %>
