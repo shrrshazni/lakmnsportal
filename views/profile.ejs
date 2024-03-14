@@ -66,7 +66,7 @@
       <div class="card-body">
         <div class="border-bottom border-dashed">
           <h4 class="mb-3">Details
-            <button class="btn btn-link p-0" type="button"> <span class="fas fa-edit fs-9 ms-3 text-body-quaternary"></span></button>
+            <button class="btn btn-link p-0" type="button"><span class="fas fa-edit fs-9 ms-3 text-body-quaternary"></span></button>
           </h4>
         </div>
         <div class="pt-4 mb-7 mb-lg-4 mb-xl-7">
@@ -101,7 +101,7 @@
 <div class="mb-6">
   <div class="scrollbar">
     <ul class="nav nav-underline fs-9 flex-nowrap mb-3 pb-1" id="myTab" role="tablist">
-      <li class="nav-item me-3"><a class="nav-link text-nowrap active" id="orders-tab" data-bs-toggle="tab" href="#tab-activity" role="tab" aria-controls="tab-orders" aria-selected="true"><span class="fa-solid fa-clock me-2"></span>Activity<span class="text-body-tertiary fw-normal"> (35)</span></a></li>
+      <li class="nav-item me-3"><a class="nav-link text-nowrap active" id="orders-tab" data-bs-toggle="tab" href="#tab-activity" role="tab" aria-controls="tab-orders" aria-selected="true"><span class="fa-solid fa-clock me-2"></span>Activity<span class="text-body-tertiary fw-normal"> (<%= activities.length %>)</span></a></li>
       <li class="nav-item me-3"><a class="nav-link text-nowrap" id="reviews-tab" data-bs-toggle="tab" href="#tab-leave" role="tab" aria-controls="tab-orders" aria-selected="true"><span class="fa-solid fa-calendar me-2"></span>Leave<span class="text-body-tertiary fw-normal"></span></a></li>
       <li class="nav-item me-3"><a class="nav-link text-nowrap" id="wishlist-tab" data-bs-toggle="tab" href="#tab-personal" role="tab" aria-controls="tab-orders" aria-selected="true"><span class="fa-solid fa-user me-2"></span>Personal</a></li>
     </ul>
@@ -126,10 +126,10 @@
             <thead>
               <tr>
                 <th class="sort white-space-nowrap align-middle pe-3 ps-0 text-uppercase" scope="col" data-sort="title" style="width:25%;min-width: 125px;">Title</th>
-                <th class="sort align-middle ps-0 text-start text-uppercase" scope="col" data-sort="type" style="width:20%;min-width: 125px;">Type</th>
-                <th class="sort align-middle pe-6 text-uppercase text-start" scope="col" data-sort="description" style="width:30%;min-width: 200px; ">Description</th>
-                <th class="sort align-middle ps-0 text-start text-uppercase" scope="col" data-sort="date" style="width:15%;min-width: 100px;">Date</th>
-                <th class="sort align-middle ps-0 text-start text-uppercase" scope="col" data-sort="time" style="width:15%;min-width: 100px;">Time</th>
+                <th class="sort align-middle ps-0 text-start text-uppercase" scope="col" data-sort="type" style="width:15%;min-width: 125px;">Type</th>
+                <th class="sort align-middle pe-6 text-uppercase text-start" scope="col" data-sort="description" style="width:35%;min-width: 200px; ">Description</th>
+                <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="date" style="width:15%;min-width: 100px;">Date</th>
+                <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="time" style="width:15%;min-width: 100px;">Time</th>
                 <th class="sort align-middle text-end" scope="col" style="width: 10%"></th>
               </tr>
             </thead>
@@ -137,11 +137,11 @@
               <% if(activities && activities.length > 0){ %>
               <% activities.forEach(item => { %>
               <tr class="position-static">
-                <td class="title align-middle white-space-nowrap py-4 ps-0 fw-bold text-primary"><%= item.title %></td>
-                <td class="type align-middle text-body-tertiary fw-bold text-start py-2 ps-0"><%= item.type %></td>
-                <td class="description align-middle white-space-nowrap text-start fw-bold text-body-tertiary py-2 text-start ps-2"><%= item.description%></td>
-                <td class="date align-middle text-body-tertiary text-start py-2 ps-0"><%= item.date.toLocaleDateString('en-UK', { day: '2-digit', month: 'short', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></td>
-                <td class="time align-middle text-body-tertiary text-start py-2 ps-0"><%= item.date.toLocaleTimeString('en-UK', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone : 'Asia/Kuala_Lumpur' }) %></td>
+                <td class="title align-middle white-space-nowrap py-4 ps-0 fw-bold text-primary fs-8"><%= item.title %></td>
+                <td class="type align-middle fw-bold text-start py-2 ps-0 fs-8"><%= item.type %></td>
+                <td class="description align-middle text-start fw-semibold py-2 text-start ps-2 fst-italic fs-9"><%= item.description%></td>
+                <td class="date align-middle text-center py-2 ps-0 fs-9"><%= item.date.toLocaleDateString('en-UK', { day: '2-digit', month: 'short', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></td>
+                <td class="time align-middle text-center py-2 ps-0 fs-9"><%= item.date.toLocaleTimeString('en-UK', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone : 'Asia/Kuala_Lumpur' }) %></td>
                 <td class="align-middle text-end white-space-nowrap ps-0 action">
                   <div class="font-sans-serif btn-reveal-trigger position-static">
                     <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs--2" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
@@ -178,7 +178,7 @@
     </div>
 
     <div class="tab-pane fade" id="tab-leave" role="tabpanel" aria-labelledby="leaves-tab">
-      <div data-list='{"valueNames":["type","startdate","returndate","status"],"page":6,"pagination":true}'>
+      <div data-list='{"valueNames":["type","startdate","returndate","reliefstaff","status"],"page":6,"pagination":true}'>
         <div class="d-md-flex justify-content-between align-items-center mb-4">
           <div class="col-12 col-md-auto">
             <div class="search-box">
@@ -202,6 +202,9 @@
                 </th>
                 <th class="sort align-middle ps-3" scope="col" data-sort="returndate" style="width:15%;min-width: 100px;">
                   RETURN DATE
+                </th>
+                <th class="sort align-middle ps-3" scope="col" data-sort="reliefstaff" style="width:15%;min-width: 100px;">
+                  RELIEF STAFF
                 </th>
                 <th class="sort align-middle text-end" scope="col" data-sort="status" style="width:20%;min-width: 125px;">
                   STATUS
@@ -241,13 +244,19 @@
                   %>
               <tr class="position-static">
                 <td class="align-middle time white-space-nowrap ps-0 type py-4">
-                  <a class="fw-bold fs-0" href="/leave/details/<%= leaves._id %>"><%= leaves.type %></a>
+                  <a class="fw-bold fs-8" href="/leave/details/<%= leaves._id %>"><%= leaves.type %></a>
                 </td>
                 <td class="align-middle white-space-nowrap startdate ps-3 py-4">
                   <p class="mb-0 fs-9 text-900"><%= formatDate(leaves.date.start) %></p>
                 </td>
                 <td class="align-middle white-space-nowrap returndate ps-3 py-4">
                   <p class="mb-0 fs-9 text-900"><%= formatDate(leaves.date.return) %></p>
+                </td>
+                <td class="align-middle text-body white-space-nowrap reliefstaff ps-3">
+                  <% 
+                      const checkUserRelief = allUser.find(check => check._id.toString() === leaves.assignee[0].toString());
+                    %>
+                  <a class="mb-0 fs-9" href="/staff/details/<%= checkUserRelief._id %>"><%= checkUserRelief.fullname %></a>
                 </td>
                 <td class="align-middle white-space-nowrap text-end status">
                   <span class="badge badge-phoenix fs-10 badge-phoenix-<%= statusColor %>"><%= leaves.status %></span>

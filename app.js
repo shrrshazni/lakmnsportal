@@ -113,6 +113,7 @@ const userSchema = new mongoose.Schema({
     isOfficer: { type: Boolean, default: false },
     isManagement: { type: Boolean, default: false },
     isPersonalAssistant: { type: Boolean, default: false },
+    isNonOfficeHour: { type: Boolean, default: false },
     dateEmployed: { type: Date },
     birthdate: { type: Date }
 });
@@ -1653,6 +1654,7 @@ app.get('/profile', isAuthenticated, async function (req, res) {
     const userLeave = await UserLeave.find({ user: user._id });
     const leave = await Leave.find({ user: user._id });
     const activities = await Activity.find({ user: user._id });
+    const allUser = await User.find();
 
     const date = getDateFormat2();
 
@@ -1681,7 +1683,8 @@ app.get('/profile', isAuthenticated, async function (req, res) {
             userLeave: userLeave,
             activities: activities,
             info: info,
-            today: date
+            today: date,
+            allUser: allUser
         });
     }
 });
@@ -3209,7 +3212,7 @@ app.get('/leave/:approval/:id', async function (req, res) {
                 res.redirect('/leave/details/' + id);
             }
         } else if (approval === 'cancelled') {
-            
+
             if (checkLeave.status === 'approved') {
                 const userLeave = await UserLeave.findOne({
                     user: firstRecipientId
@@ -3330,7 +3333,7 @@ app.get('/leave/:approval/:id', async function (req, res) {
                 {
                     $set: {
                         status: 'cancelled',
-                        comment : 'The request has been cancelled by the ' + checkLeave.approvals[indexOfRecipient].role
+                        comment: 'The request has been cancelled by the ' + checkLeave.approvals[indexOfRecipient].role
                     }
                 },
                 { new: true }

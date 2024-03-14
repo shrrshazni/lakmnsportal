@@ -356,10 +356,10 @@
             <th class="sort white-space-nowrap align-middle ps-0" scope="col" data-sort="member" style="width:15%;">MEMBERS</th>
             <th class="sort align-middle ps-3" scope="col" data-sort="position" style="width:10%;">POSITION</th>
             <th class="sort align-middle ps-3" scope="col" data-sort="activity" style="width:25%;">LATEST ACTIVITY</th>
-            <th class="sort align-middle ps-3" scope="col" data-sort="when" style="width:10%;">WHEN</th>
-            <th class="sort align-middle ps-3" scope="col" data-sort="taskprogress" style="width:5%;">PROGRESS</th>
-            <th class="sort align-middle ps-8" scope="col" data-sort="status" style="width:5%;">STATUS</th>
-            <th class="sort align-middle text-end" scope="col" style="width:10%;"></th>
+            <th class="sort align-middle text-center" scope="col" data-sort="when" style="width:10%;">DATE</th>
+            <th class="sort align-middle text-center" scope="col" data-sort="taskprogress" style="width:10%;">PROGRESS</th>
+            <th class="sort align-middle text-center" scope="col" data-sort="status" style="width:10%;">STATUS</th>
+            <th class="sort align-middle text-end" scope="col" style="width:5%;"></th>
           </tr>
         </thead>
         <tbody class="list" id="project-summary-table-body">
@@ -374,7 +374,7 @@
               <a class="mb-0 ms-3 fw-bold fs-8" href="/staff/details/<%= department._id %>"><%= department.fullname %></a>
             </td>
             <td class="align-middle white-space-nowrap position ps-3">
-              <p class="mb-0 fs-9 text-body"><%= department.position %></p>
+              <p class="mb-0 fs-9 text-body-highlight fw-semibold"><%= department.position %></p>
             </td>
 
 
@@ -383,23 +383,23 @@
             <% if (userActivities && userActivities.length > 0) { %>
             <% const latestActivity = userActivities.reduce((latest, activity) => activity.date > latest.date ? activity : latest, userActivities[0]); %>
             <td class="align-middle activity ps-3">
-              <p class="fs-9 fw-semibold text-body-highlight mb-0">
+              <p class="fs-9 fw-semibold text-body-highlight mb-0 fst-italic">
                 <%= latestActivity.description %>
               </p>
             </td>
-            <td class="align-middle white-space-nowrap when ps-3">
-              <p class="fw-bold text-body-emphasis fs-9 mb-0">
+            <td class="align-middle white-space-nowrap text-center when ps-0">
+              <p class="fw-semibold text-body-secondary fs-9 mb-0">
                 <%= latestActivity.date.toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %>
               </p>
             </td>
 
             <% } else { %>
             <td class="align-middle white-space-nowrap ps-3 text-start taskprogress">
-              <p class="text-body-secondary fs-10 mb-0">No activities</p>
+              <p class="text-body fw-semibold fs-9 mb-0">No activities</p>
             </td>
 
-            <td class="align-middle white-space-nowrap ps-3 text-start taskprogress">
-              <p class="text-body-secondary fs-10 mb-0">No activities</p>
+            <td class="align-middle white-space-nowrap ps-0 text-center taskprogress">
+              <p class="text-body fw-semibold fs-9 mb-0">No activities</p>
             </td>
             <% } %>
 
@@ -423,14 +423,14 @@
             <% const completionPercentage3 = (urgentTasks / totalTasks) * 100; %>
             <% const completionPercentage4 = (processTasks / totalTasks) * 100; %>
 
-            <td class="align-middle white-space-nowrap ps-3 taskprogress">
+            <td class="align-middle white-space-nowrap text-center ps-0 taskprogress">
               <p class="text-body-secondary fs-10 mb-0"><%= `${doneTasks} / ${totalTasks}` %></p>
               <div class="progress" style="height:3px;">
                 <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar bg-success" style="width: <%= completionPercentage1 %>%" aria-valuenow="<%= completionPercentage1 %>" aria-valuemin="0" aria-valuemax="100" role="progressbar"></div>
               </div>
             </td>
 
-            <td class="align-middle white-space-nowrap ps-8 status">
+            <td class="align-middle white-space-nowrap text-center ps-0 status">
               <div class="progress progress-stack mt-3" style="height:3px;">
                 <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar bg-info" style="width:<%= completionPercentage4 %>%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100" role="progressbar"></div>
                 <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar bg-success" style="width:<%= completionPercentage1 %>%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100" data-bs-toggle="tooltip" data-bs-placement="top" title="5% Damage" role="progressbar"></div>
@@ -439,12 +439,12 @@
               </div>
             </td>
             <% } else { %>
-            <td class="align-middle white-space-nowrap ps-3 text-start taskprogress">
-              <p class="text-body-secondary fs-10 mb-0">No tasks</p>
+            <td class="align-middle white-space-nowrap ps-0 text-center taskprogress">
+              <p class="text-body fw-semibold fs-9 mb-0">No tasks</p>
             </td>
 
-            <td class="align-middle white-space-nowrap ps-3 text-center status">
-              <p class="text-body-secondary fs-10 mb-0">No tasks</p>
+            <td class="align-middle white-space-nowrap ps-0 text-center status">
+              <p class="text-body fw-semibold fs-9 mb-0">No tasks</p>
             </td>
             <% } %>
 
@@ -1250,7 +1250,7 @@
                   <div class="timeline-item-content ps-6 ps-md-3">
                     <h5 class="fs-9 lh-sm"><%= activity.title %></h5>
                     <p class="fs-9">by <a class="fw-semibold" href="#!"><%= activity.user.fullname %></a></p>
-                    <p class="fs-9 text-body-secondary mb-5"><%= activity.description %></p>
+                    <p class="fs-9 text-body fst-italic mb-5"><%= activity.description %></p>
                   </div>
                 </div>
               </div>
@@ -1556,13 +1556,13 @@
             <table class="table fs-9 mb-0 border-top border-translucent">
               <thead>
                 <tr>
-                  <th class="sort white-space-nowrap align-middle ps-0" scope="col" data-sort="type" style="width:15%;">TYPE</th>
-                  <th class="sort align-middle ps-3" scope="col" data-sort="staff" style="width:10%;">STAFF</th>
-                  <th class="sort align-middle ps-3" scope="col" data-sort="startdate" style="width:10%;">START DATE</th>
-                  <th class="sort align-middle ps-3" scope="col" data-sort="returndate" style="width:10%;">RETURN DATE</th>
-                  <th class="sort align-middle ps-8" scope="col" data-sort="latestapproval" style="width:20%;">LATEST APPROVAL</th>
-                  <th class="sort align-middle ps-8" scope="col" data-sort="status" style="width:5%;">STATUS</th>
-                  <th class="sort align-middle text-end" scope="col" style="width:10%;"></th>
+                  <th class="sort white-space-nowrap align-middle ps-0" scope="col" data-sort="type" style="width:10%;">TYPE</th>
+                  <th class="sort align-middle ps-3" scope="col" data-sort="staff" style="width:15%;">STAFF</th>
+                  <th class="sort align-middle ps-3" scope="col" data-sort="latestapproval" style="width:20%;">LATEST APPROVAL</th>
+                  <th class="sort align-middle text-center" scope="col" data-sort="startdate" style="width:10%;">START DATE</th>
+                  <th class="sort align-middle text-center" scope="col" data-sort="returndate" style="width:10%;">RETURN DATE</th>
+                  <th class="sort align-middle text-center" scope="col" data-sort="status" style="width:10%;">STATUS</th>
+                  <th class="sort align-middle text-end" scope="col" style="width:5%;"></th>
                 </tr>
               </thead>
 
@@ -1606,15 +1606,9 @@
                     <% const userApproval = allUser.find(userapp => userapp._id.toString() === leaves.user.toString()); %>
                     <a class="fw-bold fs-8" href="/staff/details/<%= leaves.user %>"><%= userApproval.fullname %></a>
                   </td>
-                  <td class="align-middle white-space-nowrap startdate ps-3 py-4">
-                    <p class="mb-0 fs-9 text-900"><%= formatDate(leaves.date.start) %></p>
-                  </td>
-                  <td class="align-middle white-space-nowrap returndate ps-3 py-4">
-                    <p class="mb-0 fs-9 text-900"><%= formatDate(leaves.date.return) %></p>
-                  </td>
                   <td class="align-middle latestapproval ps-3 py-4">
                     <% const latestApproval = leaves.approvals.reduce((latest, approval) => approval.timestamp > latest.timestamp ? approval : latest, leaves.approvals[0]); %>
-                    <p class="fs-9 fw-semibold text-body-highlight mb-0">
+                    <p class="fs-9 fw-semibold text-body-highlight mb-0 fst-italic">
                       <%= latestApproval.role %> has <%= latestApproval.status %> this <%= leaves.type %> at <%= latestApproval.timestamp.toLocaleDateString('en-UK', { 
                                     year: 'numeric', 
                                     month: 'long', 
@@ -1622,6 +1616,12 @@
                                     timeZone: 'Asia/Kuala_Lumpur' 
                                   }); %>
                     </p>
+                  </td>
+                  <td class="align-middle white-space-nowrap text-center startdate ps-0 py-4">
+                    <p class="mb-0 fs-9 text-body"><%= formatDate(leaves.date.start) %></p>
+                  </td>
+                  <td class="align-middle white-space-nowrap text-center returndate ps-0 py-4">
+                    <p class="mb-0 fs-9 text-body"><%= formatDate(leaves.date.return) %></p>
                   </td>
                   <td class="align-middle white-space-nowrap text-center status">
                     <span class="badge badge-phoenix fs-10 badge-phoenix-<%= statusApprovalColor %>"><%= leaves.status %></span>
@@ -1715,29 +1715,29 @@
 
                 <tr class="position-static">
 
-                  <td class="align-middle text-body white-space-nowrap ps-0 staff">
+                  <td class="align-middle white-space-nowrap ps-0 staff">
                     <% const staffToday = allUser.find(staff => staff._id.toString() === onLeave.user.toString()); %>
                     <a class="mb-0 ms-0 fw-bold fs-8" href="/staff/details/<%= onLeave.user %>"><%= staffToday.fullname %></a>
                   </td>
 
 
-                  <td class="align-middle text-body white-space-nowrap ps-0 type">
+                  <td class="align-middle white-space-nowrap ps-0 type">
                     <a class="mb-0 ms-3 fw-bold fs-8" href="/leave/details/<%= onLeave._id %>"><%= onLeave.type %></a>
                   </td>
 
-                  <td class="align-middle text-body white-space-nowrap ps-0 startdate">
-                    <p class="mb-0 ms-3 fs-9 text-900"><%= formatDate(onLeave.date.start) %></p>
+                  <td class="align-middle text-center white-space-nowrap ps-0 startdate">
+                    <p class="mb-0 ms-3 fs-9 text-body"><%= formatDate(onLeave.date.start) %></p>
                   </td>
 
-                  <td class="align-middle text-body white-space-nowrap ps-0 startdate">
-                    <p class="mb-0 ms-3 fs-9 text-900"><%= formatDate(onLeave.date.return) %></p>
+                  <td class="align-middle text-center white-space-nowrap ps-0 returndate">
+                    <p class="mb-0 ms-3 fs-9 text-body"><%= formatDate(onLeave.date.return) %></p>
                   </td>
                 </tr>
                 <% }); %>
                 <% }else { %>
                 <tr class="position-static">
-                  <td class="align-middle text-body white-space-nowrap">
-                    <p class="mb-0 ms-3 fs-9">No staff on leave today</p>
+                  <td class="align-middle white-space-nowrap">
+                    <p class="mb-0 ms-3 fs-9 text-body border-bottom-0">No staff on leave today</p>
                   </td>
                 </tr>
                 <% } %>
