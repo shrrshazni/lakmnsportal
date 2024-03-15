@@ -35,7 +35,7 @@
   }
 </script>
 
-<div class="px-3 mb-6">
+<div class="px-lg-3 mb-6">
 
   <div class="mb-8">
     <h2 class="mb-2">Staff Overview</h2>
@@ -77,8 +77,8 @@
           <h4 class="mb-0">Department Stats</h4>
           <p class="fs-9 mb-0">Statistics for specific department</p>
 
-          <div class="d-flex justify-content-center px-2 py-0">
-            <div id="departmentChart" style="height:40vh; width: 100%;"></div>
+          <div class="d-flex justify-content-center px-0 py-0">
+            <div id="departmentChart" style="height:30vh; width: 100%;"></div>
           </div>
 
         </div>
@@ -91,8 +91,8 @@
           <h4 class="mb-0">Section Stats</h4>
           <p class="fs-9 mb-0">Statistics for specific sections</p>
 
-          <div class="d-flex justify-content-center px-2 py-0">
-            <div id="sectionChart" style="height:40vh; width: 100%;"></div>
+          <div class="d-flex justify-content-center px-0 py-0">
+            <div id="sectionChart" style="height:30vh; width: 100%;"></div>
           </div>
 
         </div>
@@ -116,10 +116,18 @@
 
         function renderBarLineChart(data, chartType) {
 
+          const isMobile = window.innerWidth <= 540; // Check if window width is less than or equal to 540px (considered as mobile)
+          let pieChartCenter = ['30%', '50%']; // Default center position for the pie chart
+
+          // Adjust pie chart center position for mobile view
+          if (isMobile) {
+            // Move the pie chart towards the center horizontally
+            pieChartCenter = ['50%', '50%'];
+          }
+
           const userCounts = chartType === 'department' ? data.userCountByDepartment : data.userCountBySection;
 
           const chartOption = {
-            color: theme.primary,
             tooltip: {
               trigger: 'item',
               padding: [7, 10],
@@ -137,11 +145,32 @@
                 return `${params.name} (${params.value})`;
               }
             },
+            legend: {
+              type: 'scroll',
+              orient: 'vertical',
+              right: 50, // Adjust the distance from the right side of the chart
+              top: 'center',
+              show: !isMobile,
+              data: Object.keys(userCounts),
+              textStyle: {
+                color: getColor('text-body', 'color'),
+                lineHeight: 14,
+              },
+              formatter: function(name) {
+                // Custom formatter to display text with limited number of words and wrap into two rows
+                const maxWords = 4;
+                const words = name.split(' ');
+                if (words.length > maxWords) {
+                  return words.slice(0, maxWords).join(' ') + '\n' + words.slice(maxWords).join(' ');
+                }
+                return name;
+              }
+            },
             series: [{
               name: 'User Count',
               type: 'pie', // Changed type to 'pie' for pie chart
-              radius: ['30%', '70%'], // Adjust radius as needed
-              center: ['50%', '50%'], // Center the pie chart
+              radius: ['50%', '70%'], // Adjust radius as needed
+              center: pieChartCenter, // Center the pie chart
               data: Object.keys(userCounts).map(key => ({
                 name: key,
                 value: userCounts[key]
@@ -152,7 +181,9 @@
                 color: theme.primary // Adjust label color
               },
               itemStyle: {
-                borderRadius: 5
+                borderRadius: 4,
+                borderWidth: 1, // Add border width
+                borderColor: getColor('bg-body', 'background-color') // Set border color (white in this case)
               },
             }],
           };
@@ -168,8 +199,12 @@
           chart.setOption(chartOption);
 
           window.addEventListener('resize', function() {
+
             chart.resize();
+
           });
+
+
         }
 
       });
