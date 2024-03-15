@@ -834,12 +834,12 @@
         <thead>
           <tr>
             <th class="sort white-space-nowrap align-middle ps-0" scope="col" data-sort="staff" style="width:15%;">STAFF</th>
-            <th class="sort align-middle ps-3" scope="col" data-sort="type" style="width:15%;">TYPE</th>
-            <th class="sort align-middle ps-3" scope="col" data-sort="startdate" style="width:10%;">START DATE</th>
-            <th class="sort align-middle ps-3" scope="col" data-sort="returndate" style="width:10%;">RETURN DATE</th>
+            <th class="sort align-middle ps-3" scope="col" data-sort="type" style="width:10%;">TYPE</th>
             <th class="sort align-middle ps-3" scope="col" data-sort="department" style="width:15%;">DEPARTMENT</th>
             <th class="sort align-middle ps-3" scope="col" data-sort="reliefstaff" style="width:15%;">RELIEF STAFF</th>
-            <th class="sort align-middle ps-8" scope="col" data-sort="status" style="width:5%;">STATUS</th>
+            <th class="sort align-middle text-center text-center ps-3" scope="col" data-sort="startdate" style="width:10%;">START DATE</th>
+            <th class="sort align-middle text-center text-center ps-3" scope="col" data-sort="returndate" style="width:10%;">RETURN DATE</th>
+            <th class="sort align-middle text-center text-center ps-3" scope="col" data-sort="status" style="width:5%;">STATUS</th>
             <th class="sort align-middle text-end" scope="col" style="width:5%;"></th>
           </tr>
         </thead>
@@ -889,23 +889,15 @@
               <% 
               const checkUser = allUser.find(check => check._id.toString() === leave.user.toString());
               %>
-              <a class="mb-0 ms-3 fw-bold fs-8" href="/staff/details/<%= checkUser._id %>"><%= checkUser.fullname %></a>
+              <a class="mb-0 fw-bold fs-8" href="/staff/details/<%= checkUser._id %>"><%= checkUser.fullname %></a>
             </td>
 
-            <td class="align-middle text-body white-space-nowrap position ps-3">
-              <a class="mb-0 fs-8 fw-bold" href="/leave/details/<%= leave._id %> "><%= leave.type %></a>
-            </td>
-
-            <td class="align-middle white-space-nowrap startdate ps-3">
-              <p class="mb-0 fs-9 text-body" id="start-date"><%= formatDate(leave.date.start) %></p>
-            </td>
-
-            <td class="align-middle white-space-nowrap returndate ps-3">
-              <p class="mb-0 fs-9 text-body"><%= formatDate(leave.date.return) %></p>
+            <td class="align-middle white-space-nowrap position ps-3">
+              <a class="mb-0 fs-8 fw-semibold" href="/leave/details/<%= leave._id %> "><%= leave.type %></a>
             </td>
 
             <td class="align-middle department ps-3">
-              <p class="mb-0 fs-9 text-body"><%= leave.department %></p>
+              <p class="mb-0 fs-9 text-body-highlight"><%= leave.department %></p>
             </td>
 
             <td class="align-middle text-body white-space-nowrap reliefstaff ps-3">
@@ -913,6 +905,14 @@
                 const checkUserRelief = allUser.find(check => check._id.toString() === leave.assignee[0].toString());
               %>
               <a class="mb-0 fs-9" href="/staff/details/<%= checkUserRelief._id %>"><%= checkUserRelief.fullname %></a>
+            </td>
+
+            <td class="align-middle white-space-nowrap text-center startdate ps-0">
+              <p class="mb-0 fs-9 text-body" id="start-date"><%= formatDate(leave.date.start) %></p>
+            </td>
+
+            <td class="align-middle white-space-nowrap text-center returndate ps-0">
+              <p class="mb-0 fs-9 text-body"><%= formatDate(leave.date.return) %></p>
             </td>
 
             <td class="align-middle white-space-nowrap text-center status">

@@ -1703,10 +1703,10 @@
             <table class="table fs-9 mb-0 border-top border-translucent">
               <thead>
                 <tr>
-                  <th class="sort white-space-nowrap align-middle ps-0" scope="col" data-sort="staff" style="width:15%;">STAFF</th>
-                  <th class="sort align-middle ps-3" scope="col" data-sort="type" style="width:15%;">TYPE</th>
-                  <th class="sort align-middle ps-3" scope="col" data-sort="startdate" style="width:10%;">START DATE</th>
-                  <th class="sort align-middle ps-3" scope="col" data-sort="returndate" style="width:10%;">RETURN DATE</th>
+                  <th class="sort white-space-nowrap align-middle text-start" scope="col" data-sort="staff" style="width:auto;">STAFF</th>
+                  <th class="sort align-middle text-start" scope="col" data-sort="type" style="width:auto;">TYPE</th>
+                  <th class="sort align-middle text-center" scope="col" data-sort="startdate" style="width:auto;">START DATE</th>
+                  <th class="sort align-middle text-center" scope="col" data-sort="returndate" style="width:auto;">RETURN DATE</th>
                 </tr>
               </thead>
               <tbody class="list" id="project-summary-table-body">
@@ -1715,22 +1715,22 @@
 
                 <tr class="position-static">
 
-                  <td class="align-middle white-space-nowrap ps-0 staff">
+                  <td class="align-middle text-body white-space-nowrap ps-0 staff">
                     <% const staffToday = allUser.find(staff => staff._id.toString() === onLeave.user.toString()); %>
-                    <a class="mb-0 ms-0 fw-bold fs-8" href="/staff/details/<%= onLeave.user %>"><%= staffToday.fullname %></a>
+                    <a class="mb-0 fw-bold fs-8 ps-2" href="/staff/details/<%= onLeave.user %>"><%= staffToday.fullname %></a>
                   </td>
 
 
-                  <td class="align-middle white-space-nowrap ps-0 type">
-                    <a class="mb-0 ms-3 fw-bold fs-8" href="/leave/details/<%= onLeave._id %>"><%= onLeave.type %></a>
+                  <td class="align-middle text-body white-space-nowrap ps-0 type">
+                    <a class="mb-0 fw-bold fs-8 ps-2" href="/leave/details/<%= onLeave._id %>"><%= onLeave.type %></a>
                   </td>
 
-                  <td class="align-middle text-center white-space-nowrap ps-0 startdate">
-                    <p class="mb-0 ms-3 fs-9 text-body"><%= formatDate(onLeave.date.start) %></p>
+                  <td class="align-middle text-body white-space-nowrap ps-0 startdate">
+                    <p class="mb-0 fs-9 text-center"><%= formatDate(onLeave.date.start) %></p>
                   </td>
 
-                  <td class="align-middle text-center white-space-nowrap ps-0 returndate">
-                    <p class="mb-0 ms-3 fs-9 text-body"><%= formatDate(onLeave.date.return) %></p>
+                  <td class="align-middle text-body white-space-nowrap ps-0 returndate">
+                    <p class="mb-0 fs-9 text-center"><%= formatDate(onLeave.date.return) %></p>
                   </td>
                 </tr>
                 <% }); %>
@@ -1781,10 +1781,10 @@
             <table class="table fs-9 mb-0 border-top border-translucent">
               <thead>
                 <tr>
-                  <th class="sort white-space-nowrap align-middle ps-0" scope="col" data-sort="staff" style="width:15%;">STAFF</th>
-                  <th class="sort align-middle ps-3" scope="col" data-sort="type" style="width:15%;">TYPE</th>
-                  <th class="sort align-middle ps-3" scope="col" data-sort="startdate" style="width:10%;">START DATE</th>
-                  <th class="sort align-middle ps-3" scope="col" data-sort="returndate" style="width:10%;">RETURN DATE</th>
+                  <th class="sort white-space-nowrap align-middle text-start" scope="col" data-sort="staff" style="width:auto;">STAFF</th>
+                  <th class="sort align-middle text-start" scope="col" data-sort="type" style="width:auto;">TYPE</th>
+                  <th class="sort align-middle text-center" scope="col" data-sort="startdate" style="width:auto;">START DATE</th>
+                  <th class="sort align-middle text-center" scope="col" data-sort="returndate" style="width:auto;">RETURN DATE</th>
                 </tr>
               </thead>
               <tbody class="list" id="project-summary-table-body">
@@ -1795,20 +1795,20 @@
 
                   <td class="align-middle text-body white-space-nowrap ps-0 staff">
                     <% const staffWeek = allUser.find(staff => staff._id.toString() === onLeave.user.toString()); %>
-                    <a class="mb-0 ms-0 fw-bold fs-8" href="/staff/details/<%= onLeave.user %>"><%= staffWeek.fullname %></a>
+                    <a class="mb-0 fw-bold fs-8 ps-2" href="/staff/details/<%= onLeave.user %>"><%= staffWeek.fullname %></a>
                   </td>
 
 
                   <td class="align-middle text-body white-space-nowrap ps-0 type">
-                    <a class="mb-0 ms-3 fw-bold fs-8" href="/leave/details/<%= onLeave._id %>"><%= onLeave.type %></a>
+                    <a class="mb-0 fw-bold fs-8 ps-2" href="/leave/details/<%= onLeave._id %>"><%= onLeave.type %></a>
                   </td>
 
                   <td class="align-middle text-body white-space-nowrap ps-0 startdate">
-                    <p class="mb-0 ms-3 fs-9 text-900"><%= formatDate(onLeave.date.start) %></p>
+                    <p class="mb-0 fs-9 text-center"><%= formatDate(onLeave.date.start) %></p>
                   </td>
 
-                  <td class="align-middle text-body white-space-nowrap ps-0 startdate">
-                    <p class="mb-0 ms-3 fs-9 text-900"><%= formatDate(onLeave.date.return) %></p>
+                  <td class="align-middle text-body white-space-nowrap ps-0 returndate">
+                    <p class="mb-0 fs-9 text-center"><%= formatDate(onLeave.date.return) %></p>
                   </td>
                 </tr>
                 <% }); %>
@@ -1859,10 +1859,10 @@
             <table class="table fs-9 mb-0 border-top border-translucent">
               <thead>
                 <tr>
-                  <th class="sort white-space-nowrap align-middle ps-0" scope="col" data-sort="staff" style="width:15%;">STAFF</th>
-                  <th class="sort align-middle ps-3" scope="col" data-sort="type" style="width:15%;">TYPE</th>
-                  <th class="sort align-middle ps-3" scope="col" data-sort="startdate" style="width:10%;">START DATE</th>
-                  <th class="sort align-middle ps-3" scope="col" data-sort="returndate" style="width:10%;">RETURN DATE</th>
+                  <th class="sort white-space-nowrap align-middle text-start" scope="col" data-sort="staff" style="width:auto;">STAFF</th>
+                  <th class="sort align-middle text-start" scope="col" data-sort="type" style="width:auto;">TYPE</th>
+                  <th class="sort align-middle text-center" scope="col" data-sort="startdate" style="width:auto;">START DATE</th>
+                  <th class="sort align-middle text-center" scope="col" data-sort="returndate" style="width:auto;">RETURN DATE</th>
                 </tr>
               </thead>
               <tbody class="list" id="project-summary-table-body">
@@ -1873,20 +1873,20 @@
 
                   <td class="align-middle text-body white-space-nowrap ps-0 staff">
                     <% const staffMonth = allUser.find(staff => staff._id.toString() === onLeave.user.toString());%>
-                    <a class="mb-0 ms-0 fw-bold fs-8" href="/staff/details/<%= onLeave.user %>"><%= staffMonth.fullname %></a>
+                    <a class="mb-0 fw-bold fs-8 ps-2" href="/staff/details/<%= onLeave.user %>"><%= staffMonth.fullname %></a>
                   </td>
 
 
                   <td class="align-middle text-body white-space-nowrap ps-0 type">
-                    <a class="mb-0 ms-3 fw-bold fs-8" href="/leave/details/<%= onLeave._id %>"><%= onLeave.type %></a>
+                    <a class="mb-0 fw-bold fs-8 ps-2" href="/leave/details/<%= onLeave._id %>"><%= onLeave.type %></a>
                   </td>
 
                   <td class="align-middle text-body white-space-nowrap ps-0 startdate">
-                    <p class="mb-0 ms-3 fs-9 text-900"><%= formatDate(onLeave.date.start) %></p>
+                    <p class="mb-0 fs-9 text-center"><%= formatDate(onLeave.date.start) %></p>
                   </td>
 
-                  <td class="align-middle text-body white-space-nowrap ps-0 startdate">
-                    <p class="mb-0 ms-3 fs-9 text-900"><%= formatDate(onLeave.date.return) %></p>
+                  <td class="align-middle text-body white-space-nowrap ps-0 returndate">
+                    <p class="mb-0 fs-9 text-center"><%= formatDate(onLeave.date.return) %></p>
                   </td>
                 </tr>
                 <% }); %>

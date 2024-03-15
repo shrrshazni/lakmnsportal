@@ -19,11 +19,11 @@
             <div class="flex-1 d-md-none">
               <button class="btn px-3 btn-phoenix-secondary text-body-tertiary me-2" data-phoenix-toggle="offcanvas" data-phoenix-target="#productFilterColumn"><span class="fa-solid fa-bars"></span></button>
             </div>
-            <button class="btn btn-primary me-2"><span class="fa-solid fa-envelope me-2"></span><span>Send a message</span></button>
+            <button class="btn btn-primary me-2 d-none"><span class="fa-solid fa-envelope me-2"></span><span>Send a message</span></button>
             <button class="btn px-3 btn-phoenix-secondary" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fa-solid fa-ellipsis"></span></button>
             <ul class="dropdown-menu dropdown-menu-end p-0" style="z-index: 9999;">
-              <li><a class="dropdown-item" href="#!">View profile</a></li>
-              <li><a class="dropdown-item" href="#!">Report</a></li>
+              <li><a class="dropdown-item d-none" href="#!">View profile</a></li>
+              <li><a class="dropdown-item" href="#!">Print</a></li>
             </ul>
           </div>
         </div>
@@ -45,9 +45,9 @@
                 <div class="col-12 col-xxl-auto">
                   <div class="avatar avatar-5xl"><img class="rounded-circle border border-primary" src="/assets/img/team/avatar.webp" alt="" /></div>
                 </div>
-                <div class="col-12 col-sm-auto flex-1">
-                  <h3 class="fw-bolder mb-2"><%= otherUser.fullname %></h3>
-                  <p class="mb-0"><%= otherUser.position %></p>
+                <div class="col-12 col-sm-auto flex-1 text-md-start text-center">
+                  <h3 class="fw-bold mb-3 mt-3"><%= otherUser.fullname %></h3>
+                  <p class="mb-3"><%= otherUser.position %></p>
                   <p class="fw-bold text-primary">"User Status"</p>
                 </div>
               </div>
@@ -480,23 +480,23 @@
                 <table class="table fs-9 mb-0">
                   <thead>
                     <tr>
-                      <th class="sort white-space-nowrap align-middle pe-3 ps-0 text-uppercase" scope="col" data-sort="title" style="width:25%;min-width: 125px;">Title</th>
-                      <th class="sort align-middle ps-0 text-start text-uppercase" scope="col" data-sort="type" style="width:20%;min-width: 125px;">Type</th>
-                      <th class="sort align-middle pe-6 text-uppercase text-start" scope="col" data-sort="description" style="width:30%;min-width: 200px; ">Description</th>
-                      <th class="sort align-middle ps-0 text-start text-uppercase" scope="col" data-sort="date" style="width:15%;min-width: 100px;">Date</th>
-                      <th class="sort align-middle ps-0 text-start text-uppercase" scope="col" data-sort="time" style="width:15%;min-width: 100px;">Time</th>
-                      <th class="sort align-middle text-end" scope="col" style="width: 10%"></th>
+                      <th class="sort white-space-nowrap align-middle pe-3 ps-0" scope="col" data-sort="title" style="width:15%;">Title</th>
+                      <th class="sort align-middle ps-0 text-start " scope="col" data-sort="type" style="width:10%;min-width: 100px;">Type</th>
+                      <th class="sort align-middle pe-0 text-start" scope="col" data-sort="description" style="width:30%;min-width: 300px;">Description</th>
+                      <th class="sort align-middle ps-0 text-start text-center" scope="col" data-sort="date" style="width:10%;">Date</th>
+                      <th class="sort align-middle ps-0 text-start text-center" scope="col" data-sort="time" style="width:10%;">Time</th>
+                      <th class="sort align-middle text-end" scope="col" style="width: 5%"></th>
                     </tr>
                   </thead>
                   <tbody class="list">
                     <% if(activities && activities.length > 0){ %>
                     <% activities.forEach(item => { %>
                     <tr class="position-static">
-                      <td class="title align-middle white-space-nowrap py-4 ps-0 fw-bold text-primary"><%= item.title %></td>
-                      <td class="type align-middle text-body-tertiary fw-bold text-start py-2 ps-0"><%= item.type %></td>
-                      <td class="description align-middle white-space-nowrap text-start fw-bold text-body-tertiary py-2 text-start ps-2"><%= item.description%></td>
-                      <td class="date align-middle text-body-tertiary text-start py-2 ps-0"><%= item.date.toLocaleDateString('en-UK', { day: '2-digit', month: 'short', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></td>
-                      <td class="time align-middle text-body-tertiary text-start py-2 ps-0"><%= item.date.toLocaleTimeString('en-UK', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone : 'Asia/Kuala_Lumpur' }) %></td>
+                      <td class="title align-middle white-space-nowrap py-4 ps-0 fw-bold text-primary fs-8"><%= item.title %></td>
+                      <td class="type align-middle text-body-highlight fw-bold text-start py-2 ps-0 fs-9"><%= item.type %></td>
+                      <td class="description align-middle text-start fw-semibold text-body-highlight py-2 text-start ps-2 fst-italic"><%= item.description%></td>
+                      <td class="date align-middle text-body text-center py-2 ps-0"><%= item.date.toLocaleDateString('en-UK', { day: '2-digit', month: 'short', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></td>
+                      <td class="time align-middle text-body text-center py-2 ps-0"><%= item.date.toLocaleTimeString('en-UK', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone : 'Asia/Kuala_Lumpur' }) %></td>
                       <td class="align-middle text-end white-space-nowrap ps-0 action">
                         <div class="font-sans-serif btn-reveal-trigger position-static">
                           <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs--2" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
@@ -533,7 +533,7 @@
           </div>
 
           <div class="mb-8" style="min-height: 25vh;" id="scrollspyLeaves">
-            <div data-list='{"valueNames":["type","startdate","returndate","status"],"page":6,"pagination":true}'>
+            <div data-list='{"valueNames":["type","reliefstaff","startdate","returndate","status"],"page":6,"pagination":true}'>
               <div class="d-md-flex justify-content-between align-items-center mb-4">
                 <h2 class="col-12 col-md-auto mb-3">Leave</h2>
                 <div class="col-12 col-md-auto">
@@ -550,19 +550,22 @@
                 <table class="table fs-9 mb-0 border-top border-200">
                   <thead>
                     <tr>
-                      <th class="sort white-space-nowrap align-middle ps-0" scope="col" data-sort="type" style="width:20%;min-width: 150px;">
+                      <th class="sort white-space-nowrap align-middle ps-0" scope="col" data-sort="type" style="width:15%;">
                         TYPE
                       </th>
-                      <th class="sort align-middle ps-3" scope="col" data-sort="startdate" style="width:15%;min-width: 100px;">
+                      <th class="sort align-middle ps-3" scope="col" data-sort="reliefstaff" style="width:20%;">
+                        RELIEF STAFF
+                      </th>
+                      <th class="sort align-middle text-center" scope="col" data-sort="startdate" style="width:15%;">
                         START DATE
                       </th>
-                      <th class="sort align-middle ps-3" scope="col" data-sort="returndate" style="width:15%;min-width: 100px;">
+                      <th class="sort align-middle text-center" scope="col" data-sort="returndate" style="width:15%;">
                         RETURN DATE
                       </th>
-                      <th class="sort align-middle text-end" scope="col" data-sort="status" style="width:20%;min-width: 125px;">
+                      <th class="sort align-middle text-center" scope="col" data-sort="status" style="width:10%;">
                         STATUS
                       </th>
-                      <th class="sort align-middle text-end" scope="col" style="width: 10%"></th>
+                      <th class="sort align-middle text-end" scope="col" style="width: 5%"></th>
                     </tr>
                   </thead>
 
@@ -599,15 +602,22 @@
                     %>
                     <tr class="position-static">
                       <td class="align-middle time white-space-nowrap ps-0 type py-4">
-                        <a class="fw-bold fs-0" href="/leave/details/<%= leaves._id %>"><%= leaves.type %></a>
+                        <a class="fw-bold fs-8" href="/leave/details/<%= leaves._id %>"><%= leaves.type %></a>
                       </td>
-                      <td class="align-middle white-space-nowrap startdate ps-3 py-4">
-                        <p class="mb-0 fs-9 text-900"><%= formatDate(leaves.date.start) %></p>
+
+                      <td class="align-middle text-body white-space-nowrap reliefstaff ps-3">
+                        <% 
+                          const checkUserRelief = allUser.find(check => check._id.toString() === leaves.assignee[0].toString());
+                        %>
+                        <a class="mb-0 fs-9" href="/staff/details/<%= checkUserRelief._id %>"><%= checkUserRelief.fullname %></a>
                       </td>
-                      <td class="align-middle white-space-nowrap returndate ps-3 py-4">
-                        <p class="mb-0 fs-9 text-900"><%= formatDate(leaves.date.return) %></p>
+                      <td class="align-middle white-space-nowrap startdate">
+                        <p class="mb-0 fs-9 text-body text-center"><%= formatDate(leaves.date.start) %></p>
                       </td>
-                      <td class="align-middle white-space-nowrap text-end status">
+                      <td class="align-middle white-space-nowrap returndate">
+                        <p class="mb-0 fs-9 text-body text-center"><%= formatDate(leaves.date.return) %></p>
+                      </td>
+                      <td class="align-middle white-space-nowrap text-center status">
                         <span class="badge badge-phoenix fs-10 badge-phoenix-<%= statusColor %>"><%= leaves.status %></span>
                       </td>
                       <td class="align-middle text-end white-space-nowrap pe-0 action">
@@ -616,7 +626,7 @@
                             <span class="fas fa-ellipsis-h fs-9"></span>
                           </button>
                           <div class="dropdown-menu dropdown-menu-end py-2">
-                            <a class="dropdown-item" href="/leave/details/<%= leaves.uuid %>">View</a>
+                            <a class="dropdown-item" href="/leave/details/<%= leaves._id %>">View</a>
                           </div>
                         </div>
                       </td>

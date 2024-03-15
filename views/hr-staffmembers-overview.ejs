@@ -77,8 +77,8 @@
           <h4 class="mb-0">Department Stats</h4>
           <p class="fs-9 mb-0">Statistics for specific department</p>
 
-          <div class="d-flex justify-content-center px-4 py-6">
-            <div id="departmentChart" style="height: 200px; width: 500px;"></div>
+          <div class="d-flex justify-content-center px-2 py-0">
+            <div id="departmentChart" style="height:40vh; width: 100%;"></div>
           </div>
 
         </div>
@@ -91,8 +91,8 @@
           <h4 class="mb-0">Section Stats</h4>
           <p class="fs-9 mb-0">Statistics for specific sections</p>
 
-          <div class="d-flex justify-content-center px-4 py-6">
-            <div id="sectionChart" style="height: 200px; width: 700px;"></div>
+          <div class="d-flex justify-content-center px-2 py-0">
+            <div id="sectionChart" style="height:40vh; width: 100%;"></div>
           </div>
 
         </div>
@@ -137,56 +137,24 @@
                 return `${params.name} (${params.value})`;
               }
             },
-            xAxis: {
-              type: 'category',
-              data: Object.keys(userCounts),
-              boundaryGap: false,
-              axisLine: {
-                show: true,
-                lineStyle: {
-                  color: '#e3e6ed'
-                }
-              },
-              axisTick: {
-                show: false
-              },
-              axisLabel: {
-                interval: 6,
-                showMinLabel: true,
-                showMaxLabel: true,
-                color: '#949db5',
-              }
-            },
-            yAxis: {
-              show: false, // Set show to false to hide y-axis
-            },
             series: [{
               name: 'User Count',
-              type: 'bar',
-              data: Object.values(userCounts),
-              barWidth: '10px',
-              showBackground: true,
-              symbol: 'none',
-              itemStyle: {
-                borderRadius: 10
-              }, // Adjust the width of the bars
+              type: 'pie', // Changed type to 'pie' for pie chart
+              radius: ['30%', '70%'], // Adjust radius as needed
+              center: ['50%', '50%'], // Center the pie chart
+              data: Object.keys(userCounts).map(key => ({
+                name: key,
+                value: userCounts[key]
+              })),
               label: {
                 show: false,
-                position: 'top',
-                color: theme.primary, // You can adjust the label color
+                formatter: '{b} ({c})', // Format label to display name and value
+                color: theme.primary // Adjust label color
               },
-              backgroundStyle: {
-                borderRadius: 10,
-                color: theme.bg_primary_subtle,
-                opacity: 1.0
+              itemStyle: {
+                borderRadius: 5
               },
             }],
-            grid: {
-              right: 10,
-              left: 10,
-              bottom: 0,
-              top: 0
-            }
           };
 
           // Create ECharts instance and set the option
@@ -200,7 +168,7 @@
           chart.setOption(chartOption);
 
           window.addEventListener('resize', function() {
-            leaveBarCharts.resize();
+            chart.resize();
           });
         }
 

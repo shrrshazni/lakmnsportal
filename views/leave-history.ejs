@@ -69,16 +69,16 @@ function formatDate(inputDate) {
                 <th class="sort white-space-nowrap align-middle ps-0" scope="col" data-sort="type" style="width: 15%">
                   TYPE
                 </th>
-                <th class="sort align-middle ps-3" scope="col" data-sort="startdate" style="width: 15%">
+                <th class="sort align-middle text-center ps-3" scope="col" data-sort="startdate" style="width: 15%">
                   START DATE
                 </th>
-                <th class="sort align-middle ps-3" scope="col" data-sort="returndate" style="width: 15%">
+                <th class="sort align-middle text-center ps-3" scope="col" data-sort="returndate" style="width: 15%">
                   RETURN DATE
                 </th>
-                <th class="sort align-middle text-end" scope="col" data-sort="status" style="width: 10%">
+                <th class="sort align-middle text-center" scope="col" data-sort="status" style="width: 10%">
                   STATUS
                 </th>
-                <th class="sort align-middle text-end" scope="col" style="width: 10%"></th>
+                <th class="sort align-middle text-end" scope="col" style="width: 5%"></th>
               </tr>
             </thead>
 
@@ -118,13 +118,13 @@ function formatDate(inputDate) {
                 <td class="align-middle time white-space-nowrap ps-0 type py-4">
                   <a class="fw-bold fs-8" href="/leave/details/<%= leaves._id %>"><%= leaves.type %></a>
                 </td>
-                <td class="align-middle white-space-nowrap startdate ps-3 py-4">
-                  <p class="mb-0 fs-9 text-900"><%= formatDate(leaves.date.start) %></p>
+                <td class="align-middle white-space-nowrap text-center startdate ps-0 py-4">
+                  <p class="mb-0 fs-9 text-body"><%= formatDate(leaves.date.start) %></p>
                 </td>
-                <td class="align-middle white-space-nowrap returndate ps-3 py-4">
-                  <p class="mb-0 fs-9 text-900"><%= formatDate(leaves.date.return) %></p>
+                <td class="align-middle white-space-nowrap text-center returndate ps-0 py-4">
+                  <p class="mb-0 fs-9 text-body"><%= formatDate(leaves.date.return) %></p>
                 </td>
-                <td class="align-middle white-space-nowrap text-end status">
+                <td class="align-middle white-space-nowrap text-center status">
                   <span class="badge badge-phoenix fs-10 badge-phoenix-<%= statusApprovalColor %>"><%= leaves.status %></span>
                 </td>
                 <td class="align-middle text-end white-space-nowrap pe-0 action">
