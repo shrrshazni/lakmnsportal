@@ -737,21 +737,26 @@ app.get(
 
             let currentDatePointerPrevious7Days = new Date(fourteenDaysAgo);
             while (currentDatePointerPrevious7Days < sevenDaysAgo) {
-                const formattedDate = currentDatePointerPrevious7Days
-                    .toISOString()
-                    .split('T')[0];
+                const formattedDate = currentDatePointerPrevious7Days.toISOString().split('T')[0];
                 dateCountsPrevious7Days[formattedDate] = {
                     pending: 0,
                     invalid: 0,
                     percentage: 0
                 };
-                currentDatePointerPrevious7Days.setDate(
-                    currentDatePointerPrevious7Days.getDate() + 1
-                );
+                currentDatePointerPrevious7Days.setDate(currentDatePointerPrevious7Days.getDate() + 1);
+
             }
 
             leaveDataPrevious7Days.forEach(entry => {
                 const formattedDate = entry.date.start.toISOString().split('T')[0];
+
+                if (!dateCountsPrevious7Days[formattedDate]) {
+                    dateCountsPrevious7Days[formattedDate] = {
+                        pending: 0,
+                        invalid: 0,
+                        percentage: 0
+                    };
+                }
 
                 // Update counts for the date
                 dateCountsPrevious7Days[formattedDate].pending +=
@@ -1652,7 +1657,7 @@ app.get('/profile', isAuthenticated, async function (req, res) {
         read: false
     }).populate('sender');
     const userLeave = await UserLeave.find({ user: user._id });
-    const leave = await Leave.find({ user: user._id });
+    const leave = await Leave.find({ user: user._id, status: { $nin: ['denied', 'cancelled'] } });
     const activities = await Activity.find({ user: user._id });
     const allUser = await User.find();
 
@@ -1685,6 +1690,24 @@ app.get('/profile', isAuthenticated, async function (req, res) {
             info: info,
             today: date,
             allUser: allUser
+        });
+    }
+});
+
+// SETTINGS
+app.get('/settings', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    }).populate('sender');
+
+    if (user) {
+        res.render('settings', {
+            user: user,
+            uuid: uuidv4(),
+            notifications: notifications
         });
     }
 });

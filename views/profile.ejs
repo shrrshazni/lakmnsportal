@@ -15,15 +15,15 @@
       <div class="col-auto d-none">
         <button class="btn btn-phoenix-primary"><span class="fa-regular fa-envelope me-2"></span>Message</button>
       </div>
-      <div class="col-auto d-none">
-        <button class="btn btn-phoenix-secondary"><span class="fa-solid fa-gears me-2"></span>Settings</button>
+      <div class="col-auto">
+        <a class="btn btn-phoenix-secondary" role="button" href="/settings"><span class="fa-solid fa-gears me-2"></span>Settings</a>
       </div>
     </div>
   </div>
 </div>
 <div class="row g-3 mb-6">
   <div class="col-12 col-lg-8">
-    <div class="card h-100">
+    <div class="card">
       <div class="card-body">
         <div class="border-bottom border-dashed pb-4">
           <div class="row align-items-center g-3 g-sm-5 text-center text-sm-start">
@@ -40,7 +40,7 @@
             <div class="col-12 col-sm-auto flex-1">
               <h3><%= user.fullname %></h3>
               <p class="text-body-secondary">Joined since, <%= formattedDate  %></p>
-              <div><a class="me-2" href="#!"><span class="fab fa-linkedin-in text-body-quaternary text-opacity-75 text-primary-hover"></span></a><a class="me-2" href="#!"><span class="fab fa-facebook text-body-quaternary text-opacity-75 text-primary-hover"></span></a><a href="#!"><span class="fab fa-twitter text-body-quaternary text-opacity-75 text-primary-hover"></span></a></div>
+              <p class="text-primary fs-8">"Your status"</p>
             </div>
           </div>
         </div>
@@ -69,13 +69,21 @@
             <button class="btn btn-link p-0" type="button"><span class="fas fa-edit fs-9 ms-3 text-body-quaternary"></span></button>
           </h4>
         </div>
-        <div class="pt-4 mb-7 mb-lg-4 mb-xl-7">
+        <div class="pt-4 mb-0">
           <div class="row justify-content-between">
             <div class="col-auto">
               <h5 class="text-body-highlight">Department</h5>
             </div>
             <div class="col-auto">
-              <p class="text-body-secondary"><%= user.department %><br /><%=  user.section %></p>
+              <p class="text-body-secondary"><%= user.department %></p>
+            </div>
+          </div>
+          <div class="row justify-content-between">
+            <div class="col-auto">
+              <h5 class="text-body-highlight">Section</h5>
+            </div>
+            <div class="col-auto">
+              <p class="text-body-secondary"><%=  user.section %></p>
             </div>
           </div>
         </div>
@@ -104,6 +112,7 @@
       <li class="nav-item me-3"><a class="nav-link text-nowrap active" id="orders-tab" data-bs-toggle="tab" href="#tab-activity" role="tab" aria-controls="tab-orders" aria-selected="true"><span class="fa-solid fa-clock me-2"></span>Activity<span class="text-body-tertiary fw-normal"> (<%= activities.length %>)</span></a></li>
       <li class="nav-item me-3"><a class="nav-link text-nowrap" id="reviews-tab" data-bs-toggle="tab" href="#tab-leave" role="tab" aria-controls="tab-orders" aria-selected="true"><span class="fa-solid fa-calendar me-2"></span>Leave<span class="text-body-tertiary fw-normal"></span></a></li>
       <li class="nav-item me-3"><a class="nav-link text-nowrap" id="wishlist-tab" data-bs-toggle="tab" href="#tab-personal" role="tab" aria-controls="tab-orders" aria-selected="true"><span class="fa-solid fa-user me-2"></span>Personal</a></li>
+      <li class="nav-item me-3"><a class="nav-link text-nowrap" id="wishlist-tab" data-bs-toggle="tab" href="#tab-attachment" role="tab" aria-controls="tab-orders" aria-selected="true"><span class="fa-solid fa-user me-2"></span>Attachments</a></li>
     </ul>
   </div>
   <div class="tab-content" id="profileTabContent">
@@ -275,7 +284,7 @@
               <%  }); %> <% } else { %>
               <tr class="position-static">
                 <td class="align-middle time white-space-nowrap ps-0 border-bottom-0">
-                  <p>No leave submitted from <span class="fw-bold text-primary"><%= user.fullname %></span></p>
+                  <p>No leave submitted from you</p>
                 </td>
               </tr>
               <% } %>
@@ -302,6 +311,72 @@
     </div>
 
     <div class="tab-pane fade" id="tab-personal" role="tabpanel" aria-labelledby="personal-tab">
+      <div class="row g-3 mb-6">
+
+        <div class="col-md-6">
+          <div class="input-group">
+            <span class="input-group-text"><i class="fa-solid fa-id-card-clip"></i></span>
+            <div class="form-floating">
+              <input type="text" class="form-control" id="floatingInputGroup1" placeholder="" value="<%= user.nric %>" disabled>
+              <label for="floatingInputGroup1">NRIC</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="input-group">
+            <span class="input-group-text"><i class="fa-solid fa-cake-candles"></i></span>
+            <div class="form-floating">
+              <input type="text" class="form-control" id="floatingInputGroup1" placeholder="" value="<%= user.birthday %>" disabled>
+              <label for="floatingInputGroup1">Birthday</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="input-group">
+            <span class="input-group-text"><i class="fa-solid fa-venus-mars"></i></span>
+            <div class="form-floating">
+              <input type="text" class="form-control" id="floatingInputGroup1" placeholder="" value="<%= user.gender %>" disabled>
+              <label for="floatingInputGroup1">Gender</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="input-group">
+            <span class="input-group-text"><i class="fa-brands fa-pagelines"></i></span>
+            <div class="form-floating">
+              <input type="text" class="form-control" id="floatingInputGroup1" placeholder="" value="<%= user.age %>" disabled>
+              <label for="floatingInputGroup1">Age</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="input-group">
+            <span class="input-group-text"><i class="fa-solid fa-user-graduate"></i></span>
+            <div class="form-floating">
+              <input type="text" class="form-control" id="floatingInputGroup1" placeholder="" value="<%= user.education %>" disabled>
+              <label for="floatingInputGroup1">Education</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <div class="input-group">
+            <span class="input-group-text"><i class="fa-solid fa-map-pin"></i></span>
+            <div class="form-floating">
+              <textarea style="height: 100px; width: 100%;" class="form-control" disabled><%= user.address %></textarea>
+              <label for="floatingInputGroup1">Address</label>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="tab-pane fade" id="tab-attachment" role="tabpanel" aria-labelledby="personal-tab">
       <div class="row g-3 mb-6">
 
         <div class="col-md-6">
