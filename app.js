@@ -1707,8 +1707,77 @@ app.get('/settings', isAuthenticated, async function (req, res) {
         res.render('settings', {
             user: user,
             uuid: uuidv4(),
-            notifications: notifications
+            notifications: notifications,
+            show: '',
+            alert: ''
         });
+    }
+}).post('/settings', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    }).populate('sender');
+
+    if (user) {
+
+        if (req.body.oldPassword === '' && req.body.newPassword === '' && req.body.newPassword2 === '') {
+            const updateFields = {};
+
+            // Add fields from req.body to the updateFields object if they are present
+            if (req.body.officenumber) {
+                updateFields.officenumber = req.body.officenumber;
+            }
+            if (req.body.email) {
+                updateFields.email = req.body.email;
+            }
+            if (req.body.phone) {
+                updateFields.phone = req.body.phone;
+            }
+            if (req.body.dateEmployed) {
+                updateFields.dateEmployed = req.body.dateEmployed;
+            }
+            if (req.body.birthdate) {
+                updateFields.birthdate = req.body.birthdate;
+            }
+            if (req.body.nric) {
+                updateFields.nric = req.body.nric;
+            }
+            if (req.body.marital) {
+                updateFields.marital = req.body.marital;
+            }
+            if (req.body.education) {
+                updateFields.education = req.body.education;
+            }
+            if (req.body.address) {
+                updateFields.address = req.body.address;
+            }
+
+            const updateUser = await User.findOneAndUpdate(
+                {
+                    _id: user._id
+                },
+                {
+                    $set: updateFields
+                },
+                { new: true }
+            );
+
+            if (updateUser) {
+
+                console.log("Update successful");
+                res.render('settings', {
+                    user: user,
+                    uuid: uuidv4(),
+                    notifications: notifications,
+                    show: 'show',
+                    alert: 'Update sucessful, please do check your profile to see the changes'
+                });
+            }
+        } else {
+            
+        }
     }
 });
 

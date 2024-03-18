@@ -95,27 +95,27 @@
         </div>
         <div class="form-check form-switch">
           <input class="form-check-input" id="permitFollow" type="checkbox" checked="checked" name="permitFollow" />
-          <label class="form-check-label fs-8" for="permitFollow">Permit users to see you online.</label>
+          <label class="form-check-label fs-8" for="permitFollow">Permit users to see you online</label>
         </div>
       </div>
     </div>
     <div class="col-12 col-xl-8">
-      <div class="border-bottom mb-4">
+      <form class="border-bottom mb-4" method="post" action="/settings">
         <div class="mb-6">
           <h4 class="mb-4">Basic Information</h4>
           <div class="row g-3">
             <div class="col-12 col-sm-6">
               <div class="form-icon-container">
                 <div class="form-floating">
-                  <input class="form-control form-icon-input" id="officenumber" type="text" placeholder="Last Name" />
+                  <input class="form-control form-icon-input" name="officenumber" type="text" placeholder="officenumber" />
                   <label class="text-body-tertiary form-icon-label" for="officenumber">OFFICE NUMBER</label>
-                </div><span class="fa-solid fa-user text-body fs-9 form-icon"></span>
+                </div><span class="fa-solid fa-phone text-body fs-9 form-icon"></span>
               </div>
             </div>
             <div class="col-12 col-sm-6">
               <div class="form-icon-container">
                 <div class="form-floating">
-                  <input class="form-control form-icon-input" id="email" type="email" placeholder="Email" />
+                  <input class="form-control form-icon-input" name="email" type="email" placeholder="Email" />
                   <label class="text-body-tertiary form-icon-label" for="email">ENTER YOUR EMAIL</label>
                 </div><span class="fa-solid fa-envelope text-body fs-9 form-icon"></span>
               </div>
@@ -123,17 +123,17 @@
             <div class="col-12 col-sm-6">
               <div class="form-icon-container">
                 <div class="form-floating">
-                  <input class="form-control form-icon-input" id="phone" type="tel" placeholder="Phone" />
+                  <input class="form-control form-icon-input" name="phone" type="tel" placeholder="Phone" />
                   <label class="text-body-tertiary form-icon-label" for="phone">ENTER YOUR PHONE</label>
-                </div><span class="fa-solid fa-phone text-body fs-9 form-icon"></span>
+                </div><span class="fa-solid fa-mobile-screen text-body fs-9 form-icon"></span>
               </div>
             </div>
             <div class="col-12 col-sm-6">
               <div class="form-icon-container">
                 <div class="form-floating">
-                  <input class="form-control form-icon-input" id="dateEmployed" type="text" placeholder="Phone" />
+                  <input type="text" class="form-control datetimepicker flatpickr-input form-icon-input" placeholder="" name="dateEmployed" data-options='{"disableMobile":true,"allowInput":true, "defaultDate": "1990-01-01", "locale" : { "firstDayOfWeek" : 1}, "mode": "multiple" }'>
                   <label class="text-body-tertiary form-icon-label" for="dateEmployed">DATE EMPLOYED</label>
-                </div><span class="fa-solid fa-phone text-body fs-9 form-icon"></span>
+                </div><span class="fa-solid fa-calendar-plus text-body fs-9 form-icon"></span>
               </div>
             </div>
           </div>
@@ -143,13 +143,13 @@
             <h4 class="mb-4">Company Info</h4>
             <div class="form-icon-container mb-3">
               <div class="form-floating">
-                <input class="form-control form-icon-input" id="companyName" type="text" placeholder="Company Name" />
+                <input class="form-control form-icon-input" name="companyName" type="text" placeholder="Company Name" />
                 <label class="text-body-tertiary form-icon-label" for="companyName">COMPANY NAME</label>
               </div><span class="fa-solid fa-building text-body fs-9 form-icon"></span>
             </div>
             <div class="form-icon-container">
               <div class="form-floating">
-                <input class="form-control form-icon-input" id="website" type="text" placeholder="Website" />
+                <input class="form-control form-icon-input" name="website" type="text" placeholder="Website" />
                 <label class="text-body-tertiary form-icon-label" for="website">Website</label>
               </div><span class="fa-solid fa-globe text-body fs-9 form-icon"></span>
             </div>
@@ -158,19 +158,19 @@
             <h4 class="mb-4">Change Password</h4>
             <div class="form-icon-container mb-3">
               <div class="form-floating">
-                <input class="form-control form-icon-input" id="oldPassword" type="password" placeholder="Old password" />
+                <input class="form-control form-icon-input" name="oldPassword" type="password" placeholder="Old password" />
                 <label class="text-body-tertiary form-icon-label" for="oldPassword">Old Password</label>
               </div><span class="fa-solid fa-lock text-body fs-9 form-icon"></span>
             </div>
             <div class="form-icon-container mb-3">
               <div class="form-floating">
-                <input class="form-control form-icon-input" id="newPassword" type="password" placeholder="New password" />
+                <input class="form-control form-icon-input" name="newPassword" type="password" placeholder="New password" />
                 <label class="text-body-tertiary form-icon-label" for="newPassword">New Password</label>
               </div><span class="fa-solid fa-key text-body fs-9 form-icon"></span>
             </div>
             <div class="form-icon-container">
               <div class="form-floating">
-                <input class="form-control form-icon-input" id="newPassword2" type="password" placeholder="Confirm New password" />
+                <input class="form-control form-icon-input" name="newPassword2" type="password" placeholder="Confirm New password" />
                 <label class="text-body-tertiary form-icon-label" for="newPassword2">Confirm New Password</label>
               </div><span class="fa-solid fa-key text-body fs-9 form-icon"></span>
             </div>
@@ -182,15 +182,15 @@
             <div class="col-12 col-sm-6">
               <div class="form-icon-container">
                 <div class="form-floating">
-                  <input class="form-control form-icon-input" id="birthday" type="text" placeholder="birthday" />
-                  <label class="text-body-tertiary form-icon-label" for="birthday">BIRTH DATE</label>
-                </div><span class="fa-solid fa-phone text-body fs-9 form-icon"></span>
+                  <input type="text" class="form-control datetimepicker flatpickr-input form-icon-input" placeholder="" name="birthdate" data-options='{"disableMobile":true,"allowInput":true, "defaultDate": "1980-01-01", "locale" : { "firstDayOfWeek" : 1}}'>
+                  <label class="text-body-tertiary form-icon-label" for="birthday">Birth date</label>
+                </div><span class="fa-solid fa-cake-candles text-body fs-9 form-icon"></span>
               </div>
             </div>
             <div class="col-12 col-sm-6">
               <div class="form-icon-container">
                 <div class="form-floating">
-                  <input class="form-control form-icon-input" id="nric" type="text" placeholder="NRIC" />
+                  <input class="form-control form-icon-input" name="nric" type="text" placeholder="" />
                   <label class="text-body-tertiary form-icon-label" for="nric">NRIC</label>
                 </div><span class="fa-solid fa-user text-body fs-9 form-icon"></span>
               </div>
@@ -198,47 +198,80 @@
             <div class="col-12 col-sm-6">
               <div class="form-icon-container">
                 <div class="form-floating">
-                  <input class="form-control form-icon-input" id="marital" type="text" placeholder="NRIC" />
-                  <label class="text-body-tertiary form-icon-label" for="marital">Marital</label>
-                </div><span class="fa-solid fa-user text-body fs-9 form-icon"></span>
+                  <select name="marital" class="form-select form-icon-input">
+                    <option selected>Select your marital status</option>
+                    <option value="single">Single</option>
+                    <option value="married">Married</option>
+                    <option value="widowed">Widowed</option>
+                    <option value="divorced">Divorced</option>
+                    <option value="seperated">Seperated</option>
+                  </select>
+                  <label class="text-body-tertiary form-icon-label" for="marital">Marital Status</label>
+                </div><span class="fa-solid fa-id-card text-body fs-9 form-icon"></span>
               </div>
             </div>
             <div class="col-12 col-sm-6">
               <div class="form-icon-container">
                 <div class="form-floating">
-                  <input class="form-control form-icon-input" id="education" type="text" placeholder="NRIC" />
+                  <select name="education" class="form-select form-icon-input">
+                    <option selected>Select your highest education</option>
+                    <option value="SPM">SPM</option>
+                    <option value="Professional Certificate">Professional Certificate</option>
+                    <option value="Diploma">Diploma</option>
+                    <option value="Degree">Degree</option>
+                    <option value="Master">Master</option>
+                    <option value="PHD">PHD</option>
+                  </select>
                   <label class="text-body-tertiary form-icon-label" for="education">Education</label>
-                </div><span class="fa-solid fa-user text-body fs-9 form-icon"></span>
+                </div><span class="fa-solid fa-graduation-cap text-body fs-9 form-icon"></span>
               </div>
             </div>
             <div class="col-12 col-sm-12">
               <div class="form-icon-container">
                 <div class="form-floating">
-                  <textarea class="form-control form-icon-input" id="address" style="height: 115px;" placeholder="Info"></textarea>
+                  <textarea class="form-control form-icon-input" name="address" style="height: 115px;" placeholder="Info"></textarea>
                   <label class="text-body-tertiary form-icon-label" for="address">Address</label>
-                </div><span class="fa-solid fa-circle-info text-body fs-9 form-icon"></span>
+                </div><span class="fa-solid fa-house-user text-body fs-9 form-icon"></span>
               </div>
             </div>
           </div>
         </div>
         <div class="text-end mb-6">
           <div>
-            <button class="btn btn-phoenix-secondary me-2">Cancel Changes</button>
-            <button class="btn btn-phoenix-primary">Save Information</button>
+            <a class="btn btn-phoenix-secondary me-2" role="button" href="/settings">Cancel Changes</a>
+            <button class="btn btn-phoenix-primary" type="submit">Save Information</button>
           </div>
         </div>
-      </div>
+      </form>
+
       <div class="row gy-5">
         <div class="col-12 col-md-6 d-none">
           <h4 class="text-body-emphasis">Transfer Ownership</h4>
           <p class="text-body-tertiary">Transfer this account to another person or to a company repository.</p>
           <button class="btn btn-phoenix-warning">Transfer</button>
         </div>
-        <div class="col-12 col-md-6">
+        <div class="col-12 col-md-6 d-none">
           <h4 class="text-body-emphasis">Account Deletion</h4>
           <p class="text-body-tertiary">Transfer this account to another person or to a company repository.</p>
           <button class="btn btn-phoenix-danger">Delete account</button>
         </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- toast alert submission -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 5">
+  <div class="d-flex">
+    <div class="toast <%= show %> align-items-center text-white border-0" role="alert" data-bs-autohide="false" aria-live="assertive" aria-atomic="true">
+      <div class="d-flex justify-content-between">
+        <div class="toast-body px-0 py-3">
+          <code class="text-primary"><%= alert %></code>
+        </div>
+
+        <button class="btn ms-2 p-0" type="button" data-bs-dismiss="toast" aria-label="Close">
+          <span class="uil uil-times fs-7"></span>
+        </button>
       </div>
     </div>
   </div>
