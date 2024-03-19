@@ -1,6 +1,6 @@
 <%- include('partials/private-header.ejs') %>
 
-<nav class="mb-2" aria-label="breadcrumb">
+<nav class="mb-2 d-none" aria-label="breadcrumb">
   <ol class="breadcrumb mb-0">
     <li class="breadcrumb-item"><a href="#!">Profile</a></li>
     <li class="breadcrumb-item active" aria-current="page"><%= user.username %></li>
@@ -112,7 +112,7 @@
       <li class="nav-item me-3"><a class="nav-link text-nowrap active" id="orders-tab" data-bs-toggle="tab" href="#tab-activity" role="tab" aria-controls="tab-orders" aria-selected="true"><span class="fa-solid fa-clock me-2"></span>Activity<span class="text-body-tertiary fw-normal"> (<%= activities.length %>)</span></a></li>
       <li class="nav-item me-3"><a class="nav-link text-nowrap" id="reviews-tab" data-bs-toggle="tab" href="#tab-leave" role="tab" aria-controls="tab-orders" aria-selected="true"><span class="fa-solid fa-calendar me-2"></span>Leave<span class="text-body-tertiary fw-normal"></span></a></li>
       <li class="nav-item me-3"><a class="nav-link text-nowrap" id="wishlist-tab" data-bs-toggle="tab" href="#tab-personal" role="tab" aria-controls="tab-orders" aria-selected="true"><span class="fa-solid fa-user me-2"></span>Personal</a></li>
-      <li class="nav-item me-3"><a class="nav-link text-nowrap" id="wishlist-tab" data-bs-toggle="tab" href="#tab-attachment" role="tab" aria-controls="tab-orders" aria-selected="true"><span class="fa-solid fa-user me-2"></span>Attachments</a></li>
+      <li class="nav-item me-3"><a class="nav-link text-nowrap" id="wishlist-tab" data-bs-toggle="tab" href="#tab-attachment" role="tab" aria-controls="tab-orders" aria-selected="true"><span class="fa-solid fa-clipboard me-2"></span>Attachments</a></li>
     </ul>
   </div>
   <div class="tab-content" id="profileTabContent">
@@ -377,66 +377,89 @@
     </div>
 
     <div class="tab-pane fade" id="tab-attachment" role="tabpanel" aria-labelledby="personal-tab">
-      <div class="row g-3 mb-6">
+      <div class="mb-6">
 
-        <div class="col-md-6">
-          <div class="input-group">
-            <span class="input-group-text"><i class="fa-solid fa-id-card-clip"></i></span>
-            <div class="form-floating">
-              <input type="text" class="form-control" id="floatingInputGroup1" placeholder="" value="<%= user.nric %>" disabled>
-              <label for="floatingInputGroup1">NRIC</label>
+        <div class="overflow-x-hidden vh-50 scrollbar w-100">
+          <%
+            const formatDateFile = (date) => {
+              const options = { day: 'numeric', month: 'short', hour: 'numeric', minute: 'numeric', hour12: true };
+              const formattedDate = new Intl.DateTimeFormat('en-US', options).format(date);
+            
+              // Add day suffix (st, nd, rd, or th)
+              const day = date.getDate();
+              const daySuffix = (day) => {
+                if (day >= 11 && day <= 13) {
+                  return 'th';
+                }
+                const lastDigit = day % 10;
+                switch (lastDigit) {
+                  case 1: return 'st';
+                  case 2: return 'nd';
+                  case 3: return 'rd';
+                  default: return 'th';
+                   }
+              };
+            
+              return formattedDate.replace(/(\d+)/, (match, p1) => `${p1}${daySuffix(day)}`);
+            };
+          %>
+
+          <% const modalFiles = files.filter((file) => file.user.toString() === user._id.toString() && file.origin !== 'leave'); %>
+          <% const lastIndexFile = modalFiles.length - 1; var borderModalFile = ''; %>
+          <% if(modalFiles && modalFiles.length > 0){ %>
+          <% modalFiles.forEach((file, index) => { %>
+
+          <% 
+                if(index === lastIndexFile){
+                    borderModalFile = 'border-bottom';
+                } else {
+                    borderModalFile = '';
+                }
+              %>
+
+          <% if(file.type === '.png' || file.type === '.webp' || file.type === '.jpg' || file.type === '.jpeg' || file.type === '.gif' ){ %>
+          <div class="border-top <%= borderModalFile %> border-dashed px-0 pt-4 pb-3">
+            <div class="me-n3">
+              <div class="d-flex flex-between-center">
+                <div class="d-flex mb-1"><span class="fa-solid fa-image me-2 text-body-tertiary fs-9"></span>
+                  <p class="text-body-highlight mb-0 lh-1"><%= file.name %></p>
+                </div>
+                <div class="btn-reveal-trigger me-3">
+                  <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fas fa-ellipsis-h"></span></button>
+                  <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item" href="/files/download/<%= file._id %>">Download</a><a class="dropdown-item d-none" href="#!">Report abuse</a></div>
+                </div>
+              </div>
+              <% const userFile = allUser.find(item => item._id.toString() === user._id.toString()); %>
+              <div class="d-flex fs-9 text-body-tertiary mb-2 flex-wrap"><span><%= file.size %></span><span class="text-body-quaternary mx-1">| </span><a href="#!"><%= userFile.fullname %> </a><span class="text-body-quaternary mx-1">| </span><span class="text-nowrap"><%= formatDateFile(file.date) %></span></div><img class="rounded-2" src="<%= file.path %>" alt="" style="max-width:230px" />
             </div>
           </div>
-        </div>
 
-        <div class="col-md-6">
-          <div class="input-group">
-            <span class="input-group-text"><i class="fa-solid fa-cake-candles"></i></span>
-            <div class="form-floating">
-              <input type="text" class="form-control" id="floatingInputGroup1" placeholder="" value="<%= user.birthday %>" disabled>
-              <label for="floatingInputGroup1">Birthday</label>
+          <% }else { %>
+
+          <div class="border-top <%= borderModalFile %> px-0 pt-4 pb-3">
+            <div class="me-n3">
+              <div class="d-flex flex-between-center">
+                <div>
+                  <div class="d-flex align-items-center mb-1"><span class="fa-solid fa-image me-2 fs-9 text-body-tertiary"></span>
+                    <p class="text-body-highlight mb-0 lh-1"><%= file.name %></p>
+                  </div>
+                  <div class="d-flex fs-9 text-body-tertiary mb-0 flex-wrap"><span><%= file.size %></span><span class="text-body-quaternary mx-1">| </span><a href="#!"><%= file.user %> </a><span class="text-body-quaternary mx-1">| </span><span class="text-nowrap"><%= formatDateFile(file.date) %></span></div>
+                </div>
+                <div class="btn-reveal-trigger me-3">
+                  <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fas fa-ellipsis-h"></span></button>
+                  <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item" href="#!">Edit</a><a class="dropdown-item text-danger" href="/">Delete</a><a class="dropdown-item" href="#!">Download</a><a class="dropdown-item" href="#!">Report abuse</a></div>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="col-md-4">
-          <div class="input-group">
-            <span class="input-group-text"><i class="fa-solid fa-venus-mars"></i></span>
-            <div class="form-floating">
-              <input type="text" class="form-control" id="floatingInputGroup1" placeholder="" value="<%= user.gender %>" disabled>
-              <label for="floatingInputGroup1">Gender</label>
-            </div>
-          </div>
-        </div>
+          <% } %>
+          <% }); %>
+          <% }else { %>
+          <p class="white-space-nowrap fs-9">There is no file uploaded yet</p>
+          <% } %>
 
-        <div class="col-md-4">
-          <div class="input-group">
-            <span class="input-group-text"><i class="fa-brands fa-pagelines"></i></span>
-            <div class="form-floating">
-              <input type="text" class="form-control" id="floatingInputGroup1" placeholder="" value="<%= user.age %>" disabled>
-              <label for="floatingInputGroup1">Age</label>
-            </div>
-          </div>
-        </div>
 
-        <div class="col-md-4">
-          <div class="input-group">
-            <span class="input-group-text"><i class="fa-solid fa-user-graduate"></i></span>
-            <div class="form-floating">
-              <input type="text" class="form-control" id="floatingInputGroup1" placeholder="" value="<%= user.education %>" disabled>
-              <label for="floatingInputGroup1">Education</label>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-12">
-          <div class="input-group">
-            <span class="input-group-text"><i class="fa-solid fa-map-pin"></i></span>
-            <div class="form-floating">
-              <textarea style="height: 100px; width: 100%;" class="form-control" disabled><%= user.address %></textarea>
-              <label for="floatingInputGroup1">Address</label>
-            </div>
-          </div>
         </div>
 
       </div>

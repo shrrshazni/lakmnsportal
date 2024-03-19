@@ -10,7 +10,6 @@ const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
 const passportLocalMongoose = require('passport-local-mongoose');
 const MongoDBSession = require('connect-mongodb-session')(session);
-const crypto = require('crypto');
 const moment = require('moment');
 const path = require('path');
 const fileUpload = require('express-fileupload');
@@ -19,6 +18,7 @@ const cron = require('node-cron');
 const { v4: uuidv4 } = require('uuid');
 const { send } = require('process');
 const fs = require('fs').promises;
+const qr = require('qrcode');
 
 const mongoURI =
     'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/session';
@@ -1660,6 +1660,7 @@ app.get('/profile', isAuthenticated, async function (req, res) {
     const leave = await Leave.find({ user: user._id, status: { $nin: ['denied', 'cancelled'] } });
     const activities = await Activity.find({ user: user._id });
     const allUser = await User.find();
+    const file = await File.find();
 
     const date = getDateFormat2();
 
@@ -1689,7 +1690,8 @@ app.get('/profile', isAuthenticated, async function (req, res) {
             activities: activities,
             info: info,
             today: date,
-            allUser: allUser
+            allUser: allUser,
+            files: file
         });
     }
 });
@@ -1722,7 +1724,9 @@ app.get('/settings', isAuthenticated, async function (req, res) {
 
     if (user) {
 
-        if (req.body.oldPassword === '' && req.body.newPassword === '' && req.body.newPassword2 === '') {
+        if ((req.body.oldPassword === '' && req.body.newPassword === '' && req.body.newPassword2 === '') ||
+            (req.body.oldPassword === undefined && req.body.newPassword === undefined && req.body.newPassword2 === undefined)) {
+
             const updateFields = {};
 
             // Add fields from req.body to the updateFields object if they are present
@@ -1736,47 +1740,91 @@ app.get('/settings', isAuthenticated, async function (req, res) {
                 updateFields.phone = req.body.phone;
             }
             if (req.body.dateEmployed) {
-                updateFields.dateEmployed = req.body.dateEmployed;
+                updateFields.dateEmployed = new Date(req.body.dateEmployed);
             }
             if (req.body.birthdate) {
-                updateFields.birthdate = req.body.birthdate;
+                updateFields.birthdate = new Date(req.body.birthdate);
             }
             if (req.body.nric) {
                 updateFields.nric = req.body.nric;
             }
-            if (req.body.marital) {
+            if (req.body.marital && req.body.marital !== "Select your marital status") {
                 updateFields.marital = req.body.marital;
             }
-            if (req.body.education) {
+            if (req.body.education && req.body.education !== "Select your highest education") {
                 updateFields.education = req.body.education;
             }
             if (req.body.address) {
                 updateFields.address = req.body.address;
             }
 
-            const updateUser = await User.findOneAndUpdate(
-                {
-                    _id: user._id
-                },
-                {
-                    $set: updateFields
-                },
-                { new: true }
-            );
-
-            if (updateUser) {
-
-                console.log("Update successful");
+            if (Object.keys(updateFields).length === 0) {
                 res.render('settings', {
                     user: user,
                     uuid: uuidv4(),
                     notifications: notifications,
                     show: 'show',
-                    alert: 'Update sucessful, please do check your profile to see the changes'
+                    alert: 'Update unsuccessful, there no any input to be updated'
                 });
+            } else {
+                const updateUser = await User.findOneAndUpdate(
+                    {
+                        _id: user._id
+                    },
+                    {
+                        $set: updateFields
+                    },
+                    { new: true }
+                );
+
+                if (updateUser) {
+
+                    console.log("Update successful");
+                    res.render('settings', {
+                        user: user,
+                        uuid: uuidv4(),
+                        notifications: notifications,
+                        show: 'show',
+                        alert: 'Update sucessful on basic or personal information, please do check your profile to see the changes'
+                    });
+                }
             }
+
+
         } else {
-            
+            const isPasswordValid = await user.authenticate(req.body.oldPassword);
+            const newPasswordMatch = req.body.newPassword === req.body.newPassword2;
+
+            if (isPasswordValid.user === false) {
+                res.render('settings', {
+                    user: user,
+                    uuid: uuidv4(),
+                    notifications: notifications,
+                    show: 'show',
+                    alert: 'Update unsuccessful, maybe you entered a wrong current password'
+                });
+            } else if (newPasswordMatch === false) {
+                res.render('settings', {
+                    user: user,
+                    uuid: uuidv4(),
+                    notifications: notifications,
+                    show: 'show',
+                    alert: 'Update unsuccessful, new password and confirm pasword are not match'
+                });
+            } else {
+                await user.setPassword(req.body.newPassword);
+                const updatePassword = await user.save();
+
+                if (updatePassword) {
+                    res.render('settings', {
+                        user: user,
+                        uuid: uuidv4(),
+                        notifications: notifications,
+                        show: 'show',
+                        alert: 'Update successful on new password, you can use it onwards'
+                    });
+                }
+            }
         }
     }
 });
@@ -3522,7 +3570,7 @@ cron.schedule(
         // Find leave records with date.start timestamp less than or equal to 3 days from now
         const currentDate = new Date();
         const invalidLeaves = await Leave.find({
-            estimated: { $gte: currentDate.setDate(currentDate.getDate() + 3) },
+            timestamp: { $gte: currentDate.setDate(currentDate.getDate() + 3) },
             $or: [{ status: 'pending' }, { status: 'submitted' }]
         });
 
@@ -4068,6 +4116,70 @@ app.get(
         }
     }
 );
+
+// Function to generate a unique identifier (replace this with your own logic)
+const generateUniqueIdentifier = () => {
+    return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+};
+
+// Function to generate QR code URL based on unique identifier
+const generateQRCodeUrl = (uniqueIdentifier) => {
+    return `http://localhost:5002/trial/${uniqueIdentifier}`;
+};
+
+// ATTENDACE TRIAL
+app.get('/trial', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    }).populate('sender');
+
+
+    if (user) {
+
+        const uniqueIdentifier = generateUniqueIdentifier();
+        const qrCodeUrl = generateQRCodeUrl(uniqueIdentifier);
+
+        console.log('First qrCodeUrl', qrCodeUrl);
+
+        res.render('temp', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4(),
+            qrCodeUrl: qrCodeUrl,
+            uniqueIdentifier: uniqueIdentifier
+        });
+    }
+});
+
+app.get('/generate-qr', async (req, res) => {
+    const uniqueIdentifier = generateUniqueIdentifier();
+    const rawUrl = generateQRCodeUrl(uniqueIdentifier);
+    const qrCodeUrl = preprocessIdentifier(rawUrl);
+    console.log(rawUrl);
+
+    try {
+        const qrCodeImage = await qr.toDataURL(rawUrl, {
+            type: 'image/png',
+            errorCorrectionLevel: 'H',
+            color: { dark: '#008000', light: '#FFFFFF' }, // Set the color (dark is the main color, light is the background color)
+            width: 400,
+            margin: 0// Set the width of the QR code
+        });
+
+        res.json({ qrCodeImage }); // Send the QR code image data as JSON
+    } catch (error) {
+        console.error('Error generating QR code:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+function preprocessIdentifier(identifier) {
+    // Implement preprocessing logic here (e.g., remove special characters)
+    return identifier.replace(/[^a-zA-Z0-9]/g, ''); // Remove any characters that are not alphanumeric
+}
 
 // FUNCTIONS
 

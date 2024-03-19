@@ -1,6 +1,23 @@
 <%- include('partials/private-header.ejs') %>
 
 <div class="mb-9">
+
+  <div class="row align-items-center justify-content-between g-3 mb-4">
+    <div class="col-auto">
+      <h2 class="mb-0">Settings</h2>
+    </div>
+    <div class="col-auto">
+      <div class="row g-2 g-sm-3">
+        <div class="col-auto d-none">
+          <button class="btn btn-phoenix-primary"><span class="fa-regular fa-envelope me-2"></span>Message</button>
+        </div>
+        <div class="col-auto">
+          <a class="btn btn-phoenix-secondary" role="button" href="/profile"><span class="fa-solid fa-user me-2"></span>Profile</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="row g-6">
     <div class="col-12 col-xl-4">
 
@@ -116,7 +133,7 @@
               <div class="form-icon-container">
                 <div class="form-floating">
                   <input class="form-control form-icon-input" name="email" type="email" placeholder="Email" />
-                  <label class="text-body-tertiary form-icon-label" for="email">ENTER YOUR EMAIL</label>
+                  <label class="text-body-tertiary form-icon-label" for="email">ENTER YOUR WORK EMAIL</label>
                 </div><span class="fa-solid fa-envelope text-body fs-9 form-icon"></span>
               </div>
             </div>
@@ -131,48 +148,10 @@
             <div class="col-12 col-sm-6">
               <div class="form-icon-container">
                 <div class="form-floating">
-                  <input type="text" class="form-control datetimepicker flatpickr-input form-icon-input" placeholder="" name="dateEmployed" data-options='{"disableMobile":true,"allowInput":true, "defaultDate": "1990-01-01", "locale" : { "firstDayOfWeek" : 1}, "mode": "multiple" }'>
+                  <input type="text" class="form-control datetimepicker flatpickr-input form-icon-input" placeholder="" name="dateEmployed" data-options='{"disableMobile":true,"allowInput":true, "locale" : { "firstDayOfWeek" : 1}, "mode": "multiple" }'>
                   <label class="text-body-tertiary form-icon-label" for="dateEmployed">DATE EMPLOYED</label>
                 </div><span class="fa-solid fa-calendar-plus text-body fs-9 form-icon"></span>
               </div>
-            </div>
-          </div>
-        </div>
-        <div class="row gx-3 mb-6 gy-6 gy-sm-3">
-          <div class="col-12 col-sm-6 d-none">
-            <h4 class="mb-4">Company Info</h4>
-            <div class="form-icon-container mb-3">
-              <div class="form-floating">
-                <input class="form-control form-icon-input" name="companyName" type="text" placeholder="Company Name" />
-                <label class="text-body-tertiary form-icon-label" for="companyName">COMPANY NAME</label>
-              </div><span class="fa-solid fa-building text-body fs-9 form-icon"></span>
-            </div>
-            <div class="form-icon-container">
-              <div class="form-floating">
-                <input class="form-control form-icon-input" name="website" type="text" placeholder="Website" />
-                <label class="text-body-tertiary form-icon-label" for="website">Website</label>
-              </div><span class="fa-solid fa-globe text-body fs-9 form-icon"></span>
-            </div>
-          </div>
-          <div class="col-12 col-sm-6">
-            <h4 class="mb-4">Change Password</h4>
-            <div class="form-icon-container mb-3">
-              <div class="form-floating">
-                <input class="form-control form-icon-input" name="oldPassword" type="password" placeholder="Old password" />
-                <label class="text-body-tertiary form-icon-label" for="oldPassword">Old Password</label>
-              </div><span class="fa-solid fa-lock text-body fs-9 form-icon"></span>
-            </div>
-            <div class="form-icon-container mb-3">
-              <div class="form-floating">
-                <input class="form-control form-icon-input" name="newPassword" type="password" placeholder="New password" />
-                <label class="text-body-tertiary form-icon-label" for="newPassword">New Password</label>
-              </div><span class="fa-solid fa-key text-body fs-9 form-icon"></span>
-            </div>
-            <div class="form-icon-container">
-              <div class="form-floating">
-                <input class="form-control form-icon-input" name="newPassword2" type="password" placeholder="Confirm New password" />
-                <label class="text-body-tertiary form-icon-label" for="newPassword2">Confirm New Password</label>
-              </div><span class="fa-solid fa-key text-body fs-9 form-icon"></span>
             </div>
           </div>
         </div>
@@ -182,7 +161,7 @@
             <div class="col-12 col-sm-6">
               <div class="form-icon-container">
                 <div class="form-floating">
-                  <input type="text" class="form-control datetimepicker flatpickr-input form-icon-input" placeholder="" name="birthdate" data-options='{"disableMobile":true,"allowInput":true, "defaultDate": "1980-01-01", "locale" : { "firstDayOfWeek" : 1}}'>
+                  <input type="text" class="form-control datetimepicker flatpickr-input form-icon-input" placeholder="" name="birthdate" data-options='{"disableMobile":true,"allowInput":true, "locale" : { "firstDayOfWeek" : 1}}'>
                   <label class="text-body-tertiary form-icon-label" for="birthday">Birth date</label>
                 </div><span class="fa-solid fa-cake-candles text-body fs-9 form-icon"></span>
               </div>
@@ -204,7 +183,7 @@
                     <option value="married">Married</option>
                     <option value="widowed">Widowed</option>
                     <option value="divorced">Divorced</option>
-                    <option value="seperated">Seperated</option>
+                    <option value="seperated">Separated</option>
                   </select>
                   <label class="text-body-tertiary form-icon-label" for="marital">Marital Status</label>
                 </div><span class="fa-solid fa-id-card text-body fs-9 form-icon"></span>
@@ -236,9 +215,107 @@
             </div>
           </div>
         </div>
+        <div class="row gx-3 mb-6 gy-6 gy-sm-3">
+          <div class="col-12 col-sm-6 d-none">
+            <h4 class="mb-4">Company Info</h4>
+            <div class="form-icon-container mb-3">
+              <div class="form-floating">
+                <input class="form-control form-icon-input" name="companyName" type="text" placeholder="Company Name" />
+                <label class="text-body-tertiary form-icon-label" for="companyName">COMPANY NAME</label>
+              </div><span class="fa-solid fa-building text-body fs-9 form-icon"></span>
+            </div>
+            <div class="form-icon-container">
+              <div class="form-floating">
+                <input class="form-control form-icon-input" name="website" type="text" placeholder="Website" />
+                <label class="text-body-tertiary form-icon-label" for="website">Website</label>
+              </div><span class="fa-solid fa-globe text-body fs-9 form-icon"></span>
+            </div>
+          </div>
+          <div class="col-12 col-sm-6">
+            <h4 class="mb-4">Change Password</h4>
+            <div class="form-icon-container mb-3">
+              <div class="form-floating">
+                <div class="container px-0">
+                  <div>
+                    <input class="form-control form-icon-input" id="password1" type="password" name="oldPassword" placeholder="Old Password" style="height: 3rem;" />
+                  </div>
+                  <span type="button" class="position-absolute end-0 top-0 me-3" id="togglePassword" style="margin-top: 0.75rem;">
+                    <i class="fa fa-eye-slash pt-1" aria-hidden="true" width="15" height="15"></i>
+                  </span>
+                </div><span class="fa-solid fa-lock text-body fs-9 form-icon pt-1"></span>
+              </div>
+
+              <script>
+                document.getElementById("togglePassword").addEventListener("click", function() {
+                  var passwordInput = document.getElementById("password1");
+                  if (passwordInput.type === "password") {
+                    passwordInput.type = "text";
+                    this.innerHTML = '<i class="fa fa-eye" aria-hidden="true"  width="15" height="15"></i>';
+                  } else {
+                    passwordInput.type = "password";
+                    this.innerHTML = '<i class="fa fa-eye-slash" aria-hidden="true"  width="16.5" height="16.5"></i>';
+                  }
+                });
+              </script>
+
+            </div>
+            <div class="form-icon-container mb-3">
+              <div class="form-floating">
+                <div class="container px-0">
+                  <div>
+                    <input class="form-control form-icon-input" id="password2" type="password" name="newPassword" placeholder="New password" style="height: 3rem;" /><span class="fa-solid fa-key text-body fs-9 form-icon pt-1"></span>
+                  </div>
+                  <span type="button" class="position-absolute end-0 top-0 me-3" id="togglePassword2" style="margin-top: 0.75rem;">
+                    <i class="fa fa-eye-slash pt-1" aria-hidden="true" width="15" height="15"></i>
+                  </span>
+                </div>
+              </div>
+
+              <script>
+                document.getElementById("togglePassword2").addEventListener("click", function() {
+                  var passwordInput = document.getElementById("password2");
+                  if (passwordInput.type === "password") {
+                    passwordInput.type = "text";
+                    this.innerHTML = '<i class="fa fa-eye" aria-hidden="true"  width="15" height="15"></i>';
+                  } else {
+                    passwordInput.type = "password";
+                    this.innerHTML = '<i class="fa fa-eye-slash" aria-hidden="true"  width="16.5" height="16.5"></i>';
+                  }
+                });
+              </script>
+
+            </div>
+            <div class="form-icon-container mb-3">
+              <div class="form-floating">
+                <div class="container px-0">
+                  <div>
+                    <input class="form-control form-icon-input" id="password3" type="password" name="newPassword2" placeholder="Confirm password" style="height: 3rem;" />
+                  </div>
+                  <span type="button" class="position-absolute end-0 top-0 me-3" id="togglePassword3" style="margin-top: 0.75rem;">
+                    <i class="fa fa-eye-slash" aria-hidden="true" width="15" height="15"></i>
+                  </span>
+                </div><span class="fa-solid fa-key text-body fs-9 form-icon pt-1"></span>
+              </div>
+
+              <script>
+                document.getElementById("togglePassword3").addEventListener("click", function() {
+                  var passwordInput = document.getElementById("password3");
+                  if (passwordInput.type === "password") {
+                    passwordInput.type = "text";
+                    this.innerHTML = '<i class="fa fa-eye" aria-hidden="true"  width="15" height="15"></i>';
+                  } else {
+                    passwordInput.type = "password";
+                    this.innerHTML = '<i class="fa fa-eye-slash" aria-hidden="true"  width="16.5" height="16.5"></i>';
+                  }
+                });
+              </script>
+
+            </div>
+          </div>
+        </div>
         <div class="text-end mb-6">
           <div>
-            <a class="btn btn-phoenix-secondary me-2" role="button" href="/settings">Cancel Changes</a>
+            <a class="btn btn-phoenix-secondary me-2" role="button" href="/">Cancel Changes</a>
             <button class="btn btn-phoenix-primary" type="submit">Save Information</button>
           </div>
         </div>
