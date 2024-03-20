@@ -19,6 +19,7 @@ const { v4: uuidv4 } = require('uuid');
 const { send } = require('process');
 const fs = require('fs').promises;
 const qr = require('qrcode');
+const twilio = require('twilio');
 
 const mongoURI =
     'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/session';
@@ -114,6 +115,7 @@ const userSchema = new mongoose.Schema({
     isManagement: { type: Boolean, default: false },
     isPersonalAssistant: { type: Boolean, default: false },
     isNonOfficeHour: { type: Boolean, default: false },
+    isSuperAdmin: { type: Boolean, default: false },
     dateEmployed: { type: Date },
     birthdate: { type: Date }
 });
@@ -227,7 +229,11 @@ const taskSchema = new mongoose.Schema({
 // USER'S INFORMATION
 const infoSchema = new mongoose.Schema({
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    status: String
+    status: { type: String },
+    emailVerified: { type: Boolean, default: false },
+    phoneVerified: { type: Boolean, default: false },
+    isOnline: { type: Boolean, default: false },
+    lastSeen: { type: Date },
 });
 
 // LEAVE
@@ -344,6 +350,14 @@ let transporter = nodemailer.createTransport({
     }
 });
 
+// PHONE TRANSPORTER
+const accountSid = "ACafc8b0a422560f0091b2855b4482326a";
+const authToken = "4e7acc459aaed9ecf0fd426308f89e61";
+const client = twilio(accountSid, authToken);
+// const verifySid = "VAfe5663f4ddd898cce9936534b3abf99a";
+
+
+
 // BASIC USER PART
 
 // HOME
@@ -358,6 +372,7 @@ app.get('/', isAuthenticated, async function (req, res) {
     const allUser = await User.find();
     const allLeave = await Leave.find();
     const allUserLeave = await UserLeave.find();
+    const allInfo = await Info.find();
     const userLeave = await UserLeave.findOne({ user: user._id })
         .populate('user')
         .exec();
@@ -367,6 +382,7 @@ app.get('/', isAuthenticated, async function (req, res) {
         .populate('assignee')
         .exec();
     const file = await File.find();
+    const info = await Info.findOne({ user: user._id });
 
     // find activities one week ago
     const sevenDaysAgo = new Date();
@@ -541,12 +557,14 @@ app.get('/', isAuthenticated, async function (req, res) {
             allUser: allUser,
             allUserLeave: allUserLeave,
             allLeave: allLeave,
+            allInfo: allInfo,
             userLeave: userLeave,
             leave: leave,
             tasks: task,
             files: file,
             activities: activities,
             selectedNames: '',
+            info: info,
             // toast
             show: '',
             alert: ''
@@ -1074,6 +1092,7 @@ app.get('/staff/details/:id', isAuthenticated, async function (req, res) {
     const allUser = await User.find();
     const activities = await Activity.find({ user: otherUser._id });
     const leave = await Leave.find({ user: otherUser._id });
+    const info = await Info.findOne({ user: otherUser._id });
 
     if (user) {
         res.render('staff-details', {
@@ -1085,7 +1104,8 @@ app.get('/staff/details/:id', isAuthenticated, async function (req, res) {
             files: file,
             allUser: allUser,
             activities: activities,
-            leave: leave
+            leave: leave,
+            info: info
         });
     }
 });
@@ -1620,6 +1640,26 @@ app
                         return res.redirect('/');
                     });
                 });
+
+                const updateInfo = await Info.findOneAndUpdate(
+                    {
+                        user: user._id
+                    },
+                    {
+                        isOnline: true,
+                        lastSeen: new Date()
+                    },
+                    {
+                        new: true
+                    }
+                )
+
+                if (updateInfo) {
+                    console.log('Is online at ' + new Date());
+                } else {
+                    console.log('Failed to update');
+                }
+
             } catch (error) {
                 console.error(error);
                 res.status(500).send('Internal Server Error');
@@ -1704,12 +1744,14 @@ app.get('/settings', isAuthenticated, async function (req, res) {
         recipient: user._id,
         read: false
     }).populate('sender');
+    const info = await Info.findOne({ user: user._id });
 
     if (user) {
         res.render('settings', {
             user: user,
             uuid: uuidv4(),
             notifications: notifications,
+            info: info,
             show: '',
             alert: ''
         });
@@ -1721,6 +1763,7 @@ app.get('/settings', isAuthenticated, async function (req, res) {
         recipient: user._id,
         read: false
     }).populate('sender');
+    const info = await Info.findOne({ user: user._id });
 
     if (user) {
 
@@ -1763,19 +1806,72 @@ app.get('/settings', isAuthenticated, async function (req, res) {
                     user: user,
                     uuid: uuidv4(),
                     notifications: notifications,
+                    info: info,
                     show: 'show',
                     alert: 'Update unsuccessful, there no any input to be updated'
                 });
             } else {
-                const updateUser = await User.findOneAndUpdate(
-                    {
-                        _id: user._id
-                    },
-                    {
-                        $set: updateFields
-                    },
-                    { new: true }
-                );
+                let updateUser = '';
+
+                if (updateFields.phone !== '') {
+                    updateUser = await User.findOneAndUpdate(
+                        {
+                            _id: user._id
+                        },
+                        {
+                            $set: updateFields
+                        },
+                        { new: true }
+                    );
+
+                    await Info.findOneAndUpdate(
+                        {
+                            user: user._id
+                        },
+                        {
+                            phoneVerified: false,
+                        },
+                        {
+                            new: true
+                        }
+                    );
+
+                } else if (updateFields.email !== '') {
+
+                    updateUser = await User.findOneAndUpdate(
+                        {
+                            _id: user._id
+                        },
+                        {
+                            $set: updateFields
+                        },
+                        { new: true }
+                    );
+
+                    await Info.findOneAndUpdate(
+                        {
+                            user: user._id
+                        },
+                        {
+                            emailVerified: false,
+                        },
+                        {
+                            new: true
+                        }
+                    );
+
+                } else {
+                    updateUser = await User.findOneAndUpdate(
+                        {
+                            _id: user._id
+                        },
+                        {
+                            $set: updateFields
+                        },
+                        { new: true }
+                    );
+                }
+
 
                 if (updateUser) {
 
@@ -1784,6 +1880,7 @@ app.get('/settings', isAuthenticated, async function (req, res) {
                         user: user,
                         uuid: uuidv4(),
                         notifications: notifications,
+                        info: info,
                         show: 'show',
                         alert: 'Update sucessful on basic or personal information, please do check your profile to see the changes'
                     });
@@ -1800,6 +1897,7 @@ app.get('/settings', isAuthenticated, async function (req, res) {
                     user: user,
                     uuid: uuidv4(),
                     notifications: notifications,
+                    info: info,
                     show: 'show',
                     alert: 'Update unsuccessful, maybe you entered a wrong current password'
                 });
@@ -1808,6 +1906,7 @@ app.get('/settings', isAuthenticated, async function (req, res) {
                     user: user,
                     uuid: uuidv4(),
                     notifications: notifications,
+                    info: info,
                     show: 'show',
                     alert: 'Update unsuccessful, new password and confirm pasword are not match'
                 });
@@ -1820,12 +1919,114 @@ app.get('/settings', isAuthenticated, async function (req, res) {
                         user: user,
                         uuid: uuidv4(),
                         notifications: notifications,
+                        info: info,
                         show: 'show',
                         alert: 'Update successful on new password, you can use it onwards'
                     });
                 }
             }
         }
+    }
+});
+
+app.get('/info/:type/:method/:id', async function (req, res) {
+    const id = req.params.id;
+    const user = await User.findOne({ _id: id });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    }).populate('sender');
+    const info = await Info.findOne({ user: user._id });
+
+    if (user) {
+        var type = req.params.type;
+        var method = req.params.method;
+
+        if (type === 'email' && method === 'verification') {
+            let mailOptions = {
+                from: 'shrrshazni@gmail.com',
+                to: user.email,
+                subject: 'lakmnsportal - Email Verification',
+                html: `
+                  <html>
+                    <head>
+                      <style>
+                        body {
+                          font-family: 'Arial', sans-serif;
+                          background-color: #f4f4f4;
+                          color: #333;
+                        }
+                        p {
+                          margin-bottom: 20px;
+                        }
+                        a {
+                          color: #3498db;
+                        }
+                      </style>
+                    </head>
+                    <body>
+                      <h1>Leave Request</h1>
+                      <p>Please click here to confirm your email to be verified, <a href="http://localhost:5002/info/email/confirm/${user._id}">lakmnsportal</a></p>
+                    </body>
+                  </html>
+                `
+            };
+
+            transporter.sendMail(mailOptions, (error, info) => {
+                if (error) {
+                    console.log(error);
+
+                    res.render('settings', {
+                        user: user,
+                        uuid: uuidv4(),
+                        notifications: notifications,
+                        info: info,
+                        show: 'show',
+                        alert: 'The email you submitted here is invalid'
+                    });
+                }
+
+                console.log('Message %s sent: %s', info.messageId, info.response);
+            });
+
+            res.render('settings', {
+                user: user,
+                uuid: uuidv4(),
+                notifications: notifications,
+                info: info,
+                show: 'show',
+                alert: 'We already send email verification towards your email'
+            });
+
+        } else if (type === 'email' && method === 'confirm') {
+            const updateEmail = await Info.findOneAndUpdate(
+                {
+                    user: user._id
+                },
+                {
+                    emailVerified: true
+                },
+                { upsert: true, new: true }
+            );
+
+            if (updateEmail) {
+                console.log('Email is verified');
+                res.redirect('/');
+            } else {
+                console.log('There is error');
+                res.redirect('/');
+            }
+        }
+        // else if (type === 'phone' && method === 'verification') {
+        //     const tac = generateTAC();
+        //     const phone = '+6' + user.phone;
+
+        //     await client.messages.create({
+        //         body: `Your TAC is: ${tac}`,
+        //         from: 'YOUR_TWILIO_PHONE_NUMBER',
+        //         to: phone
+        //     });
+        // }
     }
 });
 
@@ -2626,6 +2827,7 @@ app
                 const allUser = await User.find();
                 const allLeave = await Leave.find();
                 const allUserLeave = await UserLeave.find();
+                const allInfo = await Info.find();
                 const taskHome = await Task.find({ assignee: { $in: [user._id] } })
                     .sort({ timestamp: -1 })
                     .populate('assignee')
@@ -2819,6 +3021,7 @@ app
                     allUser: allUser,
                     allUserLeave: allUserLeave,
                     allLeave: allLeave,
+                    allInfo: allInfo,
                     userLeave: userLeave,
                     leave: leave,
                     tasks: taskHome,
@@ -3672,33 +3875,8 @@ app.get('/markAsRead/:id', isAuthenticated, async function (req, res) {
     if (update) {
         res.redirect(update.url);
     } else {
-        const username = req.user.username;
-        const user = await User.findOne({ username: username });
-        const notifications = await Notification.find({
-            recipient: user._id,
-            read: false
-        }).populate('sender');
-
-        const allUser = await User.find();
-        const allLeave = await Leave.find();
-        const allUserLeave = await UserLeave.find();
-        const leave = await Leave.find({ user: user._id });
-
-        const userLeave = await UserLeave.findOne({ user: user._id });
-
-        res.render('home', {
-            user: user,
-            notifications: notifications,
-            // all data
-            allUser: allUser,
-            allUserLeave: allUserLeave,
-            allLeave: allLeave,
-            userLeave: userLeave,
-            leave: leave,
-            // toast
-            show: 'show',
-            alert: 'Notification has been marked'
-        });
+        console.log('There is error for the update for notifications');
+        res.redirect('/');
     }
 });
 
@@ -3716,28 +3894,11 @@ app.get('/markAllAsRead', isAuthenticated, async function (req, res) {
         { new: true }
     );
 
-    const allUser = await User.find();
-    const allLeave = await Leave.find();
-    const allUserLeave = await UserLeave.find();
-    const leave = await Leave.find({ user: user._id });
-    const userLeave = await UserLeave.findOne({ user: user._id });
-
     if (update) {
         res.redirect('/');
     } else {
-        res.render('home', {
-            user: user,
-            notifications: notifications,
-            // all data
-            allUser: allUser,
-            allUserLeave: allUserLeave,
-            allLeave: allLeave,
-            userLeave: userLeave,
-            leave: leave,
-            // toast
-            show: 'show',
-            alert: 'All notification has been marked'
-        });
+        console.log('There is error for the update for notifications');
+        res.redirect('/');
     }
 });
 
@@ -3846,7 +4007,8 @@ app.get('/files/delete/cancel/:uuid', async function (req, res) {
 // FECTH API
 
 app.post('/status-update', isAuthenticated, async (req, res) => {
-    const user = req.user.username;
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
     const status = req.body.status;
 
     const update = await Info.findOneAndUpdate(
@@ -4174,6 +4336,37 @@ app.get('/generate-qr', async (req, res) => {
         console.error('Error generating QR code:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
+});
+
+app.get('/super-admin/update', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+
+    if (user.isSuperAdmin) {
+        const allUsers = await User.find();
+
+        // Iterate through each user
+        for (const user of allUsers) {
+
+            // Update the user's additional information
+            await Info.findOneAndUpdate(
+                { user: user._id },
+                {
+                    status: 'Will be updated',
+                    emailVerified: false,
+                    phoneVerified: false,
+                    isOnline: false,
+                    lastSeen: new Date()
+                },
+                { upsert: true, new: true }
+            );
+        }
+
+        console.log('All user has been updated');
+
+        res.redirect('/');
+    }
+
 });
 
 function preprocessIdentifier(identifier) {

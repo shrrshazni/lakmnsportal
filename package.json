@@ -49,6 +49,7 @@
     "slick-carousel": "^1.8.1",
     "sortablejs": "^1.15.1",
     "swiper": "^11.0.5",
+    "twilio": "^5.0.1",
     "uuid": "^9.0.1"
   }
 }

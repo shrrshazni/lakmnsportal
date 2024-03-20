@@ -48,7 +48,7 @@
                 <div class="col-12 col-sm-auto flex-1 text-md-start text-center">
                   <h3 class="fw-bold mb-3 mt-3"><%= otherUser.fullname %></h3>
                   <p class="mb-3"><%= otherUser.position %></p>
-                  <p class="fw-bold text-primary">"User Status"</p>
+                  <p class="fw-semibold text-primary fst-italic">"<%= info.status %>"</p>
                 </div>
               </div>
             </div>
@@ -92,10 +92,21 @@
                 <p class="text-primary"><%= section %> </p>
               </div>
               <div class="mb-0">
+                <% 
+                const date = new Date(info.lastSeen);
+                const formattedDateForOnline = date.toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                  hour: 'numeric',
+                  minute: 'numeric',
+                  hour12: true
+                });
+                %>
                 <div class="d-flex align-items-center mb-1"><span class="me-2 uil uil-clock"></span>
                   <h5 class="text-body-highlight mb-0">Last online</h5>
                 </div>
-                <p class="mb-0 text-body-secondary">12 November 2021, 10:54 AM</p>
+                <p class="mb-0 text-body-secondary"><%= formattedDateForOnline %></p>
               </div>
             </div>
           </div>

@@ -132,13 +132,14 @@
             if(user.section === ''){
                 var showSection = ''
             }else{
-                var showSection = ' in ' + user.section;
+                var showSection =  user.section;
             }
           %>
           <div class="col-12 col-md-6 flex-1">
             <h3 class="mx-auto white-space-nowrap"><%= user.fullname %></h3>
-            <p class="fw-bold"><%= user.position %><br> <span class="fw-normal fst-italic"> <%= user.department %><%= showSection %></span></p>
-            <p class="mx-auto text-primary">"User's status"</p>
+            <br>
+            <p class="fw-bold"><%= user.position %><br><span class="fw-normal white-space-nowrap fst-italic"> <%= user.department %><br><%= showSection %></span></p>
+            <p class="mx-auto text-primary fst-italic">"<%= info.status %>"</p>
           </div>
         </div>
 
@@ -356,7 +357,7 @@
             <th class="sort white-space-nowrap align-middle ps-0" scope="col" data-sort="member" style="width:15%;">MEMBERS</th>
             <th class="sort align-middle ps-3" scope="col" data-sort="position" style="width:10%;">POSITION</th>
             <th class="sort align-middle ps-3" scope="col" data-sort="activity" style="width:25%;">LATEST ACTIVITY</th>
-            <th class="sort align-middle text-center" scope="col" data-sort="when" style="width:10%;">DATE</th>
+            <th class="sort align-middle text-center" scope="col" data-sort="when" style="width:15%;">LAST SEEN</th>
             <th class="sort align-middle text-center" scope="col" data-sort="taskprogress" style="width:10%;">PROGRESS</th>
             <th class="sort align-middle text-center" scope="col" data-sort="status" style="width:10%;">STATUS</th>
             <th class="sort align-middle text-end" scope="col" style="width:5%;"></th>
@@ -368,8 +369,19 @@
 
           <tr class="position-static">
             <td class="align-middle text-body white-space-nowrap ps-0 member">
+
+              <%
+              const checkOnline = allInfo.find(item => item.user.toString() === department._id.toString());
+
+              var showOnline = '';
+              if(checkOnline.isOnline === true){
+                showOnline = '';
+              }else{
+                showOnline = 'd-none';
+              }
+              %>
               <div class="avatar avatar-xl">
-                <div class="avatar-name rounded-circle"><span><%= department && department.fullname ? department.fullname[0].toUpperCase() : '' %></span></div>
+                <div class="avatar-name rounded-circle"><span><%= department && department.fullname ? department.fullname[0].toUpperCase() : '' %></span><span class="fa-solid fa-circle ms-n1 position-absolute bottom-0 ps-3 <%= showOnline %>" style="font-size: 8.5px;color: #32b115;"></span></div>
               </div>
               <a class="mb-0 ms-3 fw-bold fs-8" href="/staff/details/<%= department._id %>"><%= department.fullname %></a>
             </td>
@@ -387,21 +399,18 @@
                 <%= latestActivity.description %>
               </p>
             </td>
-            <td class="align-middle white-space-nowrap text-center when ps-0">
-              <p class="fw-semibold text-body-secondary fs-9 mb-0">
-                <%= latestActivity.date.toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %>
-              </p>
-            </td>
 
             <% } else { %>
             <td class="align-middle white-space-nowrap ps-3 text-start taskprogress">
               <p class="text-body fw-semibold fs-9 mb-0">No activities</p>
             </td>
-
-            <td class="align-middle white-space-nowrap ps-0 text-center taskprogress">
-              <p class="text-body fw-semibold fs-9 mb-0">No activities</p>
-            </td>
             <% } %>
+
+            <td class="align-middle white-space-nowrap text-center when ps-0">
+              <p class="fw-semibold text-body-secondary fs-9 mb-0">
+                <%= checkOnline.lastSeen.toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %>
+              </p>
+            </td>
 
             <%
             const userTasks = otherTasks.filter(task => {

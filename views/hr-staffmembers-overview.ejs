@@ -117,7 +117,7 @@
         function renderBarLineChart(data, chartType) {
 
           const isMobile = window.innerWidth <= 540; // Check if window width is less than or equal to 540px (considered as mobile)
-          let pieChartCenter = ['30%', '50%']; // Default center position for the pie chart
+          let pieChartCenter = ['25%', '50%']; // Default center position for the pie chart
 
           // Adjust pie chart center position for mobile view
           if (isMobile) {
@@ -148,7 +148,7 @@
             legend: {
               type: 'scroll',
               orient: 'vertical',
-              right: 50, // Adjust the distance from the right side of the chart
+              right: 30, // Adjust the distance from the right side of the chart
               top: 'center',
               show: !isMobile,
               data: Object.keys(userCounts),
@@ -180,11 +180,11 @@
                 formatter: '{b} ({c})', // Format label to display name and value
                 color: theme.primary // Adjust label color
               },
-              itemStyle: {
-                borderRadius: 4,
-                borderWidth: 1, // Add border width
-                borderColor: getColor('bg-body', 'background-color') // Set border color (white in this case)
-              },
+              //   itemStyle: {
+              //     borderRadius: 4,
+              //     borderWidth: 1, // Add border width
+              //     borderColor: getColor('bg-body', 'background-color') // Set border color (white in this case)
+              //   },
             }],
           };
 

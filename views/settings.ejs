@@ -19,7 +19,7 @@
   </div>
 
   <div class="row g-6">
-    <div class="col-12 col-xl-4">
+    <div class="col-12 col-xl-5">
 
       <div class="card mb-6">
         <div class="card-body">
@@ -36,24 +36,20 @@
             const formattedDate = date.toLocaleDateString(date, options);
             %>
               <div class="col-12 col-sm-auto flex-1">
-                <h3><%= user.fullname %></h3>
+                <h3 class="fs-6 white-space-nowrap"><%= user.fullname %></h3>
                 <p class="text-body-secondary">Joined since, <%= formattedDate  %></p>
-                <p class="text-primary fs-8">"Your status"</p>
+                <p class="text-primary fs-8 fst-italic">"<%= info.status %>"</p>
               </div>
             </div>
           </div>
           <div class="d-flex flex-between-center pt-4">
             <div>
-              <h6 class="mb-2 text-body-secondary">Grade</h6>
-              <h4 class="fs-7 text-body-highlight mb-0"><%= user.grade %></h4>
+              <h6 class="mb-2 text-body-secondary">Email</h6>
+              <a class="lh-1" href="mailto:<%= user.email %>"><%= user.email %></a>
             </div>
             <div>
-              <h6 class="mb-2 text-body-secondary">Position</h6>
-              <h4 class="fs-7 text-body-highlight mb-0"><%= user.position %></h4>
-            </div>
-            <div>
-              <h6 class="mb-2 text-body-secondary">Work ID</h6>
-              <h4 class="fs-7 text-body-highlight mb-0"><%= user.username %></h4>
+              <h6 class="mb-2 text-body-secondary">Phone</h6>
+              <a href="tel:+6<%= user.phone %>">+6<%= user.phone %></a>
             </div>
           </div>
         </div>
@@ -101,11 +97,38 @@
         </div>
       </div>
 
+      <%
+       var textEmailVerified = '';
+       var textPhoneVerified = '';
+       var showVerifyEmail = '';
+       var showVerifyPhone = '';
+
+       if(info.emailVerified === false){
+         textEmailVerified = 'Email has not yet been verified';
+         showVerifyEmail = '';
+        }else{
+         textEmailVerified = 'Email has been verified';
+         showVerifyEmail = 'd-none';
+        }
+
+        if(info.phoneVerified === false){
+         textPhoneVerified = 'Phone number has not yet been verified';
+         showVerifyPhone = '';
+        }else{
+         textPhoneVerified = 'Phone number has been verified';
+         showVerifyPhone = 'd-none';
+        }
+      %>
+
       <div class="border-bottom border-translucent border-dashed pb-3 mb-4">
-        <h5 class="text-body mb-3">Your email has not yet been verified</h5>
-        <button class="btn btn-phoenix-success">Verify Now</button>
+        <h5 class="text-body mb-3"><%= textEmailVerified %></h5>
+        <a class="btn btn-phoenix-success <%= showVerifyEmail %>" role="button" href="/info/email/verification/<%= user._id %>">Verify Now</a>
       </div>
-      <div class="mb-4">
+      <div class="border-bottom border-translucent border-dashed pb-3 mb-4 d-none">
+        <h5 class="text-body mb-3"><%= textPhoneVerified %></h5>
+        <a class="btn btn-phoenix-success <%= showVerifyPhone %>" role="button" href="/info/phone/verification/<%= user._id %>">Verify Now</a>
+      </div>
+      <div class="mb-4 d-none">
         <div class="form-check form-switch">
           <input class="form-check-input" id="showPhone" type="checkbox" checked="checked" name="showPhone" />
           <label class="form-check-label fs-8" for="showPhone">Show your personal phone number</label>
@@ -116,7 +139,7 @@
         </div>
       </div>
     </div>
-    <div class="col-12 col-xl-8">
+    <div class="col-12 col-xl-7">
       <form class="border-bottom mb-4" method="post" action="/settings">
         <div class="mb-6">
           <h4 class="mb-4">Basic Information</h4>
