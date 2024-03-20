@@ -1,25 +1,13 @@
-<%- include('partials/private-header.ejs') %>
+<%- include('partials/public-header.ejs') %>
 
-<h4 class="mt-5">Scan the QR Code to Mark Attendance</h4>
-<div style="height: 30vh;" id="qrCode"></div>
-<script>
-  function reloadQRCode() {
-    const qrCodeContainer = document.getElementById('qrCode');
-    const uniqueIdentifier = '<%= uniqueIdentifier %>';
-    const qrCodeUrl = '<%= qrCodeUrl %>';
-    fetch(`/generate-qr`)
-      .then(response => response.json())
-      .then(data => {
-        const qrCodeImg = document.createElement('img');
-        qrCodeImg.src = data.qrCodeImage; // Assuming the JSON response contains the image URL
-        qrCodeContainer.innerHTML = ''; // Clear previous QR code
-        qrCodeContainer.appendChild(qrCodeImg);
-      })
-      .catch(error => console.error('Error loading QR code:', error));
-  }
+<h1>3D WebGL Example</h1>
+<div id="webgl-container" style="width: 400px; height: 50vh;">
+  <!-- WebGL canvas will be appended here -->
+</div>
 
-  reloadQRCode(); // Load QR code initially
-  setInterval(reloadQRCode, 4000); // Reload QR code every 5 seconds
-</script>
+<script src="/assets/js/threejs/three.cjs"></script>
+<script type="module" src="/assets/js/threejs/OBJLoader.js"></script>
+<script type="module" src="/assets/js/threejs/script.js"></script>
 
-<%- include('partials/private-footer.ejs') %>
+
+<%- include('partials/public-footer.ejs') %>

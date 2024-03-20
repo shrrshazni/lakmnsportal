@@ -1446,6 +1446,11 @@ app.get('/landing', async function (req, res) {
     res.render('landing-page');
 });
 
+// WEBGL
+app.get('/webgl', async function (req, res) {
+    res.render('temp');
+});
+
 // AUTH
 
 //SIGNUP
@@ -1679,13 +1684,35 @@ app
     });
 
 // SIGNOUT
-app.get('/sign-out', async function (req, res) {
+app.get('/sign-out/:id', async function (req, res) {
     req.session.destroy(function (err) {
         if (err) {
             return next(err);
         }
         res.redirect('/');
     });
+
+    const user = await User.findOne({ _id: req.params.id });
+
+    const updateInfo = await Info.findOneAndUpdate(
+        {
+            user: user._id
+        },
+        {
+            isOnline: false,
+            lastSeen: new Date()
+        },
+        {
+            new: true
+        }
+    )
+
+    if (updateInfo) {
+        console.log('Is online at ' + new Date());
+    } else {
+        console.log('Failed to update');
+    }
+
 });
 
 // PROFILE

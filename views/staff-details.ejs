@@ -42,8 +42,17 @@
           <div class="card mb-3">
             <div class="card-body">
               <div class="row align-items-center g-3 text-center text-xxl-start">
+                <% 
+                var showOnline = '';
+                
+                if(info.isOnline === true){
+                    showOnline = 'border-success';
+                }else{
+                    showOnline = 'border-primary';
+                }
+                %>
                 <div class="col-12 col-xxl-auto">
-                  <div class="avatar avatar-5xl"><img class="rounded-circle border border-primary" src="/assets/img/team/avatar.webp" alt="" /></div>
+                  <div class="avatar avatar-5xl"><img class="rounded-circle border <%= showOnline %>" src="/assets/img/team/avatar.webp" alt="" /></div>
                 </div>
                 <div class="col-12 col-sm-auto flex-1 text-md-start text-center">
                   <h3 class="fw-bold mb-3 mt-3"><%= otherUser.fullname %></h3>
@@ -104,7 +113,7 @@
                 });
                 %>
                 <div class="d-flex align-items-center mb-1"><span class="me-2 uil uil-clock"></span>
-                  <h5 class="text-body-highlight mb-0">Last online</h5>
+                  <h5 class="text-body-highlight mb-0">Last Seen</h5>
                 </div>
                 <p class="mb-0 text-body-secondary"><%= formattedDateForOnline %></p>
               </div>
