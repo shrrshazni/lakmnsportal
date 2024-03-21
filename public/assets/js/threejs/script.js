@@ -14,7 +14,7 @@ document.body.appendChild(renderer.domElement);
 
 const loader = new OBJLoader();
 var obj;
-loader.load('', function (object) {
+loader.load('./cactus.obj', function (object) {
     scene.add(object);
     obj = object;
 });

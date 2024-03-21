@@ -5,7 +5,7 @@
   <div class="bg-body-emphasis sticky-top landing-navbar" data-navbar-shadow-on-scroll="data-navbar-shadow-on-scroll">
     <nav class="navbar navbar-expand-lg container-small px-3 px-lg-7 px-xxl-3"><a class="navbar-brand flex-1 flex-lg-grow-0" href="/">
         <div class="d-flex align-items-center">
-          <p class="logo-text ms-2" style="color:rgb(239, 242, 246);">lakmns <span>portal</span></p>
+          <p class="logo-text ms-2" style="color:orange;">lakmns<span class="text-body">portal</span></p>
         </div>
       </a>
       <div class="d-lg-none">
@@ -191,13 +191,12 @@
     <div class="hero-header-container-alternate position-relative">
       <div class="container-small px-lg-5 px-xxl-3">
         <div class="row align-items-center">
-          <div class="col-12 col-lg-6 pt-8 pb-6 position-relative z-5 text-center text-lg-start">
-            <h1 class="fs-3 fs-md-2 fs-xl-1 fw-black mb-4"><span class="text-gradient-info me-3">Portal</span>for<br />our workplace</h1>
-            <p class="mb-5 pe-xl-10">Digital gateway, the portal facilitates access, interaction, and exchange of information, services, or resources within a specific platform</p><a class="btn btn-lg btn-primary rounded-pill me-3" href="/sign-in" role="button">Sign In</a><a class="btn btn-link me-2 fs-8 p-0 d-none" href="#!" role="button">Check Demo<span class="fa-solid fa-angle-right ms-2 fs-9"></span></a>
+          <div class="col-12 col-lg-6 pt-6 pb-3 position-relative z-5 text-center text-lg-start">
+            <h1 class="fs-3 fs-md-2 fs-xl-2 fw-black mb-3">Towards a world class <span class="text-gradient-info me-3">Islamic</span> charitable trust</h1>
+            <p class="mb-5 pe-xl-10 fw-semibold fs-8">A digital gateway empowering seamless access, interaction, and exchange of information, services, and resources through our innovative web portal</p><a class="btn btn-lg btn-primary rounded-pill me-3" href="/sign-in" role="button">Sign In</a><a class="btn btn-link me-2 fs-8 p-0 d-none" href="#!" role="button">Check Demo<span class="fa-solid fa-angle-right ms-2 fs-9"></span></a>
           </div>
           <div class="col-12 col-lg-6 d-none d-lg-block mb-3">
-            <lottie-player class="mx-auto mt-n3" src="https://lottie.host/82a7b999-62f0-4f54-9329-acc83233ebb4/CYoNwqBvXW.json" background="##FFFFFF" speed="1" style="width: 650px; height: 650px" loop autoplay direction="1" mode="normal"></lottie-player>
-            <!-- <div class="lottie d-light-none" data-options='{"path":"https://lottie.host/82a7b999-62f0-4f54-9329-acc83233ebb4/CYoNwqBvXW.json"}' style="width: 450px; height: 550px"></div> -->
+            <div id="myCanvas" class="w-50 position-absolute top-0 end-0 pt-5" style="height: 50vh;"></div>
           </div>
         </div>
       </div>
@@ -208,7 +207,16 @@
     </div>
   </section>
 
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.162.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.162.0/examples/jsm/"
+      }
+    }
+  </script>
 
+  <script type="module" src="main.js"></script>
 
   <!-- ============================================-->
   <!-- features begin ============================-->

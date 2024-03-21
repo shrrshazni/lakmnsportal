@@ -1,0 +1,412 @@
+{
+  "accessors": [
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 944,
+      "max": [
+        71.5979232788086,
+        71.79867553710938,
+        72.0
+      ],
+      "min": [
+        -71.59791564941406,
+        -71.79867553710938,
+        -72.0
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 11328,
+      "componentType": 5126,
+      "count": 944,
+      "max": [
+        0.9944353103637695,
+        0.9972236156463623,
+        1.0
+      ],
+      "min": [
+        -0.99443519115448,
+        -0.9972235560417175,
+        -1.0
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 3,
+      "componentType": 5126,
+      "count": 944,
+      "max": [
+        1.0,
+        1.0,
+        0.0373234786093235,
+        1.0
+      ],
+      "min": [
+        -0.9999845027923584,
+        -1.0,
+        -0.037323445081710815,
+        1.0
+      ],
+      "type": "VEC4"
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 944,
+      "max": [
+        0.9999995231628418,
+        1.0
+      ],
+      "min": [
+        0.0,
+        2.384185791015625e-07
+      ],
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 0,
+      "componentType": 5125,
+      "count": 5040,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 22656,
+      "componentType": 5126,
+      "count": 944,
+      "max": [
+        72.09513854980469,
+        72.29727935791016,
+        72.5
+      ],
+      "min": [
+        -72.09512329101563,
+        -72.29727935791016,
+        -72.5
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 33984,
+      "componentType": 5126,
+      "count": 944,
+      "max": [
+        0.9944353103637695,
+        0.9972236156463623,
+        1.0
+      ],
+      "min": [
+        -0.9944351315498352,
+        -0.9972235560417175,
+        -1.0
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 1,
+      "byteOffset": 7552,
+      "componentType": 5126,
+      "count": 944,
+      "max": [
+        0.9999995231628418,
+        1.0
+      ],
+      "min": [
+        0.0,
+        2.384185791015625e-07
+      ],
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 0,
+      "byteOffset": 20160,
+      "componentType": 5125,
+      "count": 5040,
+      "type": "SCALAR"
+    }
+  ],
+  "asset": {
+    "extras": {
+      "author": "Gravity Jack (https://sketchfab.com/gravityjack)",
+      "license": "CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)",
+      "source": "https://sketchfab.com/3d-models/earth-e7499c9024444299afb9a01107f97523",
+      "title": "Earth"
+    },
+    "generator": "Sketchfab-12.68.0",
+    "version": "2.0"
+  },
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteLength": 40320,
+      "name": "floatBufferViews",
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteLength": 15104,
+      "byteOffset": 40320,
+      "byteStride": 8,
+      "name": "floatBufferViews",
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 45312,
+      "byteOffset": 55424,
+      "byteStride": 12,
+      "name": "floatBufferViews",
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 15104,
+      "byteOffset": 100736,
+      "byteStride": 16,
+      "name": "floatBufferViews",
+      "target": 34962
+    }
+  ],
+  "buffers": [
+    {
+      "byteLength": 115840,
+      "uri": "scene.bin"
+    }
+  ],
+  "images": [
+    {
+      "uri": "textures/earth_baseColor.png"
+    },
+    {
+      "uri": "textures/earth_metallicRoughness.png"
+    },
+    {
+      "uri": "textures/earth_normal.png"
+    },
+    {
+      "uri": "textures/shippingRoutes_baseColor.png"
+    }
+  ],
+  "materials": [
+    {
+      "doubleSided": true,
+      "name": "earth",
+      "normalTexture": {
+        "index": 2
+      },
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 0
+        },
+        "metallicFactor": 0.0,
+        "metallicRoughnessTexture": {
+          "index": 1
+        }
+      }
+    },
+    {
+      "alphaMode": "BLEND",
+      "doubleSided": true,
+      "name": "shippingRoutes",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ],
+        "baseColorTexture": {
+          "index": 3
+        },
+        "metallicFactor": 0.0,
+        "metallicRoughnessTexture": {
+          "index": 1
+        }
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "earth_earth_0",
+      "primitives": [
+        {
+          "attributes": {
+            "NORMAL": 1,
+            "POSITION": 0,
+            "TANGENT": 2,
+            "TEXCOORD_0": 3
+          },
+          "indices": 4,
+          "material": 0,
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "shippingRoutes_shippingRoutes_0",
+      "primitives": [
+        {
+          "attributes": {
+            "NORMAL": 6,
+            "POSITION": 5,
+            "TEXCOORD_0": 7
+          },
+          "indices": 8,
+          "material": 1,
+          "mode": 4
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "children": [
+        1
+      ],
+      "matrix": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        2.220446049250313e-16,
+        -1.0,
+        0.0,
+        0.0,
+        1.0,
+        2.220446049250313e-16,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "name": "Sketchfab_model"
+    },
+    {
+      "children": [
+        2
+      ],
+      "matrix": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        -1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "name": "fae8b9b0954d4c05aa3d809c0f15d7c3.fbx"
+    },
+    {
+      "children": [
+        3,
+        5
+      ],
+      "name": "RootNode"
+    },
+    {
+      "children": [
+        4
+      ],
+      "matrix": [
+        0.9216939168837182,
+        -2.7755575615628914e-17,
+        -0.3879179340782657,
+        0.0,
+        -0.3879179340782657,
+        -2.220446049250313e-16,
+        -0.9216939168837183,
+        0.0,
+        -2.7755575615628914e-17,
+        1.0000000000000002,
+        -2.220446049250313e-16,
+        0.0,
+        0.849853515625,
+        0.0,
+        -0.348663330078125,
+        1.0
+      ],
+      "name": "earth"
+    },
+    {
+      "mesh": 0,
+      "name": "earth_earth_0"
+    },
+    {
+      "children": [
+        6
+      ],
+      "matrix": [
+        0.9216939168837182,
+        -2.7755575615628914e-17,
+        -0.3879179340782657,
+        0.0,
+        -0.3879179340782657,
+        -2.220446049250313e-16,
+        -0.9216939168837183,
+        0.0,
+        -2.7755575615628914e-17,
+        1.0000000000000002,
+        -2.220446049250313e-16,
+        0.0,
+        0.849853515625,
+        0.0,
+        -0.348663330078125,
+        1.0
+      ],
+      "name": "shippingRoutes"
+    },
+    {
+      "mesh": 1,
+      "name": "shippingRoutes_shippingRoutes_0"
+    }
+  ],
+  "samplers": [
+    {
+      "magFilter": 9729,
+      "minFilter": 9987,
+      "wrapS": 10497,
+      "wrapT": 10497
+    }
+  ],
+  "scene": 0,
+  "scenes": [
+    {
+      "name": "Sketchfab_Scene",
+      "nodes": [
+        0
+      ]
+    }
+  ],
+  "textures": [
+    {
+      "sampler": 0,
+      "source": 0
+    },
+    {
+      "sampler": 0,
+      "source": 1
+    },
+    {
+      "sampler": 0,
+      "source": 2
+    },
+    {
+      "sampler": 0,
+      "source": 3
+    }
+  ]
+}
