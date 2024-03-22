@@ -351,11 +351,10 @@ let transporter = nodemailer.createTransport({
 });
 
 // PHONE TRANSPORTER
-const accountSid = "ACafc8b0a422560f0091b2855b4482326a";
-const authToken = "4e7acc459aaed9ecf0fd426308f89e61";
-const client = twilio(accountSid, authToken);
+// const accountSid = "ACafc8b0a422560f0091b2855b4482326a";
+// const authToken = "4e7acc459aaed9ecf0fd426308f89e61";
+// const client = twilio(accountSid, authToken);
 // const verifySid = "VAfe5663f4ddd898cce9936534b3abf99a";
-
 
 
 // BASIC USER PART
@@ -1446,11 +1445,6 @@ app.get('/landing', async function (req, res) {
     res.render('landing-page');
 });
 
-// WEBGL
-app.get('/webgl', async function (req, res) {
-    res.render('temp');
-});
-
 // AUTH
 
 //SIGNUP
@@ -1683,6 +1677,82 @@ app
         }
     });
 
+app.get('/forgot-password', async function (req, res) {
+
+    res.render('forgot-password', {
+        show: '',
+        alert: ''
+    });
+
+}).post('/forgot-password', async function (req, res) {
+    const email = req.body.email;
+    const checkEmail = await User.findOne({ email: email });
+
+    const randomUUID = uuidv4();
+    const randomAlphaNumeric = randomUUID.replace(/-/g, '').substring(0, 5).toUpperCase();
+
+    if (checkEmail) {
+        let mailOptions = {
+            from: 'shrrshazni@gmail.com',
+            to: checkEmail.email,
+            subject: 'lakmnsportal - Reset Password',
+            html: `
+              <html>
+                <head>
+                 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+                  <style>
+                    body {
+                      font-family: 'Arial', sans-serif;
+                      background-color: #f4f4f4;
+                      color: #333;
+                    }
+                    p {
+                      margin-bottom: 20px;
+                    }
+                    a {
+                      color: #3498db;
+                    }
+                  </style>
+                </head>
+                <body>
+                  <h4>Leave Request</h4>
+                  <h2 class="">${randomAlphaNumeric}</h2>
+                  <p>Please click here to confirm your email to be verified, <a href="http://localhost:5002/reset-password/${checkEmail._id}/${randomAlphaNumeric}">lakmnsportal</a></p>
+                </body>
+
+                <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+              </html>
+            `
+        };
+
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+                console.log(error);
+
+                res.render('settings', {
+                    user: user,
+                    uuid: uuidv4(),
+                    notifications: notifications,
+                    info: info,
+                    show: 'show',
+                    alert: 'The email you submitted here is invalid'
+                });
+            }
+
+            console.log('Message %s sent: %s', info.messageId, info.response);
+        });
+
+        res.render('forgot-password', {
+            show: 'show',
+            alert: 'We have seen reset password link and 5 digit code to your email'
+        })
+    } else {
+
+    }
+
+
+});
+
 // SIGNOUT
 app.get('/sign-out/:id', async function (req, res) {
     req.session.destroy(function (err) {
@@ -1713,6 +1783,10 @@ app.get('/sign-out/:id', async function (req, res) {
         console.log('Failed to update');
     }
 
+});
+
+app.get('/temp', async function (req, res) {
+    res.render('temp');
 });
 
 // PROFILE

@@ -140,3 +140,18 @@
     background-position: 100% 50%;
   }
 }
+
+/* extra bootstrap settings */
+
+@media (min-width: 768px) {
+    .h-md-40 {
+        height: 40vh !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .h-sm-35 {
+        height: 35vh !important;
+    }
+}
+
