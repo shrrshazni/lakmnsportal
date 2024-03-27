@@ -1,0 +1,35 @@
+<%- include('partials/private-header') %>
+
+<div class="mb-3 mt-3">
+
+  <img id="qrCode" src="<%= qrCodeUrl %>" alt="QR Code">
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Function to update QR code image every 5 seconds
+      setInterval(updateQRCode, 5000);
+
+      // Call updateQRCode() once immediately upon page load
+      updateQRCode();
+
+      function updateQRCode() {
+        fetch('/generate-qr')
+          .then(response => {
+            if (!response.ok) {
+              throw new Error('Network response was not ok');
+            }
+            return response.json();
+          })
+          .then(data => {
+            // Update the src attribute of the QR code image
+            document.getElementById('qrCode').src = data.qrCodeImage;
+          })
+          .catch(error => {
+            console.error('Error updating QR code:', error);
+          });
+      }
+    });
+  </script>
+</div>
+
+<%- include('partials/private-footer.ejs') %>

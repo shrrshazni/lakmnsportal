@@ -19,7 +19,7 @@ const { v4: uuidv4 } = require('uuid');
 const { send } = require('process');
 const fs = require('fs').promises;
 const qr = require('qrcode');
-const twilio = require('twilio');
+// const twilio = require('twilio');
 
 const mongoURI =
     'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/session';
@@ -73,6 +73,12 @@ const leaveDatabase = mongoose.createConnection(
 // File Database
 const fileDatabase = mongoose.createConnection(
     'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/file'
+);
+
+
+// Attendance Database
+const attendanceDatabase = mongoose.createConnection(
+    'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/attendance'
 );
 
 // SCHEMA INITIALIZATION
@@ -300,6 +306,44 @@ const FileSchema = new mongoose.Schema({
     size: String
 });
 
+// ATTENDANCE
+const AttendanceSchema = new mongoose.Schema({
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
+    date: {
+        signInTime: {
+            type: Date,
+            default: null
+        },
+        signOutTime: {
+            type: Date,
+            default: null
+        },
+    },
+    status: {
+        type: String,
+        enum: ['Present', 'Absent', 'Late'],
+        default: 'Present'
+    }
+
+});
+
+const qrCodeSchema = new mongoose.Schema({
+    uniqueId: {
+        type: String,
+        required: true
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now,
+        required: true
+    }
+});
+
+
 //mongoose passport-local
 userSchema.plugin(passportLocalMongoose);
 userSchema.plugin(findOrCreate);
@@ -312,6 +356,8 @@ const Notification = userDatabase.model('Notification', notificationSchema);
 const Task = userDatabase.model('Task', taskSchema);
 const Leave = leaveDatabase.model('Leave', leaveSchema);
 const File = fileDatabase.model('File', FileSchema);
+const Attendance = attendanceDatabase.model('Attendance', AttendanceSchema);
+const QRCode = attendanceDatabase.model('QRCode', qrCodeSchema);
 
 passport.use(User.createStrategy());
 
@@ -4611,11 +4657,19 @@ app.get('/trial', isAuthenticated, async function (req, res) {
     }
 });
 
+// QR GENERATED
 app.get('/generate-qr', async (req, res) => {
     const uniqueIdentifier = generateUniqueIdentifier();
     const rawUrl = generateQRCodeUrl(uniqueIdentifier);
     const qrCodeUrl = preprocessIdentifier(rawUrl);
-    console.log(rawUrl);
+
+    // Save the raw URL in the database
+    // await QRCode.create({
+    //     uniqueId: uniqueIdentifier,
+    //     createdAt: new Date()
+    // });
+
+    console.log(uniqueIdentifier);
 
     try {
         const qrCodeImage = await qr.toDataURL(rawUrl, {
@@ -4626,11 +4680,37 @@ app.get('/generate-qr', async (req, res) => {
             margin: 0// Set the width of the QR code
         });
 
-        res.json({ qrCodeImage }); // Send the QR code image data as JSON
+        res.json({ qrCodeImage });
     } catch (error) {
         console.error('Error generating QR code:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
+});
+
+// SCAN QR GENERATED
+app.get('/scan-qr', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    }).populate('sender');
+
+    if (user) {
+        res.render('scan', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4()
+        })
+    }
+});
+
+app.post('/process-scanned-data', (req, res) => {
+    const scannedData = req.body.scannedData;
+    console.log('Received scanned data from client:', scannedData);
+
+    // Process the scanned data as needed
+    res.redirect('/'); // Send a response to the client
 });
 
 app.get('/super-admin/update', isAuthenticated, async function (req, res) {

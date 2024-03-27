@@ -1,0 +1,65 @@
+<%- include('partials/private-header') %>
+<div class="mb-3 mt-3">
+
+  <h1 class="text-center mb-3">QR Code Scanner</h1>
+  <video id="video" class="w-100" autoplay></video>
+  <canvas id="canvas" style="display: none;"></canvas>
+  <p id="result" class="text-center"></p>
+
+  <script type="text/javascript" src="https://unpkg.com/@zxing/library@latest"></script>
+
+  <script>
+    const codeReader = new ZXing.BrowserQRCodeReader();
+    const videoElement = document.getElementById('video');
+    const canvasElement = document.getElementById('canvas');
+    const canvasContext = canvasElement.getContext('2d');
+    const resultElement = document.getElementById('result');
+
+    navigator.mediaDevices.getUserMedia({
+        video: true
+      })
+      .then(function(stream) {
+        videoElement.srcObject = stream;
+      })
+      .catch(function(err) {
+        console.error('Error accessing camera:', err);
+      });
+
+    codeReader.decodeFromVideoElement(videoElement, (result, error) => {
+      if (result) {
+        console.log('QR code detected:', result.text);
+        // Display the scanned QR code data in the <p> tag
+        resultElement.textContent = result.text;
+        // Optionally, you can also send the scanned data to the server
+        // sendScannedDataToServer(result.text);
+      }
+      if (error) {
+        console.error('QR code scan error:', error);
+      }
+    });
+
+    function sendScannedDataToServer(data) {
+      fetch('/process-scanned-data', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            scannedData: data
+          })
+        })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          console.log('Scanned data successfully sent to server');
+        })
+        .catch(error => {
+          console.error('Error sending scanned data to server:', error);
+        });
+    }
+  </script>
+
+
+</div>
+<%- include('partials/private-footer.ejs') %>
