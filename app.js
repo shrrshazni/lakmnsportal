@@ -310,7 +310,6 @@ const FileSchema = new mongoose.Schema({
 const AttendanceSchema = new mongoose.Schema({
     user: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
         required: true
     },
     date: {
@@ -325,10 +324,10 @@ const AttendanceSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['Present', 'Absent', 'Late'],
+        enum: ['Present', 'Absent', 'Late', 'Invalid'],
         default: 'Present'
-    }
-
+    },
+    timestamp: { type: Date, default: null }
 });
 
 const qrCodeSchema = new mongoose.Schema({
@@ -4651,16 +4650,6 @@ app.get('/attendance', isAuthenticated, async function (req, res) {
 // QR GENERATED
 app.get('/generate-qr', async (req, res) => {
     const uniqueIdentifier = generateUniqueIdentifier();
-    // const rawUrl = generateQRCodeUrl(uniqueIdentifier);
-    // const qrCodeUrl = preprocessIdentifier(rawUrl);
-
-    // Save the raw URL in the database
-    // await QRCode.create({
-    //     uniqueId: uniqueIdentifier,
-    //     createdAt: new Date()
-    // });
-
-    console.log(uniqueIdentifier);
 
     try {
         const qrCodeImage = await qr.toDataURL(uniqueIdentifier, {
@@ -4671,12 +4660,27 @@ app.get('/generate-qr', async (req, res) => {
             margin: 0// Set the width of the QR code
         });
 
-        res.json({ qrCodeImage });
+        res.json({ qrCodeImage, uniqueIdentifier });
     } catch (error) {
         console.error('Error generating QR code:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
+
+app.post('/save-qr-data', isAuthenticated, async function (req, res) {
+    const qrData = req.body.qrData;
+    console.log('Received QR code data:', qrData);
+
+    // Save the raw URL in the database
+    await QRCode.create({
+        uniqueId: qrData,
+        createdAt: new Date()
+    });
+
+    // Send a response to indicate success
+    res.status(200).send('QR code data received and saved successfully');
+});
+
 
 // SCAN QR GENERATED
 app.get('/scan-qr', isAuthenticated, async function (req, res) {
@@ -4696,12 +4700,66 @@ app.get('/scan-qr', isAuthenticated, async function (req, res) {
     }
 });
 
-app.post('/process-scanned-data', (req, res) => {
+app.post('/process-scanned-data', isAuthenticated, async function (req, res) {
     const scannedData = req.body.scannedData;
-    console.log('Received scanned data from client:', scannedData);
+    const id = req.body.id;
 
-    // Process the scanned data as needed
-    res.redirect('/'); // Send a response to the client
+    console.log('Received scanned data from client:', scannedData);
+    console.log('Id received is:', id);
+
+    const checkUser = await User.findOne({ _id: id });
+
+    if (checkUser) {
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const existingAttendance = await Attendance.findOne({
+            user: checkUser._id,
+            timestamp: {
+                $gte: today, // Greater than or equal to the start of today
+                $lt: new Date() // Less than the current time
+            }
+        });
+
+        if (existingAttendance) {
+
+            if (existingAttendance.date.signOutTime === null) {
+                await Attendance.findOneAndUpdate(
+                    {
+                        user: checkUser._id
+                    },
+                    {
+                        'date.signOutTime': new Date()
+                    },
+                    {
+                        upsert: true, new: true
+                    }
+                )
+            } else {
+                console.log('Already sign out for this day, thank you');
+            }
+        } else {
+            // User found, update the signInTime field of their attendance
+            const currentDate = new Date();
+
+            const attendance = new Attendance({
+                user: checkUser._id,
+                date: {
+                    signInTime: currentDate,
+                    signOutTime: null
+                },
+                status: 'Present'
+            });
+
+            await attendance.save();
+
+            console.log("New sign in attendance for today, thank you");
+        }
+
+    }
+    
+    res.redirect('/');
 });
 
 app.get('/super-admin/update', isAuthenticated, async function (req, res) {

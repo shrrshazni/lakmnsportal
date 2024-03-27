@@ -40,28 +40,62 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', function() {
+      let previousQRData = null;
+
+      async function updateQRCode() {
+        try {
+          // Generate a new QR code
+          const response = await fetch('/generate-qr');
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          const data = await response.json();
+
+          // Update the src attribute of the QR code image
+          document.getElementById('qrCode').src = data.qrCodeImage;
+
+          // Save the previous QR code data
+          if (previousQRData) {
+            await saveQRData(previousQRData);
+          }
+
+          // Update the previous QR data to the new one
+          previousQRData = data.uniqueIdentifier;
+
+          console.log('QR code updated successfully');
+        } catch (error) {
+          console.error('Error updating QR code:', error);
+        }
+      }
+
       // Function to update QR code image every 5 seconds
       setInterval(updateQRCode, 5000);
 
-      // Call updateQRCode() once immediately upon page load
-      updateQRCode();
+      async function saveQRData(qrData) {
+        try {
+          // Perform any actions to save the QR code data here
+          console.log('Saving QR code data:', qrData);
 
-      function updateQRCode() {
-        fetch('/generate-qr')
-          .then(response => {
-            if (!response.ok) {
-              throw new Error('Network response was not ok');
-            }
-            return response.json();
-          })
-          .then(data => {
-            // Update the src attribute of the QR code image
-            document.getElementById('qrCode').src = data.qrCodeImage;
-          })
-          .catch(error => {
-            console.error('Error updating QR code:', error);
+          const response = await fetch('/save-qr-data', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              qrData: qrData
+            })
           });
+
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+
+          console.log('QR code data successfully saved');
+        } catch (error) {
+          console.error('Error saving QR code data:', error);
+        }
       }
+      
     });
   </script>
 </div>

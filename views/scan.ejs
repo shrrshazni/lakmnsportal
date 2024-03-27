@@ -39,18 +39,9 @@
               'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-              scannedData: data
+              scannedData: data,
+              id : '<%= user._id %>'
             })
-          })
-          .then(response => {
-            if (!response.ok) {
-              throw new Error('Network response was not ok');
-            }
-            console.log('Scanned data successfully sent to server');
-            location.reload();
-          })
-          .catch(error => {
-            console.error('Error sending scanned data to server:', error);
           });
       }
 
