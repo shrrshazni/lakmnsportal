@@ -15,9 +15,15 @@
     const canvasContext = canvasElement.getContext('2d');
     const resultElement = document.getElementById('result');
 
-    navigator.mediaDevices.getUserMedia({
-        video: true
-      })
+    // Specify constraints to use the back camera
+    const constraints = {
+      video: {
+        facingMode: 'environment' // Use the environment (back) camera
+      }
+    };
+
+    // Request access to the camera with specified constraints
+    navigator.mediaDevices.getUserMedia(constraints)
       .then(function(stream) {
         videoElement.srcObject = stream;
       })
