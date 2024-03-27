@@ -2,7 +2,41 @@
 
 <div class="mb-3 mt-3">
 
-  <img id="qrCode" src="<%= qrCodeUrl %>" alt="QR Code">
+  <style>
+    .qr-code-container {
+      max-width: 100%;
+      /* Ensure the container does not exceed the viewport width */
+    }
+
+    #qrCode {
+      width: 100%;
+      /* Initially set the image width to 100% */
+      height: auto;
+      /* Maintain aspect ratio */
+    }
+
+    /* Media queries for different viewport sizes */
+    @media screen and (min-width: 768px) {
+      #qrCode {
+        width: 50%;
+        /* Adjust the width for larger screens */
+      }
+    }
+
+    @media screen and (min-width: 1024px) {
+      #qrCode {
+        width: 30%;
+        /* Adjust the width for even larger screens */
+      }
+    }
+  </style>
+
+  <div class="qr-code-container">
+    <img id="qrCode">
+  </div>
+
+
+
 
   <script>
     document.addEventListener('DOMContentLoaded', function() {

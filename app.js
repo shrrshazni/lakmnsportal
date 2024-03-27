@@ -4625,13 +4625,8 @@ const generateUniqueIdentifier = () => {
     return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 };
 
-// Function to generate QR code URL based on unique identifier
-const generateQRCodeUrl = (uniqueIdentifier) => {
-    return `http://localhost:5002/trial/${uniqueIdentifier}`;
-};
-
 // ATTENDACE TRIAL
-app.get('/trial', isAuthenticated, async function (req, res) {
+app.get('/attendance', isAuthenticated, async function (req, res) {
     const username = req.user.username;
     const user = await User.findOne({ username: username });
     const notifications = await Notification.find({
@@ -4643,15 +4638,11 @@ app.get('/trial', isAuthenticated, async function (req, res) {
     if (user) {
 
         const uniqueIdentifier = generateUniqueIdentifier();
-        const qrCodeUrl = generateQRCodeUrl(uniqueIdentifier);
-
-        console.log('First qrCodeUrl', qrCodeUrl);
 
         res.render('temp', {
             user: user,
             notifications: notifications,
             uuid: uuidv4(),
-            qrCodeUrl: qrCodeUrl,
             uniqueIdentifier: uniqueIdentifier
         });
     }
@@ -4660,8 +4651,8 @@ app.get('/trial', isAuthenticated, async function (req, res) {
 // QR GENERATED
 app.get('/generate-qr', async (req, res) => {
     const uniqueIdentifier = generateUniqueIdentifier();
-    const rawUrl = generateQRCodeUrl(uniqueIdentifier);
-    const qrCodeUrl = preprocessIdentifier(rawUrl);
+    // const rawUrl = generateQRCodeUrl(uniqueIdentifier);
+    // const qrCodeUrl = preprocessIdentifier(rawUrl);
 
     // Save the raw URL in the database
     // await QRCode.create({
@@ -4672,11 +4663,11 @@ app.get('/generate-qr', async (req, res) => {
     console.log(uniqueIdentifier);
 
     try {
-        const qrCodeImage = await qr.toDataURL(rawUrl, {
+        const qrCodeImage = await qr.toDataURL(uniqueIdentifier, {
             type: 'image/png',
             errorCorrectionLevel: 'H',
-            color: { dark: '#008000', light: '#FFFFFF' }, // Set the color (dark is the main color, light is the background color)
-            width: 400,
+            color: { dark: '#d3b534', light: '#0c3a23' }, // Set the color (dark is the main color, light is the background color)
+            width: 350,
             margin: 0// Set the width of the QR code
         });
 

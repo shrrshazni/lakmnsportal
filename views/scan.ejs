@@ -1,71 +1,95 @@
 <%- include('partials/private-header') %>
-<div class="mb-3 mt-3">
+<div class="mb-3 mt-n3">
 
-  <h1 class="text-center mb-3">QR Code Scanner</h1>
-  <video id="video" class="w-100" autoplay></video>
-  <canvas id="canvas" style="display: none;"></canvas>
-  <p id="result" class="text-center"></p>
+    <section class="px-0" id="demo-content">
+      <h2 class="title text-center mb-5">User's Attendance</h2>
 
-  <script type="text/javascript" src="https://unpkg.com/@zxing/library@latest"></script>
+      <div class="mb-3">
+        <button class="btn btn-primary" id="startButton">Start</button>
+      </div>
 
-  <script>
-    const codeReader = new ZXing.BrowserQRCodeReader();
-    const videoElement = document.getElementById('video');
-    const canvasElement = document.getElementById('canvas');
-    const canvasContext = canvasElement.getContext('2d');
-    const resultElement = document.getElementById('result');
+      <div class="mb-3">
+        <video id="video" class="border border-gray w-100"></video>
+      </div>
 
-    // Specify constraints to use the back camera
-    const constraints = {
-      video: {
-        facingMode: 'environment' // Use the environment (back) camera
-      }
-    };
+      <label class="form-label fst-italic fw-semibold fs-9">Result</label>
+      <pre><p class="fs-9" id="result"></p></pre>
+    </section>
 
-    // Request access to the camera with specified constraints
-    navigator.mediaDevices.getUserMedia(constraints)
-      .then(function(stream) {
-        videoElement.srcObject = stream;
-      })
-      .catch(function(err) {
-        console.error('Error accessing camera:', err);
-      });
+    <script type="text/javascript" src="https://unpkg.com/@zxing/library@latest"></script>
 
-    codeReader.decodeFromVideoElement(videoElement, (result, error) => {
-      if (result) {
-        console.log('QR code detected:', result.text);
-        // Display the scanned QR code data in the <p> tag
-        resultElement.textContent = result.text;
-        // Optionally, you can also send the scanned data to the server
-        // sendScannedDataToServer(result.text);
-      }
-      if (error) {
-        console.error('QR code scan error:', error);
-      }
-    });
+    <script>
+      function decodeOnce(codeReader, selectedDeviceId) {
+        codeReader.decodeFromInputVideoDevice(selectedDeviceId, 'video').then((result) => {
+          console.log(result);
+          document.getElementById('result').textContent = result.text;
 
-    function sendScannedDataToServer(data) {
-      fetch('/process-scanned-data', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            scannedData: data
-          })
-        })
-        .then(response => {
-          if (!response.ok) {
-            throw new Error('Network response was not ok');
-          }
-          console.log('Scanned data successfully sent to server');
-        })
-        .catch(error => {
-          console.error('Error sending scanned data to server:', error);
+          // Submit result to server
+          sendScannedDataToServer(result.text);
+        }).catch((err) => {
+          console.error(err);
+          document.getElementById('result').textContent = err;
         });
-    }
-  </script>
+      }
 
+      function sendScannedDataToServer(data) {
+        fetch('/process-scanned-data', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              scannedData: data
+            })
+          })
+          .then(response => {
+            if (!response.ok) {
+              throw new Error('Network response was not ok');
+            }
+            console.log('Scanned data successfully sent to server');
+            location.reload();
+          })
+          .catch(error => {
+            console.error('Error sending scanned data to server:', error);
+          });
+      }
+
+      window.addEventListener('load', function() {
+        let codeReader;
+        let selectedDeviceId;
+
+        function startScan() {
+          codeReader = new ZXing.BrowserQRCodeReader();
+          console.log('ZXing code reader initialized');
+
+          // Always decode once, no need for changing video source
+          codeReader.getVideoInputDevices().then((videoInputDevices) => {
+            if (videoInputDevices.length >= 1) {
+              // Find the environment camera if available
+              const environmentCamera = videoInputDevices.find(device => device.label.toLowerCase().includes('environment') || device.label.toLowerCase().includes('rear'));
+              if (environmentCamera) {
+                selectedDeviceId = environmentCamera.deviceId;
+              } else {
+                selectedDeviceId = videoInputDevices[0].deviceId;
+              }
+              decodeOnce(codeReader, selectedDeviceId);
+            }
+          }).catch((err) => {
+            console.error(err);
+          });
+        }
+
+        document.getElementById('startButton').addEventListener('click', () => {
+          if (codeReader) {
+            codeReader.reset();
+            document.getElementById('result').textContent = '';
+            startScan(); // Restart the scan
+          } else {
+            startScan(); // Start the initial scan
+          }
+        });
+      });
+    </script>
 
 </div>
 <%- include('partials/private-footer.ejs') %>
