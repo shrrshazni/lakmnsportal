@@ -4655,8 +4655,8 @@ app.get('/generate-qr', async (req, res) => {
         const qrCodeImage = await qr.toDataURL(uniqueIdentifier, {
             type: 'image/png',
             errorCorrectionLevel: 'H',
-            color: { dark: '#d3b534', light: '#0c3a23' }, // Set the color (dark is the main color, light is the background color)
-            width: 350,
+            color: { dark: '#3874ff', light: '#fff' }, // Set the color (dark is the main color, light is the background color)
+            width: 400,
             margin: 0// Set the width of the QR code
         });
 
@@ -4672,10 +4672,10 @@ app.post('/save-qr-data', isAuthenticated, async function (req, res) {
     console.log('Received QR code data:', qrData);
 
     // Save the raw URL in the database
-    await QRCode.create({
-        uniqueId: qrData,
-        createdAt: new Date()
-    });
+    // await QRCode.create({
+    //     uniqueId: qrData,
+    //     createdAt: new Date()
+    // });
 
     // Send a response to indicate success
     res.status(200).send('QR code data received and saved successfully');
@@ -4749,7 +4749,8 @@ app.post('/process-scanned-data', isAuthenticated, async function (req, res) {
                     signInTime: currentDate,
                     signOutTime: null
                 },
-                status: 'Present'
+                status: 'Present',
+                timestamp: new Date()
             });
 
             await attendance.save();
@@ -4758,7 +4759,7 @@ app.post('/process-scanned-data', isAuthenticated, async function (req, res) {
         }
 
     }
-    
+
     res.redirect('/');
 });
 

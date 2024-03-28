@@ -18,21 +18,72 @@
     /* Media queries for different viewport sizes */
     @media screen and (min-width: 768px) {
       #qrCode {
-        width: 50%;
+        width: 70%;
         /* Adjust the width for larger screens */
       }
     }
 
     @media screen and (min-width: 1024px) {
       #qrCode {
-        width: 30%;
+        width: 50%;
         /* Adjust the width for even larger screens */
       }
     }
   </style>
 
-  <div class="qr-code-container">
-    <img id="qrCode">
+  <div class="mb-6">
+    <div class="mb-3">
+      <h2 class="mb-2">Attendance</h2>
+      <h5 class="text-body-tertiary fw-semibold">Regular presence of employees during work hours.</h5>
+    </div>
+
+    <div class="row gy-3 gx-6">
+
+      <div class="col-12 col-xxl-6">
+        <div class="qr-code-container text-center p-4 border border-gray rounded-3">
+          <img id="qrCode" class="w-100">
+        </div>
+      </div>
+
+      <div class="col-12 col-xxl-6">
+        <div id="team-members" data-list='{"valueNames":["member","position","activity","when","taskprogress","status","action"],"pagination":false}'>
+          <div class="row align-items-end justify-content-between pb-4 g-3">
+
+            <div class="col-auto">
+              <h3>Staff List</h3>
+              <p class="text-body-tertiary lh-sm mb-0">Department or section here</p>
+            </div>
+
+            <div class="col-12 col-md-auto">
+              <div class="">
+                <h3>28/3/2024</h3>
+              </div>
+            </div>
+
+          </div>
+          <div class="table-responsive ms-n1 ps-1">
+            <table class="table fs-9 mb-0 border-top border-translucent">
+              <thead>
+                <tr>
+                  <th class="sort white-space-nowrap align-middle ps-0" scope="col" data-sort="member" style="width:15%;">MEMBERS</th>
+                  <th class="sort align-middle ps-3" scope="col" data-sort="position" style="width:20%;">DATE TIME</th>
+                  <th class="sort align-middle text-center" scope="col" data-sort="status" style="width:15%;">USER STATUS</th>
+                </tr>
+              </thead>
+              <tbody class="list scrollbar overflow-y-auto overflow-x-hidden" id="project-summary-table-body">
+
+                <tr class="position-static">
+
+                </tr>
+
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
   </div>
 
 
@@ -68,6 +119,8 @@
         }
       }
 
+      updateQRCode();
+
       // Function to update QR code image every 5 seconds
       setInterval(updateQRCode, 5000);
 
@@ -95,7 +148,7 @@
           console.error('Error saving QR code data:', error);
         }
       }
-      
+
     });
   </script>
 </div>
