@@ -50,13 +50,58 @@
           <div class="row align-items-end justify-content-between pb-4 g-3">
 
             <div class="col-auto">
-              <h3>Staff List</h3>
-              <p class="text-body-tertiary lh-sm mb-0">Department or section here</p>
+              <h3 id="currentTime"></h3>
+
+              <script>
+                function updateTime() {
+                  // Create a new Date object to get the current time
+                  var currentTime = new Date();
+
+                  // Get the hours, minutes, and seconds
+                  var hours = currentTime.getHours();
+                  var minutes = currentTime.getMinutes();
+                  var seconds = currentTime.getSeconds();
+
+                  // Add leading zeros if the numbers are less than 10
+                  hours = (hours < 10) ? '0' + hours : hours;
+                  minutes = (minutes < 10) ? '0' + minutes : minutes;
+                  seconds = (seconds < 10) ? '0' + seconds : seconds;
+
+                  // Construct the time string in HH:MM:SS format
+                  var timeString = hours + ':' + minutes + ':' + seconds;
+
+                  // Update the content of the <h3> element with the current time
+                  document.getElementById('currentTime').textContent = timeString;
+                }
+
+                // Call updateTime function initially to set the time immediately
+                updateTime();
+
+                // Update the time every second
+                setInterval(updateTime, 1000);
+              </script>
             </div>
 
             <div class="col-12 col-md-auto">
               <div class="">
-                <h3>28/3/2024</h3>
+
+                <% 
+                
+                var currentDate = new Date();
+
+                // Get the day of the week, day of the month, month, and year
+                var dayOfWeek = currentDate.toLocaleDateString('en-US', { weekday: 'long' });
+                var dayOfMonth = currentDate.toLocaleDateString('en-US', { day: '2-digit' });
+                var month = currentDate.toLocaleDateString('en-US', { month: 'long' });
+                var year = currentDate.toLocaleDateString('en-US', { year: 'numeric' });
+
+                // Construct the formatted date string
+                var formattedDate = dayOfWeek + ", " + dayOfMonth + " " + month + " " + year;
+
+                %>
+
+                <h3><%= formattedDate %></h3>
+
               </div>
             </div>
 
