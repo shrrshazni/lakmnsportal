@@ -4625,29 +4625,16 @@ const generateUniqueIdentifier = () => {
 };
 
 // ATTENDACE TRIAL
-app.get('/attendance', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    }).populate('sender');
+app.get('/attendance', async function (req, res) {
+    const uniqueIdentifier = generateUniqueIdentifier();
 
-
-    if (user) {
-
-        const uniqueIdentifier = generateUniqueIdentifier();
-
-        res.render('temp', {
-            user: user,
-            notifications: notifications,
-            uuid: uuidv4(),
-            uniqueIdentifier: uniqueIdentifier
-        });
-    }
+    res.render('temp', {
+        uuid: uuidv4(),
+        uniqueIdentifier: uniqueIdentifier
+    });
 });
 
-app.get('/api/attendance/today', isAuthenticated, async function (req, res) {
+app.get('/api/attendance/today', async function (req, res) {
     try {
         // Get today's date
         const today = new Date();
@@ -4718,7 +4705,7 @@ app.get('/generate-qr', async (req, res) => {
         const qrCodeImage = await qr.toDataURL(uniqueIdentifier, {
             type: 'image/png',
             errorCorrectionLevel: 'H',
-            color: { dark: '#3874ff', light: '#fff' }, // Set the color (dark is the main color, light is the background color)
+            color: { dark: '#3874ff', light: '#ffffff' }, // Set the color (dark is the main color, light is the background color)
             width: 400,
             margin: 0// Set the width of the QR code
         });
@@ -4730,7 +4717,7 @@ app.get('/generate-qr', async (req, res) => {
     }
 });
 
-app.post('/save-qr-data', isAuthenticated, async function (req, res) {
+app.post('/save-qr-data', async function (req, res) {
     const qrData = req.body.qrData;
     console.log('Received QR code data:', qrData);
 
@@ -4772,6 +4759,8 @@ app.post('/process-scanned-data', isAuthenticated, async function (req, res) {
 
     const checkUser = await User.findOne({ _id: id });
 
+    var log = "";
+
     if (checkUser) {
 
         const today = new Date();
@@ -4800,7 +4789,9 @@ app.post('/process-scanned-data', isAuthenticated, async function (req, res) {
                     }
                 )
             } else {
-                console.log('Already sign out for this day, thank you');
+                console.log('You have successfully signed out for today, thank you');
+
+                log = "You have successfully signed out for today.";
             }
         } else {
             // User found, update the signInTime field of their attendance
@@ -4819,25 +4810,28 @@ app.post('/process-scanned-data', isAuthenticated, async function (req, res) {
             await attendance.save();
 
             console.log("New sign in attendance for today, thank you");
+
+            log = "New sign in attendance for today, thank you.";
         }
 
-    }
+        const response = {
+            user: checkUser,
+            message: log
+        }
 
-    res.redirect('/');
+        console.log(response);
+
+        res.json(response);
+    }
 });
 
 app.get('/fetch-user/:userId', isAuthenticated, async function (req, res) {
     const userId = req.params.userId;
 
-    // Assuming 'User' is your Mongoose model for users
-    User.findById(userId, (err, user) => {
-        if (err) {
-            console.error('Error fetching user data:', err);
-            res.status(500).json({ error: 'Internal Server Error' });
-        } else {
-            res.json(user); // Send user data as response
-        }
-    });
+    console.log(userId);
+
+    res.json(userId); // Send user data as response
+
 });
 
 app.get('/super-admin/update', isAuthenticated, async function (req, res) {

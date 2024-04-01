@@ -1,6 +1,6 @@
-<%- include('partials/private-header') %>
+<%- include('partials/public-header') %>
 
-<div class="mb-3 mt-3">
+<div class="mb-3 mt-3 p-4">
 
   <style>
     .qr-code-container {
@@ -33,15 +33,14 @@
 
   <div class="mb-6">
     <div class="mb-3">
-      <h2 class="mb-2">Attendance</h2>
-      <h5 class="text-body-tertiary fw-semibold">Regular presence of employees during work hours.</h5>
+      <h1 class="mb-2">Attendance</h1>
     </div>
 
     <div class="row gy-3 gx-6">
 
       <div class="col-12 col-xxl-6">
         <div class="qr-code-container text-center p-4 border border-gray rounded-3">
-          <img id="qrCode" class="w-100">
+          <img id="qrCode" class="w-100 border border-light border-1">
         </div>
       </div>
 
@@ -251,4 +250,4 @@
   </script>
 </div>
 
-<%- include('partials/private-footer.ejs') %>
+<%- include('partials/public-footer.ejs') %>
