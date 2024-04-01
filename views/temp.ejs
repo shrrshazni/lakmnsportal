@@ -46,11 +46,11 @@
       </div>
 
       <div class="col-12 col-xxl-6">
-        <div id="team-members" data-list='{"valueNames":["member","position","activity","when","taskprogress","status","action"],"pagination":false}'>
+        <div id="team-members" data-list='{"valueNames":["member","datetime","status"],"pagination":false}'>
           <div class="row align-items-end justify-content-between pb-4 g-3">
 
-            <div class="col-auto">
-              <h3 id="currentTime"></h3>
+            <div class="col-6 col-md-auto">
+              <h2 id="currentTime"></h2>
 
               <script>
                 function updateTime() {
@@ -82,9 +82,8 @@
               </script>
             </div>
 
-            <div class="col-12 col-md-auto">
-              <div class="">
-
+            <div class="col-6 col-md-auto">
+              <div class="text-end">
                 <% 
                 
                 var currentDate = new Date();
@@ -96,30 +95,84 @@
                 var year = currentDate.toLocaleDateString('en-US', { year: 'numeric' });
 
                 // Construct the formatted date string
-                var formattedDate = dayOfWeek + ", " + dayOfMonth + " " + month + " " + year;
+                var formattedDate = dayOfMonth + " " + month + " " + year;
 
                 %>
 
-                <h3><%= formattedDate %></h3>
-
+                <h3 class=""><%= formattedDate %></h3>
               </div>
             </div>
 
           </div>
-          <div class="table-responsive ms-n1 ps-1">
+          <div class="table-responsive ms-n1 ps-1 scrollbar" style="height: 54vh;">
             <table class="table fs-9 mb-0 border-top border-translucent">
               <thead>
                 <tr>
-                  <th class="sort white-space-nowrap align-middle ps-0" scope="col" data-sort="member" style="width:15%;">MEMBERS</th>
-                  <th class="sort align-middle ps-3" scope="col" data-sort="position" style="width:20%;">DATE TIME</th>
-                  <th class="sort align-middle text-center" scope="col" data-sort="status" style="width:15%;">USER STATUS</th>
+                  <th class="sort align-middle text-start" scope="col" data-sort="member" style="width:30%;">STAFF</th>
+                  <th class="sort align-middle text-center" scope="col" data-sort="datetime" style="width:20%;">DATE TIME</th>
+                  <th class="sort align-middle text-center" scope="col" data-sort="status" style="width:20%;">USER STATUS</th>
                 </tr>
               </thead>
-              <tbody class="list scrollbar overflow-y-auto overflow-x-hidden" id="project-summary-table-body">
+              <tbody class="list" id="attendance-list">
 
-                <tr class="position-static">
+                <!-- <tr class="position-static">
 
-                </tr>
+                  <td class="align-middle text-body white-space-nowrap ps-0 member">
+                    <div class="avatar avatar-4xl">
+                      <div class="avatar-name rounded-circle"><span>SS</span></div>
+                    </div>
+                    <a class="mb-0 ms-3 fw-bold fs-7" href="">Sharir Shazni</a>
+                  </td>
+
+                  <td class="align-middle white-space-nowrap text-center datetime ps-0">
+                    <p class="fw-semibold text-body-emphasis fs-8 mb-0">
+                      09:08
+                    </p>
+                  </td>
+
+                  <td class="align-middle white-space-nowrap text-center status ps-0">
+                    <p class="fw-semibold text-body-emphasis fs-8 mb-0">
+                      User status
+                    </p>
+                  </td>
+
+                </tr> -->
+
+                <script>
+                  function fetchDataAndPopulateTable() {
+                    fetch('/api/attendance/today') // Fetch attendance data for today within a specific time range
+                      .then(response => response.json())
+                      .then(data => {
+                        const tableBody = document.getElementById('attendance-list');
+                        tableBody.innerHTML = ''; // Clear existing table rows
+                        data.forEach(entry => {
+                          const row = `
+                                        <tr class="position-static">
+                                            <td class="align-middle text-body white-space-nowrap ps-0 member">
+                                                <div class="avatar avatar-3xl">
+                                                    <div class="avatar-name rounded-circle"><span>${entry.user ? entry.user.initials : 'Unknown'}</span></div>
+                                                </div>
+                                                <a class="mb-0 ms-3 fw-bold fs-7" href="">${entry.user ? entry.user.fullname : 'Unknown'}</a>
+                                            </td>
+                                            <td class="align-middle white-space-nowrap text-center datetime ps-0">
+                                                <p class="fw-semibold text-body-emphasis fs-8 mb-0">${entry.datetime}</p>
+                                            </td>
+                                            <td class="align-middle white-space-nowrap text-center status ps-0">
+                                                <p class="fw-semibold text-body-emphasis fs-8 mb-0">${entry.status}</p>
+                                            </td>
+                                        </tr>`;
+                          tableBody.insertAdjacentHTML('beforeend', row);
+                        });
+                      })
+                      .catch(error => {
+                        console.error('Error fetching data:', error);
+                      });
+                  }
+
+                  // Call the function initially and then every 5 seconds
+                  fetchDataAndPopulateTable();
+                  setInterval(fetchDataAndPopulateTable, 3000); // 5000 milliseconds = 5 seconds
+                </script>
 
               </tbody>
             </table>
