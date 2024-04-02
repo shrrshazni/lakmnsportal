@@ -31,10 +31,65 @@
     }
   </style>
 
-  <div class="mb-6">
-    <div class="mb-3">
-      <h1 class="mb-2">Attendance</h1>
+  <div class="mb-0">
+    <div class="row align-items-end justify-content-between pb-3 g-3">
+
+      <div class="col-6 col-md-auto">
+        <div class="text-start">
+          <% 
+                      
+                      var currentDate = new Date();
+      
+                      // Get the day of the week, day of the month, month, and year
+                      var dayOfWeek = currentDate.toLocaleDateString('en-US', { weekday: 'long' });
+                      var dayOfMonth = currentDate.toLocaleDateString('en-US', { day: '2-digit' });
+                      var month = currentDate.toLocaleDateString('en-US', { month: 'long' });
+                      var year = currentDate.toLocaleDateString('en-US', { year: 'numeric' });
+      
+                      // Construct the formatted date string
+                      var formattedDate = dayOfWeek + ", " + dayOfMonth + " " + month + " " + year;
+      
+                      %>
+
+          <h1 class="fst-italic"><%= formattedDate %></h1>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-auto">
+        <h1 class="text-end" id="currentTime"></h1>
+
+        <script>
+          function updateTime() {
+            // Create a new Date object to get the current time
+            var currentTime = new Date();
+
+            // Get the hours, minutes, and seconds
+            var hours = currentTime.getHours();
+            var minutes = currentTime.getMinutes();
+            var seconds = currentTime.getSeconds();
+
+            // Add leading zeros if the numbers are less than 10
+            hours = (hours < 10) ? '0' + hours : hours;
+            minutes = (minutes < 10) ? '0' + minutes : minutes;
+            seconds = (seconds < 10) ? '0' + seconds : seconds;
+
+            // Construct the time string in HH:MM:SS format
+            var timeString = hours + ':' + minutes + ':' + seconds;
+
+            // Update the content of the <h3> element with the current time
+            document.getElementById('currentTime').textContent = timeString;
+          }
+
+          // Call updateTime function initially to set the time immediately
+          updateTime();
+
+          // Update the time every second
+          setInterval(updateTime, 1000);
+        </script>
+      </div>
+
     </div>
+
 
     <div class="row gy-3 gx-6">
 
@@ -45,97 +100,38 @@
       </div>
 
       <div class="col-12 col-xxl-6">
-        <div id="team-members" data-list='{"valueNames":["member","datetime","status"],"pagination":false}'>
-          <div class="row align-items-end justify-content-between pb-4 g-3">
-
-            <div class="col-6 col-md-auto">
-              <h2 id="currentTime"></h2>
-
-              <script>
-                function updateTime() {
-                  // Create a new Date object to get the current time
-                  var currentTime = new Date();
-
-                  // Get the hours, minutes, and seconds
-                  var hours = currentTime.getHours();
-                  var minutes = currentTime.getMinutes();
-                  var seconds = currentTime.getSeconds();
-
-                  // Add leading zeros if the numbers are less than 10
-                  hours = (hours < 10) ? '0' + hours : hours;
-                  minutes = (minutes < 10) ? '0' + minutes : minutes;
-                  seconds = (seconds < 10) ? '0' + seconds : seconds;
-
-                  // Construct the time string in HH:MM:SS format
-                  var timeString = hours + ':' + minutes + ':' + seconds;
-
-                  // Update the content of the <h3> element with the current time
-                  document.getElementById('currentTime').textContent = timeString;
-                }
-
-                // Call updateTime function initially to set the time immediately
-                updateTime();
-
-                // Update the time every second
-                setInterval(updateTime, 1000);
-              </script>
-            </div>
-
-            <div class="col-6 col-md-auto">
-              <div class="text-end">
-                <% 
-                
-                var currentDate = new Date();
-
-                // Get the day of the week, day of the month, month, and year
-                var dayOfWeek = currentDate.toLocaleDateString('en-US', { weekday: 'long' });
-                var dayOfMonth = currentDate.toLocaleDateString('en-US', { day: '2-digit' });
-                var month = currentDate.toLocaleDateString('en-US', { month: 'long' });
-                var year = currentDate.toLocaleDateString('en-US', { year: 'numeric' });
-
-                // Construct the formatted date string
-                var formattedDate = dayOfMonth + " " + month + " " + year;
-
-                %>
-
-                <h3 class=""><%= formattedDate %></h3>
-              </div>
-            </div>
-
-          </div>
-          <div class="table-responsive ms-n1 ps-1 scrollbar" style="height: 54vh;">
+        <h4 class="position-absolute mt-2 fs-8">Latest Attendance Registration</h4>
+        <div class="mb-3" id="team-members" data-list='{"valueNames":["member","datetime","status"],"pagination":false}'>
+          <div class="table-responsive ms-n1 ps-1 scrollbar">
             <table class="table fs-9 mb-0 border-top border-translucent">
               <thead>
-                <tr>
-                  <th class="sort align-middle text-start" scope="col" data-sort="member" style="width:30%;">STAFF</th>
-                  <th class="sort align-middle text-center" scope="col" data-sort="datetime" style="width:20%;">DATE TIME</th>
-                  <th class="sort align-middle text-center" scope="col" data-sort="status" style="width:20%;">USER STATUS</th>
-                </tr>
+                <th class="sort align-middle text-start opacity-0" scope="col" data-sort="member" style="width:60%;">STAFF</th>
+                <th class="sort align-middle text-end opacity-0" scope="col" data-sort="datetime" style="width:40%;">SECTION</th>
               </thead>
               <tbody class="list" id="attendance-list">
 
                 <!-- <tr class="position-static">
-
-                  <td class="align-middle text-body white-space-nowrap ps-0 member">
-                    <div class="avatar avatar-4xl">
-                      <div class="avatar-name rounded-circle"><span>SS</span></div>
-                    </div>
-                    <a class="mb-0 ms-3 fw-bold fs-7" href="">Sharir Shazni</a>
-                  </td>
-
-                  <td class="align-middle white-space-nowrap text-center datetime ps-0">
-                    <p class="fw-semibold text-body-emphasis fs-8 mb-0">
-                      09:08
-                    </p>
-                  </td>
-
-                  <td class="align-middle white-space-nowrap text-center status ps-0">
-                    <p class="fw-semibold text-body-emphasis fs-8 mb-0">
-                      User status
-                    </p>
-                  </td>
-
-                </tr> -->
+  
+                    <td class="align-middle text-body white-space-nowrap ps-0 member">
+                      <div class="avatar avatar-4xl">
+                        <div class="avatar-name rounded-circle"><span>SS</span></div>
+                      </div>
+                      <a class="mb-0 ms-3 fw-bold fs-7" href="">Sharir Shazni</a>
+                    </td>
+  
+                    <td class="align-middle white-space-nowrap text-center datetime ps-0">
+                      <p class="fw-semibold text-body-emphasis fs-8 mb-0">
+                        09:08
+                      </p>
+                    </td>
+  
+                    <td class="align-middle white-space-nowrap text-center status ps-0">
+                      <p class="fw-semibold text-body-emphasis fs-8 mb-0">
+                        User status
+                      </p>
+                    </td>
+  
+                  </tr> -->
 
                 <script>
                   function fetchDataAndPopulateTable() {
@@ -146,20 +142,17 @@
                         tableBody.innerHTML = ''; // Clear existing table rows
                         data.forEach(entry => {
                           const row = `
-                                        <tr class="position-static">
-                                            <td class="align-middle text-body white-space-nowrap ps-0 member">
-                                                <div class="avatar avatar-3xl">
-                                                    <div class="avatar-name rounded-circle"><span>${entry.user ? entry.user.initials : 'Unknown'}</span></div>
-                                                </div>
-                                                <a class="mb-0 ms-3 fw-bold fs-7" href="">${entry.user ? entry.user.fullname : 'Unknown'}</a>
-                                            </td>
-                                            <td class="align-middle white-space-nowrap text-center datetime ps-0">
-                                                <p class="fw-semibold text-body-emphasis fs-8 mb-0">${entry.datetime}</p>
-                                            </td>
-                                            <td class="align-middle white-space-nowrap text-center status ps-0">
-                                                <p class="fw-semibold text-body-emphasis fs-8 mb-0">${entry.status}</p>
-                                            </td>
-                                        </tr>`;
+                                          <tr class="position-static">
+                                              <td class="align-middle text-body white-space-nowrap ps-0 member">
+                                                  <div class="avatar avatar-3xl">
+                                                      <div class="avatar-name rounded-circle"><span>${entry.user ? entry.user.initials : 'Unknown'}</span></div>
+                                                  </div>
+                                                  <a class="mb-0 ms-3 fw-bold fs-7" href="">${entry.user ? entry.user.fullname : 'Unknown'}</a>
+                                              </td>
+                                              <td class="align-middle text-center datetime ps-0">
+                                                  <p class="fw-semibold text-body-emphasis fs-8 mb-0">${entry.user.section}</p>
+                                              </td>
+                                          </tr>`;
                           tableBody.insertAdjacentHTML('beforeend', row);
                         });
                       })
@@ -175,6 +168,40 @@
 
               </tbody>
             </table>
+          </div>
+        </div>
+
+        <div class="card w-100">
+          <div class="card-body min-vh-50">
+            <div class="mb-3" id="latest-scanned-data"></div>
+            <div id="message"></div>
+
+            <script>
+              async function fetchLatestScannedData() {
+                try {
+                  // Fetch the latest scanned data from the Attendance collection
+                  const response = await fetch('/get-latest-scanned-data');
+                  const data = await response.json();
+                  const latestScannedDataElement = document.getElementById('latest-scanned-data');
+                  const message = document.getElementById('message');
+
+                  if (Object.keys(data).length === 0 && data.constructor === Object) {
+                    latestScannedDataElement.textContent = "There is no data retrieved"
+                  } else {
+                    latestScannedDataElement.textContent = JSON.stringify(data.user);
+                    message.textContent = data.message;
+                  }
+
+                } catch (error) {
+                  console.error('Error fetching latest scanned data:', error);
+                }
+              }
+
+              // Call the function to fetch latest scanned data after a delay
+              fetchLatestScannedData();
+
+              setInterval(fetchLatestScannedData, 3000);
+            </script>
           </div>
         </div>
       </div>

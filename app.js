@@ -312,6 +312,7 @@ const AttendanceSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         required: true
     },
+    type: { type: String, enum: ['sign in', 'sign out', 'manual add', 'event', 'meeting', 'invalid'], default: 'invalid' },
     date: {
         signInTime: {
             type: Date,
@@ -328,6 +329,15 @@ const AttendanceSchema = new mongoose.Schema({
         default: 'Present'
     },
     timestamp: { type: Date, default: null }
+});
+
+const TempAttendanceSchema = new mongoose.Schema({
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true
+    },
+    type: { type: String, enum: ['sign in', 'sign out', 'manual add', 'event', 'meeting', 'invalid'], default: 'invalid' },
+    timestamp: { type: Date }
 });
 
 const qrCodeSchema = new mongoose.Schema({
@@ -356,6 +366,7 @@ const Task = userDatabase.model('Task', taskSchema);
 const Leave = leaveDatabase.model('Leave', leaveSchema);
 const File = fileDatabase.model('File', FileSchema);
 const Attendance = attendanceDatabase.model('Attendance', AttendanceSchema);
+const TempAttendance = attendanceDatabase.model('TempAttendance', TempAttendanceSchema);
 const QRCode = attendanceDatabase.model('QRCode', qrCodeSchema);
 
 passport.use(User.createStrategy());
@@ -4649,7 +4660,7 @@ app.get('/api/attendance/today', async function (req, res) {
                 $gte: today, // Find records where signInTime is greater than or equal to today
                 // $lte: currentTime // and less than or equal to the current time
             }
-        }).sort({ 'date.signInTime': -1 }).lean();
+        }).sort({ 'date.signInTime': -1 }).limit(1).lean();
 
         // Get all users
         const allUsers = await User.find().lean();
@@ -4776,7 +4787,7 @@ app.post('/process-scanned-data', isAuthenticated, async function (req, res) {
 
         if (existingAttendance) {
 
-            if (existingAttendance.date.signOutTime === null) {
+            if (existingAttendance.date.signOutTime === null && existingAttendance.date.signInTime !== "") {
                 await Attendance.findOneAndUpdate(
                     {
                         user: checkUser._id
@@ -4788,13 +4799,15 @@ app.post('/process-scanned-data', isAuthenticated, async function (req, res) {
                         upsert: true, new: true
                     }
                 )
-            } else {
+
                 console.log('You have successfully signed out for today, thank you');
 
-                log = "You have successfully signed out for today.";
+                log = "You have successfully signed out for today, thank you!";
+            } else {
+                console.log('You already sign out for today.');
+                log = "You already sign out for today, thank you!";
             }
         } else {
-            // User found, update the signInTime field of their attendance
             const currentDate = new Date();
 
             const attendance = new Attendance({
@@ -4809,9 +4822,17 @@ app.post('/process-scanned-data', isAuthenticated, async function (req, res) {
 
             await attendance.save();
 
+            const tempAttendance = new TempAttendance({
+                user: checkUser._id,
+                timestamp: new Date(),
+                type: 'sign in',
+            });
+
+            await tempAttendance.save();
+
             console.log("New sign in attendance for today, thank you");
 
-            log = "New sign in attendance for today, thank you.";
+            log = "New sign in attendance for today, thank you!";
         }
 
         const response = {
@@ -4820,8 +4841,50 @@ app.post('/process-scanned-data', isAuthenticated, async function (req, res) {
         }
 
         console.log(response);
-
         res.json(response);
+    }
+});
+
+app.get('/get-latest-scanned-data', isAuthenticated, async function (req, res) {
+    try {
+        const tempAttendance = await TempAttendance.findOne().sort({ timestamp: -1 }).lean();
+        console.log(tempAttendance);
+
+        var message = '';
+
+        if (tempAttendance) {
+            const allUser = await User.find();
+            const user = allUser.find(user => user._id.toString() === tempAttendance.user.toString());
+
+            console.log(user);
+
+            if (tempAttendance.type === 'sign in') {
+                message = 'Have sign in, welcome!';
+            } else if (tempAttendance.type === 'sign out') {
+                message = 'Have sign out, have a good rest!';
+            } else if (tempAttendance.type === 'meeting') {
+                message = 'Welcome to the meeting room!';
+            } else if (tempAttendance.type === 'events') {
+                message = 'Thank you for your participation!';
+            } else if (tempAttendance.type === 'invalid') {
+                message = 'PLease try again!';
+            }
+
+            const response = {
+                temp: tempAttendance,
+                user: user,
+                message: message
+            };
+
+            res.json(response);
+        } else {
+            res.json(response);
+        }
+
+        // res.json({ response });
+    } catch (error) {
+        console.error('Error fetching latest scanned data:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 
