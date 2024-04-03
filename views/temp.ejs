@@ -32,81 +32,81 @@
   </style>
 
   <div class="mb-0">
-    <div class="row align-items-end justify-content-between pb-3 g-3">
-
-      <div class="col-6 col-md-auto">
-        <div class="text-start">
-          <% 
-                      
-                      var currentDate = new Date();
-      
-                      // Get the day of the week, day of the month, month, and year
-                      var dayOfWeek = currentDate.toLocaleDateString('en-US', { weekday: 'long' });
-                      var dayOfMonth = currentDate.toLocaleDateString('en-US', { day: '2-digit' });
-                      var month = currentDate.toLocaleDateString('en-US', { month: 'long' });
-                      var year = currentDate.toLocaleDateString('en-US', { year: 'numeric' });
-      
-                      // Construct the formatted date string
-                      var formattedDate = dayOfWeek + ", " + dayOfMonth + " " + month + " " + year;
-      
-                      %>
-
-          <h1 class="fst-italic"><%= formattedDate %></h1>
-        </div>
-      </div>
-
-      <div class="col-6 col-md-auto">
-        <h1 class="text-end" id="currentTime"></h1>
-
-        <script>
-          function updateTime() {
-            // Create a new Date object to get the current time
-            var currentTime = new Date();
-
-            // Get the hours, minutes, and seconds
-            var hours = currentTime.getHours();
-            var minutes = currentTime.getMinutes();
-            var seconds = currentTime.getSeconds();
-
-            // Add leading zeros if the numbers are less than 10
-            hours = (hours < 10) ? '0' + hours : hours;
-            minutes = (minutes < 10) ? '0' + minutes : minutes;
-            seconds = (seconds < 10) ? '0' + seconds : seconds;
-
-            // Construct the time string in HH:MM:SS format
-            var timeString = hours + ':' + minutes + ':' + seconds;
-
-            // Update the content of the <h3> element with the current time
-            document.getElementById('currentTime').textContent = timeString;
-          }
-
-          // Call updateTime function initially to set the time immediately
-          updateTime();
-
-          // Update the time every second
-          setInterval(updateTime, 1000);
-        </script>
-      </div>
-
-    </div>
 
 
     <div class="row gy-3 gx-6">
 
-      <div class="col-12 col-xxl-6">
+      <div class="col-12 col-xxl-6 mb-5">
         <div class="qr-code-container text-center p-4 border border-gray rounded-3">
           <img id="qrCode" class="w-100 border border-light border-1">
         </div>
       </div>
 
       <div class="col-12 col-xxl-6">
-        <h4 class="position-absolute mt-2 fs-8">Latest Attendance Registration</h4>
         <div class="mb-3" id="team-members" data-list='{"valueNames":["member","datetime","status"],"pagination":false}'>
+          <div class="row align-items-end justify-content-between pb-3 g-3">
+
+            <div class="col-6 col-md-auto">
+              <div class="text-start">
+                <% 
+                                
+                                var currentDate = new Date();
+                
+                                // Get the day of the week, day of the month, month, and year
+                                var dayOfWeek = currentDate.toLocaleDateString('en-US', { weekday: 'long' });
+                                var dayOfMonth = currentDate.toLocaleDateString('en-US', { day: '2-digit' });
+                                var month = currentDate.toLocaleDateString('en-US', { month: 'long' });
+                                var year = currentDate.toLocaleDateString('en-US', { year: 'numeric' });
+                
+                                // Construct the formatted date string
+                                var formattedDate = dayOfMonth + " " + month + ", " + year;
+                
+                                %>
+
+                <h2 class=""><%= formattedDate %></h2>
+              </div>
+            </div>
+
+            <div class="col-6 col-md-auto">
+              <h2 class="text-end" id="currentTime"></h2>
+
+              <script>
+                function updateTime() {
+                  // Create a new Date object to get the current time
+                  var currentTime = new Date();
+
+                  // Get the hours, minutes, and seconds
+                  var hours = currentTime.getHours();
+                  var minutes = currentTime.getMinutes();
+                  var seconds = currentTime.getSeconds();
+
+                  // Add leading zeros if the numbers are less than 10
+                  hours = (hours < 10) ? '0' + hours : hours;
+                  minutes = (minutes < 10) ? '0' + minutes : minutes;
+                  seconds = (seconds < 10) ? '0' + seconds : seconds;
+
+                  // Construct the time string in HH:MM:SS format
+                  var timeString = hours + ':' + minutes + ':' + seconds;
+
+                  // Update the content of the <h3> element with the current time
+                  document.getElementById('currentTime').textContent = timeString;
+                }
+
+                // Call updateTime function initially to set the time immediately
+                updateTime();
+
+                // Update the time every second
+                setInterval(updateTime, 1000);
+              </script>
+            </div>
+
+          </div>
           <div class="table-responsive ms-n1 ps-1 scrollbar">
             <table class="table fs-9 mb-0 border-top border-translucent">
               <thead>
-                <th class="sort align-middle text-start opacity-0" scope="col" data-sort="member" style="width:60%;">STAFF</th>
-                <th class="sort align-middle text-end opacity-0" scope="col" data-sort="datetime" style="width:40%;">SECTION</th>
+                <th class="sort align-middle text-start" scope="col" data-sort="member" style="width:50%;">STAFF</th>
+                <th class="sort align-middle text-center" scope="col" data-sort="datetime" style="width:30%;">SECTION</th>
+                <th class="sort align-middle text-center" scope="col" data-sort="datetime" style="width:20%;">TYPE</th>
               </thead>
               <tbody class="list" id="attendance-list">
 
@@ -152,6 +152,10 @@
                                               <td class="align-middle text-center datetime ps-0">
                                                   <p class="fw-semibold text-body-emphasis fs-8 mb-0">${entry.user.section}</p>
                                               </td>
+
+                                              <td class="align-middle text-center datetime ps-0">
+                                                  <p class="fw-semibold white-space-nowrap text-body-emphasis fs-8 mb-0">${entry.type}</p>
+                                              </td>
                                           </tr>`;
                           tableBody.insertAdjacentHTML('beforeend', row);
                         });
@@ -163,7 +167,7 @@
 
                   // Call the function initially and then every 5 seconds
                   fetchDataAndPopulateTable();
-                  setInterval(fetchDataAndPopulateTable, 3000); // 5000 milliseconds = 5 seconds
+                  setInterval(fetchDataAndPopulateTable, 10000); // 5000 milliseconds = 5 seconds
                 </script>
 
               </tbody>
@@ -171,110 +175,230 @@
           </div>
         </div>
 
-        <div class="card w-100">
-          <div class="card-body min-vh-50">
-            <div class="mb-3" id="latest-scanned-data"></div>
-            <div id="message"></div>
+        <div class="mb-3 row g-3">
+          <div class="mb-3" id="latest-scanned-data"></div>
 
-            <script>
-              async function fetchLatestScannedData() {
-                try {
-                  // Fetch the latest scanned data from the Attendance collection
-                  const response = await fetch('/get-latest-scanned-data');
-                  const data = await response.json();
-                  const latestScannedDataElement = document.getElementById('latest-scanned-data');
-                  const message = document.getElementById('message');
+          <style>
+            #id-card {
+              perspective: 1000px;
+            }
 
-                  if (Object.keys(data).length === 0 && data.constructor === Object) {
-                    latestScannedDataElement.textContent = "There is no data retrieved"
-                  } else {
-                    latestScannedDataElement.textContent = JSON.stringify(data.user);
-                    message.textContent = data.message;
-                  }
+            #attendance-card {
+              width: 300px;
+              height: 400px;
+              border-radius: 15px;
+              /* Increased border radius for smoother corners */
+              background: #fff;
+              /* Add your desired background color */
+              position: relative;
+              overflow: hidden;
+              box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+              /* Added box shadow for depth */
+              animation: rotateCard 2s infinite alternate;
+              transform-origin: center;
+              /* Define animation */
+            }
 
-                } catch (error) {
-                  console.error('Error fetching latest scanned data:', error);
-                }
+            @keyframes rotateCard {
+              from {
+                transform: rotateY(0deg);
               }
 
-              // Call the function to fetch latest scanned data after a delay
-              fetchLatestScannedData();
+              to {
+                transform: rotateY(20deg);
+              }
+            }
 
-              setInterval(fetchLatestScannedData, 3000);
-            </script>
+            .card-body {
+              padding: 20px;
+              /* Increased padding for thicker appearance */
+            }
+
+            .glow-on-hover {
+              width: 100%;
+              height: 100%;
+              border: none;
+              outline: none;
+              background: none;
+              cursor: pointer;
+              position: absolute;
+              top: 0;
+              left: 0;
+              z-index: 1;
+              border-radius: inherit;
+              overflow: hidden;
+            }
+
+            .glow-on-hover:before {
+              content: '';
+              background: linear-gradient(90deg, #fffb00, #79f04a);
+              position: absolute;
+              top: -50%;
+              left: -50%;
+              width: 200%;
+              height: 200%;
+              z-index: -1;
+              opacity: 0;
+              transition: opacity 0.5s;
+              border-radius: inherit;
+            }
+
+            .glow-on-hover:hover:before {
+              opacity: 1;
+            }
+
+            .card-body {
+              position: relative;
+              z-index: 2;
+            }
+
+            @media only screen and (max-width: 600px) {
+              #attendance-card {
+                width: 80%;
+                height: auto;
+              }
+            }
+          </style>
+
+          <div id="id-card" class="d-flex justify-content-center align-items-center">
+            <div class="card glow-on-hover" id="attendance-card">
+              <div class="card-body text-center">
+                <div class="mb-4 d-flex justify-content-between">
+                  <img src="../../assets/img/icons/logo.png" height="40" alt="" />
+                  <p></p>
+                </div>
+                <div class="avatar avatar-4xl mb-6 mx-auto">
+                  <img class="rounded-circle border border-primary" src="/assets/img/team/avatar.webp" alt="" />
+                </div>
+                <p class="mb-1 fs-8 fw-bold fst-italic">${data.user.username}</p>
+                <p class="mb-5 fs-8 fw-bold">${data.user.fullname}</p>
+
+                <p class="mb-1 fs-8">${data.user.position}</p>
+                <p class="mb-0 fs-8">${data.user.section}</p>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <p id="message" class="fs-7 fw-bold text-center"></p>
           </div>
         </div>
-      </div>
 
+        <!-- <script>
+          async function fetchLatestScannedData() {
+            try {
+              // Fetch the latest scanned data from the Attendance collection
+              const response = await fetch('/get-latest-scanned-data');
+              const data = await response.json();
+              const latestScannedDataElement = document.getElementById('latest-scanned-data');
+              const message = document.getElementById('message');
+              const idCard = document.getElementById('id-card');
+
+              if (Object.keys(data).length === 0 && data.constructor === Object) {
+                latestScannedDataElement.textContent = "There is no data retrieved"
+              } else {
+
+                console.log(data);
+                const cardHtml = `
+                <div class="card w-75 w-lg-50" style="min-height: 35vh;">
+                    <div class="card-body text-center">
+                        <div class="mb-2 d-flex justify-content-between">
+                            <img src="../../assets/img/icons/logo.png" height="40" alt="" />
+                         <p></p>
+                        </div>
+                        <div class="avatar avatar-5xl mb-5 mx-auto">
+                            <img class="rounded-circle border border-primary" src="/assets/img/team/avatar.webp" alt="" />
+                        </div>
+                        <p class="mb-1 fs-8 fw-bold">${data.user.fullname}</p>
+                        <p class="mb-3 fs-8 fw-bold fst-italic">${data.user.username}</p>
+                        <p class="mb-1 fs-8">${data.user.position}</p>
+                        <p class="mb-0 fs-8">${data.user.section}</p>
+                    </div>
+                </div>`;
+
+                idCard.innerHTML = cardHtml;
+                message.textContent = data.message;
+              }
+
+            } catch (error) {
+              console.error('Error fetching latest scanned data:', error);
+            }
+          }
+
+          // Call the function to fetch latest scanned data after a delay
+          fetchLatestScannedData();
+
+          setInterval(fetchLatestScannedData, 2000);
+        </script> -->
+      </div>
     </div>
 
   </div>
 
+</div>
 
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    let previousQRData = null;
 
-
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      let previousQRData = null;
-
-      async function updateQRCode() {
-        try {
-          // Generate a new QR code
-          const response = await fetch('/generate-qr');
-          if (!response.ok) {
-            throw new Error('Network response was not ok');
-          }
-          const data = await response.json();
-
-          // Update the src attribute of the QR code image
-          document.getElementById('qrCode').src = data.qrCodeImage;
-
-          // Save the previous QR code data
-          if (previousQRData) {
-            await saveQRData(previousQRData);
-          }
-
-          // Update the previous QR data to the new one
-          previousQRData = data.uniqueIdentifier;
-
-          console.log('QR code updated successfully');
-        } catch (error) {
-          console.error('Error updating QR code:', error);
+    async function updateQRCode() {
+      try {
+        // Generate a new QR code
+        const response = await fetch('/generate-qr');
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
         }
-      }
+        const data = await response.json();
 
-      updateQRCode();
+        // Update the src attribute of the QR code image
+        document.getElementById('qrCode').src = data.qrCodeImage;
 
-      // Function to update QR code image every 5 seconds
-      setInterval(updateQRCode, 5000);
-
-      async function saveQRData(qrData) {
-        try {
-          // Perform any actions to save the QR code data here
-          console.log('Saving QR code data:', qrData);
-
-          const response = await fetch('/save-qr-data', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              qrData: qrData
-            })
-          });
-
-          if (!response.ok) {
-            throw new Error('Network response was not ok');
-          }
-
-          console.log('QR code data successfully saved');
-        } catch (error) {
-          console.error('Error saving QR code data:', error);
+        // Save the previous QR code data
+        if (previousQRData) {
+          await saveQRData(previousQRData);
         }
-      }
 
-    });
-  </script>
+        // Update the previous QR data to the new one
+        previousQRData = data.uniqueIdentifier;
+
+        console.log('QR code updated successfully');
+      } catch (error) {
+        console.error('Error updating QR code:', error);
+      }
+    }
+
+    updateQRCode();
+
+    // Function to update QR code image every 5 seconds
+    setInterval(updateQRCode, 5000);
+
+    async function saveQRData(qrData) {
+      try {
+        // Perform any actions to save the QR code data here
+        console.log('Saving QR code data:', qrData);
+
+        const response = await fetch('/save-qr-data', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            qrData: qrData
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+
+        console.log('QR code data successfully saved');
+      } catch (error) {
+        console.error('Error saving QR code data:', error);
+      }
+    }
+
+  });
+</script>
 </div>
 
 <%- include('partials/public-footer.ejs') %>

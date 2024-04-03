@@ -3093,10 +3093,8 @@ app
                     approvals: approvals
                 });
 
-                Leave.create(leave);
+                const currentLeave = await Leave.create(leave);
                 console.log('Leave request submitted');
-
-                const currentLeave = await Leave.findOne({ fileId: uuid });
 
                 // activity
                 const activityUser = new Activity({
@@ -3190,6 +3188,7 @@ app
                     assignee: { $ne: [user._id] }
                 });
                 const otherActivitiesHome = await Activity.find();
+                const info = await Info.findOne({ user: user._id });
 
                 // find staff on leave today
                 const today = new Date();
@@ -3377,6 +3376,7 @@ app
                     leave: leave,
                     tasks: taskHome,
                     files: fileHome,
+                    info: info,
                     activities: activitiesHome,
                     selectedNames: '',
                     show: 'show',
@@ -4660,7 +4660,7 @@ app.get('/api/attendance/today', async function (req, res) {
                 $gte: today, // Find records where signInTime is greater than or equal to today
                 // $lte: currentTime // and less than or equal to the current time
             }
-        }).sort({ 'date.signInTime': -1 }).limit(1).lean();
+        }).sort({ 'date.signInTime': -1 }).limit(2).lean();
 
         // Get all users
         const allUsers = await User.find().lean();
@@ -4697,6 +4697,7 @@ app.get('/api/attendance/today', async function (req, res) {
                 } : null,
                 datetime: formatDateTime(new Date(entry.date.signInTime)), // Assuming you want to display signInTime
                 status: entry.status,
+                type: entry.type
             };
         });
 
@@ -4738,10 +4739,24 @@ app.post('/save-qr-data', async function (req, res) {
     //     createdAt: new Date()
     // });
 
-    // Send a response to indicate success
+    const checkTempAttendance = await TempAttendance.find();
+
+    if (checkTempAttendance.length <= 1) {
+        const deleteAll = await TempAttendance.deleteMany();
+        console.log(deleteAll);
+    } else {
+        const excludedDocumentId = await TempAttendance.findOne().sort({ timestamp: -1 });
+        console.log(excludedDocumentId);
+
+        if (!excludedDocumentId) {
+            console.log('No matching document found');
+        } else {
+            await TempAttendance.deleteMany({ _id: { $ne: excludedDocumentId } });
+        }
+    }
+
     res.status(200).send('QR code data received and saved successfully');
 });
-
 
 // SCAN QR GENERATED
 app.get('/scan-qr', isAuthenticated, async function (req, res) {
@@ -4793,7 +4808,8 @@ app.post('/process-scanned-data', isAuthenticated, async function (req, res) {
                         user: checkUser._id
                     },
                     {
-                        'date.signOutTime': new Date()
+                        'date.signOutTime': new Date(),
+                        type: 'sign out'
                     },
                     {
                         upsert: true, new: true
@@ -4801,6 +4817,14 @@ app.post('/process-scanned-data', isAuthenticated, async function (req, res) {
                 )
 
                 console.log('You have successfully signed out for today, thank you');
+
+                const tempAttendance = new TempAttendance({
+                    user: checkUser._id,
+                    timestamp: new Date(),
+                    type: 'sign out',
+                });
+
+                await tempAttendance.save();
 
                 log = "You have successfully signed out for today, thank you!";
             } else {
@@ -4817,7 +4841,8 @@ app.post('/process-scanned-data', isAuthenticated, async function (req, res) {
                     signOutTime: null
                 },
                 status: 'Present',
-                timestamp: new Date()
+                timestamp: new Date(),
+                type: 'sign in'
             });
 
             await attendance.save();
@@ -4848,15 +4873,11 @@ app.post('/process-scanned-data', isAuthenticated, async function (req, res) {
 app.get('/get-latest-scanned-data', isAuthenticated, async function (req, res) {
     try {
         const tempAttendance = await TempAttendance.findOne().sort({ timestamp: -1 }).lean();
-        console.log(tempAttendance);
-
         var message = '';
 
         if (tempAttendance) {
             const allUser = await User.find();
             const user = allUser.find(user => user._id.toString() === tempAttendance.user.toString());
-
-            console.log(user);
 
             if (tempAttendance.type === 'sign in') {
                 message = 'Have sign in, welcome!';
@@ -4878,6 +4899,7 @@ app.get('/get-latest-scanned-data', isAuthenticated, async function (req, res) {
 
             res.json(response);
         } else {
+            const response = "";
             res.json(response);
         }
 
