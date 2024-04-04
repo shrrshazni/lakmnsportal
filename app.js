@@ -4739,21 +4739,21 @@ app.post('/save-qr-data', async function (req, res) {
     //     createdAt: new Date()
     // });
 
-    const checkTempAttendance = await TempAttendance.find();
+    // const checkTempAttendance = await TempAttendance.find();
 
-    if (checkTempAttendance.length <= 1) {
-        const deleteAll = await TempAttendance.deleteMany();
-        console.log(deleteAll);
-    } else {
-        const excludedDocumentId = await TempAttendance.findOne().sort({ timestamp: -1 });
-        console.log(excludedDocumentId);
+    // if (checkTempAttendance.length <= 1) {
+    //     const deleteAll = await TempAttendance.deleteMany();
+    //     console.log(deleteAll);
+    // } else {
+    //     const excludedDocumentId = await TempAttendance.findOne().sort({ timestamp: -1 });
+    //     console.log(excludedDocumentId);
 
-        if (!excludedDocumentId) {
-            console.log('No matching document found');
-        } else {
-            await TempAttendance.deleteMany({ _id: { $ne: excludedDocumentId } });
-        }
-    }
+    //     if (!excludedDocumentId) {
+    //         console.log('No matching document found');
+    //     } else {
+    //         await TempAttendance.deleteMany({ _id: { $ne: excludedDocumentId } });
+    //     }
+    // }
 
     res.status(200).send('QR code data received and saved successfully');
 });
