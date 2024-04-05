@@ -4910,15 +4910,6 @@ app.get('/get-latest-scanned-data', isAuthenticated, async function (req, res) {
     }
 });
 
-app.get('/fetch-user/:userId', isAuthenticated, async function (req, res) {
-    const userId = req.params.userId;
-
-    console.log(userId);
-
-    res.json(userId); // Send user data as response
-
-});
-
 app.get('/super-admin/update', isAuthenticated, async function (req, res) {
     const username = req.user.username;
     const user = await User.findOne({ username: username });
