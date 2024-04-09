@@ -21,12 +21,12 @@
             
                             %>
 
-        <h2 class=""><%= formattedDate %></h2>
+        <h2 class="fs-5 fs-lg-4"><%= formattedDate %></h2>
       </div>
     </div>
 
     <div class="col-6 col-md-auto">
-      <h2 class="text-end" id="currentTime"></h2>
+      <h2 class="text-end fs-5 fs-lg-4" id="currentTime"></h2>
 
       <script>
         function updateTime() {
@@ -47,7 +47,7 @@
           var timeString = hours + ':' + minutes + ':' + seconds;
 
           // Update the content of the <h3> element with the current time
-          document.getElementById('currentTime').textContent = timeString;
+          document.getElementById('currentTime').textContent = timeString + ' UTC +8';
         }
 
         // Call updateTime function initially to set the time immediately
@@ -95,8 +95,12 @@
 
       <div class="col-md-6 mb-5">
 
-        <div class="qr-code-container text-center p-4 border border-gray rounded-3 mb-4">
-          <img id="qrCode" class="w-100 border border-light border-1">
+        <div class="container rounded-3 border border-gray" style="background-color: #3874ff; padding: 2.5rem;">
+          <div class="qr-code-container text-center p-4 rounded-3 mb-10" style="background-color: #FFF;">
+            <img id="qrCode" class="w-100 border border-light border-1">
+          </div>
+
+          <h1 class="text-center" style="font-size: 3.5rem; color: #FFF;">LAKMNS</h1>
         </div>
 
         <script>
@@ -222,8 +226,8 @@
           <style>
             :root {
               --card-gradient-colors: #FFF, #F8FFAE, #b5ffae;
-              --glow-colors: #b5ffae;
-              --message-colors: #FF5733;
+              --glow-colors: #36ba3c;
+              --message-colors: ;
             }
 
             @keyframes glow {
@@ -337,11 +341,11 @@
 
           <div class="d-none mt-5 mb-4" id="latest-attendance">
             <div id="id-card" class="d-flex justify-content-center align-items-center mb-0">
-              <div class="card glow-on-hover mb-2" id="attendance-card">
+              <div class="card border border-gray-200 glow-on-hover mb-2" id="attendance-card">
                 <lottie-player id="lottie-player" class="mx-auto mt-n3 position-absolute end-0 top-0" src="https://lottie.host/9286c4fc-dca4-4d7f-b918-85480656a0cf/bLVZCz5laC.json" speed="1" style="width: 110px; height: 110px;" direction="1" mode="normal"></lottie-player>
                 <div class="card-body text-center">
                   <div class="mb-2 d-flex justify-content-between">
-                    <img src="../../assets/img/icons/logo.png" height="40" alt="" />
+                    <img id="logo" class="d-none" src="../../assets/img/icons/logo.png" height="40" alt="" />
                     <p></p>
                   </div>
                   <div class="avatar avatar-4xl mb-4 mx-auto">
@@ -368,14 +372,15 @@
                 var card = document.getElementById('attendance-card');
                 const latestAtt = document.getElementById('latest-attendance');
                 var lottiePlayer = document.getElementById('lottie-player');
+                var logo = document.getElementById('logo');
 
                 if (data === "") {
                   console.log('There is no data');
                   latestAtt.classList.add('d-none');
                   card.classList.remove('glow');
                   card.classList.remove('box-shadow');
-
-                  message.classList.remove('fade-in');
+                  message.classList.add('d-none');
+                  logo.classList.add('d-none');
                   lottiePlayer.stop();
                 } else {
                   latestAtt.classList.remove('d-none');
@@ -397,30 +402,18 @@
                     glowColors = '#FF5733';
                   } else {
                     gradientColors = '#FFF, #F8FFAE, #b5ffae';
-                    glowColors = '#b5ffae';
+                    glowColors = '#36ba3c';
                   }
 
                   document.documentElement.style.setProperty('--card-gradient-colors', gradientColors);
                   document.documentElement.style.setProperty('--glow-colors', glowColors);
-                  document.documentElement.style.setProperty('--message-colors', glowColors);
-
-                  // Set Lottie animation based on tempAttendance.type
-                  if (data.temp.type === 'sign out') {
-                    lottiePlayer.style.display = 'block'; // Show the player
-                    lottie.loadAnimation({
-                      container: lottiePlayer, // DOM element where the animation will play
-                      renderer: 'svg',
-                      loop: true,
-                      autoplay: true,
-                      path: 'https://lottie.host/9286c4fc-dca4-4d7f-b918-85480656a0cf/bLVZCz5laC.json' // Path to your animation JSON file
-                    });
-                  } else {
-                  }
 
                   // Add glow class after 2 seconds
                   setTimeout(function() {
                     card.classList.add('glow');
                     card.classList.add('box-shadow');
+                    logo.classList.remove('d-none');
+                    document.documentElement.style.setProperty('--message-colors', glowColors);
                     message.textContent = data.message;
                     lottiePlayer.play();
                   }, 1000);
