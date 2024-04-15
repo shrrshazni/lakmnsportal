@@ -1,25 +1,25 @@
 <%- include('partials/public-header') %>
 
-<div class="mb-3 mt-3 p-4">
+<div class="mb-0 mt-3 p-4 h-100">
 
-  <div class="row align-items-end justify-content-between pb-3 g-3">
+  <div class="row align-items-end justify-content-between p-lg-3 p-1 pb-0 g-3">
 
     <div class="col-6 col-md-auto">
       <div class="text-start">
         <% 
                             
-                            var currentDate = new Date();
+        var currentDate = new Date();
             
-                            // Get the day of the week, day of the month, month, and year
-                            var dayOfWeek = currentDate.toLocaleDateString('en-US', { weekday: 'long' });
-                            var dayOfMonth = currentDate.toLocaleDateString('en-US', { day: '2-digit' });
-                            var month = currentDate.toLocaleDateString('en-US', { month: 'long' });
-                            var year = currentDate.toLocaleDateString('en-US', { year: 'numeric' });
+        // Get the day of the week, day of the month, month, and year
+        var dayOfWeek = currentDate.toLocaleDateString('en-US', { weekday: 'long' });
+        var dayOfMonth = currentDate.toLocaleDateString('en-US', { day: '2-digit' });
+        var month = currentDate.toLocaleDateString('en-US', { month: 'long' });
+        var year = currentDate.toLocaleDateString('en-US', { year: 'numeric' });
             
-                            // Construct the formatted date string
-                            var formattedDate = dayOfMonth + " " + month + ", " + year;
+        // Construct the formatted date string
+        var formattedDate = dayOfMonth + " " + month + ", " + year;
             
-                            %>
+        %>
 
         <h2 class="fs-5 fs-lg-4"><%= formattedDate %></h2>
       </div>
@@ -91,16 +91,16 @@
 
   <div class="mb-0">
 
-    <div class="row gy-3 gx-6">
+    <div class="row gy-3 gx-6" style="min-height: 50vh;">
 
-      <div class="col-md-6 mb-5">
+      <div class="col-md-6 mb-0 p-lg-5 p-3 pe-none">
 
-        <div class="container rounded-3 border border-gray" style="background-color: #3874ff; padding: 2.5rem;">
-          <div class="qr-code-container text-center p-4 rounded-3 mb-10" style="background-color: #FFF;">
+        <div class="container rounded-5 border border-gray p-4 p-lg-6" style="background-color: #3874ff;">
+          <div class="qr-code-container text-center p-1 p-lg-4 rounded-2 mb-10" style="background-color: #FFF;">
             <img id="qrCode" class="w-100 border border-light border-1">
           </div>
 
-          <h1 class="text-center" style="font-size: 3.5rem; color: #FFF;">LAKMNS</h1>
+          <h1 class="text-center fst-italic fs-lg-3 fs-4" style="color: #FFF;">LAKMNS</h1>
         </div>
 
         <script>
@@ -167,61 +167,80 @@
 
       </div>
 
-      <div class="col-md-6">
+      <div class="col-md-6 mt-n2 mt-lg-0 p-7">
 
-        <div class="mb-3 row g-3">
+        <div class="mb-3 row g-3" style="height: 100%;">
 
-          <div class="mb-3" id="team-members" data-list='{"valueNames":["member","datetime","status"],"pagination":false}'>
-            <div class="table-responsive ms-n1 ps-1 scrollbar">
-              <table class="table fs-9 mb-0 border-top border-translucent">
-                <thead class="d-none">
-                  <th class="sort align-middle text-start" scope="col" data-sort="member" style="width:50%;">STAFF</th>
-                  <th class="sort align-middle text-center" scope="col" data-sort="datetime" style="width:30%;">SECTION</th>
-                  <th class="sort align-middle text-center" scope="col" data-sort="datetime" style="width:20%;">TYPE</th>
-                </thead>
-                <tbody class="list" id="attendance-list">
+          <div style="height: 50%;">
+            <div class="border border-gray rounded-3 p-5">
+              <div class="mb-3" id="team-members" data-list='{"valueNames":["member","datetime","status"],"pagination":false}'>
+                <div class="table-responsive ms-n1 mb-n3 ps-1 scrollbar">
+                  <table class="table fs-9 mb-0 border-translucent">
+                    <thead class="d-none">
+                      <th class="sort align-middle text-start" scope="col" data-sort="member" style="width:50%;">STAFF</th>
+                      <th class="sort align-middle text-center" scope="col" data-sort="datetime" style="width:30%;">SECTION</th>
+                      <th class="sort align-middle text-center" scope="col" data-sort="datetime" style="width:20%;">TYPE</th>
+                    </thead>
+                    <tbody class="list" id="attendance-list">
 
-                  <script>
-                    function fetchDataAndPopulateTable() {
-                      fetch('/api/attendance/today') // Fetch attendance data for today within a specific time range
-                        .then(response => response.json())
-                        .then(data => {
-                          const tableBody = document.getElementById('attendance-list');
-                          tableBody.innerHTML = ''; // Clear existing table rows
-                          data.forEach(entry => {
-                            const row = `
-                                                  <tr class="position-static">
-                                                      <td class="align-middle text-body white-space-nowrap ps-0 member">
-                                                          <div class="avatar avatar-2xl">
-                                                              <div class="avatar-name rounded-circle"><span class="fs-5">${entry.user ? entry.user.initials : 'Unknown'}</span></div>
-                                                          </div>
-                                                          <a class="mb-0 ms-3 fw-bold fs-8" href="">${entry.user ? entry.user.fullname : 'Unknown'}</a>
-                                                      </td>
-                                                      <td class="align-middle text-center datetime ps-0">
-                                                          <p class="fw-semibold text-body-emphasis fs-9 mb-0">${entry.user.section}</p>
-                                                      </td>
-        
-                                                      <td class="align-middle text-center datetime ps-0">
-                                                          <p class="badge badge-phoenix badge-phoenix-success fs-10 mb-0">${entry.type}</p>
-                                                      </td>
-                                                  </tr>`;
-                            tableBody.insertAdjacentHTML('beforeend', row);
-                          });
-                        })
-                        .catch(error => {
-                          console.error('Error fetching data:', error);
-                        });
-                    }
+                      <script>
+                        function fetchDataAndPopulateTable() {
+                          fetch('/api/attendance/today') // Fetch attendance data for today within a specific time range
+                            .then(response => response.json())
+                            .then(data => {
+                              const tableBody = document.getElementById('attendance-list');
+                              tableBody.innerHTML = ''; // Clear existing table rows
 
-                    // Call the function initially and then every 5 seconds
-                    fetchDataAndPopulateTable();
-                    setInterval(fetchDataAndPopulateTable, 10000); // 5000 milliseconds = 5 seconds
-                  </script>
+                              if (data.length === 0) {
+                                console.log('No attendance records found');
 
-                </tbody>
-              </table>
+                                const row = `
+                                  <tr class="position-static">
+                                      <td class="align-middle text-center" style="border-top: none; border-bottom: none;">
+                                           <h3 class="fs-5 fw-bold mt-1 mb-n2">No staff clock in yet</h3>
+                                       </td>
+                                  </tr>
+                                  `;
+
+                                tableBody.insertAdjacentHTML('beforeend', row);
+                              } else {
+                                data.forEach(entry => {
+                                  const row = `
+                                    <tr class="position-static border-top">
+                                        <td class="align-middle text-body white-space-nowrap ps-0 member">
+                                            <div class="avatar avatar-2xl">
+                                                <div class="avatar-name rounded-circle"><span class="fs-5">${entry.user ? entry.user.initials : 'Unknown'}</span></div>
+                                            </div>
+                                            <a class="mb-0 ms-3 fw-bold fs-8" href="">${entry.user ? entry.user.fullname : 'Unknown'}</a>
+                                        </td>
+                                        <td class="align-middle text-center datetime ps-0">
+                                            <p class="fw-semibold text-body-emphasis fs-9 mb-0">${entry.user.section}</p>
+                                        </t
+                                      <td class="align-middle text-center datetime ps-0">
+                                           <p class="badge badge-phoenix badge-phoenix-success fs-10 mb-0">${entry.type}</p>
+                                       </td>
+                                    </tr>`;
+                                  tableBody.insertAdjacentHTML('beforeend', row);
+                                });
+                              }
+                            })
+                            .catch(error => {
+                              console.error('Error fetching data:', error);
+                            });
+                        }
+
+                        // Call the function initially and then every 5 seconds
+                        fetchDataAndPopulateTable();
+                        setInterval(fetchDataAndPopulateTable, 10000); // 5000 milliseconds = 5 seconds
+                      </script>
+
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           </div>
+
 
           <style>
             :root {
@@ -261,6 +280,7 @@
               animation: rotateCard 3.5s infinite alternate;
               transform-origin: center;
               opacity: 1;
+              margin: 0 auto;
             }
 
             .box-shadow {
@@ -340,7 +360,7 @@
           </style>
 
           <div class="d-none mt-5 mb-4" id="latest-attendance">
-            <div id="id-card" class="d-flex justify-content-center align-items-center mb-0">
+            <div id="id-card" class="d-flex justify-content-center align-items-center mb-0" style="height: 50%;">
               <div class="card border border-gray-200 glow-on-hover mb-2" id="attendance-card">
                 <lottie-player id="lottie-player" class="mx-auto mt-n3 position-absolute end-0 top-0" src="https://lottie.host/9286c4fc-dca4-4d7f-b918-85480656a0cf/bLVZCz5laC.json" speed="1" style="width: 110px; height: 110px;" direction="1" mode="normal"></lottie-player>
                 <div class="card-body text-center">
@@ -415,6 +435,7 @@
                     logo.classList.remove('d-none');
                     document.documentElement.style.setProperty('--message-colors', glowColors);
                     message.textContent = data.message;
+                    message.classList.remove('d-none');
                     lottiePlayer.play();
                   }, 1000);
                 }
@@ -437,7 +458,6 @@
 
   </div>
 
-</div>
 </div>
 
 <%- include('partials/public-footer.ejs') %>
