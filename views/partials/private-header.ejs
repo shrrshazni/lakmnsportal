@@ -88,8 +88,8 @@
   <link href="vendors/fullcalendar/main.min.css" rel="stylesheet" />
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-  <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
 
 </head>
 
@@ -135,7 +135,7 @@
               </div>
             </li>
 
-            <!-- Home -->
+            <!-- Calendar -->
             <li class="nav-item">
               <!-- parent pages-->
               <div class="nav-item-wrapper"><a class="nav-link label-1" href="/calendar" role="button" data-bs-toggle="" aria-expanded="false">
@@ -145,7 +145,7 @@
               </div>
             </li>
 
-            <!-- leave -->
+            <!-- Leave -->
             <div class="nav-item-wrapper"><a class="nav-link dropdown-indicator label-1" href="#nv-tables" role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-tables">
                 <div class="d-flex align-items-center">
                   <div class="dropdown-indicator-icon"><span class="fas fa-caret-right"></span></div><span class="nav-link-icon"><span data-feather="clock"></span></span><span class="nav-link-text">Leave</span>
@@ -170,6 +170,16 @@
                 </ul>
               </div>
             </div>
+
+            <!-- Attendance -->
+            <li class="nav-item">
+              <!-- parent pages-->
+              <div class="nav-item-wrapper"><a class="nav-link label-1" href="/scan-qr" role="button" data-bs-toggle="" aria-expanded="false">
+                  <div class="d-flex align-items-center"><span class="nav-link-icon"><span class="mb-1" data-feather="columns"></span></span><span class="nav-link-text-wrapper"><span class="nav-link-text">Attendance</span></span>
+                  </div>
+                </a>
+              </div>
+            </li>
 
             <% 
             var showHumanResource = '';
@@ -240,13 +250,32 @@
                 </div>
               </div>
 
+              <div class="nav-item-wrapper"><a class="nav-link dropdown-indicator label-1" href="#nv-human-resources-attendance" role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-tables">
+                  <div class="d-flex align-items-center">
+                    <div class="dropdown-indicator-icon"><span class="fas fa-caret-right"></span></div><span class="nav-link-icon"><span data-feather="clipboard"></span></span><span class="nav-link-text">Attendance</span>
+                  </div>
+                </a>
+                <div class="parent-wrapper label-1">
+                  <ul class="nav collapse parent" data-bs-parent="#navbarVerticalCollapse" id="nv-human-resources-attendance">
+                    <li class="collapsed-nav-item-title d-none">Leave
+                    </li>
+                    <li class="nav-item"><a class="nav-link" href="/human-resource/attendance/overview" data-bs-toggle="" aria-expanded="false">
+                        <div class="d-flex align-items-center"><span class="nav-link-text">Overview</span>
+                        </div>
+                      </a>
+                      <!-- more inner pages-->
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
             </li>
 
             <!-- Examples -->
             <li class="nav-item">
 
               <!-- label-->
-              <p class="navbar-vertical-label">Coming Soon
+              <p class="navbar-vertical-label d-none">Coming Soon
               </p>
               <hr class="navbar-vertical-line" />
 
@@ -506,7 +535,7 @@
                   <a class="btn btn-link p-0 fs-9 fw-normal" role="button" href="/markAllAsRead">Mark all as read</a>
                 </div>
               </div>
-              <div class="card-body p-0">
+              <div class="card-body p-2">
                 <div class="scrollbar-overlay" style="height: 27rem;">
                   <% if (notifications.length > 0) { %>
                   <% notifications.forEach(notification => { %>
@@ -629,7 +658,7 @@
         <li class="nav-item dropdown"><a class="nav-link lh-1 pe-0 white-space-nowrap" id="navbarDropdownUser" href="#!" role="button" data-bs-toggle="dropdown" aria-haspopup="true" data-bs-auto-close="outside" aria-expanded="false"><%= user.fullname.split(' ')[0] %> <span class="fa-solid fa-chevron-down fs-10"></span></a>
           <div class="dropdown-menu dropdown-menu-end navbar-dropdown-caret py-0 dropdown-profile shadow border" aria-labelledby="navbarDropdownUser">
             <div class="card position-relative border-0">
-              <div class="card-body p-0">
+              <div class="card-body p-1">
                 <div class="text-center pt-4 pb-3">
                   <% if(user.profile === '' ){ user.profile = '/assets/img/team/avatar.webp' ; } %>
                   <div class="avatar avatar-xl ">

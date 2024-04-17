@@ -1,0 +1,117 @@
+<%- include('partials/private-header.ejs') %>
+
+<div class="mb-6">
+
+  <div class="mb-6">
+    <h2 class="mb-2">Attendance Overview</h2>
+    <h5 class="text-body-tertiary fw-semibold">Tracking Participation, Absences, Presence.</h5>
+  </div>
+
+  <div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis pt-7 pb-3 border-y mb-6">
+    <div id="all-attendance" data-list='{"valueNames":["staff","position","department","section","grade","classification"],"page":10,"pagination":true}'>
+
+      <div class="mb-3">
+        <h3>All attendance</h3>
+        <p class="text-body-tertiary lh-sm mb-0">Every team member attendance throughout one calendar.</p>
+      </div>
+
+      <div class="row align-items-end justify-content-between pb-4 g-3">
+
+        <div class="col-12 col-md-auto">
+          <div class="search-box">
+            <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
+              <input class="form-control search-input search form-control-sm" type="search" placeholder="Search staffs" aria-label="Search" />
+              <span class="fas fa-search search-box-icon"></span>
+            </form>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-auto">
+          <div class="form-icon-container">
+            <input class="form-control form-icon-input datetimepicker flatpickr-input" type="text" id="selectedDate" name="date" placeholder="" data-options='{"disableMobile":true,"allowInput":true, "locale" : { "firstDayOfWeek" : 1}, "mode": "single", "dateFormat": "m/Y","disable": [true] }' />
+            <span class="fas fa-calendar text-900 fs-9 form-icon"></span>
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="table-responsive ms-n1 ps-1 scrollbar">
+        <table class="table fs-9 mb-0 border-top border-translucent">
+          <thead>
+            <tr>
+              <th class="sort white-space-nowrap align-middle ps-0" scope="col" data-sort="staff" style="width:15%;">STAFF</th>
+              <th class="sort align-middle ps-3" scope="col" data-sort="department" style="width:15%;">DEPARTMENT</th>
+              <th class="sort align-middle ps-3" scope="col" data-sort="section" style="width:15%;">SECTION</th>
+              <th class="sort align-middle ps-3" scope="col" data-sort="grade" style="width:5%;">ATTENDANCE</th>
+              <th class="sort align-middle text-end" scope="col" style="width:5%;"></th>
+            </tr>
+          </thead>
+          <tbody class="list" id="project-summary-table-body">
+
+          </tbody>
+        </table>
+      </div>
+      <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
+        <div class="col-auto d-flex">
+          <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p><a class="fw-semibold" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semibold d-none" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
+        </div>
+        <div class="col-auto d-flex">
+          <button class="page-link" data-list-pagination="prev"><span class="fas fa-chevron-left"></span></button>
+          <ul class="mb-0 pagination"></ul>
+          <button class="page-link pe-0" data-list-pagination="next"><span class="fas fa-chevron-right"></span></button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        const selectedDateInput = document.getElementById('selectedDate');
+
+        selectedDateInput.addEventListener('change', function(event) {
+          const selectedDate = event.target.value;
+
+          // Send a Fetch request to the server to fetch attendance data
+          fetch('/api/data/all-attendance', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                date: selectedDate
+              })
+            })
+            .then(response => response.json())
+            .then(data => {
+              //   // Update the table with the received attendance data
+              //   const tbody = document.querySelector('tbody');
+              //   tbody.innerHTML = ''; // Clear existing rows
+              //   data.forEach(item => {
+              //     const tr = document.createElement('tr');
+              //     // Create and append table cells with attendance data
+              //     // Adjust as per your data structure
+              //     const td1 = document.createElement('td');
+              //     td1.textContent = item.userName;
+              //     const td2 = document.createElement('td');
+              //     td2.textContent = item.signInTime;
+              //     const td3 = document.createElement('td');
+              //     td3.textContent = item.signOutTime;
+              //     // Append cells to the row
+              //     tr.appendChild(td1);
+              //     tr.appendChild(td2);
+              //     tr.appendChild(td3);
+              //     // Append row to the table body
+              //     tbody.appendChild(tr);
+              //   });
+            })
+            .catch(error => {
+              console.error('Error:', error);
+            });
+        });
+      });
+    </script>
+  </div>
+
+</div>
+
+<%- include('partials/private-footer.ejs') %>

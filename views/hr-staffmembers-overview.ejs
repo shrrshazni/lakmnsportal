@@ -1,345 +1,349 @@
 <%- include('partials/private-header.ejs') %>
 
-<!-- colour script for echarts -->
-<script>
-  // take the root of the colour from css for echarts
-  const style = getComputedStyle(document.body);
-  const theme = {
-    primary: style.getPropertyValue('--phoenix-primary'),
-    secondary: style.getPropertyValue('--phoenix-secondary'),
-    success: style.getPropertyValue('--phoenix-success'),
-    info: style.getPropertyValue('--phoenix-info'),
-    warning: style.getPropertyValue('--phoenix-warning'),
-    danger: style.getPropertyValue('--phoenix-danger'),
-    bg_primary_subtle: style.getPropertyValue('--phoenix-primary-bg-subtle'),
-    tertiary: style.getPropertyPriority('--phoenix-tertiary-color'),
-    light: style.getPropertyValue('--phoenix-light'),
-    dark: style.getPropertyValue('--phoenix-dark'),
-    secondary_subtle: style.getPropertyValue('--phoenix-secondary-border-subtle'),
-    cyan: style.getPropertyValue('--phoenix-cyan'),
-    gray_100: style.getPropertyValue('--phoenix-gray-100')
-  };
+<div class="mb-6">
 
-  //   take css class color based on their property color/bg-colour for echarts
-  function getColor(className, property) {
-    var element = document.createElement('div');
-    element.className = className;
-    document.body.appendChild(element);
-
-    var computedStyle = window.getComputedStyle(element);
-    var color = computedStyle.getPropertyValue(property);
-
-    document.body.removeChild(element);
-
-    return color;
-  }
-</script>
-
-<div class="px-lg-3 mb-6">
-
-  <div class="mb-8">
+  <div class="mb-6">
     <h2 class="mb-2">Staff Overview</h2>
     <h5 class="text-body-tertiary fw-semibold">Comprehensive insight into staff dynamics</h5>
   </div>
 
-  <div class="row justify-content-between mb-6">
-    <div class="col-6 col-md-4 col-xxl-2 text-center border-translucent border-start-xxl border-end-xxl-0 border-bottom-xxl-0 border-end border-bottom pb-4 pb-xxl-0 "><span class="uil fs-5 lh-1 fa-solid fa-users-line text-primary"></span>
-      <h1 class="fs-5 pt-3"><%= allUser.length %></h1>
-      <p class="fs-9 mb-0">Total Staff</p>
-    </div>
-    <div class="col-6 col-md-4 col-xxl-2 text-center border-translucent border-start-xxl border-end-xxl-0 border-bottom-xxl-0 border-end-md border-bottom pb-4 pb-xxl-0"><span class="uil fs-5 lh-1 fa-solid fa-desktop text-info"></span>
-      <h1 class="fs-5 pt-3"><%= allUser.filter(user => user.grade >= 25).length %></h1>
-      <p class="fs-9 mb-0">Total Executive</p>
-    </div>
-    <div class="col-6 col-md-4 col-xxl-2 text-center border-translucent border-start-xxl border-bottom-xxl-0 border-bottom border-end border-end-md-0 pb-4 pb-xxl-0 pt-4 pt-md-0"><span class="uil fs-5 lh-1 fa-solid fa-laptop text-primary"></span>
-      <h1 class="fs-5 pt-3"><%= allUser.filter(user => user.grade <= 25).length %></h1>
-      <p class="fs-9 mb-0">Total Non-Executive</p>
-    </div>
-    <div class="col-6 col-md-4 col-xxl-2 text-center border-translucent border-start-xxl border-end-md border-end-xxl-0 border-bottom border-bottom-md-0 pb-4 pb-xxl-0 pt-4 pt-xxl-0"><span class="uil fs-5 lh-1 fa-solid fa-user-plus text-info"></span>
-      <h1 class="fs-5 pt-3"><%= allUser.filter(user => user.classification === 'trainee').length %></h1>
-      <p class="fs-9 mb-0">Total Trainee Staff</p>
-    </div>
-    <div class="col-6 col-md-4 col-xxl-2 text-center border-translucent border-start-xxl border-end border-end-xxl-0 pb-md-4 pb-xxl-0 pt-4 pt-xxl-0"><span class="uil fs-5 lh-1 fa-solid fa-divide text-success"></span>
-      <h1 class="fs-5 pt-3"><%= sections.length %></h1>
-      <p class="fs-9 mb-0">Total Section</p>
-    </div>
-    <div class="col-6 col-md-4 col-xxl-2 text-center border-translucent border-start-xxl border-end-xxl pb-md-4 pb-xxl-0 pt-4 pt-xxl-0"><span class="uil fs-5 lh-1 fa-solid fa-building text-danger"></span>
-      <h1 class="fs-5 pt-3"><%= departments.length %></h1>
-      <p class="fs-9 mb-0">Total Department</p>
+  <!-- colour script for echarts -->
+  <script>
+    // take the root of the colour from css for echarts
+    const style = getComputedStyle(document.body);
+    const theme = {
+      primary: style.getPropertyValue('--phoenix-primary'),
+      secondary: style.getPropertyValue('--phoenix-secondary'),
+      success: style.getPropertyValue('--phoenix-success'),
+      info: style.getPropertyValue('--phoenix-info'),
+      warning: style.getPropertyValue('--phoenix-warning'),
+      danger: style.getPropertyValue('--phoenix-danger'),
+      bg_primary_subtle: style.getPropertyValue('--phoenix-primary-bg-subtle'),
+      tertiary: style.getPropertyPriority('--phoenix-tertiary-color'),
+      light: style.getPropertyValue('--phoenix-light'),
+      dark: style.getPropertyValue('--phoenix-dark'),
+      secondary_subtle: style.getPropertyValue('--phoenix-secondary-border-subtle'),
+      cyan: style.getPropertyValue('--phoenix-cyan'),
+      gray_100: style.getPropertyValue('--phoenix-gray-100')
+    };
+
+    //   take css class color based on their property color/bg-colour for echarts
+    function getColor(className, property) {
+      var element = document.createElement('div');
+      element.className = className;
+      document.body.appendChild(element);
+
+      var computedStyle = window.getComputedStyle(element);
+      var color = computedStyle.getPropertyValue(property);
+
+      document.body.removeChild(element);
+
+      return color;
+    }
+  </script>
+
+  <div class="px-lg-3 mb-6">
+
+    <div class="row justify-content-between mb-6">
+      <div class="col-6 col-md-4 col-xxl-2 text-center border-translucent border-start-xxl border-end-xxl-0 border-bottom-xxl-0 border-end border-bottom pb-4 pb-xxl-0 "><span class="uil fs-5 lh-1 fa-solid fa-users-line text-primary"></span>
+        <h1 class="fs-5 pt-3"><%= allUser.length %></h1>
+        <p class="fs-9 mb-0">Total Staff</p>
+      </div>
+      <div class="col-6 col-md-4 col-xxl-2 text-center border-translucent border-start-xxl border-end-xxl-0 border-bottom-xxl-0 border-end-md border-bottom pb-4 pb-xxl-0"><span class="uil fs-5 lh-1 fa-solid fa-desktop text-info"></span>
+        <h1 class="fs-5 pt-3"><%= allUser.filter(user => user.grade >= 25).length %></h1>
+        <p class="fs-9 mb-0">Total Executive</p>
+      </div>
+      <div class="col-6 col-md-4 col-xxl-2 text-center border-translucent border-start-xxl border-bottom-xxl-0 border-bottom border-end border-end-md-0 pb-4 pb-xxl-0 pt-4 pt-md-0"><span class="uil fs-5 lh-1 fa-solid fa-laptop text-primary"></span>
+        <h1 class="fs-5 pt-3"><%= allUser.filter(user => user.grade <= 25).length %></h1>
+        <p class="fs-9 mb-0">Total Non-Executive</p>
+      </div>
+      <div class="col-6 col-md-4 col-xxl-2 text-center border-translucent border-start-xxl border-end-md border-end-xxl-0 border-bottom border-bottom-md-0 pb-4 pb-xxl-0 pt-4 pt-xxl-0"><span class="uil fs-5 lh-1 fa-solid fa-user-plus text-info"></span>
+        <h1 class="fs-5 pt-3"><%= allUser.filter(user => user.classification === 'trainee').length %></h1>
+        <p class="fs-9 mb-0">Total Trainee Staff</p>
+      </div>
+      <div class="col-6 col-md-4 col-xxl-2 text-center border-translucent border-start-xxl border-end border-end-xxl-0 pb-md-4 pb-xxl-0 pt-4 pt-xxl-0"><span class="uil fs-5 lh-1 fa-solid fa-divide text-success"></span>
+        <h1 class="fs-5 pt-3"><%= sections.length %></h1>
+        <p class="fs-9 mb-0">Total Section</p>
+      </div>
+      <div class="col-6 col-md-4 col-xxl-2 text-center border-translucent border-start-xxl border-end-xxl pb-md-4 pb-xxl-0 pt-4 pt-xxl-0"><span class="uil fs-5 lh-1 fa-solid fa-building text-danger"></span>
+        <h1 class="fs-5 pt-3"><%= departments.length %></h1>
+        <p class="fs-9 mb-0">Total Department</p>
+      </div>
+
     </div>
 
-  </div>
+    <div class="row g-3">
+      <div class="col-12 col-xxl-6">
+        <div class="card">
+          <div class="card-body" style="min-height: 25vh;">
+            <h4 class="mb-0">Department Stats</h4>
+            <p class="fs-9 mb-0">Statistics for specific department</p>
 
-  <div class="row g-3">
-    <div class="col-12 col-xxl-6">
-      <div class="card">
-        <div class="card-body" style="min-height: 25vh;">
-          <h4 class="mb-0">Department Stats</h4>
-          <p class="fs-9 mb-0">Statistics for specific department</p>
+            <div class="d-flex justify-content-center px-0 py-0">
+              <div id="departmentChart" style="height:30vh; width: 100%;"></div>
+            </div>
 
-          <div class="d-flex justify-content-center px-0 py-0">
-            <div id="departmentChart" style="height:30vh; width: 100%;"></div>
           </div>
-
         </div>
       </div>
-    </div>
 
-    <div class="col-12 col-xxl-6">
-      <div class="card">
-        <div class="card-body" style="min-height: 25vh;">
-          <h4 class="mb-0">Section Stats</h4>
-          <p class="fs-9 mb-0">Statistics for specific sections</p>
+      <div class="col-12 col-xxl-6">
+        <div class="card">
+          <div class="card-body" style="min-height: 25vh;">
+            <h4 class="mb-0">Section Stats</h4>
+            <p class="fs-9 mb-0">Statistics for specific sections</p>
 
-          <div class="d-flex justify-content-center px-0 py-0">
-            <div id="sectionChart" style="height:30vh; width: 100%;"></div>
+            <div class="d-flex justify-content-center px-0 py-0">
+              <div id="sectionChart" style="height:30vh; width: 100%;"></div>
+            </div>
+
           </div>
-
         </div>
       </div>
-    </div>
 
-    <script>
-      document.addEventListener('DOMContentLoaded', function() {
-        const staffOverviewSectionURL = `/api/staff/overview/department-section`;
+      <script>
+        document.addEventListener('DOMContentLoaded', function() {
+          const staffOverviewSectionURL = `/api/staff/overview/department-section`;
 
-        fetch(staffOverviewSectionURL)
-          .then(response => response.json())
-          .then(data => {
-            renderBarLineChart(data, 'department');
-            renderBarLineChart(data, 'section'); // You can change the second argument to 'section' for the section chart
-          })
-          .catch(error => {
-            // Handle errors
-            console.error('Error:', error);
-          });
+          fetch(staffOverviewSectionURL)
+            .then(response => response.json())
+            .then(data => {
+              renderBarLineChart(data, 'department');
+              renderBarLineChart(data, 'section'); // You can change the second argument to 'section' for the section chart
+            })
+            .catch(error => {
+              // Handle errors
+              console.error('Error:', error);
+            });
 
-        function renderBarLineChart(data, chartType) {
+          function renderBarLineChart(data, chartType) {
 
-          const isMobile = window.innerWidth <= 540; // Check if window width is less than or equal to 540px (considered as mobile)
-          let pieChartCenter = ['25%', '50%']; // Default center position for the pie chart
+            const isMobile = window.innerWidth <= 540; // Check if window width is less than or equal to 540px (considered as mobile)
+            let pieChartCenter = ['25%', '50%']; // Default center position for the pie chart
 
-          // Adjust pie chart center position for mobile view
-          if (isMobile) {
-            // Move the pie chart towards the center horizontally
-            pieChartCenter = ['50%', '50%'];
+            // Adjust pie chart center position for mobile view
+            if (isMobile) {
+              // Move the pie chart towards the center horizontally
+              pieChartCenter = ['50%', '50%'];
+            }
+
+            const userCounts = chartType === 'department' ? data.userCountByDepartment : data.userCountBySection;
+
+            const chartOption = {
+              tooltip: {
+                trigger: 'item',
+                padding: [7, 10],
+                backgroundColor: getColor('bg-body', 'background-color'),
+                borderColor: theme.secondary_subtle,
+                textStyle: {
+                  color: getColor('link-primary', 'color')
+                },
+                borderWidth: 1,
+                transitionDuration: 0,
+                axisPointer: {
+                  type: 'none'
+                },
+                formatter: function(params) {
+                  return `${params.name} (${params.value})`;
+                }
+              },
+              legend: {
+                type: 'scroll',
+                orient: 'vertical',
+                right: 30, // Adjust the distance from the right side of the chart
+                top: 'center',
+                show: !isMobile,
+                data: Object.keys(userCounts),
+                textStyle: {
+                  color: getColor('text-body', 'color'),
+                  lineHeight: 14,
+                },
+                formatter: function(name) {
+                  // Custom formatter to display text with limited number of words and wrap into two rows
+                  const maxWords = 4;
+                  const words = name.split(' ');
+                  if (words.length > maxWords) {
+                    return words.slice(0, maxWords).join(' ') + '\n' + words.slice(maxWords).join(' ');
+                  }
+                  return name;
+                }
+              },
+              series: [{
+                name: 'User Count',
+                type: 'pie', // Changed type to 'pie' for pie chart
+                radius: ['50%', '70%'], // Adjust radius as needed
+                center: pieChartCenter, // Center the pie chart
+                data: Object.keys(userCounts).map(key => ({
+                  name: key,
+                  value: userCounts[key]
+                })),
+                label: {
+                  show: false,
+                  formatter: '{b} ({c})', // Format label to display name and value
+                  color: theme.primary // Adjust label color
+                },
+                //   itemStyle: {
+                //     borderRadius: 4,
+                //     borderWidth: 1, // Add border width
+                //     borderColor: getColor('bg-body', 'background-color') // Set border color (white in this case)
+                //   },
+              }],
+            };
+
+            // Create ECharts instance and set the option
+            const chart = echarts.init(document.getElementById(`${chartType}Chart`), null, {
+              devicePixelRatio: window.devicePixelRatio > 1 ? 2 : 1,
+              renderer: 'canvas',
+              width: 'auto',
+              height: 'auto'
+            });
+
+            chart.setOption(chartOption);
+
+            window.addEventListener('resize', function() {
+
+              chart.resize();
+
+            });
+
+
           }
 
-          const userCounts = chartType === 'department' ? data.userCountByDepartment : data.userCountBySection;
+        });
+      </script>
 
-          const chartOption = {
-            tooltip: {
-              trigger: 'item',
-              padding: [7, 10],
-              backgroundColor: getColor('bg-body', 'background-color'),
-              borderColor: theme.secondary_subtle,
-              textStyle: {
-                color: getColor('link-primary', 'color')
-              },
-              borderWidth: 1,
-              transitionDuration: 0,
-              axisPointer: {
-                type: 'none'
-              },
-              formatter: function(params) {
-                return `${params.name} (${params.value})`;
-              }
-            },
-            legend: {
-              type: 'scroll',
-              orient: 'vertical',
-              right: 30, // Adjust the distance from the right side of the chart
-              top: 'center',
-              show: !isMobile,
-              data: Object.keys(userCounts),
-              textStyle: {
-                color: getColor('text-body', 'color'),
-                lineHeight: 14,
-              },
-              formatter: function(name) {
-                // Custom formatter to display text with limited number of words and wrap into two rows
-                const maxWords = 4;
-                const words = name.split(' ');
-                if (words.length > maxWords) {
-                  return words.slice(0, maxWords).join(' ') + '\n' + words.slice(maxWords).join(' ');
-                }
-                return name;
-              }
-            },
-            series: [{
-              name: 'User Count',
-              type: 'pie', // Changed type to 'pie' for pie chart
-              radius: ['50%', '70%'], // Adjust radius as needed
-              center: pieChartCenter, // Center the pie chart
-              data: Object.keys(userCounts).map(key => ({
-                name: key,
-                value: userCounts[key]
-              })),
-              label: {
-                show: false,
-                formatter: '{b} ({c})', // Format label to display name and value
-                color: theme.primary // Adjust label color
-              },
-              //   itemStyle: {
-              //     borderRadius: 4,
-              //     borderWidth: 1, // Add border width
-              //     borderColor: getColor('bg-body', 'background-color') // Set border color (white in this case)
-              //   },
-            }],
-          };
+      <div class="col-12 col-xxl-4 d-none">
+        <div class=" card">
+          <div class="card-body" style="min-height: 35vh;">
 
-          // Create ECharts instance and set the option
-          const chart = echarts.init(document.getElementById(`${chartType}Chart`), null, {
-            devicePixelRatio: window.devicePixelRatio > 1 ? 2 : 1,
-            renderer: 'canvas',
-            width: 'auto',
-            height: 'auto'
-          });
-
-          chart.setOption(chartOption);
-
-          window.addEventListener('resize', function() {
-
-            chart.resize();
-
-          });
-
-
-        }
-
-      });
-    </script>
-
-    <div class="col-12 col-xxl-4 d-none">
-      <div class=" card">
-        <div class="card-body" style="min-height: 35vh;">
-
+          </div>
         </div>
       </div>
-    </div>
 
+    </div>
   </div>
-</div>
 
-<div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis pt-7 pb-3 border-y mb-6">
-  <div id="all-staff" data-list='{"valueNames":["staff","position","department","section","grade","classification"],"page":10,"pagination":true}'>
+  <div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis pt-7 pb-3 border-y mb-6">
+    <div id="all-staff" data-list='{"valueNames":["staff","position","department","section","grade","classification"],"page":10,"pagination":true}'>
 
-    <div class="mb-3">
-      <h3>Full Team Members</h3>
-      <p class="text-body-tertiary lh-sm mb-0">Every team member contributes to organizational success.</p>
-    </div>
+      <div class="mb-3">
+        <h3>Full Team Members</h3>
+        <p class="text-body-tertiary lh-sm mb-0">Every team member contributes to organizational success.</p>
+      </div>
 
-    <div class="row align-items-end justify-content-between pb-4 g-3">
+      <div class="row align-items-end justify-content-between pb-4 g-3">
 
-      <div class="col-12 col-md-auto">
-        <div class="search-box">
-          <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
-            <input class="form-control search-input search form-control-sm" type="search" placeholder="Search staffs" aria-label="Search" />
-            <span class="fas fa-search search-box-icon"></span>
-          </form>
+        <div class="col-12 col-md-auto">
+          <div class="search-box">
+            <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
+              <input class="form-control search-input search form-control-sm" type="search" placeholder="Search staffs" aria-label="Search" />
+              <span class="fas fa-search search-box-icon"></span>
+            </form>
+          </div>
         </div>
+
+        <div class="col-12 col-md-auto d-none">
+          <a class="btn btn-primary my-auto me-2" role="button" href="/"><span class="fa-solid fa-plus me-2"></span>Add new staff</a>
+        </div>
+
       </div>
 
-      <div class="col-12 col-md-auto d-none">
-        <a class="btn btn-primary my-auto me-2" role="button" href="/"><span class="fa-solid fa-plus me-2"></span>Add new staff</a>
-      </div>
+      <div class="table-responsive ms-n1 ps-1 scrollbar">
+        <table class="table fs-9 mb-0 border-top border-translucent">
+          <thead>
+            <tr>
+              <th class="sort white-space-nowrap align-middle ps-0" scope="col" data-sort="staff" style="width:15%;">STAFF</th>
+              <th class="sort align-middle ps-3" scope="col" data-sort="position" style="width:10%;">POSITION</th>
+              <th class="sort align-middle ps-3" scope="col" data-sort="department" style="width:15%;">DEPARTMENT</th>
+              <th class="sort align-middle ps-3" scope="col" data-sort="section" style="width:15%;">SECTION</th>
+              <th class="sort align-middle ps-3" scope="col" data-sort="grade" style="width:5%;">GRADE</th>
+              <th class="sort align-middle ps-8" scope="col" data-sort="classification" style="width:10%;">CLASSIFICATION</th>
+              <th class="sort align-middle text-end" scope="col" style="width:5%;"></th>
+            </tr>
+          </thead>
+          <tbody class="list" id="project-summary-table-body">
+            <% if(allUser && allUser.length>0){ %>
+            <% allUser.forEach(staff => { %>
 
-    </div>
-
-    <div class="table-responsive ms-n1 ps-1 scrollbar">
-      <table class="table fs-9 mb-0 border-top border-translucent">
-        <thead>
-          <tr>
-            <th class="sort white-space-nowrap align-middle ps-0" scope="col" data-sort="staff" style="width:15%;">STAFF</th>
-            <th class="sort align-middle ps-3" scope="col" data-sort="position" style="width:10%;">POSITION</th>
-            <th class="sort align-middle ps-3" scope="col" data-sort="department" style="width:15%;">DEPARTMENT</th>
-            <th class="sort align-middle ps-3" scope="col" data-sort="section" style="width:15%;">SECTION</th>
-            <th class="sort align-middle ps-3" scope="col" data-sort="grade" style="width:5%;">GRADE</th>
-            <th class="sort align-middle ps-8" scope="col" data-sort="classification" style="width:10%;">CLASSIFICATION</th>
-            <th class="sort align-middle text-end" scope="col" style="width:5%;"></th>
-          </tr>
-        </thead>
-        <tbody class="list" id="project-summary-table-body">
-          <% if(allUser && allUser.length>0){ %>
-          <% allUser.forEach(staff => { %>
-
-          <tr class="position-static">
-            <td class="align-middle text-body white-space-nowrap ps-0 staff">
-              <div class="avatar avatar-xl">
-                <div class="avatar-name rounded-circle fs-9"><span><%= staff.username %></span></div>
-              </div>
-              <a class="mb-0 ms-3 fw-bold fs-8" href="/staff/details/<%= staff._id %>"><%= staff.fullname %></a>
-            </td>
-
-            <td class="align-middle white-space-nowrap position ps-3">
-              <p class="mb-0 fs-9 text-body"><%= staff.position %></p>
-            </td>
-
-            <td class="align-middle department ps-3">
-              <p class="mb-0 fs-9 text-body"><%= staff.department %></p>
-            </td>
-
-            <td class="align-middle section ps-3">
-              <p class="mb-0 fs-9 text-body"><%= staff.section %></p>
-            </td>
-
-            <td class="align-middle white-space-nowrap grade ps-3">
-              <p class="mb-0 fs-9 text-body"><%= staff.grade %></p>
-            </td>
-
-            <td class="align-middle text-center white-space-nowrap classification ps-3">
-              <p class="mb-0 fs-9 text-body"><%= staff.classification.charAt(0).toUpperCase() + staff.classification.slice(1) %></p>
-            </td>
-
-            <td class="align-middle text-end white-space-nowrap pe-0">
-              <div class="btn-reveal-trigger position-static">
-                <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs-10" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fas fa-ellipsis-h fs-10"></span></button>
-                <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item" href="/staff/details/<%= staff._id %>">View</a><a class="dropdown-item d-none" href="#!">Export</a>
-                  <div class="dropdown-divider d-none"></div><a class="dropdown-item" href="#!">Edit</a>
-                  <div class="dropdown-divider d-none"></div><a class="dropdown-item text-danger" href="#!">Remove</a>
+            <tr class="position-static">
+              <td class="align-middle text-body white-space-nowrap ps-0 staff">
+                <div class="avatar avatar-xl">
+                  <div class="avatar-name rounded-circle fs-9"><span><%= staff.username %></span></div>
                 </div>
-              </div>
-            </td>
+                <a class="mb-0 ms-3 fw-bold fs-8" href="/staff/details/<%= staff._id %>"><%= staff.fullname %></a>
+              </td>
 
-          </tr>
-          <% }); %>
-          <% }else { %>
-          <tr class="position-static">
-            <td class="mb-0 fs-9 text-body">
-              <p>There is no user found in your department</p>
-            </td>
-          </tr>
-          <% } %>
-        </tbody>
-      </table>
-    </div>
-    <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
-      <div class="col-auto d-flex">
-        <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p><a class="fw-semibold" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semibold d-none" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
-      </div>
-      <div class="col-auto d-flex">
-        <button class="page-link" data-list-pagination="prev"><span class="fas fa-chevron-left"></span></button>
-        <ul class="mb-0 pagination"></ul>
-        <button class="page-link pe-0" data-list-pagination="next"><span class="fas fa-chevron-right"></span></button>
-      </div>
-    </div>
-  </div>
-</div>
+              <td class="align-middle white-space-nowrap position ps-3">
+                <p class="mb-0 fs-9 text-body"><%= staff.position %></p>
+              </td>
 
-<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 5">
-  <div class="d-flex">
-    <div class="toast <%= show %> align-items-center text-white border-0" role="alert" data-bs-autohide="false" aria-live="assertive" aria-atomic="true">
-      <div class="d-flex justify-content-between">
-        <div class="toast-body px-0 py-3">
-          <code class="text-primary"><%= alert %></code>
+              <td class="align-middle department ps-3">
+                <p class="mb-0 fs-9 text-body"><%= staff.department %></p>
+              </td>
+
+              <td class="align-middle section ps-3">
+                <p class="mb-0 fs-9 text-body"><%= staff.section %></p>
+              </td>
+
+              <td class="align-middle white-space-nowrap grade ps-3">
+                <p class="mb-0 fs-9 text-body"><%= staff.grade %></p>
+              </td>
+
+              <td class="align-middle text-center white-space-nowrap classification ps-3">
+                <p class="mb-0 fs-9 text-body"><%= staff.classification.charAt(0).toUpperCase() + staff.classification.slice(1) %></p>
+              </td>
+
+              <td class="align-middle text-end white-space-nowrap pe-0">
+                <div class="btn-reveal-trigger position-static">
+                  <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs-10" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fas fa-ellipsis-h fs-10"></span></button>
+                  <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item" href="/staff/details/<%= staff._id %>">View</a><a class="dropdown-item d-none" href="#!">Export</a>
+                    <div class="dropdown-divider d-none"></div><a class="dropdown-item" href="#!">Edit</a>
+                    <div class="dropdown-divider d-none"></div><a class="dropdown-item text-danger" href="#!">Remove</a>
+                  </div>
+                </div>
+              </td>
+
+            </tr>
+            <% }); %>
+            <% }else { %>
+            <tr class="position-static">
+              <td class="mb-0 fs-9 text-body">
+                <p>There is no user found in your department</p>
+              </td>
+            </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+      <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
+        <div class="col-auto d-flex">
+          <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p><a class="fw-semibold" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semibold d-none" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
         </div>
-
-        <button class="btn ms-2 p-0" type="button" data-bs-dismiss="toast" aria-label="Close">
-          <span class="uil uil-times fs-7"></span>
-        </button>
+        <div class="col-auto d-flex">
+          <button class="page-link" data-list-pagination="prev"><span class="fas fa-chevron-left"></span></button>
+          <ul class="mb-0 pagination"></ul>
+          <button class="page-link pe-0" data-list-pagination="next"><span class="fas fa-chevron-right"></span></button>
+        </div>
       </div>
     </div>
   </div>
+
+  <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 5">
+    <div class="d-flex">
+      <div class="toast <%= show %> align-items-center text-white border-0" role="alert" data-bs-autohide="false" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex justify-content-between">
+          <div class="toast-body px-0 py-3">
+            <code class="text-primary"><%= alert %></code>
+          </div>
+
+          <button class="btn ms-2 p-0" type="button" data-bs-dismiss="toast" aria-label="Close">
+            <span class="uil uil-times fs-7"></span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <%- include('partials/private-footer.ejs') %>

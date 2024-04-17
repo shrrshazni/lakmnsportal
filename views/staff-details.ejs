@@ -512,7 +512,7 @@
                     <% if(activities && activities.length > 0){ %>
                     <% activities.forEach(item => { %>
                     <tr class="position-static">
-                      <td class="title align-middle white-space-nowrap py-4 ps-0 fw-bold text-primary fs-8"><%= item.title %></td>
+                      <td class="title align-middle white-space-nowrap py-4 ps-0 fw-bold text-primary fs-9 fs-md-8"><%= item.title %></td>
                       <td class="type align-middle text-body-highlight fw-bold text-start py-2 ps-0 fs-9"><%= item.type %></td>
                       <td class="description align-middle text-start fw-semibold text-body-highlight py-2 text-start ps-2 fst-italic"><%= item.description%></td>
                       <td class="date align-middle text-body text-center py-2 ps-0"><%= item.date.toLocaleDateString('en-UK', { day: '2-digit', month: 'short', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></td>
@@ -622,7 +622,7 @@
                     %>
                     <tr class="position-static">
                       <td class="align-middle time white-space-nowrap ps-0 type py-4">
-                        <a class="fw-bold fs-8" href="/leave/details/<%= leaves._id %>"><%= leaves.type %></a>
+                        <a class="fw-bold fs-9 fs-md-8" href="/leave/details/<%= leaves._id %>"><%= leaves.type %></a>
                       </td>
 
                       <td class="align-middle text-body white-space-nowrap reliefstaff ps-3">

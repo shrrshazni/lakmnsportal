@@ -325,7 +325,7 @@ const AttendanceSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['Present', 'Absent', 'Late', 'Invalid'],
+        enum: ['Present', 'Absent', 'Late', 'Invalid', 'Leave'],
         default: 'Present'
     },
     timestamp: { type: Date, default: null }
@@ -2035,10 +2035,6 @@ app.get('/sign-out/:id', async function (req, res) {
 
 });
 
-app.get('/temp', async function (req, res) {
-    res.render('temp');
-});
-
 // PROFILE
 app.get('/profile', isAuthenticated, async function (req, res) {
     const username = req.user.username;
@@ -2048,10 +2044,11 @@ app.get('/profile', isAuthenticated, async function (req, res) {
         read: false
     }).populate('sender');
     const userLeave = await UserLeave.find({ user: user._id });
-    const leave = await Leave.find({ user: user._id, status: { $nin: ['denied', 'cancelled'] } });
-    const activities = await Activity.find({ user: user._id });
+    const leave = await Leave.find({ user: user._id, status: { $nin: ['denied', 'cancelled'] } }).sort({ timestamp: -1 });
+    const activities = await Activity.find({ user: user._id }).sort({ date: -1 });
     const allUser = await User.find();
-    const file = await File.find();
+    const file = await File.find().sort({ date: -1 });
+    const attendance = await Attendance.find({ user: user._id }).sort({ timestamp: -1 });
 
     const date = getDateFormat2();
 
@@ -2082,7 +2079,8 @@ app.get('/profile', isAuthenticated, async function (req, res) {
             info: info,
             today: date,
             allUser: allUser,
-            files: file
+            files: file,
+            attendance: attendance
         });
     }
 });
@@ -4118,15 +4116,19 @@ app.get('/leave/:approval/:id', async function (req, res) {
 });
 
 // SCHEDULER
+
+// CHECK EACH LEAVE VALIDITY
 cron.schedule(
     '0 0 * * *',
     async () => {
         // Find leave records with date.start timestamp less than or equal to 3 days from now
         const currentDate = new Date();
         const invalidLeaves = await Leave.find({
-            timestamp: { $gte: currentDate.setDate(currentDate.getDate() + 3) },
-            $or: [{ status: 'pending' }, { status: 'submitted' }]
+            timestamp: { $lte: currentDate.setDate(currentDate.getDate() - 3) },
+            status: 'pending'
         });
+
+        console.log(invalidLeaves);
 
         const adminHR = await User.findOne({ isAdmin: true });
         const depChiefExec = await User.findOne({ isDeputyChiefExec: true });
@@ -4211,6 +4213,56 @@ cron.schedule(
         timezone: 'Asia/Kuala_Lumpur' // Adjust timezone accordingly
     }
 );
+
+// CHECK USER SESSION MAXAGE
+cron.schedule(
+    '0 * * * *', // Runs every hour
+    () => {
+        store.all((error, sessions) => {
+            if (error) {
+                console.error('Error retrieving sessions:', error);
+                return;
+            }
+
+            // Iterate through each session
+            sessions.forEach(async session => {
+                // Extract relevant session data
+
+                const sessionUser = session.session.passport.user;
+
+                // Check if session has expired
+                const currentTime = Date.now();
+                const sessionExpirationTime = new Date(session.expires).getTime();
+                if (currentTime > sessionExpirationTime) {
+                    try {
+                        // Set user's isOnline to false
+                        await Info.findOneAndUpdate({ sessionUser }, { isOnline: false });
+                        console.log(`User ${sessionUser} is now offline`);
+                    } catch (updateError) {
+                        console.error(`Error updating user ${sessionUser}:`, updateError);
+                    }
+                }
+            });
+            console.log('Session check complete');
+        });
+    },
+    {
+        scheduled: true,
+        timezone: 'Asia/Kuala_Lumpur' // Adjust timezone accordingly
+    }
+);
+
+app.get('/temp', async function (req, res) {
+    const currentDate = new Date();
+    currentDate.setDate(currentDate.getDate() - 3);
+
+    const invalidLeaves = await Leave.find({
+        timestamp: { $lte: currentDate }
+    });
+
+    console.log(invalidLeaves);
+
+});
 
 // NOTIFICATIONS
 app.get('/markAsRead/:id', isAuthenticated, async function (req, res) {
@@ -4630,6 +4682,24 @@ app.get(
     }
 );
 
+app.get('/human-resource/attendance/overview', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    }).populate('sender');
+
+    if (user) {
+
+        res.render('hr-attendance-overview', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4(),
+        });
+    }
+});
+
 // Function to generate a unique identifier (replace this with your own logic)
 const generateUniqueIdentifier = () => {
     return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
@@ -4643,6 +4713,85 @@ app.get('/attendance', async function (req, res) {
         uuid: uuidv4(),
         uniqueIdentifier: uniqueIdentifier
     });
+});
+
+// SCAN QR GENERATED
+app.get('/scan-qr', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    }).populate('sender');
+
+    if (user) {
+        res.render('scan', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4()
+        })
+    }
+});
+
+//GET ALL ATTENDANCE DATA
+app.post('/api/data/all-attendance', isAuthenticated, async function (req, res) {
+    const selectedDate = req.body.date;
+
+    console.log(selectedDate);
+
+    const [month, year] = selectedDate.split('/');
+
+    try {
+        // Create a set of all possible status types
+        const allStatusTypes = ['Present', 'Absent', 'Late', 'Invalid', 'Leave'];
+
+        // Query attendance records based on the month and year
+        const attendanceData = await Attendance.aggregate([
+            // Match attendance records for the selected month and year
+            {
+                $match: {
+                    timestamp: {
+                        $gte: new Date(`${year}-${month}-01`),
+                        $lt: new Date(`${year}-${parseInt(month) + 1}-01`)
+                    }
+                }
+            },
+            // Group by user and status, count occurrences
+            {
+                $group: {
+                    _id: { user: '$user', status: '$status' },
+                    count: { $sum: 1 }
+                }
+            }
+        ]);
+
+        console.log('Attendance data after first group stage:');
+        console.log(attendanceData);
+
+        // Initialize user status counts with zero counts for all status types
+        const userStatusCounts = {};
+
+        attendanceData.forEach(({ _id, count }) => {
+            const { user, status } = _id;
+            if (!userStatusCounts[user]) {
+                userStatusCounts[user] = {};
+                // Initialize counts for all status types
+                allStatusTypes.forEach(statusType => {
+                    userStatusCounts[user][statusType] = 0;
+                });
+            }
+            userStatusCounts[user][status] = count;
+        });
+
+        console.log('User status counts:');
+        console.log(userStatusCounts);
+
+        // Respond with the filtered attendance data
+        res.json(attendanceData);
+    } catch (error) {
+        console.error('Error fetching attendance data:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
 });
 
 app.get('/api/attendance/today', async function (req, res) {
@@ -4758,24 +4907,6 @@ app.post('/save-qr-data', async function (req, res) {
     res.status(200).send('QR code data received and saved successfully');
 });
 
-// SCAN QR GENERATED
-app.get('/scan-qr', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    }).populate('sender');
-
-    if (user) {
-        res.render('scan', {
-            user: user,
-            notifications: notifications,
-            uuid: uuidv4()
-        })
-    }
-});
-
 app.post('/process-scanned-data', isAuthenticated, async function (req, res) {
     const scannedData = req.body.scannedData;
     const id = req.body.id;
@@ -4792,72 +4923,80 @@ app.post('/process-scanned-data', isAuthenticated, async function (req, res) {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
-        const existingAttendance = await Attendance.findOne({
-            user: checkUser._id,
-            timestamp: {
-                $gte: today, // Greater than or equal to the start of today
-                $lt: new Date() // Less than the current time
-            }
-        });
+        const checkQrCode = await QRCode.findOne({ uniqueId: id });
 
-        if (existingAttendance) {
+        if (checkQrCode) {
+            console.log("You qr code is invalid, try to scan latest qr code!");
 
-            if (existingAttendance.date.signOutTime === null && existingAttendance.date.signInTime !== "") {
-                await Attendance.findOneAndUpdate(
-                    {
-                        user: checkUser._id
+            log = "You qr code is invalid, try to scan latest qr code!";
+        } else {
+            const existingAttendance = await Attendance.findOne({
+                user: checkUser._id,
+                timestamp: {
+                    $gte: today, // Greater than or equal to the start of today
+                    $lt: new Date() // Less than the current time
+                }
+            });
+
+            if (existingAttendance) {
+
+                if (existingAttendance.date.signOutTime === null && existingAttendance.date.signInTime !== "") {
+                    await Attendance.findOneAndUpdate(
+                        {
+                            user: checkUser._id
+                        },
+                        {
+                            'date.signOutTime': new Date(),
+                            type: 'sign out'
+                        },
+                        {
+                            upsert: true, new: true
+                        }
+                    )
+
+                    console.log('You have successfully signed out for today, thank you');
+
+                    const tempAttendance = new TempAttendance({
+                        user: checkUser._id,
+                        timestamp: new Date(),
+                        type: 'sign out',
+                    });
+
+                    await tempAttendance.save();
+
+                    log = "You have successfully signed out for today, thank you!";
+                } else {
+                    console.log('You already sign out for today.');
+                    log = "You already sign out for today, thank you!";
+                }
+            } else {
+                const currentDate = new Date();
+
+                const attendance = new Attendance({
+                    user: checkUser._id,
+                    date: {
+                        signInTime: currentDate,
+                        signOutTime: null
                     },
-                    {
-                        'date.signOutTime': new Date(),
-                        type: 'sign out'
-                    },
-                    {
-                        upsert: true, new: true
-                    }
-                )
+                    status: 'Present',
+                    timestamp: new Date(),
+                    type: 'sign in'
+                });
 
-                console.log('You have successfully signed out for today, thank you');
+                await attendance.save();
 
                 const tempAttendance = new TempAttendance({
                     user: checkUser._id,
                     timestamp: new Date(),
-                    type: 'sign out',
+                    type: 'sign in',
                 });
 
                 await tempAttendance.save();
 
-                log = "You have successfully signed out for today, thank you!";
-            } else {
-                console.log('You already sign out for today.');
-                log = "You already sign out for today, thank you!";
+                console.log("New sign in attendance for today, thank you");
+
+                log = "New sign in attendance for today, thank you!";
             }
-        } else {
-            const currentDate = new Date();
-
-            const attendance = new Attendance({
-                user: checkUser._id,
-                date: {
-                    signInTime: currentDate,
-                    signOutTime: null
-                },
-                status: 'Present',
-                timestamp: new Date(),
-                type: 'sign in'
-            });
-
-            await attendance.save();
-
-            const tempAttendance = new TempAttendance({
-                user: checkUser._id,
-                timestamp: new Date(),
-                type: 'sign in',
-            });
-
-            await tempAttendance.save();
-
-            console.log("New sign in attendance for today, thank you");
-
-            log = "New sign in attendance for today, thank you!";
         }
 
         const response = {
@@ -5053,9 +5192,9 @@ generateApprovals = function (
                 ...(assignee && assignee.length > 0
                     ? assignee.map(assigneeItem => ({
                         recipient: assigneeItem._id,
-                        role: 'Temporary Replacement',
+                        role: 'Relief Staff',
                         status: 'pending',
-                        comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
+                        comment: `Relief Staff for leave by ${assigneeItem.fullname}`,
                         estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
                         timestamp: ''
                     }))
@@ -5098,9 +5237,9 @@ generateApprovals = function (
                 ...(assignee && assignee.length > 0
                     ? assignee.map(assigneeItem => ({
                         recipient: assigneeItem._id,
-                        role: 'Temporary Replacement',
+                        role: 'Relief Staff',
                         status: 'pending',
-                        comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
+                        comment: `Relief Staff for leave by ${assigneeItem.fullname}`,
                         estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
                         timestamp: ''
                     }))
@@ -5136,9 +5275,9 @@ generateApprovals = function (
             ...(assignee && assignee.length > 0
                 ? assignee.map(assigneeItem => ({
                     recipient: assigneeItem._id,
-                    role: 'Temporary Replacement',
+                    role: 'Relief Staff',
                     status: 'pending',
-                    comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
+                    comment: `Relief Staff for leave by ${assigneeItem.fullname}`,
                     estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
                     timestamp: ''
                 }))
@@ -5181,9 +5320,9 @@ generateApprovals = function (
             ...(assignee && assignee.length > 0
                 ? assignee.map(assigneeItem => ({
                     recipient: assigneeItem._id,
-                    role: 'Temporary Replacement',
+                    role: 'Relief Staff',
                     status: 'pending',
-                    comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
+                    comment: `Relief Staff for leave by ${assigneeItem.fullname}`,
                     estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
                     timestamp: ''
                 }))
@@ -5226,9 +5365,9 @@ generateApprovals = function (
             ...(assignee && assignee.length > 0
                 ? assignee.map(assigneeItem => ({
                     recipient: assigneeItem._id,
-                    role: 'Temporary Replacement',
+                    role: 'Relief Staff',
                     status: 'pending',
-                    comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
+                    comment: `Relief Staff for leave by ${assigneeItem.fullname}`,
                     estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
                     timestamp: ''
                 }))
@@ -5264,9 +5403,9 @@ generateApprovals = function (
                 ...(assignee && assignee.length > 0
                     ? assignee.map(assigneeItem => ({
                         recipient: assigneeItem._id,
-                        role: 'Temporary Replacement',
+                        role: 'Relief Staff',
                         status: 'pending',
-                        comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
+                        comment: `Relief Staff for leave by ${assigneeItem.fullname}`,
                         estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
                         timestamp: ''
                     }))
@@ -5309,9 +5448,9 @@ generateApprovals = function (
                 ...(assignee && assignee.length > 0
                     ? assignee.map(assigneeItem => ({
                         recipient: assigneeItem._id,
-                        role: 'Temporary Replacement',
+                        role: 'Relief Staff',
                         status: 'pending',
-                        comment: `Temporary replacement for leave by ${assigneeItem.fullname}`,
+                        comment: `Relief Staff for leave by ${assigneeItem.fullname}`,
                         estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
                         timestamp: ''
                     }))
