@@ -8,7 +8,7 @@
   </div>
 
   <div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis pt-7 pb-3 border-y mb-6">
-    <div id="all-attendance" data-list='{"valueNames":["staff","position","department","section","grade","classification"],"page":10,"pagination":true}'>
+    <div id="all-attendance" data-list='{"valueNames":["staff","department","section","attendance"],"page":10,"pagination":true}'>
 
       <div class="mb-3">
         <h3>All attendance</h3>
@@ -20,15 +20,25 @@
         <div class="col-12 col-md-auto">
           <div class="search-box">
             <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
-              <input class="form-control search-input search form-control-sm" type="search" placeholder="Search staffs" aria-label="Search" />
+              <input class="form-control search-input search form-control-sm" type="search" id="searchInput" placeholder="Search staffs" aria-label="Search" />
               <span class="fas fa-search search-box-icon"></span>
             </form>
           </div>
         </div>
 
+        <style>
+          #selectedDate::placeholder {
+            text-align: center;
+          }
+
+          #selectedDate {
+            text-align: center;
+          }
+        </style>
+
         <div class="col-12 col-md-auto">
           <div class="form-icon-container">
-            <input class="form-control form-icon-input datetimepicker flatpickr-input" type="text" id="selectedDate" name="date" placeholder="" data-options='{"disableMobile":true,"allowInput":true, "locale" : { "firstDayOfWeek" : 1}, "mode": "single", "dateFormat": "m/Y","disable": [true] }' />
+            <input class="form-control datetimepicker flatpickr-input border border-primary" type="text" id="selectedDate" name="date" placeholder="Select date" data-options='{"disableMobile":true,"allowInput":true, "locale" : { "firstDayOfWeek" : 1}, "mode": "single", "dateFormat": "m/Y","disable": [true] }' />
             <span class="fas fa-calendar text-900 fs-9 form-icon"></span>
           </div>
 
@@ -41,25 +51,24 @@
           <thead>
             <tr>
               <th class="sort white-space-nowrap align-middle ps-0" scope="col" data-sort="staff" style="width:15%;">STAFF</th>
-              <th class="sort align-middle ps-3" scope="col" data-sort="department" style="width:15%;">DEPARTMENT</th>
-              <th class="sort align-middle ps-3" scope="col" data-sort="section" style="width:15%;">SECTION</th>
-              <th class="sort align-middle ps-3" scope="col" data-sort="grade" style="width:5%;">ATTENDANCE</th>
-              <th class="sort align-middle text-end" scope="col" style="width:5%;"></th>
+              <th class="sort align-middle text-center ps-3" scope="col" data-sort="department" style="width:15%;">DEPARTMENT</th>
+              <th class="sort align-middle text-center ps-3" scope="col" data-sort="section" style="width:15%;">SECTION</th>
+              <th class="sort align-middle text-center ps-3" scope="col" data-sort="attendance" style="width:5%;">ATTENDANCE</th>
             </tr>
           </thead>
-          <tbody class="list" id="project-summary-table-body">
+
+          <tbody class="list" id="all-attendance-body">
+
 
           </tbody>
+
         </table>
       </div>
-      <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
+      <div class="row align-items-center justify-content-center py-2 pe-0 fs-9 mt-3">
         <div class="col-auto d-flex">
-          <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p><a class="fw-semibold" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semibold d-none" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
-        </div>
-        <div class="col-auto d-flex">
-          <button class="page-link" data-list-pagination="prev"><span class="fas fa-chevron-left"></span></button>
-          <ul class="mb-0 pagination"></ul>
-          <button class="page-link pe-0" data-list-pagination="next"><span class="fas fa-chevron-right"></span></button>
+          <button class="page-link" data-list-pagination="prev" id="prevPage"><span class="fas fa-chevron-left"></span></button>
+          <ul class="mb-0 pagination" id="pagination"></ul>
+          <button class="page-link pe-0" data-list-pagination="next" id="nextPage"><span class="fas fa-chevron-right"></span></button>
         </div>
       </div>
     </div>
@@ -67,12 +76,23 @@
     <script>
       document.addEventListener('DOMContentLoaded', function() {
         const selectedDateInput = document.getElementById('selectedDate');
+        const searchInput = document.getElementById('searchInput');
+        const prevPageButton = document.getElementById('prevPage');
+        const nextPageButton = document.getElementById('nextPage');
+        const paginationContainer = document.getElementById('pagination');
+        const dataContainer = document.getElementById('all-attendance-body');
+        let currentPage = 1;
 
-        selectedDateInput.addEventListener('change', function(event) {
-          const selectedDate = event.target.value;
+        // Function to fetch attendance data with pagination, search query, and selected date
+        function fetchData(page, searchQuery, selectedDate) {
 
-          // Send a Fetch request to the server to fetch attendance data
-          fetch('/api/data/all-attendance', {
+          if (!selectedDate) {
+            // Display message when no date is selected
+            // Render empty table or display message indicating no date is selected
+            renderEmptyTable();
+            return;
+          }
+          fetch(`/api/data/all-attendance?page=${page}&search=${searchQuery}&date=${selectedDate}`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json'
@@ -83,33 +103,164 @@
             })
             .then(response => response.json())
             .then(data => {
-              //   // Update the table with the received attendance data
-              //   const tbody = document.querySelector('tbody');
-              //   tbody.innerHTML = ''; // Clear existing rows
-              //   data.forEach(item => {
-              //     const tr = document.createElement('tr');
-              //     // Create and append table cells with attendance data
-              //     // Adjust as per your data structure
-              //     const td1 = document.createElement('td');
-              //     td1.textContent = item.userName;
-              //     const td2 = document.createElement('td');
-              //     td2.textContent = item.signInTime;
-              //     const td3 = document.createElement('td');
-              //     td3.textContent = item.signOutTime;
-              //     // Append cells to the row
-              //     tr.appendChild(td1);
-              //     tr.appendChild(td2);
-              //     tr.appendChild(td3);
-              //     // Append row to the table body
-              //     tbody.appendChild(tr);
-              //   });
+              // Update the table with the received attendance data
+              renderTable(data.data1);
+
+              // Update pagination
+              updatePagination(data.data2.length, 10);
+
+
             })
             .catch(error => {
               console.error('Error:', error);
             });
+        }
+
+        function updatePagination(totalItems, limit) {
+          const totalPages = Math.ceil(totalItems / limit);
+          const paginationContainer = document.getElementById('pagination');
+
+          paginationContainer.innerHTML = ''; // Clear existing pagination buttons
+
+          let startPage;
+          let endPage;
+
+          if (totalPages <= 3) {
+            startPage = 1;
+            endPage = totalPages;
+          } else if (currentPage === 1) {
+            startPage = 1;
+            endPage = 3;
+          } else if (currentPage === 2) {
+            startPage = 1;
+            endPage = 4;
+          } else if (currentPage >= totalPages - 1) {
+            endPage = totalPages;
+            startPage = Math.max(1, endPage - 4); // Display 5 buttons
+          } else {
+            startPage = currentPage - 2;
+            endPage = currentPage + 2;
+          }
+
+          if (startPage !== 1) {
+            const prevEllipsisButton = document.createElement('button');
+            prevEllipsisButton.textContent = '...';
+            prevEllipsisButton.classList.add('btn', 'pagination-button', 'mx-1', 'px-3', 'fs-10', 'border-0'); // Add Bootstrap classes
+            prevEllipsisButton.disabled = true;
+            paginationContainer.appendChild(prevEllipsisButton);
+          }
+
+          for (let page = startPage; page <= endPage; page++) {
+            const paginationButton = document.createElement('button');
+            paginationButton.textContent = page;
+            paginationButton.classList.add('btn', 'pagination-button', 'mx-1', 'px-3', 'fs-10'); // Add Bootstrap classes
+
+            if (page === currentPage) {
+              paginationButton.classList.add('btn-primary');
+            } else {
+              paginationButton.classList.remove('btn-primary');
+            }
+
+            paginationButton.addEventListener('click', () => {
+              currentPage = page;
+              fetchData(currentPage, searchInput.value, selectedDateInput.value);
+            });
+
+            paginationContainer.appendChild(paginationButton);
+          }
+
+          if (endPage < totalPages) {
+            const nextEllipsisButton = document.createElement('button');
+            nextEllipsisButton.textContent = '...';
+            nextEllipsisButton.classList.add('btn', 'pagination-button', 'mx-1', 'px-3', 'fs-10', 'border-0'); // Add Bootstrap classes
+            nextEllipsisButton.disabled = true;
+            paginationContainer.appendChild(nextEllipsisButton);
+          }
+        }
+
+        // Function to render pagination buttons
+        function renderPagination(totalPages) {
+          console.log('Rendering pagination with total pages:', totalPages); // Log total pages
+          paginationContainer.innerHTML = '';
+
+          for (let i = 1; i <= totalPages; i++) {
+            const button = document.createElement('button');
+            button.textContent = i;
+            button.addEventListener('click', () => {
+              currentPage = i;
+              fetchData(currentPage, searchInput.value, selectedDateInput.value);
+            });
+            paginationContainer.appendChild(button);
+          }
+        }
+
+        // Update the table with the received attendance data
+        function renderTable(data) {
+          const tbody = document.querySelector('#all-attendance-body');
+          tbody.innerHTML = ''; // Clear existing rows
+
+          data.forEach(entry => {
+            // Construct HTML row for each entry
+            const row = `
+                <tr class="position-static border-top">
+                    <td class="align-middle text-body white-space-nowrap ps-0 staff">
+                        <div class="avatar avatar-2xl">
+                            <div class="avatar-name rounded-circle"><span class="fs-8">${entry.user ? entry.user.username : 'Unknown'}</span></div>
+                        </div>
+                        <a class="mb-0 ms-3 fw-bold fs-8" href="">${entry.user ? entry.user.fullname : 'Unknown'}</a>
+                    </td>
+                    <td class="align-middle text-center department ps-0">
+                        <p class="fw-semibold text-body-emphasis fs-9 mb-0">${entry.user ? entry.user.department : 'Unknown'}</p>
+                    </td>
+                    <td class="align-middle text-center section ps-0">
+                        <p class="fw-semibold text-body-emphasis fs-9 mb-0">${entry.user ? entry.user.section : 'Unknown'}</p>
+                    </td>
+                    <td class="align-middle text-center attendance ps-0">
+                        <p class="badge badge-phoenix badge-phoenix-success fs-10 mb-0">${entry.statusCounts['Present']}</p>
+                    </td>
+                </tr>`;
+            // Insert the HTML row into the table body
+            tbody.insertAdjacentHTML('beforeend', row);
+          });
+        }
+
+
+        function renderEmptyTable() {
+          const tbody = document.querySelector('tbody');
+          tbody.innerHTML = '<tr><td colspan="4" class="text-center">No date selected</td></tr>';
+        }
+
+        // Event listener for search input
+        searchInput.addEventListener('input', function() {
+          currentPage = 1; // Reset current page to 1
+          fetchData(currentPage, this.value, selectedDateInput.value);
         });
+
+        // Event listener for previous page button
+        prevPageButton.addEventListener('click', function() {
+          if (currentPage > 1) {
+            currentPage--;
+            fetchData(currentPage, searchInput.value, selectedDateInput.value);
+          }
+        });
+
+        // Event listener for next page button
+        nextPageButton.addEventListener('click', function() {
+          currentPage++;
+          fetchData(currentPage, searchInput.value, selectedDateInput.value);
+        });
+
+        // Event listener for selected date input change
+        selectedDateInput.addEventListener('change', function(event) {
+          currentPage = 1; // Reset current page to 1
+          fetchData(currentPage, searchInput.value, event.target.value);
+        });
+
+        // Initial data fetch when the page loads
+        fetchData(currentPage, searchInput.value, selectedDateInput.value);
       });
     </script>
+
   </div>
 
 </div>

@@ -4736,14 +4736,18 @@ app.get('/scan-qr', isAuthenticated, async function (req, res) {
 //GET ALL ATTENDANCE DATA
 app.post('/api/data/all-attendance', isAuthenticated, async function (req, res) {
     const selectedDate = req.body.date;
+    const searchQuery = req.query.search || ''; // Get search query from request query params
+    const page = parseInt(req.query.page) || 1; // Get page number from request query params
+    const limit = 10; // Number of items per page
+    const skip = (page - 1) * limit; // Calculate the number of items to skip
 
-    console.log(selectedDate);
-
+    // Extract month and year from the selected date
     const [month, year] = selectedDate.split('/');
 
     try {
         // Create a set of all possible status types
         const allStatusTypes = ['Present', 'Absent', 'Late', 'Invalid', 'Leave'];
+        const allUser = await User.find();
 
         // Query attendance records based on the month and year
         const attendanceData = await Attendance.aggregate([
@@ -4765,29 +4769,56 @@ app.post('/api/data/all-attendance', isAuthenticated, async function (req, res) 
             }
         ]);
 
-        console.log('Attendance data after first group stage:');
-        console.log(attendanceData);
-
-        // Initialize user status counts with zero counts for all status types
         const userStatusCounts = {};
 
+        // Iterate over all users and initialize their status counts
+        allUser.forEach(user => {
+            userStatusCounts[user._id] = {};
+            allStatusTypes.forEach(statusType => {
+                userStatusCounts[user._id][statusType] = 0;
+            });
+        });
+
+        // Update status counts based on the attendance data
         attendanceData.forEach(({ _id, count }) => {
             const { user, status } = _id;
-            if (!userStatusCounts[user]) {
-                userStatusCounts[user] = {};
-                // Initialize counts for all status types
-                allStatusTypes.forEach(statusType => {
-                    userStatusCounts[user][statusType] = 0;
-                });
-            }
             userStatusCounts[user][status] = count;
         });
 
-        console.log('User status counts:');
-        console.log(userStatusCounts);
+        // Combine populated attendance data with user status counts
+        const combinedData = allUser.map(user => {
+            const statusCounts = userStatusCounts[user._id];
+            return {
+                user: {
+                    _id: user._id,
+                    username: user.username,
+                    fullname: user.fullname,
+                    section: user.section,
+                    department: user.department
+                },
+                statusCounts: statusCounts
+            };
+        });
 
-        // Respond with the filtered attendance data
-        res.json(attendanceData);
+        // Filter combinedData based on the search query
+        const filteredData = combinedData.filter(item => {
+            const { fullname, section, department, username } = item.user;
+            const regex = new RegExp(searchQuery, 'i');
+            return regex.test(fullname) || regex.test(section) || regex.test(department) || regex.test(username);
+        });
+
+        // Paginate the filtered data
+        const paginatedData = filteredData.slice(skip, skip + limit);
+
+        const response = {
+            data1: paginatedData,
+            data2: filteredData
+        }
+
+        console.log(filteredData.length);
+
+        // Respond with the paginated and filtered attendance data
+        res.json(response);
     } catch (error) {
         console.error('Error fetching attendance data:', error);
         res.status(500).json({ error: 'Internal server error' });
