@@ -17,32 +17,34 @@
 
       <div class="row align-items-end justify-content-between pb-4 g-3">
 
-        <div class="col-12 col-md-auto">
+        <div class="col-12 col-md-auto order-1 order-lg-0">
           <div class="form-icon-container">
             <input class="form-control form-icon-input" type="text" id="searchInput" name="date" placeholder="Search" />
             <span class="fas fa-search text-900 fs-9 form-icon"></span>
           </div>
         </div>
 
-        <style>
-          #selectedDate::placeholder {
-            text-align: center;
-          }
-
-          #selectedDate {
-            text-align: center;
-          }
-        </style>
-
-        <div class="col-12 col-md-auto">
-          <div class="container">
-            <div class="d-flex align-items-center mb-1"><span class="d-inline-block bg-info-light bullet-item me-2"></span>
-              <p class="mb-0 fw-semibold text-body lh-sm flex-1">Annual Leave</p>
-            </div>
+        <div class="col-12 col-md-auto d-flex justify-content-center d-none">
+          <div class="d-flex align-items-center mx-2"><span class="d-inline-block bg-success bullet-item me-2"></span>
+            <p class="mb-0 fw-semibold text-body lh-sm flex-1">Present</p>
           </div>
+          <div class="d-flex align-items-center mx-2"><span class="d-inline-block bg-danger bullet-item me-2"></span>
+            <p class="mb-0 fw-semibold text-body lh-sm flex-1">Absent</p>
+          </div>
+          <div class="d-flex align-items-center mx-2"><span class="d-inline-block bg-warning bullet-item me-2"></span>
+            <p class="mb-0 fw-semibold text-body lh-sm flex-1">Late</p>
+          </div>
+          <div class="d-flex align-items-center mx-2"><span class="d-inline-block bg-info bullet-item me-2"></span>
+            <p class="mb-0 fw-semibold text-body lh-sm flex-1">Invalid</p>
+          </div>
+          <div class="d-flex align-items-center mx-2"><span class="d-inline-block bg-warning-lighter bullet-item me-2"></span>
+            <p class="mb-0 fw-semibold text-body lh-sm flex-1">Leave</p>
+          </div>
+        </div>
 
+        <div class="col-12 col-md-auto order-0 order-lg-1">
           <div class="form-icon-container">
-            <input class="form-control datetimepicker flatpickr-input border border-primary" type="text" id="selectedDate" name="date" placeholder="Select date" data-options='{"disableMobile":true,"allowInput":true, "locale" : { "firstDayOfWeek" : 1}, "mode": "single", "dateFormat": "m/Y","disable": [true] }' />
+            <input class="form-control datetimepicker flatpickr-input form-icon-input" type="text" id="selectedDate" name="date" placeholder="Select date" data-options='{"disableMobile":true,"allowInput":true, "locale" : { "firstDayOfWeek" : 1}, "mode": "single", "dateFormat": "m/Y","disable": [true] }' />
             <span class="fas fa-calendar text-900 fs-9 form-icon"></span>
           </div>
 
@@ -52,7 +54,7 @@
 
       <div class="table-responsive ms-n1 ps-1 scrollbar">
         <table class="table fs-9 mb-0 border-top border-translucent">
-          <thead>
+          <thead style="pointer-events: none;">
             <tr>
               <th class="sort white-space-nowrap align-middle ps-0" scope="col" style="width:20%;">STAFF</th>
               <th class="sort align-middle text-center ps-0" scope="col" style="width:15%;">DEPARTMENT</th>
@@ -225,7 +227,8 @@
             const leaveCount = entry.statusCounts['Leave'] || 0;
             const leavePercentage = ((leaveCount / daysInMonth) * 100).toFixed(0);
 
-            console.log(presentPercentage);
+            const totalAttendance = presentCount + lateCount + leaveCount;
+            const totalPercentage = ((totalAttendance / daysInMonth) * 100).toFixed(0);
 
             const row = `
                 <tr class="position-static border-top">
@@ -242,24 +245,27 @@
                         <p class="fw-semibold text-body-emphasis fs-9 mb-0">${entry.user ? entry.user.section : 'Unknown'}</p>
                     </td>
                     <td class="align-middle text-center attendance px-5">
-                        <p class="fs-10">${presentCount} / ${daysInMonth}</p>
-                        <div class="progress progress-stack mt-n3" style="height:3.5px;">
-                          <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar bg-success" style="width:${presentPercentage}%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100" data-bs-toggle="tooltip" data-bs-placement="top" title="5% Damage" role="progressbar"></div>
+                        <p class="fs-10">${totalAttendance} / ${daysInMonth}</p>
+                        <div class="progress progress-stack mt-n3" style="height:5px;">
+                          <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar bg-primary" style="width:${totalPercentage}%" data-bs-toggle="tooltip" data-bs-placement="top" title="${totalPercentage}%"></div>
                         </div>
                     </td>
-                    <td class="align-middle text-center status px-8">
+                    <td class="align-middle text-center status px-5">
                         <p class="fs-10 opacity-0">${presentCount} / ${daysInMonth}</p>
-                        <div class="progress progress-stack mt-n3" style="height:3.5px;">
-                          <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar bg-success" style="width:${presentPercentage}%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100" data-bs-toggle="tooltip" data-bs-placement="top" title="5% Damage" role="progressbar"></div>
-                          <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar bg-success" style="width:${absentPercentage}%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100" data-bs-toggle="tooltip" data-bs-placement="top" title="5% Damage" role="progressbar"></div>
-                          <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar bg-success" style="width:${latePercentage}%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100" data-bs-toggle="tooltip" data-bs-placement="top" title="5% Damage" role="progressbar"></div>
-                          <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar bg-success" style="width:${invalidPercentage}%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100" data-bs-toggle="tooltip" data-bs-placement="top" title="5% Damage" role="progressbar"></div>
-                          <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar bg-success" style="width:${leavePercentage}%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100" data-bs-toggle="tooltip" data-bs-placement="top" title="5% Damage" role="progressbar"></div>
+                        <div class="progress progress-stack mt-n3" style="height:5px;">
+                          <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar bg-success" style="width:${presentPercentage}%" data-bs-toggle="tooltip" data-bs-placement="top" title="Present ${presentPercentage}% "></div>
+                          <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar bg-danger" style="width:${absentPercentage}%" data-bs-toggle="tooltip" data-bs-placement="top" title="Absent ${absentPercentage}% "></div>
+                          <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar bg-warning" style="width:${latePercentage}%" data-bs-toggle="tooltip" data-bs-placement="top" title="Late ${latePercentage}% "></div>
+                          <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar bg-info" style="width:${invalidPercentage}%" data-bs-toggle="tooltip" data-bs-placement="top" title="Invalid ${invalidPercentage}% "></div>
+                          <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar bg-success-lighter" style="width:${leavePercentage}%" data-bs-toggle="tooltip" data-bs-placement="top" title="Leave ${leavePercentage}% "></div>
                         </div>
                     </td>
                 </tr>`;
             // Insert the HTML row into the table body
             tbody.insertAdjacentHTML('beforeend', row);
+
+            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+            const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
           });
         }
 
@@ -284,7 +290,7 @@
 
         function renderEmptyTable() {
           const tbody = document.querySelector('tbody');
-          tbody.innerHTML = '<tr><td colspan="5" class="text-center">No date selected</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="5" class="text-center fs-8">No date selected</td></tr>';
         }
 
         // Event listener for search input
