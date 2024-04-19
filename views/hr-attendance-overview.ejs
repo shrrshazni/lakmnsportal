@@ -18,11 +18,9 @@
       <div class="row align-items-end justify-content-between pb-4 g-3">
 
         <div class="col-12 col-md-auto">
-          <div class="search-box">
-            <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
-              <input class="form-control search-input search form-control-sm" type="search" id="searchInput" placeholder="Search staffs" aria-label="Search" />
-              <span class="fas fa-search search-box-icon"></span>
-            </form>
+          <div class="form-icon-container">
+            <input class="form-control form-icon-input" type="text" id="searchInput" name="date" placeholder="Search" />
+            <span class="fas fa-search text-900 fs-9 form-icon"></span>
           </div>
         </div>
 
@@ -37,6 +35,12 @@
         </style>
 
         <div class="col-12 col-md-auto">
+          <div class="container">
+            <div class="d-flex align-items-center mb-1"><span class="d-inline-block bg-info-light bullet-item me-2"></span>
+              <p class="mb-0 fw-semibold text-body lh-sm flex-1">Annual Leave</p>
+            </div>
+          </div>
+
           <div class="form-icon-container">
             <input class="form-control datetimepicker flatpickr-input border border-primary" type="text" id="selectedDate" name="date" placeholder="Select date" data-options='{"disableMobile":true,"allowInput":true, "locale" : { "firstDayOfWeek" : 1}, "mode": "single", "dateFormat": "m/Y","disable": [true] }' />
             <span class="fas fa-calendar text-900 fs-9 form-icon"></span>
@@ -50,10 +54,11 @@
         <table class="table fs-9 mb-0 border-top border-translucent">
           <thead>
             <tr>
-              <th class="sort white-space-nowrap align-middle ps-0" scope="col" data-sort="staff" style="width:15%;">STAFF</th>
-              <th class="sort align-middle text-center ps-3" scope="col" data-sort="department" style="width:15%;">DEPARTMENT</th>
-              <th class="sort align-middle text-center ps-3" scope="col" data-sort="section" style="width:15%;">SECTION</th>
-              <th class="sort align-middle text-center ps-3" scope="col" data-sort="attendance" style="width:5%;">ATTENDANCE</th>
+              <th class="sort white-space-nowrap align-middle ps-0" scope="col" style="width:20%;">STAFF</th>
+              <th class="sort align-middle text-center ps-0" scope="col" style="width:15%;">DEPARTMENT</th>
+              <th class="sort align-middle text-center ps-0" scope="col" style="width:15%;">SECTION</th>
+              <th class="sort align-middle text-center ps-0" scope="col" style="width:10%;">ATTENDANCE</th>
+              <th class="sort align-middle text-center ps-0" scope="col" style="width:10%;">STATUS</th>
             </tr>
           </thead>
 
@@ -66,9 +71,9 @@
       </div>
       <div class="row align-items-center justify-content-center py-2 pe-0 fs-9 mt-3">
         <div class="col-auto d-flex">
-          <button class="page-link" data-list-pagination="prev" id="prevPage"><span class="fas fa-chevron-left"></span></button>
+          <button class="page-link" id="prevPage"><span class="fas fa-chevron-left"></span></button>
           <ul class="mb-0 pagination" id="pagination"></ul>
-          <button class="page-link pe-0" data-list-pagination="next" id="nextPage"><span class="fas fa-chevron-right"></span></button>
+          <button class="page-link pe-0" id="nextPage"><span class="fas fa-chevron-right"></span></button>
         </div>
       </div>
     </div>
@@ -104,7 +109,7 @@
             .then(response => response.json())
             .then(data => {
               // Update the table with the received attendance data
-              renderTable(data.data1);
+              renderTable(data.data1, selectedDate);
 
               // Update pagination
               updatePagination(data.data2.length, 10);
@@ -145,7 +150,7 @@
           if (startPage !== 1) {
             const prevEllipsisButton = document.createElement('button');
             prevEllipsisButton.textContent = '...';
-            prevEllipsisButton.classList.add('btn', 'pagination-button', 'mx-1', 'px-3', 'fs-10', 'border-0'); // Add Bootstrap classes
+            prevEllipsisButton.classList.add('btn', 'pagination-button', 'mx-0', 'px-3', 'fs-10', 'border-0'); // Add Bootstrap classes
             prevEllipsisButton.disabled = true;
             paginationContainer.appendChild(prevEllipsisButton);
           }
@@ -153,7 +158,7 @@
           for (let page = startPage; page <= endPage; page++) {
             const paginationButton = document.createElement('button');
             paginationButton.textContent = page;
-            paginationButton.classList.add('btn', 'pagination-button', 'mx-1', 'px-3', 'fs-10'); // Add Bootstrap classes
+            paginationButton.classList.add('btn', 'pagination-button', 'mx-0', 'px-3', 'fs-10'); // Add Bootstrap classes
 
             if (page === currentPage) {
               paginationButton.classList.add('btn-primary');
@@ -172,7 +177,7 @@
           if (endPage < totalPages) {
             const nextEllipsisButton = document.createElement('button');
             nextEllipsisButton.textContent = '...';
-            nextEllipsisButton.classList.add('btn', 'pagination-button', 'mx-1', 'px-3', 'fs-10', 'border-0'); // Add Bootstrap classes
+            nextEllipsisButton.classList.add('btn', 'pagination-button', 'mx-0', 'px-3', 'fs-10', 'border-0'); // Add Bootstrap classes
             nextEllipsisButton.disabled = true;
             paginationContainer.appendChild(nextEllipsisButton);
           }
@@ -195,12 +200,33 @@
         }
 
         // Update the table with the received attendance data
-        function renderTable(data) {
+        function renderTable(data, date) {
           const tbody = document.querySelector('#all-attendance-body');
           tbody.innerHTML = ''; // Clear existing rows
 
+          const [month, year] = date.split('/').map(Number); // Extract year and month from the selected date
+          const daysInMonth = new Date(year, month, 0).getDate();
+
           data.forEach(entry => {
             // Construct HTML row for each entry
+
+            const presentCount = entry.statusCounts['Present'] || 0;
+            const presentPercentage = ((presentCount / daysInMonth) * 100).toFixed(0);
+
+            const absentCount = entry.statusCounts['Absent'] || 0;
+            const absentPercentage = ((absentCount / daysInMonth) * 100).toFixed(0);
+
+            const lateCount = entry.statusCounts['Late'] || 0;
+            const latePercentage = ((lateCount / daysInMonth) * 100).toFixed(0);
+
+            const invalidCount = entry.statusCounts['Invalid'] || 0;
+            const invalidPercentage = ((invalidCount / daysInMonth) * 100).toFixed(0);
+
+            const leaveCount = entry.statusCounts['Leave'] || 0;
+            const leavePercentage = ((leaveCount / daysInMonth) * 100).toFixed(0);
+
+            console.log(presentPercentage);
+
             const row = `
                 <tr class="position-static border-top">
                     <td class="align-middle text-body white-space-nowrap ps-0 staff">
@@ -215,8 +241,21 @@
                     <td class="align-middle text-center section ps-0">
                         <p class="fw-semibold text-body-emphasis fs-9 mb-0">${entry.user ? entry.user.section : 'Unknown'}</p>
                     </td>
-                    <td class="align-middle text-center attendance ps-0">
-                        <p class="badge badge-phoenix badge-phoenix-success fs-10 mb-0">${entry.statusCounts['Present']}</p>
+                    <td class="align-middle text-center attendance px-5">
+                        <p class="fs-10">${presentCount} / ${daysInMonth}</p>
+                        <div class="progress progress-stack mt-n3" style="height:3.5px;">
+                          <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar bg-success" style="width:${presentPercentage}%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100" data-bs-toggle="tooltip" data-bs-placement="top" title="5% Damage" role="progressbar"></div>
+                        </div>
+                    </td>
+                    <td class="align-middle text-center status px-8">
+                        <p class="fs-10 opacity-0">${presentCount} / ${daysInMonth}</p>
+                        <div class="progress progress-stack mt-n3" style="height:3.5px;">
+                          <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar bg-success" style="width:${presentPercentage}%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100" data-bs-toggle="tooltip" data-bs-placement="top" title="5% Damage" role="progressbar"></div>
+                          <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar bg-success" style="width:${absentPercentage}%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100" data-bs-toggle="tooltip" data-bs-placement="top" title="5% Damage" role="progressbar"></div>
+                          <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar bg-success" style="width:${latePercentage}%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100" data-bs-toggle="tooltip" data-bs-placement="top" title="5% Damage" role="progressbar"></div>
+                          <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar bg-success" style="width:${invalidPercentage}%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100" data-bs-toggle="tooltip" data-bs-placement="top" title="5% Damage" role="progressbar"></div>
+                          <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar bg-success" style="width:${leavePercentage}%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100" data-bs-toggle="tooltip" data-bs-placement="top" title="5% Damage" role="progressbar"></div>
+                        </div>
                     </td>
                 </tr>`;
             // Insert the HTML row into the table body
@@ -224,10 +263,28 @@
           });
         }
 
+        function calculateAttendancePercentage(data, selectedDate) {
+          const [month, year] = selectedDate.split('/').map(Number); // Extract year and month from the selected date
+          const daysInMonth = new Date(year, month, 0).getDate(); // Get the number of days in the selected month
+
+          const attendancePercentage = new Array(daysInMonth).fill(0); // Initialize an array to store the percentage for each day
+
+          // Iterate through the data and update the attendance percentage array
+          data.forEach(entry => {
+            const entryDate = new Date(entry.date); // Assuming the date is in ISO format
+            if (entryDate.getFullYear() === year && entryDate.getMonth() + 1 === month) {
+              const dayOfMonth = entryDate.getDate();
+              const presentCount = entry.statusCounts['Present'] || 0;
+              attendancePercentage[dayOfMonth - 1] += (presentCount / daysInMonth) * 100; // Calculate percentage for each day
+            }
+          });
+
+          return attendancePercentage;
+        }
 
         function renderEmptyTable() {
           const tbody = document.querySelector('tbody');
-          tbody.innerHTML = '<tr><td colspan="4" class="text-center">No date selected</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="5" class="text-center">No date selected</td></tr>';
         }
 
         // Event listener for search input
