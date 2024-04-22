@@ -5045,7 +5045,7 @@ app.post('/process-scanned-data', isAuthenticated, async function (req, res) {
     }
 });
 
-app.get('/get-latest-scanned-data', isAuthenticated, async function (req, res) {
+app.get('/get-latest-scanned-data', async function (req, res) {
     try {
         const tempAttendance = await TempAttendance.findOne().sort({ timestamp: -1 }).lean();
         var message = '';
@@ -5083,7 +5083,6 @@ app.get('/get-latest-scanned-data', isAuthenticated, async function (req, res) {
         }
 
         res.json(response);
-        console.log('', response);
 
     } catch (error) {
         console.error('Error fetching latest scanned data:', error);
