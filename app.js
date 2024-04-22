@@ -1145,9 +1145,11 @@ app.get('/staff/details/:id', isAuthenticated, async function (req, res) {
         .exec();
     const file = await File.find();
     const allUser = await User.find();
-    const activities = await Activity.find({ user: otherUser._id });
-    const leave = await Leave.find({ user: otherUser._id });
     const info = await Info.findOne({ user: otherUser._id });
+
+    const leave = await Leave.find({ user: otherUser._id, status: { $nin: ['denied', 'cancelled'] } }).sort({ timestamp: -1 });
+    const activities = await Activity.find({ user: otherUser._id }).sort({ date: -1 });
+    const attendance = await Attendance.find({ user: user._id }).sort({ timestamp: -1 });
 
     if (user) {
         res.render('staff-details', {
@@ -1160,6 +1162,7 @@ app.get('/staff/details/:id', isAuthenticated, async function (req, res) {
             allUser: allUser,
             activities: activities,
             leave: leave,
+            attendance: attendance,
             info: info
         });
     }

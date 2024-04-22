@@ -348,7 +348,8 @@
           <ul class="nav nav-underline fs-9">
             <li class="nav-item"><a class="nav-link me-2" href="#scrollspyTask">Tasks</a></li>
             <li class="nav-item"><a class="nav-link me-2" href="#scrollspyActivities">Activities</a></li>
-            <li class="nav-item"><a class="nav-link me-2" href="#scrollspyLeaves">Leave</a></li>
+            <li class="nav-item"><a class="nav-link me-2" href="#scrollspyLeaves">Leaves</a></li>
+            <li class="nav-item"><a class="nav-link me-2" href="#scrollspyAttendances">Leaves</a></li>
             <li class="nav-item"><a class="nav-link" href="#scrollspyAttachments">Attachments </a></li>
           </ul>
         </nav>
@@ -482,41 +483,41 @@
           </div>
 
           <div class="mb-8" style="min-height: 25vh;" id="scrollspyActivities">
-            <div class="border-bottom border-translucent" data-list='{"valueNames":["title","type","description","date","time"],"page":5,"pagination":true}'>
-              <div class="d-md-flex justify-content-between align-items-center mb-4">
-                <h2 class="col-12 col-md-auto mb-3">Activities</h2>
+            <div class="border-bottom border-translucent mt-3" id="activities" data-list='{"valueNames":["title","type","description","date","time"],"page":5,"pagination":true}'>
+              <div class="row align-items-end justify-content-between pb-4 g-3">
+
                 <div class="col-12 col-md-auto">
                   <div class="search-box">
                     <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
                       <input class="form-control search-input search form-control-sm" type="search" placeholder="Search activities" aria-label="Search" />
                       <span class="fas fa-search search-box-icon"></span>
-
                     </form>
                   </div>
                 </div>
               </div>
 
-              <div class="table-responsive scrollbar mx-n1 px-1 border-top">
-                <table class="table fs-9 mb-0">
+              <div class="table-responsive ms-n1 ps-1 scrollbar">
+                <table class="table fs-9 mb-0 border-top border-translucent">
                   <thead>
                     <tr>
-                      <th class="sort white-space-nowrap align-middle pe-3 ps-0" scope="col" data-sort="title" style="width:15%;">Title</th>
-                      <th class="sort align-middle ps-0 text-start " scope="col" data-sort="type" style="width:10%;min-width: 100px;">Type</th>
-                      <th class="sort align-middle pe-0 text-start" scope="col" data-sort="description" style="width:30%;min-width: 300px;">Description</th>
-                      <th class="sort align-middle ps-0 text-start text-center" scope="col" data-sort="date" style="width:10%;">Date</th>
-                      <th class="sort align-middle ps-0 text-start text-center" scope="col" data-sort="time" style="width:10%;">Time</th>
-                      <th class="sort align-middle text-end" scope="col" style="width: 5%"></th>
+                      <th class="sort white-space-nowrap align-middle pe-3 ps-0 text-uppercase" scope="col" data-sort="title" style="width:25%;min-width: 125px;">Title</th>
+                      <th class="sort align-middle ps-0 text-start text-uppercase" scope="col" data-sort="type" style="width:15%;min-width: 100px;">Type</th>
+                      <th class="sort align-middle pe-6 text-uppercase text-start" scope="col" data-sort="description" style="width:35%;min-width: 250px; ">Description</th>
+                      <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="date" style="width:15%;min-width: 100px;">Date</th>
+                      <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="time" style="width:15%;min-width: 100px;">Time</th>
+                      <th class="sort align-middle text-end" scope="col" style="width: 10%"></th>
                     </tr>
                   </thead>
-                  <tbody class="list">
+
+                  <tbody class="list" id="activities-table-content">
                     <% if(activities && activities.length > 0){ %>
                     <% activities.forEach(item => { %>
                     <tr class="position-static">
                       <td class="title align-middle white-space-nowrap py-4 ps-0 fw-bold text-primary fs-9 fs-md-8"><%= item.title %></td>
-                      <td class="type align-middle text-body-highlight fw-bold text-start py-2 ps-0 fs-9"><%= item.type %></td>
-                      <td class="description align-middle text-start fw-semibold text-body-highlight py-2 text-start ps-2 fst-italic"><%= item.description%></td>
-                      <td class="date align-middle text-body text-center py-2 ps-0"><%= item.date.toLocaleDateString('en-UK', { day: '2-digit', month: 'short', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></td>
-                      <td class="time align-middle text-body text-center py-2 ps-0"><%= item.date.toLocaleTimeString('en-UK', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone : 'Asia/Kuala_Lumpur' }) %></td>
+                      <td class="type align-middle fw-semibold text-start py-2 ps-0 fs-9 text-body-highlight"><%= item.type %></td>
+                      <td class="description align-middle text-start fw-semibold py-2 text-start ps-2 fst-italic fs-9 text-body-highlight"><%= item.description%></td>
+                      <td class="date align-middle text-center py-2 ps-0 fs-9"><%= item.date.toLocaleDateString('en-UK', { day: '2-digit', month: 'short', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></td>
+                      <td class="time align-middle text-center py-2 ps-0 fs-9"><%= item.date.toLocaleTimeString('en-UK', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone : 'Asia/Kuala_Lumpur' }) %></td>
                       <td class="align-middle text-end white-space-nowrap ps-0 action">
                         <div class="font-sans-serif btn-reveal-trigger position-static">
                           <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs--2" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
@@ -532,7 +533,7 @@
                     <% }else{ %>
                     <tr class="position-static">
                       <td class="align-middle white-space-nowrap border-bottom-0">
-                        <p>No activity detected from <span class="fw-bold text-primary"><%= otherUser.fullname %></span></p>
+                        <p>No activity detected from <span class="fw-bold text-primary"><%= user.fullname %></span></p>
                       </td>
                     </tr>
                     <% } %>
@@ -553,33 +554,33 @@
           </div>
 
           <div class="mb-8" style="min-height: 25vh;" id="scrollspyLeaves">
-            <div data-list='{"valueNames":["type","reliefstaff","startdate","returndate","status"],"page":6,"pagination":true}'>
-              <div class="d-md-flex justify-content-between align-items-center mb-4">
-                <h2 class="col-12 col-md-auto mb-3">Leave</h2>
+            <div class="border-bottom border-translucent mt-3" id="leaves" data-list='{"valueNames":["type","reliefstaff","startdate","returndate","status"],"page":5,"pagination":true}'>
+              <div class="row align-items-end justify-content-between pb-4 g-3">
+
                 <div class="col-12 col-md-auto">
                   <div class="search-box">
                     <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
-                      <input class="form-control search-input search form-control-sm" type="search" placeholder="Search leave" aria-label="Search" />
+                      <input class="form-control search-input search form-control-sm" type="search" placeholder="Search leaves" aria-label="Search" />
                       <span class="fas fa-search search-box-icon"></span>
-
                     </form>
                   </div>
                 </div>
+
               </div>
-              <div class="table-responsive scrollbar">
-                <table class="table fs-9 mb-0 border-top border-200">
+              <div class="table-responsive ms-n1 ps-1 scrollbar">
+                <table class="table fs-9 mb-0 border-top border-translucent">
                   <thead>
                     <tr>
                       <th class="sort white-space-nowrap align-middle ps-0" scope="col" data-sort="type" style="width:15%;">
                         TYPE
                       </th>
-                      <th class="sort align-middle ps-3" scope="col" data-sort="reliefstaff" style="width:20%;">
+                      <th class="sort align-middle ps-3" scope="col" data-sort="reliefstaff" style="width:15%;">
                         RELIEF STAFF
                       </th>
-                      <th class="sort align-middle text-center" scope="col" data-sort="startdate" style="width:15%;">
+                      <th class="sort align-middle text-center ps-3" scope="col" data-sort="startdate" style="width:15%;">
                         START DATE
                       </th>
-                      <th class="sort align-middle text-center" scope="col" data-sort="returndate" style="width:15%;">
+                      <th class="sort align-middle text-center ps-3" scope="col" data-sort="returndate" style="width:15%;">
                         RETURN DATE
                       </th>
                       <th class="sort align-middle text-center" scope="col" data-sort="status" style="width:10%;">
@@ -590,52 +591,48 @@
                   </thead>
 
                   <% 
-                      function formatDate(inputDate) {
-                        const day = String(inputDate.getDate()).padStart(2, '0');
-                        const month = String(inputDate.getMonth() + 1).padStart(2, '0');
-                        const year = inputDate.getFullYear();
-                      
-                        return `${day}/${month}/${year}`;
-                      }
-                      %>
+                    function formatDate(inputDate) {
+                      const day = String(inputDate.getDate()).padStart(2, '0');
+                      const month = String(inputDate.getMonth() + 1).padStart(2, '0');
+                      const year = inputDate.getFullYear();
+                    
+                      return `${day}/${month}/${year}`;
+                    }
+                    %>
 
-                  <!-- table content -->
-                  <tbody class="list">
+                  <tbody class="list" id="project-summary-table-body">
                     <% if (leave && leave.length>0) { %>
                     <!-- table item -->
                     <% leave.forEach(function(leaves) { %>
 
                     <% 
-                        var statusColor = '';
-                        if (leaves.status == "pending"){
+                           var statusColor = '';
+                           if (leaves.status == "pending"){
                             statusColor = 'info';
-                        } else if(leaves.status == "approved") {
-                            statusColor = 'success';
-                        } else if(leaves.status == "denied" ||  leaves.status == "cancelled") {
-                            statusColor = 'danger';
-                        }else if (leaves.status == "invalid"){
-                            statusColor = 'warning';
-                        } else if (leaves.status == "submitted"){
-                            statusColor = 'info-lighter';
-                        } 
+                           } else if(leaves.status == "approved" || leaves.status == "submitted") {
+                               statusColor = 'success';
+                           } else if(leaves.status == "denied" ||  leaves.status == "cancelled") {
+                               statusColor = 'danger';
+                           }else if (leaves.status == "invalid"){
+                               statusColor = 'warning';
+                           }   
+                      %>
 
-                    %>
                     <tr class="position-static">
                       <td class="align-middle time white-space-nowrap ps-0 type py-4">
                         <a class="fw-bold fs-9 fs-md-8" href="/leave/details/<%= leaves._id %>"><%= leaves.type %></a>
                       </td>
-
                       <td class="align-middle text-body white-space-nowrap reliefstaff ps-3">
                         <% 
-                          const checkUserRelief = allUser.find(check => check._id.toString() === leaves.assignee[0].toString());
-                        %>
+                                        const checkUserRelief = allUser.find(check => check._id.toString() === leaves.assignee[0].toString());
+                                      %>
                         <a class="mb-0 fs-9" href="/staff/details/<%= checkUserRelief._id %>"><%= checkUserRelief.fullname %></a>
                       </td>
-                      <td class="align-middle white-space-nowrap startdate">
-                        <p class="mb-0 fs-9 text-body text-center"><%= formatDate(leaves.date.start) %></p>
+                      <td class="align-middle white-space-nowrap startdate text-center ps-3 py-4">
+                        <p class="mb-0 fs-9 text-body"><%= formatDate(leaves.date.start) %></p>
                       </td>
-                      <td class="align-middle white-space-nowrap returndate">
-                        <p class="mb-0 fs-9 text-body text-center"><%= formatDate(leaves.date.return) %></p>
+                      <td class="align-middle white-space-nowrap returndate text-center ps-3 py-4">
+                        <p class="mb-0 fs-9 text-body"><%= formatDate(leaves.date.return) %></p>
                       </td>
                       <td class="align-middle white-space-nowrap text-center status">
                         <span class="badge badge-phoenix fs-10 badge-phoenix-<%= statusColor %>"><%= leaves.status %></span>
@@ -654,26 +651,139 @@
                     <%  }); %> <% } else { %>
                     <tr class="position-static">
                       <td class="align-middle time white-space-nowrap ps-0 border-bottom-0">
-                        <p>No leave submitted from <span class="fw-bold text-primary"><%= otherUser.fullname %></span></p>
+                        <p>No leave submitted from you</p>
                       </td>
                     </tr>
                     <% } %>
                   </tbody>
                 </table>
               </div>
-              <div class="d-flex flex-wrap align-items-center justify-content-between py-3 pe-0 fs-9 border-bottom border-200">
-                <div class="d-flex">
-                  <p class="mb-0 d-none d-sm-block me-3 fw-semi-bold text-900" data-list-info="data-list-info"></p>
-                  <a class="fw-semi-bold" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semi-bold d-none" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
+              <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
+                <div class="col-auto d-flex">
+                  <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p><a class="fw-semibold" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semibold d-none" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
                 </div>
-                <div class="d-flex">
-                  <button class="page-link" data-list-pagination="prev">
-                    <span class="fas fa-chevron-left"></span>
-                  </button>
+                <div class="col-auto d-flex">
+                  <button class="page-link" data-list-pagination="prev"><span class="fas fa-chevron-left"></span></button>
                   <ul class="mb-0 pagination"></ul>
-                  <button class="page-link pe-0" data-list-pagination="next">
-                    <span class="fas fa-chevron-right"></span>
-                  </button>
+                  <button class="page-link pe-0" data-list-pagination="next"><span class="fas fa-chevron-right"></span></button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-8" style="min-height: 25vh;" id="scrollspyAttendances">
+            <div class="border-bottom border-translucent mt-3" id="attendances" data-list='{"valueNames":["type","reliefstaff","startdate","returndate","status"],"page":5,"pagination":true}'>
+              <div class="row align-items-end justify-content-between pb-4 g-3">
+
+                <div class="col-12 col-md-auto">
+                  <div class="search-box">
+                    <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
+                      <input class="form-control search-input search form-control-sm" type="search" placeholder="Search leaves" aria-label="Search" />
+                      <span class="fas fa-search search-box-icon"></span>
+                    </form>
+                  </div>
+                </div>
+
+              </div>
+              <div class="table-responsive ms-n1 ps-1 scrollbar">
+                <table class="table fs-9 mb-0 border-top border-translucent">
+                  <thead>
+                    <tr>
+                      <th class="sort white-space-nowrap align-middle ps-0" scope="col" data-sort="type" style="width:15%;">
+                        TYPE
+                      </th>
+                      <th class="sort align-middle ps-3" scope="col" data-sort="reliefstaff" style="width:15%;">
+                        RELIEF STAFF
+                      </th>
+                      <th class="sort align-middle text-center ps-3" scope="col" data-sort="startdate" style="width:15%;">
+                        START DATE
+                      </th>
+                      <th class="sort align-middle text-center ps-3" scope="col" data-sort="returndate" style="width:15%;">
+                        RETURN DATE
+                      </th>
+                      <th class="sort align-middle text-center" scope="col" data-sort="status" style="width:10%;">
+                        STATUS
+                      </th>
+                      <th class="sort align-middle text-end" scope="col" style="width: 5%"></th>
+                    </tr>
+                  </thead>
+
+                  <% 
+                    function formatDate(inputDate) {
+                      const day = String(inputDate.getDate()).padStart(2, '0');
+                      const month = String(inputDate.getMonth() + 1).padStart(2, '0');
+                      const year = inputDate.getFullYear();
+                    
+                      return `${day}/${month}/${year}`;
+                    }
+                    %>
+
+                  <tbody class="list" id="project-summary-table-body">
+                    <% if (leave && leave.length>0) { %>
+                    <!-- table item -->
+                    <% leave.forEach(function(leaves) { %>
+
+                    <% 
+                           var statusColor = '';
+                           if (leaves.status == "pending"){
+                            statusColor = 'info';
+                           } else if(leaves.status == "approved" || leaves.status == "submitted") {
+                               statusColor = 'success';
+                           } else if(leaves.status == "denied" ||  leaves.status == "cancelled") {
+                               statusColor = 'danger';
+                           }else if (leaves.status == "invalid"){
+                               statusColor = 'warning';
+                           }   
+                      %>
+
+                    <tr class="position-static">
+                      <td class="align-middle time white-space-nowrap ps-0 type py-4">
+                        <a class="fw-bold fs-9 fs-md-8" href="/leave/details/<%= leaves._id %>"><%= leaves.type %></a>
+                      </td>
+                      <td class="align-middle text-body white-space-nowrap reliefstaff ps-3">
+                        <% 
+                                        const checkUserRelief = allUser.find(check => check._id.toString() === leaves.assignee[0].toString());
+                                      %>
+                        <a class="mb-0 fs-9" href="/staff/details/<%= checkUserRelief._id %>"><%= checkUserRelief.fullname %></a>
+                      </td>
+                      <td class="align-middle white-space-nowrap startdate text-center ps-3 py-4">
+                        <p class="mb-0 fs-9 text-body"><%= formatDate(leaves.date.start) %></p>
+                      </td>
+                      <td class="align-middle white-space-nowrap returndate text-center ps-3 py-4">
+                        <p class="mb-0 fs-9 text-body"><%= formatDate(leaves.date.return) %></p>
+                      </td>
+                      <td class="align-middle white-space-nowrap text-center status">
+                        <span class="badge badge-phoenix fs-10 badge-phoenix-<%= statusColor %>"><%= leaves.status %></span>
+                      </td>
+                      <td class="align-middle text-end white-space-nowrap pe-0 action">
+                        <div class="font-sans-serif btn-reveal-trigger position-static">
+                          <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs--2" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
+                            <span class="fas fa-ellipsis-h fs-9"></span>
+                          </button>
+                          <div class="dropdown-menu dropdown-menu-end py-2">
+                            <a class="dropdown-item" href="/leave/details/<%= leaves._id %>">View</a>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                    <%  }); %> <% } else { %>
+                    <tr class="position-static">
+                      <td class="align-middle time white-space-nowrap ps-0 border-bottom-0">
+                        <p>No leave submitted from you</p>
+                      </td>
+                    </tr>
+                    <% } %>
+                  </tbody>
+                </table>
+              </div>
+              <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
+                <div class="col-auto d-flex">
+                  <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p><a class="fw-semibold" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semibold d-none" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
+                </div>
+                <div class="col-auto d-flex">
+                  <button class="page-link" data-list-pagination="prev"><span class="fas fa-chevron-left"></span></button>
+                  <ul class="mb-0 pagination"></ul>
+                  <button class="page-link pe-0" data-list-pagination="next"><span class="fas fa-chevron-right"></span></button>
                 </div>
               </div>
             </div>
@@ -766,6 +876,7 @@
             </div>
 
           </div>
+
         </div>
       </div>
     </div>
