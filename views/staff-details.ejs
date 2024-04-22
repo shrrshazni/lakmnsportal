@@ -349,7 +349,7 @@
             <li class="nav-item"><a class="nav-link me-2" href="#scrollspyTask">Tasks</a></li>
             <li class="nav-item"><a class="nav-link me-2" href="#scrollspyActivities">Activities</a></li>
             <li class="nav-item"><a class="nav-link me-2" href="#scrollspyLeaves">Leaves</a></li>
-            <li class="nav-item"><a class="nav-link me-2" href="#scrollspyAttendances">Leaves</a></li>
+            <li class="nav-item"><a class="nav-link me-2" href="#scrollspyAttendances">Attendances</a></li>
             <li class="nav-item"><a class="nav-link" href="#scrollspyAttachments">Attachments </a></li>
           </ul>
         </nav>
@@ -358,19 +358,21 @@
           <div class="mb-8" style="min-height: 25vh;">
             <h2 class="mb-4" id="scrollspyTask">Tasks</h2>
             <div class="row align-items-center g-0 justify-content-start mb-3">
-              <div class="col-12 col-sm-auto">
-                <div class="search-box w-100 mb-2 mb-sm-0" style="max-width:30rem;">
-                  <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
-                    <input class="form-control search-input search" id="searchInput" type="search" placeholder="Search tasks" aria-label="Search" />
-                    <span class="fas fa-search search-box-icon"></span>
 
+              <div class="col-12 col-md-auto">
+                <div class="search-box mb-2 mb-sm-0">
+                  <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
+                    <input class="form-control search-input search form-control-sm" id="searchInput" type="search" placeholder="Search tasks" aria-label="Search" />
+                    <span class="fas fa-search search-box-icon"></span>
                   </form>
                 </div>
               </div>
+
               <div class="col-auto d-flex">
                 <p class="mb-0 ms-sm-3 fs-9 text-body-tertiary fw-bold"><span class="fas fa-filter me-1 fw-extra-bold fs-10"></span><%= tasks.length %> tasks</p>
               </div>
             </div>
+
             <div class="card-body py-0 scrollbar task-list-body" id="itemList">
               <% if(tasks && tasks.length > 0 ) {%>
               <% const lastIndexItem = tasks.length - 1; %>
@@ -672,104 +674,66 @@
           </div>
 
           <div class="mb-8" style="min-height: 25vh;" id="scrollspyAttendances">
-            <div class="border-bottom border-translucent mt-3" id="attendances" data-list='{"valueNames":["type","reliefstaff","startdate","returndate","status"],"page":5,"pagination":true}'>
+            <div class="border-bottom border-translucent mt-3" id="attendance" data-list='{"valueNames":["date","clockin","clockout"],"page":5,"pagination":true}'>
               <div class="row align-items-end justify-content-between pb-4 g-3">
 
                 <div class="col-12 col-md-auto">
                   <div class="search-box">
                     <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
-                      <input class="form-control search-input search form-control-sm" type="search" placeholder="Search leaves" aria-label="Search" />
+                      <input class="form-control search-input search form-control-sm" type="search" placeholder="Search attendances" aria-label="Search" />
                       <span class="fas fa-search search-box-icon"></span>
                     </form>
                   </div>
                 </div>
 
               </div>
+
               <div class="table-responsive ms-n1 ps-1 scrollbar">
                 <table class="table fs-9 mb-0 border-top border-translucent">
                   <thead>
                     <tr>
-                      <th class="sort white-space-nowrap align-middle ps-0" scope="col" data-sort="type" style="width:15%;">
-                        TYPE
-                      </th>
-                      <th class="sort align-middle ps-3" scope="col" data-sort="reliefstaff" style="width:15%;">
-                        RELIEF STAFF
-                      </th>
-                      <th class="sort align-middle text-center ps-3" scope="col" data-sort="startdate" style="width:15%;">
-                        START DATE
-                      </th>
-                      <th class="sort align-middle text-center ps-3" scope="col" data-sort="returndate" style="width:15%;">
-                        RETURN DATE
-                      </th>
-                      <th class="sort align-middle text-center" scope="col" data-sort="status" style="width:10%;">
-                        STATUS
-                      </th>
-                      <th class="sort align-middle text-end" scope="col" style="width: 5%"></th>
+                      <th class="sort align-middle ps-0 text-start text-uppercase" scope="col" data-sort="type" style="width:15%;min-width: 100px;">Status</th>
+                      <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="date" style="width:15%;min-width: 150px;">Date</th>
+                      <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="clockin" style="width:15%;min-width: 100px;">Clock In</th>
+                      <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="clockout" style="width:15%;min-width: 100px;">Clock Out</th>
+                      <th class="sort align-middle text-end" scope="col" style="width: 10%"></th>
                     </tr>
                   </thead>
 
-                  <% 
-                    function formatDate(inputDate) {
-                      const day = String(inputDate.getDate()).padStart(2, '0');
-                      const month = String(inputDate.getMonth() + 1).padStart(2, '0');
-                      const year = inputDate.getFullYear();
-                    
-                      return `${day}/${month}/${year}`;
-                    }
-                    %>
-
-                  <tbody class="list" id="project-summary-table-body">
-                    <% if (leave && leave.length>0) { %>
-                    <!-- table item -->
-                    <% leave.forEach(function(leaves) { %>
+                  <tbody class="list" id="attendance-table-content">
+                    <% if(attendance && attendance.length > 0){ %>
+                    <% attendance.forEach(item => { %>
 
                     <% 
-                           var statusColor = '';
-                           if (leaves.status == "pending"){
-                            statusColor = 'info';
-                           } else if(leaves.status == "approved" || leaves.status == "submitted") {
-                               statusColor = 'success';
-                           } else if(leaves.status == "denied" ||  leaves.status == "cancelled") {
-                               statusColor = 'danger';
-                           }else if (leaves.status == "invalid"){
-                               statusColor = 'warning';
-                           }   
+                        
+                        let signOutTime;
+                        if(item.date.signOutTime === null){
+                            signOutTime = 'Not yet';
+                        } else{
+                            signOutTime = item.date.signOutTime.toLocaleTimeString('en-UK', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone : 'Asia/Kuala_Lumpur' });
+                        }
                       %>
-
                     <tr class="position-static">
-                      <td class="align-middle time white-space-nowrap ps-0 type py-4">
-                        <a class="fw-bold fs-9 fs-md-8" href="/leave/details/<%= leaves._id %>"><%= leaves.type %></a>
-                      </td>
-                      <td class="align-middle text-body white-space-nowrap reliefstaff ps-3">
-                        <% 
-                                        const checkUserRelief = allUser.find(check => check._id.toString() === leaves.assignee[0].toString());
-                                      %>
-                        <a class="mb-0 fs-9" href="/staff/details/<%= checkUserRelief._id %>"><%= checkUserRelief.fullname %></a>
-                      </td>
-                      <td class="align-middle white-space-nowrap startdate text-center ps-3 py-4">
-                        <p class="mb-0 fs-9 text-body"><%= formatDate(leaves.date.start) %></p>
-                      </td>
-                      <td class="align-middle white-space-nowrap returndate text-center ps-3 py-4">
-                        <p class="mb-0 fs-9 text-body"><%= formatDate(leaves.date.return) %></p>
-                      </td>
-                      <td class="align-middle white-space-nowrap text-center status">
-                        <span class="badge badge-phoenix fs-10 badge-phoenix-<%= statusColor %>"><%= leaves.status %></span>
-                      </td>
-                      <td class="align-middle text-end white-space-nowrap pe-0 action">
+                      <td class="type align-middle fw-semibold text-start py-2 ps-0 fs-9 fs-md-8 text-body-highlight"><%= item.status %></td>
+                      <td class="date align-middle text-center py-2 ps-0 fs-9"><%= item.timestamp.toLocaleDateString('en-UK', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></td>
+                      <td class="clockin align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-success"><%= item.date.signInTime.toLocaleTimeString('en-UK', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone : 'Asia/Kuala_Lumpur' }) %></span></td>
+                      <td class="clockin align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-success"><%= signOutTime %></span></td>
+                      <td class="align-middle text-end white-space-nowrap ps-0 action">
                         <div class="font-sans-serif btn-reveal-trigger position-static">
                           <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs--2" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
                             <span class="fas fa-ellipsis-h fs-9"></span>
                           </button>
                           <div class="dropdown-menu dropdown-menu-end py-2">
-                            <a class="dropdown-item" href="/leave/details/<%= leaves._id %>">View</a>
+                            <a class="dropdown-item" href="/">View</a>
                           </div>
                         </div>
                       </td>
                     </tr>
-                    <%  }); %> <% } else { %>
+                    <% }); %>
+                    <% }else{ %>
                     <tr class="position-static">
-                      <td class="align-middle time white-space-nowrap ps-0 border-bottom-0">
-                        <p>No leave submitted from you</p>
+                      <td class="align-middle white-space-nowrap border-bottom-0">
+                        <p>No activity detected from <span class="fw-bold text-primary"><%= user.fullname %></span></p>
                       </td>
                     </tr>
                     <% } %>

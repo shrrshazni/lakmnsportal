@@ -112,7 +112,7 @@
       <li class="nav-item me-3"><a class="nav-link text-nowrap active" id="orders-tab" data-bs-toggle="tab" href="#tab-activity" role="tab" aria-controls="tab-orders" aria-selected="true"><span class="fa-solid fa-clock me-2"></span>Activity<span class="text-body-tertiary fw-normal"> (<%= activities.length %>)</span></a></li>
       <li class="nav-item me-3"><a class="nav-link text-nowrap" id="reviews-tab" data-bs-toggle="tab" href="#tab-leave" role="tab" aria-controls="tab-orders" aria-selected="true"><span class="fa-solid fa-calendar me-2"></span>Leave<span class="text-body-tertiary fw-normal"></span></a></li>
       <li class="nav-item me-3"><a class="nav-link text-nowrap" id="wishlist-tab" data-bs-toggle="tab" href="#tab-attachment" role="tab" aria-controls="tab-orders" aria-selected="true"><span class="fa-solid fa-clipboard me-2"></span>Attachments</a></li>
-      <li class="nav-item me-3"><a class="nav-link text-nowrap" id="wishlist-tab" data-bs-toggle="tab" href="#tab-attendance" role="tab" aria-controls="tab-orders" aria-selected="true"><span class="fa-solid fa-clipboard-user me-2"></span>Attendance</a></li>
+      <li class="nav-item me-3"><a class="nav-link text-nowrap" id="wishlist-tab" data-bs-toggle="tab" href="#tab-attendance" role="tab" aria-controls="tab-orders" aria-selected="true"><span class="fa-solid fa-clipboard-user me-2"></span>Attendances</a></li>
       <li class="nav-item me-3"><a class="nav-link text-nowrap" id="wishlist-tab" data-bs-toggle="tab" href="#tab-personal" role="tab" aria-controls="tab-orders" aria-selected="true"><span class="fa-solid fa-user me-2"></span>Personal</a></li>
     </ul>
   </div>
@@ -131,6 +131,7 @@
               </form>
             </div>
           </div>
+
         </div>
 
         <div class="table-responsive ms-n1 ps-1 scrollbar">
@@ -191,6 +192,7 @@
     </div>
 
     <div class="tab-pane fade" id="tab-leave" role="tabpanel" aria-labelledby="leaves-tab">
+
       <div class="border-bottom border-translucent mt-3" id="leaves" data-list='{"valueNames":["type","reliefstaff","startdate","returndate","status"],"page":5,"pagination":true}'>
         <div class="row align-items-end justify-content-between pb-4 g-3">
 
@@ -306,6 +308,7 @@
           </div>
         </div>
       </div>
+
     </div>
 
     <div class="tab-pane fade" id="tab-attachment" role="tabpanel" aria-labelledby="attachment-tab">
@@ -427,11 +430,21 @@
             <tbody class="list" id="attendance-table-content">
               <% if(attendance && attendance.length > 0){ %>
               <% attendance.forEach(item => { %>
+
+              <% 
+                
+                let signOutTime;
+                if(item.date.signOutTime === null){
+                    signOutTime = 'Not yet';
+                } else{
+                    signOutTime = item.date.signOutTime.toLocaleTimeString('en-UK', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone : 'Asia/Kuala_Lumpur' });
+                }
+              %>
               <tr class="position-static">
                 <td class="type align-middle fw-semibold text-start py-2 ps-0 fs-9 fs-md-8 text-body-highlight"><%= item.status %></td>
                 <td class="date align-middle text-center py-2 ps-0 fs-9"><%= item.timestamp.toLocaleDateString('en-UK', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></td>
                 <td class="clockin align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-success"><%= item.date.signInTime.toLocaleTimeString('en-UK', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone : 'Asia/Kuala_Lumpur' }) %></span></td>
-                <td class="clockin align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-success"><%= item.date.signOutTime.toLocaleTimeString('en-UK', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone : 'Asia/Kuala_Lumpur' }) %></span></td>
+                <td class="clockin align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-success"><%= signOutTime %></span></td>
                 <td class="align-middle text-end white-space-nowrap ps-0 action">
                   <div class="font-sans-serif btn-reveal-trigger position-static">
                     <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs--2" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">

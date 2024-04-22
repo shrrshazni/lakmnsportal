@@ -2050,8 +2050,10 @@ app.get('/profile', isAuthenticated, async function (req, res) {
     const leave = await Leave.find({ user: user._id, status: { $nin: ['denied', 'cancelled'] } }).sort({ timestamp: -1 });
     const activities = await Activity.find({ user: user._id }).sort({ date: -1 });
     const allUser = await User.find();
-    const file = await File.find().sort({ date: -1 });
+    const file = await File.find({ type: { $ne: 'leave' } }).sort({ date: -1 });
     const attendance = await Attendance.find({ user: user._id }).sort({ timestamp: -1 });
+
+    console.log(attendance);
 
     const date = getDateFormat2();
 
@@ -4914,7 +4916,7 @@ app.get('/generate-qr', async (req, res) => {
 
 app.post('/save-qr-data', async function (req, res) {
     const qrData = req.body.qrData;
-    console.log('Received QR code data:', qrData);
+    // console.log('Received QR code data:', qrData);
 
     // Save the raw URL in the database
     // await QRCode.create({
@@ -4922,21 +4924,21 @@ app.post('/save-qr-data', async function (req, res) {
     //     createdAt: new Date()
     // });
 
-    const checkTempAttendance = await TempAttendance.find();
+    // const checkTempAttendance = await TempAttendance.find();
 
-    if (checkTempAttendance.length <= 1) {
-        const deleteAll = await TempAttendance.deleteMany();
-        console.log(deleteAll);
-    } else {
-        const excludedDocumentId = await TempAttendance.findOne().sort({ timestamp: -1 });
-        console.log(excludedDocumentId);
+    // if (checkTempAttendance.length <= 1) {
+    //     const deleteAll = await TempAttendance.deleteMany();
+    //     // console.log(deleteAll);
+    // } else {
+    //     const excludedDocumentId = await TempAttendance.findOne().sort({ timestamp: -1 });
+    //     // console.log(excludedDocumentId);
 
-        if (!excludedDocumentId) {
-            console.log('No matching document found');
-        } else {
-            await TempAttendance.deleteMany({ _id: { $ne: excludedDocumentId } });
-        }
-    }
+    //     if (!excludedDocumentId) {
+    //         console.log('No matching document found');
+    //     } else {
+    //         await TempAttendance.deleteMany({ _id: { $ne: excludedDocumentId } });
+    //     }
+    // }
 
     res.status(200).send('QR code data received and saved successfully');
 });
@@ -5038,7 +5040,7 @@ app.post('/process-scanned-data', isAuthenticated, async function (req, res) {
             message: log
         }
 
-        console.log(response);
+        // console.log(response);
         res.json(response);
     }
 });
@@ -5047,6 +5049,7 @@ app.get('/get-latest-scanned-data', isAuthenticated, async function (req, res) {
     try {
         const tempAttendance = await TempAttendance.findOne().sort({ timestamp: -1 }).lean();
         var message = '';
+        var response = '';
 
         if (tempAttendance) {
             const allUser = await User.find();
@@ -5064,19 +5067,24 @@ app.get('/get-latest-scanned-data', isAuthenticated, async function (req, res) {
                 message = 'PLease try again!';
             }
 
-            const response = {
+            response = {
                 temp: tempAttendance,
                 user: user,
                 message: message
             };
-
-            res.json(response);
         } else {
-            const response = "";
-            res.json(response);
+            // Handle the case when tempAttendance is null
+            message = 'No attendance record found.';
+            response = {
+                temp: null,
+                user: null,
+                message: message
+            };
         }
 
-        // res.json({ response });
+        res.json(response);
+        console.log('', response);
+
     } catch (error) {
         console.error('Error fetching latest scanned data:', error);
         res.status(500).json({ error: 'Internal server error' });
