@@ -4696,11 +4696,23 @@ app.get('/human-resource/attendance/overview', isAuthenticated, async function (
     }).populate('sender');
 
     if (user) {
+        const currentDate = new Date();
+        const startOfToday = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate(), 0, 0, 0);
+        const endOfToday = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate(), 23, 59, 59);
+
+        const attendance = await Attendance.find({
+            timestamp: { $gte: startOfToday, $lte: endOfToday }
+        }
+        ).sort({ timestamp: -1 });
+
+        const allUser = await User.find();
 
         res.render('hr-attendance-overview', {
             user: user,
             notifications: notifications,
             uuid: uuidv4(),
+            allUser: allUser,
+            attendance: attendance
         });
     }
 });
@@ -4830,6 +4842,7 @@ app.post('/api/data/all-attendance', isAuthenticated, async function (req, res) 
     }
 });
 
+//ATTENDANCE TODAY FOR ATTENDANCE PAGE
 app.get('/api/attendance/today', async function (req, res) {
     try {
         // Get today's date
@@ -4864,6 +4877,71 @@ app.get('/api/attendance/today', async function (req, res) {
                 const options = {
                     timeZone: 'Asia/Kuala_Lumpur',
                     hour12: false,
+                    hour: '2-digit',
+                    minute: '2-digit'
+                };
+                return dateTime.toLocaleTimeString('en-MY', options);
+            };
+
+            return {
+                user: user ? {
+                    _id: user._id,
+                    fullname: user.fullname,
+                    initials: getInitials(user.fullname),
+                    department: user.department,
+                    section: user.section,
+                    profile: user.profile,
+                    // Add other user fields as needed
+                } : null,
+                datetime: formatDateTime(new Date(entry.date.signInTime)), // Assuming you want to display signInTime
+                status: entry.status,
+                type: entry.type
+            };
+        });
+
+        // Send the filtered attendance data for today to the client
+        res.json(filteredData);
+    } catch (err) {
+        console.error('Error fetching attendance data for today:', err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// HR VIEW FOR TODAYS ATTENDANCE
+app.get('/api/hr/attendance/today', async function (req, res) {
+    try {
+        // Get today's date
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Set hours, minutes, seconds, and milliseconds to 0 to get the start of the day
+
+        // Get the current time
+        const currentTime = new Date();
+
+        // Find attendance data for today within the specified time range
+        const attendanceData = await Attendance.find({
+            'date.signInTime': {
+                $gte: today, // Find records where signInTime is greater than or equal to today
+                // $lte: currentTime // and less than or equal to the current time
+            }
+        }).sort({ 'date.signInTime': -1 }).lean();
+
+        // Get all users
+        const allUsers = await User.find().lean();
+
+        // Filter the attendance data and populate user information
+        const filteredData = attendanceData.map(entry => {
+            const user = allUsers.find(user => user._id.toString() === entry.user.toString());
+
+            const getInitials = (str) => {
+                const names = str.split(' '); // Split the full name into an array of names
+                const initials = names.slice(0, 2).map(name => name.charAt(0).toUpperCase()); // Get the first letter of each name and capitalize it
+                return initials.join(''); // Join the initials into a single string
+            };
+
+            const formatDateTime = (dateTime) => {
+                const options = {
+                    timeZone: 'Asia/Kuala_Lumpur',
+                    hour12: true,
                     hour: '2-digit',
                     minute: '2-digit'
                 };
