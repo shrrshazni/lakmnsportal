@@ -19,6 +19,7 @@ const { v4: uuidv4 } = require('uuid');
 const { send } = require('process');
 const fs = require('fs').promises;
 const qr = require('qrcode');
+const { timeStamp } = require('console');
 // const twilio = require('twilio');
 
 const mongoURI =
@@ -422,11 +423,11 @@ app.get('/', isAuthenticated, async function (req, res) {
     const notifications = await Notification.find({
         recipient: user._id,
         read: false
-    }).populate('sender');
+    }).populate('sender').sort({ timestamp: -1 });
 
-    const allUser = await User.find();
-    const allLeave = await Leave.find();
-    const allUserLeave = await UserLeave.find();
+    const allUser = await User.find().sort({ timestamp: -1 });
+    const allLeave = await Leave.find().sort({ timestamp: -1 });
+    const allUserLeave = await UserLeave.find().sort({ timestamp: -1 });
     const allInfo = await Info.find();
     const userLeave = await UserLeave.findOne({ user: user._id })
         .populate('user')
@@ -1135,7 +1136,7 @@ app.get('/staff/details/:id', isAuthenticated, async function (req, res) {
     const notifications = await Notification.find({
         recipient: user._id,
         read: false
-    }).populate('sender');
+    }).populate('sender').sort({ timestamp: -1 });
 
     const id = req.params.id;
     const otherUser = await User.findOne({ _id: id });
@@ -2045,7 +2046,7 @@ app.get('/profile', isAuthenticated, async function (req, res) {
     const notifications = await Notification.find({
         recipient: user._id,
         read: false
-    }).populate('sender');
+    }).populate('sender').sort({ timestamp: -1 });
     const userLeave = await UserLeave.find({ user: user._id });
     const leave = await Leave.find({ user: user._id, status: { $nin: ['denied', 'cancelled'] } }).sort({ timestamp: -1 });
     const activities = await Activity.find({ user: user._id }).sort({ date: -1 });
@@ -2097,7 +2098,7 @@ app.get('/settings', isAuthenticated, async function (req, res) {
     const notifications = await Notification.find({
         recipient: user._id,
         read: false
-    }).populate('sender');
+    }).populate('sender').sort({ timestamp: -1 });
     const info = await Info.findOne({ user: user._id });
 
     if (user) {
@@ -2116,7 +2117,7 @@ app.get('/settings', isAuthenticated, async function (req, res) {
     const notifications = await Notification.find({
         recipient: user._id,
         read: false
-    }).populate('sender');
+    }).populate('sender').sort({ timestamp: -1 });
     const info = await Info.findOne({ user: user._id });
 
     if (user) {
@@ -2289,7 +2290,7 @@ app.get('/info/:type/:method/:id', async function (req, res) {
     const notifications = await Notification.find({
         recipient: user._id,
         read: false
-    }).populate('sender');
+    }).populate('sender').sort({ timestamp: -1 });
     const info = await Info.findOne({ user: user._id });
 
     if (user) {
@@ -2392,7 +2393,7 @@ app.get('/calendar', isAuthenticated, async function (req, res) {
     const notifications = await Notification.find({
         recipient: user._id,
         read: false
-    }).populate('sender');
+    }).populate('sender').sort({ timestamp: -1 });
 
     res.render('calendar', {
         user: user,
@@ -2478,8 +2479,8 @@ app
             });
             const adminHR = await User.findOne({
                 isAdmin: true,
-                section: 'Administration and Human Resource Management Division',
-                _id: { $ne: user._id }
+                isHeadOfSection: true,
+                section: 'Administration and Human Resource Management Division'
             });
             const userLeave = await UserLeave.findOne({ user: user._id })
                 .populate('user')
@@ -2488,6 +2489,8 @@ app
             const assignee = await User.find({ fullname: { $in: selectedNames } });
             // leave for the user
             const leave = await Leave.find({ user: user._id });
+
+            console.log(adminHR);
 
             const newDate = {
                 start: new Date(startDate),
@@ -3059,6 +3062,15 @@ app
                     });
                 }
             } else {
+                const adminUsers = await User.find({ isAdmin: true, section: 'Administration and Human Resource Management Division', _id: { $ne: adminHR._id } });
+                
+                // Push the IDs of admin users to sendNoti
+                adminUsers.forEach(user => {
+                    if (!sendNoti.includes(user._id)) {
+                        sendNoti.push(user._id);
+                    }
+                });
+
                 let i = 0;
                 // set user id to be send
                 for (const approval of approvals) {
@@ -3082,6 +3094,8 @@ app
 
                     i++;
                 }
+
+                console.log(sendNoti);
 
                 const leave = new Leave({
                     fileId: uuid,
@@ -3176,9 +3190,9 @@ app
                 // });
 
                 // for home dashboard
-                const allUser = await User.find();
-                const allLeave = await Leave.find();
-                const allUserLeave = await UserLeave.find();
+                const allUser = await User.find().sort({ timestamp: -1 });
+                const allLeave = await Leave.find().sort({ timestamp: -1 });
+                const allUserLeave = await UserLeave.find().sort({ timestamp: -1 });
                 const allInfo = await Info.find();
                 const taskHome = await Task.find({ assignee: { $in: [user._id] } })
                     .sort({ timestamp: -1 })
@@ -3399,7 +3413,7 @@ app.get('/leave/history', isAuthenticated, async function (req, res) {
     const notifications = await Notification.find({
         recipient: user._id,
         read: false
-    }).populate('sender');
+    }).populate('sender').sort({ timestamp: -1 });
 
     if (user) {
         const leave = await Leave.find({ user: user._id }).sort({
@@ -3426,7 +3440,7 @@ app.get('/leave/details/:id', isAuthenticated, async function (req, res) {
     const notifications = await Notification.find({
         recipient: user._id,
         read: false
-    }).populate('sender');
+    }).populate('sender').sort({ timestamp: -1 });
 
     const leave = await Leave.findOne({ _id: id });
 
@@ -3489,297 +3503,317 @@ app.get('/leave/:approval/:id', async function (req, res) {
         const indexOfRecipient = checkLeave.approvals.findIndex(approval =>
             approval.recipient.equals(user._id)
         );
+        const humanResourceIndex = checkLeave.approvals.findIndex(approval =>
+            approval.role === 'Human Resource'
+        );
+
+        console.log(checkLeave.approvals[humanResourceIndex].recipient);
 
         if (approval === 'approved') {
-            const leave = await Leave.findOneAndUpdate(
-                {
-                    _id: id,
-                    'approvals.recipient': user._id
-                },
-                {
-                    $set: {
-                        'approvals.$.status': 'approved',
-                        'approvals.$.comment': 'The request have been approved',
-                        'approvals.$.timestamp': new Date()
-                    }
-                },
-                { new: true }
-            );
 
-            if (leave) {
+            if (
+                checkLeave.approvals[humanResourceIndex - 1].status === 'approved'
+                && user.isAdmin
+            ) {
+                await Leave.findOneAndUpdate(
+                    {
+                        _id: id,
+                        'approvals.recipient': checkLeave.approvals[humanResourceIndex].recipient
+                    },
+                    {
+                        $set: {
+                            'approvals.$.status': 'approved',
+                            'approvals.$.comment': 'The request have been officially approved',
+                            'approvals.$.timestamp': new Date()
+                        }
+                    },
+                    { new: true }
+                );
+
+                const firstRecipientId = checkLeave.approvals[0].recipient;
+
+                const userLeave = await UserLeave.findOne({
+                    user: firstRecipientId
+                });
+
+                const startDate = checkLeave.date.start;
+                const returnDate = checkLeave.date.return;
+
+                var timeDifference = '';
+                var daysDifference = '';
+
+                // Calculate the difference in hours between the two dates
                 if (
-                    indexOfRecipient !== -1 &&
-                    checkLeave.approvals[indexOfRecipient].status === 'approved'
+                    checkLeave.type === 'Annual Leave' ||
+                    checkLeave.type === 'Sick Leave'
                 ) {
-                    if (user.isAdmin === true) {
-                        const firstRecipientId = checkLeave.approvals[0].recipient;
-
-                        const userLeave = await UserLeave.findOne({
-                            user: firstRecipientId
-                        });
-
-                        const startDate = checkLeave.date.start;
-                        const returnDate = checkLeave.date.return;
-
-                        var timeDifference = '';
-                        var daysDifference = '';
-
-                        // Calculate the difference in hours between the two dates
-                        if (
-                            checkLeave.type === 'Annual Leave' ||
-                            checkLeave.type === 'Sick Leave'
-                        ) {
-                            daysDifference = calculateBusinessDays(startDate, returnDate);
-                        } else if (checkLeave.type === 'Half Day Leave') {
-                            numberOfDays = calculateBusinessDays(startDate, returnDate) / 2;
-                        } else if (checkLeave.type === 'Emergency Leave') {
-                            daysDifference = calculateBusinessDays(startDate, today);
-                        } else if (
-                            checkLeave.type === 'Marriage Leave' ||
-                            checkLeave.type === 'Paternity Leave' ||
-                            checkLeave.type === 'Maternity Leave' ||
-                            checkLeave.type === 'Attend Exam Leave' ||
-                            checkLeave.type === 'Hajj Leave' ||
-                            checkLeave.type === 'Unpaid Leave' ||
-                            checkLeave.type === 'Special Leave' ||
-                            checkLeave.type === 'Extended Sick Leave'
-                        ) {
-                            timeDifference = returnDate.getTime() - startDate.getTime();
-                            // Convert milliseconds to days
-                            daysDifference = Math.ceil(
-                                timeDifference / (1000 * 60 * 60 * 24)
-                            );
-                        }
-
-                        switch (checkLeave.type) {
-                            case 'Annual Leave':
-                                userLeave.annual.taken += daysDifference;
-                                userLeave.annual.taken = Math.max(0, userLeave.annual.taken);
-                                break;
-
-                            case 'Sick Leave':
-                                userLeave.sick.taken += daysDifference;
-                                userLeave.sick.taken = Math.max(0, userLeave.sick.taken);
-                                break;
-
-                            case 'Sick Extended Leave':
-                                userLeave.sickExtended.taken += daysDifference;
-                                userLeave.sickExtended.taken = Math.max(
-                                    0,
-                                    userLeave.sickExtended.taken
-                                );
-                                break;
-
-                            case 'Emergency Leave':
-                                userLeave.annual.taken += daysDifference;
-                                userLeave.annual.taken = Math.max(0, userLeave.annual.taken);
-                                userLeave.emergency.taken += daysDifference;
-                                userLeave.emergency.taken = Math.max(
-                                    0,
-                                    userLeave.emergency.taken
-                                );
-                                break;
-
-                            case 'Attend Exam Leave':
-                                userLeave.attendExam.leave -= daysDifference;
-                                userLeave.attendExam.leave = Math.max(
-                                    0,
-                                    userLeave.attendExam.leave
-                                );
-                                userLeave.attendExam.taken = userLeave.attendExam.taken + 1;
-                                break;
-
-                            case 'Maternity Leave':
-                                userLeave.maternity.leave -= daysDifference;
-                                userLeave.maternity.leave = Math.max(
-                                    0,
-                                    userLeave.maternity.leave
-                                );
-                                userLeave.maternity.taken = userLeave.maternity.taken + 1;
-                                break;
-
-                            case 'Paternity Leave':
-                                userLeave.paternity.leave -= daysDifference;
-                                userLeave.paternity.leave = Math.max(
-                                    0,
-                                    userLeave.paternity.leave
-                                );
-                                userLeave.paternity.taken = userLeave.paternity.taken + 1;
-                                break;
-
-                            case 'Hajj Leave':
-                                userLeave.hajj.taken = userLeave.hajj.taken + 1;
-                                break;
-
-                            case 'Unpaid Leave':
-                                userLeave.unpaid.taken = userLeave.unpaid.taken + 1;
-                                break;
-
-                            case 'Special Leave':
-                                userLeave.special.taken = userLeave.special.taken + 1;
-                                break;
-
-                            default:
-                                break;
-                        }
-
-                        await userLeave.save();
-
-                        await Leave.findOneAndUpdate(
-                            {
-                                _id: id
-                            },
-                            {
-                                $set: {
-                                    status: 'approved'
-                                }
-                            },
-                            { new: true }
-                        );
-
-                        // send noti
-                        const newNotification = new Notification({
-                            sender: user._id,
-                            recipient: new mongoose.Types.ObjectId(firstRecipientId),
-                            type: 'Leave',
-                            url: '/leave/details/' + id,
-                            message: 'Your leave request have been approved'
-                        });
-
-                        newNotification.save();
-
-                        // activity
-                        const activityUser = new Activity({
-                            user: user._id,
-                            date: new Date(),
-                            title: 'Leave application approved',
-                            type: 'Leave request',
-                            description: 'Approved a leave request'
-                        });
-
-                        activityUser.save();
-
-                        const firstRecipientEmail = await User.findOne({
-                            _id: firstRecipientId
-                        });
-
-                        // turn off the email notications
-                        // send email to the recipient
-                        // let mailOptions = {
-                        //     from: 'shrrshazni@gmail.com',
-                        //     to: firstlRecipientEmail.email,
-                        //     subject: 'lakmnsportal - Approval Leave Follow up',
-                        //     html: `
-                        //       <html>
-                        //         <head>
-                        //           <style>
-                        //             body {
-                        //               font-family: 'Arial', sans-serif;
-                        //               background-color: #f4f4f4;
-                        //               color: #333;
-                        //             }
-                        //             p {
-                        //               margin-bottom: 20px;
-                        //             }
-                        //             a {
-                        //               color: #3498db;
-                        //             }
-                        //           </style>
-                        //         </head>
-                        //         <body>
-                        //           <h1>Leave Request</h1>
-                        //           <p>${user.fullname} has take action of ${type} from, ${startDate} until ${returnDate}.</p>
-                        //           <p>Please do check the leave approval at <a href="http://localhost:5002/">lakmnsportal</a></p>
-                        //         </body>
-                        //       </html>
-                        //     `
-                        // };
-
-                        // transporter.sendMail(mailOptions, (error, info) => {
-                        //     if (error) {
-                        //         return console.log(error);
-                        //     }
-                        //     console.log('Message %s sent: %s', info.messageId, info.response);
-                        // });
-
-                        console.log('The leave has been officially approved');
-                        res.redirect('/leave/details/' + id);
-                    }
-                } else {
-                    const nextIndex = indexOfRecipient + 1;
-                    const nextApprovalRecipientId =
-                        checkLeave.approvals[nextIndex].recipient;
-
-                    // send noti
-                    const newNotification = new Notification({
-                        sender: user._id,
-                        recipient: new mongoose.Types.ObjectId(nextApprovalRecipientId),
-                        type: 'Leave',
-                        url: '/leave/details/' + id,
-                        message:
-                            'Previous approval has been submitted, please do check the leave request for approval'
-                    });
-
-                    newNotification.save();
-
-                    // activity
-                    const activityUser = new Activity({
-                        user: user._id,
-                        date: new Date(),
-                        title: 'Leave application approved',
-                        type: 'Leave request',
-                        description: 'Approved a leave request'
-                    });
-
-                    activityUser.save();
-
-                    const nextApprovalRecipientEmail = await User.findOne({
-                        _id: nextApprovalRecipientId
-                    });
-
-                    // turn off the email notications
-                    // send email to the recipient
-                    // let mailOptions = {
-                    //     from: 'shrrshazni@gmail.com',
-                    //     to: nextApprovalRecipientEmail.email,
-                    //     subject: 'lakmnsportal - Approval Leave Follow up',
-                    //     html: `
-                    //       <html>
-                    //         <head>
-                    //           <style>
-                    //             body {
-                    //               font-family: 'Arial', sans-serif;
-                    //               background-color: #f4f4f4;
-                    //               color: #333;
-                    //             }
-                    //             p {
-                    //               margin-bottom: 20px;
-                    //             }
-                    //             a {
-                    //               color: #3498db;
-                    //             }
-                    //           </style>
-                    //         </head>
-                    //         <body>
-                    //           <h1>Leave Request</h1>
-                    //           <p>${user.fullname} has take action of ${type} from, ${startDate} until ${returnDate}.</p>
-                    //           <p>Please do check the leave approval at <a href="http://localhost:5002/">lakmnsportal</a></p>
-                    //         </body>
-                    //       </html>
-                    //     `
-                    // };
-
-                    // transporter.sendMail(mailOptions, (error, info) => {
-                    //     if (error) {
-                    //         return console.log(error);
-                    //     }
-                    //     console.log('Message %s sent: %s', info.messageId, info.response);
-                    // });
-
-                    console.log('The leave has been approved');
-                    res.redirect('/leave/details/' + id);
+                    daysDifference = calculateBusinessDays(startDate, returnDate);
+                } else if (checkLeave.type === 'Half Day Leave') {
+                    numberOfDays = calculateBusinessDays(startDate, returnDate) / 2;
+                } else if (checkLeave.type === 'Emergency Leave') {
+                    daysDifference = calculateBusinessDays(startDate, today);
+                } else if (
+                    checkLeave.type === 'Marriage Leave' ||
+                    checkLeave.type === 'Paternity Leave' ||
+                    checkLeave.type === 'Maternity Leave' ||
+                    checkLeave.type === 'Attend Exam Leave' ||
+                    checkLeave.type === 'Hajj Leave' ||
+                    checkLeave.type === 'Unpaid Leave' ||
+                    checkLeave.type === 'Special Leave' ||
+                    checkLeave.type === 'Extended Sick Leave'
+                ) {
+                    timeDifference = returnDate.getTime() - startDate.getTime();
+                    // Convert milliseconds to days
+                    daysDifference = Math.ceil(
+                        timeDifference / (1000 * 60 * 60 * 24)
+                    );
                 }
+
+                switch (checkLeave.type) {
+                    case 'Annual Leave':
+                        userLeave.annual.taken += daysDifference;
+                        userLeave.annual.taken = Math.max(0, userLeave.annual.taken);
+                        break;
+
+                    case 'Sick Leave':
+                        userLeave.sick.taken += daysDifference;
+                        userLeave.sick.taken = Math.max(0, userLeave.sick.taken);
+                        break;
+
+                    case 'Sick Extended Leave':
+                        userLeave.sickExtended.taken += daysDifference;
+                        userLeave.sickExtended.taken = Math.max(
+                            0,
+                            userLeave.sickExtended.taken
+                        );
+                        break;
+
+                    case 'Emergency Leave':
+                        userLeave.annual.taken += daysDifference;
+                        userLeave.annual.taken = Math.max(0, userLeave.annual.taken);
+                        userLeave.emergency.taken += daysDifference;
+                        userLeave.emergency.taken = Math.max(
+                            0,
+                            userLeave.emergency.taken
+                        );
+                        break;
+
+                    case 'Attend Exam Leave':
+                        userLeave.attendExam.leave -= daysDifference;
+                        userLeave.attendExam.leave = Math.max(
+                            0,
+                            userLeave.attendExam.leave
+                        );
+                        userLeave.attendExam.taken = userLeave.attendExam.taken + 1;
+                        break;
+
+                    case 'Maternity Leave':
+                        userLeave.maternity.leave -= daysDifference;
+                        userLeave.maternity.leave = Math.max(
+                            0,
+                            userLeave.maternity.leave
+                        );
+                        userLeave.maternity.taken = userLeave.maternity.taken + 1;
+                        break;
+
+                    case 'Paternity Leave':
+                        userLeave.paternity.leave -= daysDifference;
+                        userLeave.paternity.leave = Math.max(
+                            0,
+                            userLeave.paternity.leave
+                        );
+                        userLeave.paternity.taken = userLeave.paternity.taken + 1;
+                        break;
+
+                    case 'Hajj Leave':
+                        userLeave.hajj.taken = userLeave.hajj.taken + 1;
+                        break;
+
+                    case 'Unpaid Leave':
+                        userLeave.unpaid.taken = userLeave.unpaid.taken + 1;
+                        break;
+
+                    case 'Special Leave':
+                        userLeave.special.taken = userLeave.special.taken + 1;
+                        break;
+
+                    default:
+                        break;
+                }
+
+                await userLeave.save();
+
+                await Leave.findOneAndUpdate(
+                    {
+                        _id: id
+                    },
+                    {
+                        $set: {
+                            status: 'approved'
+                        }
+                    },
+                    { new: true }
+                );
+
+                // send noti
+                const newNotification = new Notification({
+                    sender: user._id,
+                    recipient: new mongoose.Types.ObjectId(firstRecipientId),
+                    type: 'Leave',
+                    url: '/leave/details/' + id,
+                    message: 'Your leave request have been approved'
+                });
+
+                newNotification.save();
+
+                // activity
+                const activityUser = new Activity({
+                    user: user._id,
+                    date: new Date(),
+                    title: 'Leave application approved',
+                    type: 'Leave request',
+                    description: 'Approved a leave request'
+                });
+
+                activityUser.save();
+
+                const firstRecipientEmail = await User.findOne({
+                    _id: firstRecipientId
+                });
+
+                // turn off the email notications
+                // send email to the recipient
+                // let mailOptions = {
+                //     from: 'shrrshazni@gmail.com',
+                //     to: firstlRecipientEmail.email,
+                //     subject: 'lakmnsportal - Approval Leave Follow up',
+                //     html: `
+                //       <html>
+                //         <head>
+                //           <style>
+                //             body {
+                //               font-family: 'Arial', sans-serif;
+                //               background-color: #f4f4f4;
+                //               color: #333;
+                //             }
+                //             p {
+                //               margin-bottom: 20px;
+                //             }
+                //             a {
+                //               color: #3498db;
+                //             }
+                //           </style>
+                //         </head>
+                //         <body>
+                //           <h1>Leave Request</h1>
+                //           <p>${user.fullname} has take action of ${type} from, ${startDate} until ${returnDate}.</p>
+                //           <p>Please do check the leave approval at <a href="http://localhost:5002/">lakmnsportal</a></p>
+                //         </body>
+                //       </html>
+                //     `
+                // };
+
+                // transporter.sendMail(mailOptions, (error, info) => {
+                //     if (error) {
+                //         return console.log(error);
+                //     }
+                //     console.log('Message %s sent: %s', info.messageId, info.response);
+                // });
+
+
+                console.log('The leave has been officially approved');
+                res.redirect('/leave/details/' + id);
+            } else {
+
+                await Leave.findOneAndUpdate(
+                    {
+                        _id: id,
+                        'approvals.recipient': user._id
+                    },
+                    {
+                        $set: {
+                            'approvals.$.status': 'approved',
+                            'approvals.$.comment': 'The request have been approved',
+                            'approvals.$.timestamp': new Date()
+                        }
+                    },
+                    { new: true }
+                );
+
+                const nextIndex = indexOfRecipient + 1;
+                const nextApprovalRecipientId =
+                    checkLeave.approvals[nextIndex].recipient;
+
+                // send noti
+                const newNotification = new Notification({
+                    sender: user._id,
+                    recipient: new mongoose.Types.ObjectId(nextApprovalRecipientId),
+                    type: 'Leave',
+                    url: '/leave/details/' + id,
+                    message:
+                        'Previous approval has been submitted, please do check the leave request for approval'
+                });
+
+                newNotification.save();
+
+                // activity
+                const activityUser = new Activity({
+                    user: user._id,
+                    date: new Date(),
+                    title: 'Leave application approved',
+                    type: 'Leave request',
+                    description: 'Approved a leave request'
+                });
+
+                activityUser.save();
+
+                const nextApprovalRecipientEmail = await User.findOne({
+                    _id: nextApprovalRecipientId
+                });
+
+                // turn off the email notications
+                // send email to the recipient
+                // let mailOptions = {
+                //     from: 'shrrshazni@gmail.com',
+                //     to: nextApprovalRecipientEmail.email,
+                //     subject: 'lakmnsportal - Approval Leave Follow up',
+                //     html: `
+                //       <html>
+                //         <head>
+                //           <style>
+                //             body {
+                //               font-family: 'Arial', sans-serif;
+                //               background-color: #f4f4f4;
+                //               color: #333;
+                //             }
+                //             p {
+                //               margin-bottom: 20px;
+                //             }
+                //             a {
+                //               color: #3498db;
+                //             }
+                //           </style>
+                //         </head>
+                //         <body>
+                //           <h1>Leave Request</h1>
+                //           <p>${user.fullname} has take action of ${type} from, ${startDate} until ${returnDate}.</p>
+                //           <p>Please do check the leave approval at <a href="http://localhost:5002/">lakmnsportal</a></p>
+                //         </body>
+                //       </html>
+                //     `
+                // };
+
+                // transporter.sendMail(mailOptions, (error, info) => {
+                //     if (error) {
+                //         return console.log(error);
+                //     }
+                //     console.log('Message %s sent: %s', info.messageId, info.response);
+                // });
+
+                console.log('The leave has been approved');
+                res.redirect('/leave/details/' + id);
             }
+
         } else if (approval === 'denied') {
             const leave = await Leave.findOneAndUpdate(
                 {
@@ -4294,7 +4328,7 @@ app.get('/markAllAsRead', isAuthenticated, async function (req, res) {
     const notifications = await Notification.find({
         recipient: user._id,
         read: false
-    }).populate('sender');
+    }).populate('sender').sort({ timestamp: -1 });
 
     const update = await Notification.updateMany(
         { recipient: user._id },
@@ -4693,7 +4727,7 @@ app.get('/human-resource/attendance/overview', isAuthenticated, async function (
     const notifications = await Notification.find({
         recipient: user._id,
         read: false
-    }).populate('sender');
+    }).populate('sender').sort({ timestamp: -1 });
 
     if (user) {
         const currentDate = new Date();
@@ -4739,7 +4773,7 @@ app.get('/scan-qr', isAuthenticated, async function (req, res) {
     const notifications = await Notification.find({
         recipient: user._id,
         read: false
-    }).populate('sender');
+    }).populate('sender').sort({ timestamp: -1 });
 
     if (user) {
         res.render('scan', {
@@ -4941,9 +4975,7 @@ app.get('/api/hr/attendance/today', async function (req, res) {
             const formatDateTime = (dateTime) => {
                 const options = {
                     timeZone: 'Asia/Kuala_Lumpur',
-                    hour12: true,
-                    hour: '2-digit',
-                    minute: '2-digit'
+                    hour: 'numeric', minute: 'numeric', hour12: true
                 };
                 return dateTime.toLocaleTimeString('en-MY', options);
             };

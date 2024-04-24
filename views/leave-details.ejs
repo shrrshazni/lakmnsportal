@@ -3,36 +3,40 @@
 <!-- function for EJS -->
 <%
   function formatCustomDate(dateString) {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
     const date = new Date(dateString);
 
     if (isNaN(date.getTime())) {
       return 'Invalid date';
     }
 
-    const month = months[date.getMonth()];
-    const day = date.getDate();
-    const year = date.getFullYear();
-
-    let hours = date.getHours();
-    const ampm = hours >= 12 ? 'PM' : 'AM';
-    hours = hours % 12;
-    hours = hours ? hours : 12; // Handle midnight (0:00)
-
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-
-    return `${month} ${day}, ${year}, ${hours}:${minutes}${ampm}`;
+    return date.toLocaleString('en-US', {
+      timeZone: 'Asia/Kuala_Lumpur',
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
   }
 
   var showApproval = 'd-none';
 
   if (user.isAdmin) {
     const allOtherApprovalsApproved = approvals
-    .slice(0, approvals.length - 1)
+    .slice(0, approvals.length - 1) // Remove the last element from the array
+    .slice(1) // Remove the first element from the remaining array
     .every(approval => approval.status === 'approved');
 
+    const lastApprover = approvals[approvals.length -1].status;
+
     if(allOtherApprovalsApproved){
+        showApproval = '';
+    }
+
+    if(lastApprover === 'approved'){
+        showApproval = 'd-none';
+    }else{
         showApproval = '';
     }
     
@@ -41,11 +45,16 @@
         const userApprovalIndex = approvals.findIndex(approval => approval.recipient.equals(user._id));
         const isUserLeaveOwner = user._id.toString() === leave._id.toString();
 
+        console.log();
+
+        console.log(userApprovalIndex);
+
         if (userApprovalIndex && !isUserLeaveOwner && leave.status !== 'approved' && leave.status !== 'denied' && leave.status !== 'cancelled') {
             const previousApprovalEntries = approvals[userApprovalIndex-1];
 
             if ((previousApprovalEntries.status === 'approved' || previousApprovalEntries.status === 'submitted') &&
-                !(approvals[approvals.length - 1].status === 'approved' || approvals[approvals.length - 1].status === 'denied')) {
+                !(approvals[approvals.length - 1].status === 'approved' || approvals[approvals.length - 1].status === 'denied' || 
+                approvals[userApprovalIndex].status === 'approved' || approvals[userApprovalIndex].status === 'denied' )) {
                         showApproval = '';
             }
         }
@@ -94,17 +103,19 @@
     <p class="text-body-secondary mb-0">Leave request on <br class="d-sm-none"><span class="ms-sm-1"><%= formatCustomDate(leave.timestamp) %></span></p>
   </div>
 
-  <div class="col-auto">
+  <div class="col-auto d-flex justify-content-center">
     <div class="<%= showApproval %>">
       <a class="btn btn-primary me-2" role="button" href="/leave/approved/<%= leave._id %>">Approve</a>
       <a class="btn btn-outline-danger me-2" role="button" href="/leave/denied/<%= leave._id %>">Deny</a>
     </div>
-    <button class="btn px-3 btn-phoenix-secondary" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fa-solid fa-ellipsis"></span></button>
-    <ul class="dropdown-menu dropdown-menu-end p-0" style="z-index: 9999;">
-      <li><a class="dropdown-item d-none" href="/leave/history">Leave History</a></li>
-      <li><a class="dropdown-item <%= showCancel %>" href="/leave/cancelled/<%= leave._id %>">Cancel Request</a></li>
-      <li><a class="dropdown-item" href="#!">Print</a></li>
-    </ul>
+    <div>
+      <button class="btn px-3 btn-phoenix-secondary" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fa-solid fa-ellipsis"></span></button>
+      <ul class="dropdown-menu dropdown-menu-end p-0" style="z-index: 9999;">
+        <li><a class="dropdown-item d-none" href="/leave/history">Leave History</a></li>
+        <li><a class="dropdown-item <%= showCancel %>" href="/leave/cancelled/<%= leave._id %>">Cancel Request</a></li>
+        <li><a class="dropdown-item" href="#!">Print</a></li>
+      </ul>
+    </div>
   </div>
 </div>
 
