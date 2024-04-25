@@ -7,7 +7,11 @@
   </ol>
 </nav>
 
-<h2 class="mb-5">Notifications</h2>
+<div class="d-flex justify-content-between mb-5">
+    <h2>Notifications</h2>
+    <a href="/markAllAsRead" class="btn btn-link fs-8">Mark all read</a>
+</div>
+
 
 <% 
 function timeAgo(timestamp) {
@@ -43,7 +47,7 @@ function formatTime(timestamp) {
 %>
 
 <h5 class="text-body-emphasis mb-3">Today</h5>
-<div class="mx-n4 mx-lg-n6 mb-5 border-bottom">
+<div class="mx-n4 mx-lg-n6 mb-5 border-bottom scrollbar" style="min-height: 10vh; max-height: 42.5vh;">
   <% if (notificationsToday.length > 0) { %>
   <% notificationsToday.forEach(notification => { %>
 
@@ -87,7 +91,7 @@ function formatTime(timestamp) {
         <span class="fas fa-ellipsis-h fs-10 text-body"></span>
       </button>
       <div class="dropdown-menu py-2">
-        <a class="dropdown-item" href="/markAsRead/<%= notification._id %>">Mark as unread</a>
+        <a class="dropdown-item" href="/markAsRead/<%= notification._id %>">Mark as read</a>
         <a class="dropdown-item" href="<%= notification.url %>">View</a>
       </div>
     </div>
@@ -101,7 +105,7 @@ function formatTime(timestamp) {
 </div>
 
 <h5 class="text-body-emphasis mb-3 d-none">Yesterday</h5>
-<div class="mx-n4 mx-lg-n6 mb-5 border-bottom d-none">
+<div class="mx-n4 mx-lg-n6 mb-5 border-bottom d-none" style="min-height: 10vh; max-height: 42.5vh;">
   <% if (notificationsYesterday.length > 0) { %>
   <% notificationsYesterday.forEach(notification => { %>
 
@@ -145,7 +149,7 @@ function formatTime(timestamp) {
         <span class="fas fa-ellipsis-h fs-10 text-body"></span>
       </button>
       <div class="dropdown-menu py-2">
-        <a class="dropdown-item" href="/markAsRead/<%= notification._id %>">Mark as unread</a>
+        <a class="dropdown-item" href="/markAsRead/<%= notification._id %>">Mark as read</a>
         <a class="dropdown-item" href="<%= notification.url %>">View</a>
       </div>
     </div>
@@ -159,7 +163,7 @@ function formatTime(timestamp) {
 </div>
 
 <h5 class="text-body-emphasis mb-3">This Week</h5>
-<div class="mx-n4 mx-lg-n6 mb-5 border-bottom">
+<div class="mx-n4 mx-lg-n6 mb-5 border-bottom scrollbar" style="min-height: 10vh; max-height: 42.5vh;">
   <% if (notificationsThisWeek.length > 0) { %>
   <% notificationsThisWeek.forEach(notification => { %>
 
@@ -203,7 +207,7 @@ function formatTime(timestamp) {
         <span class="fas fa-ellipsis-h fs-10 text-body"></span>
       </button>
       <div class="dropdown-menu py-2">
-        <a class="dropdown-item" href="/markAsRead/<%= notification._id %>">Mark as unread</a>
+        <a class="dropdown-item" href="/markAsRead/<%= notification._id %>">Mark as read</a>
         <a class="dropdown-item" href="<%= notification.url %>">View</a>
       </div>
     </div>
@@ -217,7 +221,7 @@ function formatTime(timestamp) {
 </div>
 
 <h5 class="text-body-emphasis mb-3">This Month</h5>
-<div class="mx-n4 mx-lg-n6 mb-5 border-bottom scrollbar" style="min-height: 25vh; max-height: 50vh;">
+<div class="mx-n4 mx-lg-n6 mb-5 border-bottom scrollbar" style="min-height: 10vh; max-height: 42.5vh;">
   <% if (notificationsThisMonth.length > 0) { %>
   <% notificationsThisMonth.forEach(notification => { %>
 
@@ -261,7 +265,7 @@ function formatTime(timestamp) {
         <span class="fas fa-ellipsis-h fs-10 text-body"></span>
       </button>
       <div class="dropdown-menu py-2">
-        <a class="dropdown-item" href="/markAsRead/<%= notification._id %>">Mark as unread</a>
+        <a class="dropdown-item" href="/markAsRead/<%= notification._id %>">Mark as read</a>
         <a class="dropdown-item" href="<%= notification.url %>">View</a>
       </div>
     </div>
