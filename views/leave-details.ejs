@@ -20,28 +20,22 @@
     });
   }
 
+  var showAcknowledge = 'd-none';
   var showApproval = 'd-none';
 
-  if (user.isAdmin) {
-    const allOtherApprovalsApproved = approvals
+  const allOtherApprovalsApproved = approvals
     .slice(0, approvals.length - 1) // Remove the last element from the array
     .slice(1) // Remove the first element from the remaining array
     .every(approval => approval.status === 'approved');
 
-    const lastApprover = approvals[approvals.length -1].status;
+  if (allOtherApprovalsApproved) {
 
-    if(allOtherApprovalsApproved){
-        showApproval = '';
-    }
-
-    if(lastApprover === 'approved'){
-        showApproval = 'd-none';
-    }else{
-        showApproval = '';
+    if(user.isAdmin){
+          showAcknowledge = '';
     }
     
     } else {
-       if (approvals && approvals.length > 0) {
+      if (approvals && approvals.length > 0) {
         const userApprovalIndex = approvals.findIndex(approval => approval.recipient.equals(user._id));
         const isUserLeaveOwner = user._id.toString() === leave._id.toString();
 
@@ -58,7 +52,7 @@
                         showApproval = '';
             }
         }
-       }
+      }
     }
 
     var showCancel = 'd-none';
@@ -104,6 +98,9 @@
   </div>
 
   <div class="col-auto d-flex justify-content-center">
+    <div class="<%= showAcknowledge %>">
+      <a class="btn btn-success me-2" role="button" href="/leave/acknowledged/<%= leave._id %>">Acknowledge</a>
+    </div>
     <div class="<%= showApproval %>">
       <a class="btn btn-primary me-2" role="button" href="/leave/approved/<%= leave._id %>">Approve</a>
       <a class="btn btn-outline-danger me-2" role="button" href="/leave/denied/<%= leave._id %>">Deny</a>

@@ -517,7 +517,7 @@
         }
 
         function formatTime(timestamp) {
-            const options = { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: true };
+            const options = { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true, timeZone:'Asia/Kuala_Lumpur' };
             const formattedTime = new Date(timestamp).toLocaleString(undefined, options);
             return formattedTime;
         }
@@ -567,7 +567,7 @@
                           </p>
                         </div>
                       </div>
-                      <div class="d-none d-sm-block">
+                      <div class="d-block">
                         <button class="btn fs-10 btn-sm dropdown-toggle dropdown-caret-none transition-none notification-dropdown-toggle" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
                           <span class="fas fa-ellipsis-h fs-10 text-body"></span>
                         </button>
