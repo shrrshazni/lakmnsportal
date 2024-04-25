@@ -1,0 +1,277 @@
+<%- include('partials/private-header') %>
+
+<nav class="mb-2" aria-label="breadcrumb">
+  <ol class="breadcrumb mb-0">
+    <li class="breadcrumb-item"><a href="/">Dashboard</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Notification History</li>
+  </ol>
+</nav>
+
+<h2 class="mb-5">Notifications</h2>
+
+<% 
+function timeAgo(timestamp) {
+   const now = new Date();
+   const notificationDate = new Date(timestamp);
+   const secondsAgo = Math.floor((now - notificationDate) / 1000);
+
+   const intervals = [
+   { label: 'y', seconds: 31536000 },
+    { label: 'mon', seconds: 2592000 },
+    { label: 'd', seconds: 86400 },
+   { label: 'h', seconds: 3600 },
+    { label: 'm', seconds: 60 },
+    { label: 's', seconds: 1 }
+   ];
+
+   for (const interval of intervals) {
+   const intervalValue = Math.floor(secondsAgo / interval.seconds);
+
+   if (intervalValue >= 1) {
+       return intervalValue + (intervalValue === 1 ? interval.label : interval.label);
+   }
+  }
+
+return 'Just now';
+}
+
+function formatTime(timestamp) {
+    const options = { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true, timeZone:'Asia/Kuala_Lumpur' };
+    const formattedTime = new Date(timestamp).toLocaleString(undefined, options);
+    return formattedTime;
+}
+%>
+
+<h5 class="text-body-emphasis mb-3">Today</h5>
+<div class="mx-n4 mx-lg-n6 mb-5 border-bottom">
+  <% if (notificationsToday.length > 0) { %>
+  <% notificationsToday.forEach(notification => { %>
+
+  <% 
+  var isRead = '';
+  if(notification.read === true){
+    isRead = 'read'
+  }else {
+    isRead = 'unread';
+  }  
+  %>
+  <div class="d-flex align-items-center justify-content-between py-5 px-lg-6 px-4 notification-card border-top <%= isRead %>">
+    <div class="d-flex">
+      <div class="avatar avatar-xl me-5 mt-2">
+
+        <%
+                      var notiProfile = '';
+                      if(notification.sender.profile === ''){
+                        notiProfile = '/assets/img/team/avatar.webp';
+                      }else{
+                        notiProfile = notification.sender.profile;
+                      } 
+                %>
+        <!-- Use the actual image source from your notification -->
+        <img class="rounded-circle border border-primary" src="<%= notiProfile %>" alt="" />
+      </div>
+      <div class="flex-1 me-sm-3">
+        <h4 class="fs-8 text-body-emphasis"><%= notification.sender.fullname %></h4>
+        <p class="fs-9 text-body-highlight mb-2 mb-sm-3 fw-normal">
+          <span class='me-1 mt-1 fs-10'>💬</span><%= notification.message %>
+          <span class="text-body-quaternary text-opacity-75 fw-bold fs-10">&nbsp;<%= timeAgo(notification.timestamp) %></span>
+        </p>
+        <p class="text-body-secondary fs-9 mb-0">
+          <span class="me-1 fas fa-clock"></span>
+          <span class="fw-bold"><%= formatTime(notification.timestamp) %></span>
+        </p>
+      </div>
+    </div>
+    <div class="btn-group dropstart mb-0">
+      <button class="btn fs-10 btn-sm dropdown-toggle dropdown-caret-none transition-none notification-dropdown-toggle" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
+        <span class="fas fa-ellipsis-h fs-10 text-body"></span>
+      </button>
+      <div class="dropdown-menu py-2">
+        <a class="dropdown-item" href="/markAsRead/<%= notification._id %>">Mark as unread</a>
+        <a class="dropdown-item" href="<%= notification.url %>">View</a>
+      </div>
+    </div>
+  </div>
+  <% }); %>
+  <% } else { %>
+  <div class="px-4 px-sm-3 py-3">
+    <p>No today notifications available.</p>
+  </div>
+  <% } %>
+</div>
+
+<h5 class="text-body-emphasis mb-3 d-none">Yesterday</h5>
+<div class="mx-n4 mx-lg-n6 mb-5 border-bottom d-none">
+  <% if (notificationsYesterday.length > 0) { %>
+  <% notificationsYesterday.forEach(notification => { %>
+
+  <% 
+  var isRead = '';
+  if(notification.read === true){
+    isRead = 'read'
+  }else {
+    isRead = 'unread';
+  }  
+  %>
+  <div class="d-flex align-items-center justify-content-between py-5 px-lg-6 px-4 notification-card border-top <%= isRead %>">
+    <div class="d-flex">
+      <div class="avatar avatar-xl me-5 mt-2">
+
+        <%
+                      var notiProfile = '';
+                      if(notification.sender.profile === ''){
+                        notiProfile = '/assets/img/team/avatar.webp';
+                      }else{
+                        notiProfile = notification.sender.profile;
+                      } 
+                %>
+        <!-- Use the actual image source from your notification -->
+        <img class="rounded-circle border border-primary" src="<%= notiProfile %>" alt="" />
+      </div>
+      <div class="flex-1 me-sm-3">
+        <h4 class="fs-8 text-body-emphasis"><%= notification.sender.fullname %></h4>
+        <p class="fs-9 text-body-highlight mb-2 mb-sm-3 fw-normal">
+          <span class='me-1 mt-1 fs-10'>💬</span><%= notification.message %>
+          <span class="text-body-quaternary text-opacity-75 fw-bold fs-10">&nbsp;<%= timeAgo(notification.timestamp) %></span>
+        </p>
+        <p class="text-body-secondary fs-9 mb-0">
+          <span class="me-1 fas fa-clock"></span>
+          <span class="fw-bold"><%= formatTime(notification.timestamp) %></span>
+        </p>
+      </div>
+    </div>
+    <div class="btn-group dropstart mb-0">
+      <button class="btn fs-10 btn-sm dropdown-toggle dropdown-caret-none transition-none notification-dropdown-toggle" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
+        <span class="fas fa-ellipsis-h fs-10 text-body"></span>
+      </button>
+      <div class="dropdown-menu py-2">
+        <a class="dropdown-item" href="/markAsRead/<%= notification._id %>">Mark as unread</a>
+        <a class="dropdown-item" href="<%= notification.url %>">View</a>
+      </div>
+    </div>
+  </div>
+  <% }); %>
+  <% } else { %>
+  <div class="px-4 px-sm-3 py-3">
+    <p>No yesterday notifications available.</p>
+  </div>
+  <% } %>
+</div>
+
+<h5 class="text-body-emphasis mb-3">This Week</h5>
+<div class="mx-n4 mx-lg-n6 mb-5 border-bottom">
+  <% if (notificationsThisWeek.length > 0) { %>
+  <% notificationsThisWeek.forEach(notification => { %>
+
+  <% 
+  var isRead = '';
+  if(notification.read === true){
+    isRead = 'read'
+  }else {
+    isRead = 'unread';
+  }  
+  %>
+  <div class="d-flex align-items-center justify-content-between py-5 px-lg-6 px-4 notification-card border-top <%= isRead %>">
+    <div class="d-flex">
+      <div class="avatar avatar-xl me-5 mt-2">
+
+        <%
+                      var notiProfile = '';
+                      if(notification.sender.profile === ''){
+                        notiProfile = '/assets/img/team/avatar.webp';
+                      }else{
+                        notiProfile = notification.sender.profile;
+                      } 
+                %>
+        <!-- Use the actual image source from your notification -->
+        <img class="rounded-circle border border-primary" src="<%= notiProfile %>" alt="" />
+      </div>
+      <div class="flex-1 me-sm-3">
+        <h4 class="fs-8 text-body-emphasis"><%= notification.sender.fullname %></h4>
+        <p class="fs-9 text-body-highlight mb-2 mb-sm-3 fw-normal">
+          <span class='me-1 mt-1 fs-10'>💬</span><%= notification.message %>
+          <span class="text-body-quaternary text-opacity-75 fw-bold fs-10">&nbsp;<%= timeAgo(notification.timestamp) %></span>
+        </p>
+        <p class="text-body-secondary fs-9 mb-0">
+          <span class="me-1 fas fa-clock"></span>
+          <span class="fw-bold"><%= formatTime(notification.timestamp) %></span>
+        </p>
+      </div>
+    </div>
+    <div class="btn-group dropstart mb-0">
+      <button class="btn fs-10 btn-sm dropdown-toggle dropdown-caret-none transition-none notification-dropdown-toggle" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
+        <span class="fas fa-ellipsis-h fs-10 text-body"></span>
+      </button>
+      <div class="dropdown-menu py-2">
+        <a class="dropdown-item" href="/markAsRead/<%= notification._id %>">Mark as unread</a>
+        <a class="dropdown-item" href="<%= notification.url %>">View</a>
+      </div>
+    </div>
+  </div>
+  <% }); %>
+  <% } else { %>
+  <div class="px-4 px-sm-3 py-3">
+    <p>No yesterday notifications available.</p>
+  </div>
+  <% } %>
+</div>
+
+<h5 class="text-body-emphasis mb-3">This Month</h5>
+<div class="mx-n4 mx-lg-n6 mb-5 border-bottom scrollbar" style="min-height: 25vh; max-height: 50vh;">
+  <% if (notificationsThisMonth.length > 0) { %>
+  <% notificationsThisMonth.forEach(notification => { %>
+
+  <% 
+  var isRead = '';
+  if(notification.read === true){
+    isRead = 'read'
+  }else {
+    isRead = 'unread';
+  }  
+  %>
+  <div class="d-flex align-items-center justify-content-between py-5 px-lg-6 px-4 notification-card border-top <%= isRead %>">
+    <div class="d-flex">
+      <div class="avatar avatar-xl me-5 mt-2">
+
+        <%
+                      var notiProfile = '';
+                      if(notification.sender.profile === ''){
+                        notiProfile = '/assets/img/team/avatar.webp';
+                      }else{
+                        notiProfile = notification.sender.profile;
+                      } 
+                %>
+        <!-- Use the actual image source from your notification -->
+        <img class="rounded-circle border border-primary" src="<%= notiProfile %>" alt="" />
+      </div>
+      <div class="flex-1 me-sm-3">
+        <h4 class="fs-8 text-body-emphasis"><%= notification.sender.fullname %></h4>
+        <p class="fs-9 text-body-highlight mb-2 mb-sm-3 fw-normal">
+          <span class='me-1 mt-1 fs-10'>💬</span><%= notification.message %>
+          <span class="text-body-quaternary text-opacity-75 fw-bold fs-10">&nbsp;<%= timeAgo(notification.timestamp) %></span>
+        </p>
+        <p class="text-body-secondary fs-9 mb-0">
+          <span class="me-1 fas fa-clock"></span>
+          <span class="fw-bold"><%= formatTime(notification.timestamp) %></span>
+        </p>
+      </div>
+    </div>
+    <div class="btn-group dropstart mb-0">
+      <button class="btn fs-10 btn-sm dropdown-toggle dropdown-caret-none transition-none notification-dropdown-toggle" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
+        <span class="fas fa-ellipsis-h fs-10 text-body"></span>
+      </button>
+      <div class="dropdown-menu py-2">
+        <a class="dropdown-item" href="/markAsRead/<%= notification._id %>">Mark as unread</a>
+        <a class="dropdown-item" href="<%= notification.url %>">View</a>
+      </div>
+    </div>
+  </div>
+  <% }); %>
+  <% } else { %>
+  <div class="px-4 px-sm-3 py-3">
+    <p>No yesterday notifications available.</p>
+  </div>
+  <% } %>
+</div>
+
+<%- include('partials/private-footer.ejs') %>

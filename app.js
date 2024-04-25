@@ -4314,6 +4314,80 @@ app.get('/temp', async function (req, res) {
 });
 
 // NOTIFICATIONS
+app.get('/notifications/history', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    }).populate('sender').sort({ timestamp: -1 });
+
+    // find notification based on date
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Set time to the beginning of the day
+
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+
+    const firstDayOfWeek = new Date(today);
+    firstDayOfWeek.setDate(today.getDate() - today.getDay()); // Set to the first day of the week (Sunday)
+    firstDayOfWeek.setHours(0, 0, 0, 0); // Set time to the beginning of the day
+
+    const lastDayOfWeek = new Date(firstDayOfWeek);
+    lastDayOfWeek.setDate(firstDayOfWeek.getDate() + 6); // Set to the last day of the week (Saturday)
+    lastDayOfWeek.setHours(23, 59, 59, 999);
+
+    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+    const notificationsToday = await Notification.find({
+        recipient: user._id,
+        timestamp: {
+            $gte: today,
+            $lt: tomorrow
+        }
+    }).populate('sender').sort({ timestamp: -1, read: -1 });
+
+    const notificationsYesterday = await Notification.find({
+        recipient: user._id,
+        timestamp: {
+            $gte: yesterday,
+            $lt: today
+        }
+    }).populate('sender').sort({ timestamp: -1, read: -1 });
+
+    const notificationsThisWeek = await Notification.find({
+        recipient: user._id,
+        timestamp: {
+            $gte: firstDayOfWeek,
+            $lte: lastDayOfWeek
+        }
+    }).populate('sender').sort({ timestamp: -1, read: -1 });
+
+    const notificationsThisMonth = await Notification.find({
+        recipient: user._id,
+        timestamp: {
+            $gte: firstDayOfMonth,
+            $lte: lastDayOfMonth
+        }
+    }).populate('sender').sort({ timestamp: -1, read: -1 });
+
+    if (user) {
+        res.render('notifications', {
+            user: user,
+            notifications: notifications,
+            notificationsToday: notificationsToday,
+            notificationsYesterday: notificationsYesterday,
+            notificationsThisWeek: notificationsThisWeek,
+            notificationsThisMonth: notificationsThisMonth
+        });
+    }
+});
+
+
 app.get('/markAsRead/:id', isAuthenticated, async function (req, res) {
     const id = req.params.id;
     console.log(id);
@@ -4352,7 +4426,7 @@ app.get('/markAllAsRead', isAuthenticated, async function (req, res) {
         console.log('There is error for the update for notifications');
         res.redirect('/');
     }
-});
+})
 
 // FILES
 
