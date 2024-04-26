@@ -125,7 +125,8 @@
       <div class="row g-5 my-auto">
         <div class="row align-items-center g-3 gx-0 mb-0 text-center text-md-start col-12 col-md-6 ms-2 ms-xxl-0">
           <div class="col-12 col-md-6 mb-sm-3 ps-lg-7">
-            <div class="avatar avatar-5xl"><img class="rounded-circle border border-primary" src="/assets/img/team/avatar.webp" alt="" /></div>
+            <% if(user.profile === '' ){ user.profile = '/assets/img/team/avatar.webp' ; } %>
+            <div class="avatar avatar-5xl"><img class="rounded-circle border border-primary" src="<%= user.profile %>" alt="" /></div>
           </div>
 
           <% 
@@ -234,7 +235,7 @@
                 <div class="px-1 px-sm-3 py-3 notification-card position-relative read border-bottom">
                   <div class="d-flex align-items-center justify-content-between position-relative">
                     <div class="d-flex">
-                      <div class="avatar avatar-m status-online me-3">
+                      <div class="avatar avatar-xl me-3">
 
                         <%
                           var notiProfile = '';
@@ -375,13 +376,13 @@
 
               var showOnline = '';
               if(checkOnline.isOnline === true){
-                showOnline = '';
+                showOnline = 'status-online';
               }else{
-                showOnline = 'd-none';
+                showOnline = '';
               }
               %>
-              <div class="avatar avatar-xl">
-                <div class="avatar-name rounded-circle"><span><%= department && department.fullname ? department.fullname[0].toUpperCase() : '' %></span><span class="fa-solid fa-circle ms-n1 position-absolute bottom-0 ps-3 <%= showOnline %>" style="font-size: 8.5px;color: #32b115;"></span></div>
+              <div class="avatar avatar-xl <%= showOnline %>">
+                <div class="avatar-name rounded-circle"><span><%= department && department.fullname ? department.fullname[0].toUpperCase() : '' %></span></div>
               </div>
               <a class="mb-0 ms-3 fw-bold fs-8" href="/staff/details/<%= department._id %>"><%= department.fullname %></a>
             </td>

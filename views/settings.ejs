@@ -21,26 +21,64 @@
   <div class="row g-6">
     <div class="col-12 col-xl-5">
 
+
+
       <div class="card mb-6">
         <div class="card-body">
           <div class="border-bottom border-dashed pb-4">
-            <div class="row align-items-center g-3 g-sm-5 text-center text-sm-start">
+            <form action="/settings/upload/profile-image" method="post" enctype="multipart/form-data" class="row align-items-center g-3 g-sm-5 text-center text-sm-start">
               <div class="col-12 col-sm-auto">
-                <input class="d-none" id="avatarFile" type="file" />
-                <label class="cursor-pointer avatar avatar-5xl" for="avatarFile"><img class="rounded-circle" src="/assets/img/team/avatar.webp" alt="" style="border: 1px solid #3874ff;" /></label>
+                <input class="d-none" id="upload-profile-picture" type="file" name="file" accept="image/*" onchange="previewImage()" />
+                <label class="cursor-pointer avatar avatar-5xl" for="upload-profile-picture">
+                  <% if(user.profile === '' ){ user.profile = '/assets/img/team/avatar.webp' ; } %>
+                  <img class="rounded-circle mb-2" id="preview-image" src="<%= user.profile %>" alt="" style="border: 1px solid #3874ff;" />
+                </label>
               </div>
+
+              <script>
+                // profile image preview
+                $(document).ready(function() {
+                  $(document).on('click', function() {
+                    $('#upload-profile-picture').click();
+                  });
+
+                  $('#upload-profile-picture').on('change', function() {
+                    previewImage(this);
+                  });
+
+                  function previewImage(input) {
+                    const previewImage = $('#preview-image')[0];
+
+                    if (input.files && input.files[0]) {
+                      const reader = new FileReader();
+
+                      reader.onload = function(e) {
+                        previewImage.src = e.target.result;
+                      };
+
+                      reader.readAsDataURL(input.files[0]);
+                    }
+                  }
+                });
+              </script>
+
               <% 
-            const timestamp = user.dateEmployed; // Replace with your timestamp variable
-            const date = new Date(timestamp + 8 * 60 * 60 * 1000); // Adjust to Malaysian Standard Time (UTC+8)
-            const options = { day: 'numeric', month: 'long', year: 'numeric' };
-            const formattedDate = date.toLocaleDateString(date, options);
-            %>
+              const timestamp = user.dateEmployed; // Replace with your timestamp variable
+              const date = new Date(timestamp + 8 * 60 * 60 * 1000); // Adjust to Malaysian Standard Time (UTC+8)
+              const options = { day: 'numeric', month: 'long', year: 'numeric' };
+              const formattedDate = date.toLocaleDateString(date, options);
+              %>
+
               <div class="col-12 col-sm-auto flex-1">
-                <h3 class="fs-6 white-space-nowrap"><%= user.fullname %></h3>
+                <h3 class="fs-6"><%= user.fullname %></h3>
                 <p class="text-body-secondary">Joined since, <%= formattedDate  %></p>
                 <p class="text-primary fs-8 fst-italic">"<%= info.status %>"</p>
+                <button class="btn btn-primary myButton" type="submit" id="uploadProfile">
+                  <div class="btn-content">Upload Profile</div>
+                </button>
               </div>
-            </div>
+
+            </form>
           </div>
           <div class="d-flex flex-between-center pt-4">
             <div>

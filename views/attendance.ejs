@@ -368,7 +368,7 @@
                     <p></p>
                   </div>
                   <div class="avatar avatar-4xl mb-4 mx-auto">
-                    <img class="rounded-circle border border-gray" src="/assets/img/team/avatar.webp" alt="" />
+                    <img class="rounded-circle border border-gray" id="image-placeholder" src="" alt="" />
                   </div>
 
                   <p class="mb-1 fs-8 fw-bold text-dark" id="fullname-placeholder"></p>
@@ -391,6 +391,7 @@
                   const latestAtt = document.getElementById('latest-attendance');
                   var lottiePlayer = document.getElementById('lottie-player');
                   var logo = document.getElementById('logo');
+                  const imageElement = document.getElementById('image-placeholder');
 
                   if (data.message === "No attendance record found.") {
                     console.log('There is no data');
@@ -411,6 +412,12 @@
                     fullnamePlaceholder.textContent = data.user.fullname;
                     positionPlaceholder.textContent = data.user.position;
                     sectionPlaceholder.textContent = data.user.section;
+
+                    if (data.user.profile === null || data.user.profile === '') {
+                      imageElement.src = '/assets/img/team/avatar.webp';
+                    } else {
+                      imageElement.src = data.user.profile;
+                    }
 
                     let gradientColors = '';
                     let glowColors = '';

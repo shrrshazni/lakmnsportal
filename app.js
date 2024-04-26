@@ -2284,6 +2284,51 @@ app.get('/settings', isAuthenticated, async function (req, res) {
     }
 });
 
+app.post('/settings/upload/profile-image', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.find({ username: username });
+
+    if (user) {
+        if (!req.files || Object.keys(req.files).length === 0) {
+            console.log('There is no files selected');
+
+            res.redirect('/settings');
+        } else {
+            console.log('There are files try to be uploaded');
+
+            // No file with the report ID found, proceed with file upload
+            for (const file of Object.values(req.files)) {
+                const upload = __dirname + '/public/uploads/' + file.name;
+                const pathUpload = '/uploads/' + file.name;
+                const today = new Date();
+                const type = path.extname(file.name);
+
+                await file.mv(upload);
+
+                // Calculate file size in megabytes
+                const fileSizeInBytes = (await fs.stat(upload)).size;
+                const fileSizeInMB = fileSizeInBytes / (1024 * 1024);
+
+                console.log(fileSizeInMB);
+
+                await User.findOneAndUpdate(
+                    {
+                        username: username
+                    },
+                    {
+                        profile: pathUpload
+                    },
+                    { upsert: true, new: true, }
+                )
+            }
+
+            console.log('Done upload files!');
+
+            res.redirect('/settings');
+        }
+    }
+});
+
 app.get('/info/:type/:method/:id', async function (req, res) {
     const id = req.params.id;
     const user = await User.findOne({ _id: id });
@@ -5164,13 +5209,13 @@ app.post('/process-scanned-data', isAuthenticated, async function (req, res) {
                 user: checkUser._id,
                 timestamp: {
                     $gte: today, // Greater than or equal to the start of today
-                    $lt: new Date() // Less than the current time
+                    $lte: new Date() // Less than the current time
                 }
             });
 
             if (existingAttendance) {
 
-                if (existingAttendance.date.signOutTime === null && existingAttendance.date.signInTime !== "") {
+                if (existingAttendance.date.signOutTime === null) {
                     await Attendance.findOneAndUpdate(
                         {
                             user: checkUser._id

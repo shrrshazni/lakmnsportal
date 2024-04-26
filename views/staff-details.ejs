@@ -46,13 +46,14 @@
                 var showOnline = '';
                 
                 if(info.isOnline === true){
-                    showOnline = 'border-success';
+                    showOnline = 'status-online';
                 }else{
-                    showOnline = 'border-primary';
+                    showOnline = '';
                 }
                 %>
                 <div class="col-12 col-xxl-auto">
-                  <div class="avatar avatar-5xl"><img class="rounded-circle border <%= showOnline %>" src="/assets/img/team/avatar.webp" alt="" /></div>
+                  <% if(user.profile === '' ){ user.profile = '/assets/img/team/avatar.webp' ; } %>
+                  <div class="avatar avatar-5xl <%= showOnline %>"><img class="rounded-circle border border-primary" src="<%= user.profile %>" alt="" /></div>
                 </div>
                 <div class="col-12 col-sm-auto flex-1 text-md-start text-center">
                   <h3 class="fw-bold mb-3 mt-3"><%= otherUser.fullname %></h3>
