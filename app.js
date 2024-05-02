@@ -20,6 +20,7 @@ const { send } = require('process');
 const fs = require('fs').promises;
 const qr = require('qrcode');
 const { timeStamp } = require('console');
+const { type } = require('os');
 // const twilio = require('twilio');
 
 const mongoURI =
@@ -113,6 +114,7 @@ const userSchema = new mongoose.Schema({
         enum: ['single', 'married', 'divorced', 'widowed', 'separated'],
         default: 'single'
     },
+    children: { type: Number, default: 0 },
     isChiefExec: { type: Boolean, default: false },
     isDeputyChiefExec: { type: Boolean, default: false },
     isHeadOfDepartment: { type: Boolean, default: false },
@@ -5019,9 +5021,9 @@ app.get('/api/attendance/today', async function (req, res) {
         const attendanceData = await Attendance.find({
             'date.signInTime': {
                 $gte: today, // Find records where signInTime is greater than or equal to today
-                // $lte: currentTime // and less than or equal to the current time
+                $lte: currentTime // and less than or equal to the current time
             }
-        }).sort({ 'date.signInTime': -1 }).limit(2).lean();
+        }).sort({ timestamp: -1 }).limit(2).lean();
 
         // Get all users
         const allUsers = await User.find().lean();
@@ -5051,6 +5053,7 @@ app.get('/api/attendance/today', async function (req, res) {
                     _id: user._id,
                     fullname: user.fullname,
                     initials: getInitials(user.fullname),
+                    username: user.username,
                     department: user.department,
                     section: user.section,
                     profile: user.profile,
@@ -5158,26 +5161,26 @@ app.post('/save-qr-data', async function (req, res) {
     // console.log('Received QR code data:', qrData);
 
     // Save the raw URL in the database
-    // await QRCode.create({
-    //     uniqueId: qrData,
-    //     createdAt: new Date()
-    // });
+    await QRCode.create({
+        uniqueId: qrData,
+        createdAt: new Date()
+    });
 
-    // const checkTempAttendance = await TempAttendance.find();
+    const checkTempAttendance = await TempAttendance.find();
 
-    // if (checkTempAttendance.length <= 1) {
-    //     const deleteAll = await TempAttendance.deleteMany();
-    //     // console.log(deleteAll);
-    // } else {
-    //     const excludedDocumentId = await TempAttendance.findOne().sort({ timestamp: -1 });
-    //     // console.log(excludedDocumentId);
+    if (checkTempAttendance.length <= 1) {
+        const deleteAll = await TempAttendance.deleteMany();
+        // console.log(deleteAll);
+    } else {
+        const excludedDocumentId = await TempAttendance.findOne().sort({ timestamp: -1 });
+        // console.log(excludedDocumentId);
 
-    //     if (!excludedDocumentId) {
-    //         console.log('No matching document found');
-    //     } else {
-    //         await TempAttendance.deleteMany({ _id: { $ne: excludedDocumentId } });
-    //     }
-    // }
+        if (!excludedDocumentId) {
+            console.log('No matching document found');
+        } else {
+            await TempAttendance.deleteMany({ _id: { $ne: excludedDocumentId } });
+        }
+    }
 
     res.status(200).send('QR code data received and saved successfully');
 });
@@ -5192,6 +5195,8 @@ app.post('/process-scanned-data', isAuthenticated, async function (req, res) {
     const checkUser = await User.findOne({ _id: id });
 
     var log = "";
+
+    console.log('hello');
 
     if (checkUser) {
 
@@ -5216,7 +5221,7 @@ app.post('/process-scanned-data', isAuthenticated, async function (req, res) {
             if (existingAttendance) {
 
                 if (existingAttendance.date.signOutTime === null) {
-                    await Attendance.findOneAndUpdate(
+                    const updateSignOut = await Attendance.findOneAndUpdate(
                         {
                             user: checkUser._id
                         },
@@ -5228,7 +5233,6 @@ app.post('/process-scanned-data', isAuthenticated, async function (req, res) {
                             upsert: true, new: true
                         }
                     )
-
                     console.log('You have successfully signed out for today, thank you');
 
                     const tempAttendance = new TempAttendance({

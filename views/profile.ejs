@@ -28,8 +28,8 @@
         <div class="border-bottom border-dashed pb-4">
           <div class="row align-items-center g-3 g-sm-5 text-center text-sm-start">
             <div class="col-12 col-sm-auto">
-              <input class="d-none" id="avatarFile" type="file" />
-              <label class="cursor-pointer avatar avatar-5xl" for="avatarFile"><img class="rounded-circle" src="/assets/img/team/avatar.webp" alt="" style="border: 1px solid #3874ff;" /></label>
+              <label class="avatar avatar-5xl" for="avatarFile"> <% if(user.profile === '' ){ user.profile = '/assets/img/team/avatar.webp' ; } %>
+                <img class="rounded-circle mb-2" id="preview-image" src="<%= user.profile %>" alt="" style="border: 1px solid #3874ff;" /></label>
             </div>
             <% 
             const timestamp = user.dateEmployed; // Replace with your timestamp variable
@@ -96,9 +96,9 @@
           </div>
           <div class="row flex-between-center">
             <div class="col-auto">
-              <h5 class="text-body-highlight mb-0">Phone</h5>
+              <h5 class="text-body-highlight mb-0">Office Number</h5>
             </div>
-            <div class="col-auto"><a href="tel:+6<%= user.phone %>">+6<%= user.phone %></a></div>
+            <div class="col-auto"><a href="tel:+6<%= user.officePhone %>">+6<%= user.officePhone %></a></div>
           </div>
         </div>
       </div>
@@ -481,7 +481,123 @@
     </div>
 
     <div class="tab-pane fade" id="tab-personal" role="tabpanel" aria-labelledby="personal-tab">
-      <p><%= user %></p>
+      <div class="row g-3">
+
+        <div class="col-12 col-md-8">
+          <div class="card">
+            <div class="card-body row g-3">
+
+              <div class="col-12 col-md-6">
+                <div class="mb-3">
+                  <div class="d-flex align-items-center mb-1"><span class="me-2 uil uil-envelope-alt"> </span>
+                    <h5 class="text-body-highlight mb-0">NRIC</h5>
+                  </div>
+                  <p class="text-primary"><%= user.nric %></p>
+                </div>
+                <div class="mb-3">
+                  <div class="d-flex align-items-center mb-1"><span class="me-2 uil uil-phone"> </span>
+                    <h5 class="text-body-highlight mb-0">Birthdate</h5>
+                  </div>
+                  <p class="text-primary"><%= user.birthdate %></p>
+                </div>
+                <div class="mb-3">
+                  <div class="d-flex align-items-center mb-1"><span class="me-2 uil uil-home"> </span>
+                    <h5 class="text-body-highlight mb-0">Age</h5>
+                  </div>
+                  <p class="text-primary"><%= user.age %></p>
+                </div>
+                <div class="mb-3">
+                  <div class="d-flex align-items-center mb-1"><span class="me-2 uil uil-building"></span>
+                    <h5 class="text-body-highlight mb-0">Marital Status</h5>
+                  </div>
+                  <p class="text-primary"><%= user.marital.charAt(0).toUpperCase() + user.marital.slice(1) %></p>
+                </div>
+                <div class="mb-3">
+                  <div class="d-flex align-items-center mb-1"><span class="me-2 uil uil-building"></span>
+                    <h5 class="text-body-highlight mb-0">Address</h5>
+                  </div>
+                  <p class="text-primary"><%= user.address %></p>
+                </div>
+              </div>
+
+              <div class="col-12 col-md-6">
+                <% 
+                var pastDate = new Date("2023-01-15"); // Example past date
+
+                // Get today's date
+                var today = new Date();
+
+                // Calculate the difference in milliseconds
+                var timeDifference = today.getTime() - pastDate.getTime();
+
+                var years = Math.floor(timeDifference / (1000 * 60 * 60 * 24 * 365));
+                var months = Math.floor((timeDifference % (1000 * 60 * 60 * 24 * 365)) / (1000 * 60 * 60 * 24 * 30.44)); // Assuming a month is 30.44 days on average
+                var days = Math.floor((timeDifference % (1000 * 60 * 60 * 24 * 30.44)) / (1000 * 60 * 60 * 24));
+                
+                console.log("Years:", years);
+                console.log("Months:", months);
+                console.log("Days:", days);
+
+                var currentyears = "";
+                var currentmonths = "";
+                var currentdays = "";
+
+                if(years === 0){
+                    currentyears = "";
+                }else{
+                    currentyears = years + ' years';
+                }
+
+                if(months === 0){
+                    currentmonths = "";
+                }else{
+                    currentmonths = months + ' months';
+                }
+
+                if(days === 0){
+                    currentdays = "";
+                }else{
+                    currentdays = days + ' days';
+                }
+                %>
+                <div class="mb-3">
+                  <div class="d-flex align-items-center mb-1"><span class="me-2 uil uil-phone"> </span>
+                    <h5 class="text-body-highlight mb-0">Work Duration</h5>
+                  </div>
+                  <p class="text-primary"><%= currentyears %> <%= currentmonths %> <%= currentdays %></p>
+                </div>
+                <div class="mb-3">
+                  <div class="d-flex align-items-center mb-1"><span class="me-2 uil uil-building"></span>
+                    <h5 class="text-body-highlight mb-0">Classification</h5>
+                  </div>
+                  <p class="text-primary"><%= user.classification.charAt(0).toUpperCase() + user.classification.slice(1) %></p>
+                </div>
+                <div class="mb-3">
+                  <div class="d-flex align-items-center mb-1"><span class="me-2 uil uil-home"> </span>
+                    <h5 class="text-body-highlight mb-0">Office Number</h5>
+                  </div>
+                  <p class="text-primary"><%= user.phone %></p>
+                </div>
+                <div class="mb-3">
+                  <div class="d-flex align-items-center mb-1"><span class="me-2 uil uil-building"></span>
+                    <h5 class="text-body-highlight mb-0">Children</h5>
+                  </div>
+                  <p class="text-primary"><%= user.children %></p>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-4 d-none">
+          <div class="card">
+            <div class="card-body">
+
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
   </div>
