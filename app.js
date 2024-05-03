@@ -2157,6 +2157,9 @@ app.get('/settings', isAuthenticated, async function (req, res) {
             if (req.body.address) {
                 updateFields.address = req.body.address;
             }
+            if (req.body.children) {
+                updateFields.children = parseInt(req.body.children);
+            }
 
             if (Object.keys(updateFields).length === 0) {
                 res.render('settings', {

@@ -435,7 +435,7 @@
                 
                 let signOutTime;
                 if(item.date.signOutTime === null){
-                    signOutTime = 'Not yet';
+                    signOutTime = 'Nil';
                 } else{
                     signOutTime = item.date.signOutTime.toLocaleTimeString('en-UK', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone : 'Asia/Kuala_Lumpur' });
                 }
@@ -444,7 +444,7 @@
                 <td class="type align-middle fw-semibold text-start py-2 ps-0 fs-9 fs-md-8 text-body-highlight"><%= item.status %></td>
                 <td class="date align-middle text-center py-2 ps-0 fs-9"><%= item.timestamp.toLocaleDateString('en-UK', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></td>
                 <td class="clockin align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-success"><%= item.date.signInTime.toLocaleTimeString('en-UK', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone : 'Asia/Kuala_Lumpur' }) %></span></td>
-                <td class="clockin align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-success"><%= signOutTime %></span></td>
+                <td class="clockin align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-warning"><%= signOutTime %></span></td>
                 <td class="align-middle text-end white-space-nowrap ps-0 action">
                   <div class="font-sans-serif btn-reveal-trigger position-static">
                     <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs--2" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
@@ -489,31 +489,31 @@
 
               <div class="col-12 col-md-6">
                 <div class="mb-3">
-                  <div class="d-flex align-items-center mb-1"><span class="me-2 uil uil-envelope-alt"> </span>
+                  <div class="d-flex align-items-center mb-1"><span class="me-2 fa-solid fa-id-card-clip"> </span>
                     <h5 class="text-body-highlight mb-0">NRIC</h5>
                   </div>
                   <p class="text-primary"><%= user.nric %></p>
                 </div>
                 <div class="mb-3">
-                  <div class="d-flex align-items-center mb-1"><span class="me-2 uil uil-phone"> </span>
+                  <div class="d-flex align-items-center mb-1"><span class="me-2 fa-solid fa-cake-candles"> </span>
                     <h5 class="text-body-highlight mb-0">Birthdate</h5>
                   </div>
                   <p class="text-primary"><%= user.birthdate %></p>
                 </div>
                 <div class="mb-3">
-                  <div class="d-flex align-items-center mb-1"><span class="me-2 uil uil-home"> </span>
+                  <div class="d-flex align-items-center mb-1"><span class="me-2 fa-solid fa-baby-carriage"> </span>
                     <h5 class="text-body-highlight mb-0">Age</h5>
                   </div>
                   <p class="text-primary"><%= user.age %></p>
                 </div>
                 <div class="mb-3">
-                  <div class="d-flex align-items-center mb-1"><span class="me-2 uil uil-building"></span>
+                  <div class="d-flex align-items-center mb-1"><span class="me-2 fa-solid fa-ring"></span>
                     <h5 class="text-body-highlight mb-0">Marital Status</h5>
                   </div>
                   <p class="text-primary"><%= user.marital.charAt(0).toUpperCase() + user.marital.slice(1) %></p>
                 </div>
                 <div class="mb-3">
-                  <div class="d-flex align-items-center mb-1"><span class="me-2 uil uil-building"></span>
+                  <div class="d-flex align-items-center mb-1"><span class="me-2 fa-solid fa-address-card"></span>
                     <h5 class="text-body-highlight mb-0">Address</h5>
                   </div>
                   <p class="text-primary"><%= user.address %></p>
@@ -522,7 +522,7 @@
 
               <div class="col-12 col-md-6">
                 <% 
-                var pastDate = new Date("2023-01-15"); // Example past date
+                var pastDate = new Date(user.dateEmployed);
 
                 // Get today's date
                 var today = new Date();
@@ -533,6 +533,10 @@
                 var years = Math.floor(timeDifference / (1000 * 60 * 60 * 24 * 365));
                 var months = Math.floor((timeDifference % (1000 * 60 * 60 * 24 * 365)) / (1000 * 60 * 60 * 24 * 30.44)); // Assuming a month is 30.44 days on average
                 var days = Math.floor((timeDifference % (1000 * 60 * 60 * 24 * 30.44)) / (1000 * 60 * 60 * 24));
+
+                if (years < 1) {
+                    years = 0;
+                }
                 
                 console.log("Years:", years);
                 console.log("Months:", months);
@@ -541,6 +545,8 @@
                 var currentyears = "";
                 var currentmonths = "";
                 var currentdays = "";
+
+                
 
                 if(years === 0){
                     currentyears = "";
@@ -561,28 +567,34 @@
                 }
                 %>
                 <div class="mb-3">
-                  <div class="d-flex align-items-center mb-1"><span class="me-2 uil uil-phone"> </span>
+                  <div class="d-flex align-items-center mb-1"><span class="me-2 fa-solid fa-user-check"> </span>
                     <h5 class="text-body-highlight mb-0">Work Duration</h5>
                   </div>
                   <p class="text-primary"><%= currentyears %> <%= currentmonths %> <%= currentdays %></p>
                 </div>
                 <div class="mb-3">
-                  <div class="d-flex align-items-center mb-1"><span class="me-2 uil uil-building"></span>
+                  <div class="d-flex align-items-center mb-1"><span class="me-2 fa-solid fa-magnifying-glass-arrow-right"></span>
                     <h5 class="text-body-highlight mb-0">Classification</h5>
                   </div>
                   <p class="text-primary"><%= user.classification.charAt(0).toUpperCase() + user.classification.slice(1) %></p>
                 </div>
                 <div class="mb-3">
-                  <div class="d-flex align-items-center mb-1"><span class="me-2 uil uil-home"> </span>
+                  <div class="d-flex align-items-center mb-1"><span class="me-2 fa-solid fa-tty"> </span>
                     <h5 class="text-body-highlight mb-0">Office Number</h5>
                   </div>
                   <p class="text-primary"><%= user.phone %></p>
                 </div>
                 <div class="mb-3">
-                  <div class="d-flex align-items-center mb-1"><span class="me-2 uil uil-building"></span>
+                  <div class="d-flex align-items-center mb-1"><span class="me-2 fa-solid fa-children"></span>
                     <h5 class="text-body-highlight mb-0">Children</h5>
                   </div>
                   <p class="text-primary"><%= user.children %></p>
+                </div>
+                <div class="mb-3">
+                  <div class="d-flex align-items-center mb-1"><span class="me-2 fa-solid fa-user-graduate"></span>
+                    <h5 class="text-body-highlight mb-0">Education</h5>
+                  </div>
+                  <p class="text-primary"><%= user.education %></p>
                 </div>
               </div>
 
