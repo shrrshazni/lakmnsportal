@@ -1,11 +1,11 @@
 <%- include('partials/private-header') %>
-<div class="mb-3 mt-n3">
+<div class="mb-3 mt-n3 h-100">
 
   <section class="px-0">
 
-    <div class="mb-5" id="title">
+    <div class="mb-4" id="title">
       <h2 class="title">QR Scanner</h2>
-      <p class="mb-5">Scan, decode, interpret, retrieve data quickly.</p>
+      <p class="mb-3">Scan, decode, interpret, retrieve data quickly.</p>
     </div>
 
     <div class="mb-3 row g-3">
@@ -17,7 +17,7 @@
         <button class="btn btn-primary w-100 w-lg-10" id="startButton">Start</button>
       </div>
 
-      <div class="col-12 col-md-6" id="afterScan">
+      <div class="col-12 col-md-6 mt-n3" id="afterScan">
         <p id="userData"></p>
 
         <style>
@@ -26,7 +26,7 @@
             opacity: 0;
             z-index: 0;
             position: absolute;
-            top: 0vh;
+            top: 25vh;
             left: 0;
             right: 0;
             bottom: 0;
@@ -76,10 +76,13 @@
           @keyframes fadeOut {
             from {
               opacity: 1;
+              margin-top: 0;
+              /* Final margin-top value */
             }
 
             to {
               opacity: 0;
+              margin-top: 0;
             }
           }
 
@@ -147,14 +150,11 @@
         .then(response => response.json()) // Parse response JSON
         .then(userResponse => {
 
-
-          const title = document.getElementById('title');
           const cardContainer = document.querySelector('.card-container');
           const scanner = document.getElementById('scanner');
           const message = document.getElementById('message');
 
           message.textContent = userResponse.message;
-          title.classList.add('fade-out');
           scanner.classList.add('fade-out');
           cardContainer.classList.add('fade-in');
           setTimeout(() => {
@@ -193,6 +193,11 @@
       }
 
       document.getElementById('startButton').addEventListener('click', () => {
+        const button = document.getElementById('startButton');
+        const title = document.getElementById('title');
+        button.classList.add('d-none');
+        title.classList.add('d-none');
+
         if (codeReader) {
           codeReader.reset();
           document.getElementById('result').textContent = '';
