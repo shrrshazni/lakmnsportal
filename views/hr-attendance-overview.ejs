@@ -37,8 +37,25 @@
 
     </div>
 
+  </div>
+
+  <div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis pt-7 pb-3 border-y mb-6">
     <div class="mb-3" id="team-members" data-list='{"valueNames":["member","department", "section","status","clockin"],"page":5,"pagination":true}'>
       <div class="row align-items-end justify-content-between pb-4 g-3">
+
+        <div class="col-auto">
+          <h3>Attendance Today</h3>
+          <p class="text-body-tertiary lh-sm mb-0">High, everyone present, no absences</p>
+        </div>
+
+        <div class="col-12 col-md-auto">
+          <div class="search-box">
+            <form class="position-relative">
+              <input class="form-control search-input search form-control-sm" type="search" id="search-input" placeholder="Search team members" aria-label="Search" />
+              <span class="fas fa-search search-box-icon"></span>
+            </form>
+          </div>
+        </div>
 
       </div>
 
@@ -55,59 +72,113 @@
           <tbody class="list" id="attendance-list">
 
             <script>
-              function fetchDataAndPopulateTable() {
-                fetch('/api/hr/attendance/today')
-                  .then(response => response.json())
-                  .then(data => {
-                    const tableBody = document.getElementById('attendance-list');
-                    tableBody.innerHTML = ''; // Clear existing table rows
+              // Assuming attendanceData, filteredData, and the searchAttendance function are already available
 
-                    if (data.length === 0) {
-                      console.log('No attendance records found');
+              // Function to populate attendance table with data
+              function populateAttendanceTable(data) {
+                const tableBody = document.getElementById('attendance-list');
+                tableBody.innerHTML = ''; // Clear existing table rows
 
-                      const row = `
-                          <tr class="position-static">
-                              <td class="align-middle text-center" style="">
-                                   <h3 class="fs-5 fw-bold mt-1 mb-0">No staff clock in yet</h3>
-                               </td>
-                          </tr>
-                          `;
-
-                      tableBody.insertAdjacentHTML('beforeend', row);
-                    } else {
-                      data.forEach(entry => {
-                        const row = `
-                            <tr class="position-static border-top">
-                                <td class="align-middle text-body white-space-nowrap ps-0 member">
-                                    <div class="avatar avatar-2xl">
-                                        <div class="avatar-name rounded-circle"><span class="fs-5">${entry.user ? entry.user.initials : 'Unknown'}</span></div>
-                                    </div>
-                                    <a class="mb-0 ms-3 fw-bold fs-8" href="">${entry.user ? entry.user.fullname : 'Unknown'}</a>
-                                </td>
-                                <td class="align-middle text-center department ps-0">
-                                    <p class="fw-semibold text-body-emphasis fs-9 mb-0">${entry.user.department}</p>
-                                </td>
-                                <td class="align-middle text-center section ps-0">
-                                    <p class="fw-semibold text-body-emphasis fs-9 mb-0">${entry.user.section}</p>
-                                </td>
-                                <td class="align-middle text-center status ps-0">
-                                    <p class="badge badge-phoenix badge-phoenix-success fs-10 mb-0">${entry.type}</p>
-                                </td>
-                                <td class="align-middle text-center clockin ps-0">
-                                    <p class="badge badge-phoenix badge-phoenix-warning fs-10 mb-0">${entry.datetime}</p>
-                                </td>
-                            </tr>`;
-                        tableBody.insertAdjacentHTML('beforeend', row);
-                      });
-                    }
-                  })
-                  .catch(error => {
-                    console.error('Error fetching data:', error);
+                if (data.length === 0) {
+                  const row = `
+                      <tr class="position-static">
+                          <td class="align-middle">
+                               <h3 class="fs-9 fw-bold text-body mt-1 mb-0">No staff clock in yet</h3>
+                          </td>
+                      </tr>
+                  `;
+                  tableBody.insertAdjacentHTML('beforeend', row);
+                } else {
+                  data.forEach(entry => {
+                    const row = `
+                <tr class="position-static border-top">
+                    <td class="align-middle text-body white-space-nowrap ps-0 member">
+                        <div class="avatar avatar-2xl">
+                            <div class="avatar-name rounded-circle"><span class="fs-9">${entry.user ? entry.user.username : 'Unknown'}</span></div>
+                        </div>
+                        <a class="mb-0 ms-3 fw-bold fs-8" href="">${entry.user ? entry.user.fullname : 'Unknown'}</a>
+                    </td>
+                    <td class="align-middle text-center department ps-0">
+                        <p class="fw-semibold text-body-emphasis fs-9 mb-0">${entry.user.department}</p>
+                    </td>
+                    <td class="align-middle text-center section ps-0">
+                        <p class="fw-semibold text-body-emphasis fs-9 mb-0">${entry.user.section}</p>
+                    </td>
+                    <td class="align-middle text-center status ps-0">
+                        <p class="badge badge-phoenix badge-phoenix-success fs-10 mb-0">${entry.type}</p>
+                    </td>
+                    <td class="align-middle text-center clockin ps-0">
+                        <p class="badge badge-phoenix badge-phoenix-warning fs-10 mb-0">${entry.datetime}</p>
+                    </td>
+                </tr>`;
+                    tableBody.insertAdjacentHTML('beforeend', row);
                   });
+                }
               }
+
+              // Function to perform search
+              function searchAttendance(query) {
+                // Convert the query to lowercase for case-insensitive search
+                const searchTerm = query.toLowerCase();
+
+                // Filter attendance data based on the search query
+                const searchResults = filteredData.filter(entry => {
+                  // Check if any of the fields contain the search term
+                  return (
+                    entry.user &&
+                    (entry.user.fullname.toLowerCase().includes(searchTerm) ||
+                      entry.user.username.toLowerCase().includes(searchTerm) ||
+                      entry.user.department.toLowerCase().includes(searchTerm) ||
+                      entry.user.section.toLowerCase().includes(searchTerm) ||
+                      entry.datetime.toLowerCase().includes(searchTerm) ||
+                      entry.status.toLowerCase().includes(searchTerm) ||
+                      entry.type.toLowerCase().includes(searchTerm))
+                  );
+                });
+
+                return searchResults;
+              }
+
+              // Function to fetch data and populate table
+              async function fetchDataAndPopulateTable() {
+                try {
+                  const response = await fetch('/api/hr/attendance/today');
+                  if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                  }
+                  const data = await response.json();
+                  filteredData = data.map(entry => ({
+                    ...entry,
+                    datetime: formatDateTime(new Date(entry.signInTime))
+                  }));
+                  populateAttendanceTable(filteredData);
+                } catch (error) {
+                  console.error('Error fetching data:', error);
+                }
+              }
+
               // Call the function initially and then every 5 seconds
               fetchDataAndPopulateTable();
-              setInterval(fetchDataAndPopulateTable, 5000); // 5000 milliseconds = 5 seconds
+              setInterval(fetchDataAndPopulateTable, 10000); // 5000 milliseconds = 5 seconds
+
+              // Example usage of search functionality
+              const searchInput = document.getElementById('search-input');
+              searchInput.addEventListener('input', () => {
+                const searchTerm = searchInput.value.trim(); // Get the search query from input
+                const searchResults = searchAttendance(searchTerm); // Perform search
+                populateAttendanceTable(searchResults); // Update table with search results
+              });
+
+              // Other helper functions
+              function formatDateTime(dateTime) {
+                const options = {
+                  timeZone: 'Asia/Kuala_Lumpur',
+                  hour: 'numeric',
+                  minute: 'numeric',
+                  hour12: true
+                };
+                return dateTime.toLocaleTimeString('en-MY', options);
+              }
             </script>
 
           </tbody>
@@ -115,14 +186,6 @@
       </div>
 
       <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
-        <div class="col-12 col-md-auto">
-          <div class="search-box">
-            <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
-              <input class="form-control search-input search form-control-sm" type="search" placeholder="Search attendances today" aria-label="Search" />
-              <span class="fas fa-search search-box-icon"></span>
-            </form>
-          </div>
-        </div>
 
         <div class="col-auto d-flex">
           <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p><a class="fw-semibold" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semibold d-none" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
@@ -136,9 +199,7 @@
       </div>
     </div>
 
-  </div>
 
-  <div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis pt-7 pb-3 border-y mb-6">
     <div id="all-attendance" data-list='{"valueNames":["staff","department","section","attendance"],"page":10,"pagination":true}'>
 
       <div class="mb-3">

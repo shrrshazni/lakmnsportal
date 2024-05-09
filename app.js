@@ -1152,7 +1152,7 @@ app.get('/staff/details/:id', isAuthenticated, async function (req, res) {
 
     const leave = await Leave.find({ user: otherUser._id, status: { $nin: ['denied', 'cancelled'] } }).sort({ timestamp: -1 });
     const activities = await Activity.find({ user: otherUser._id }).sort({ date: -1 });
-    const attendance = await Attendance.find({ user: user._id }).sort({ timestamp: -1 });
+    const attendance = await Attendance.find({ user: otherUser._id }).sort({ timestamp: -1 });
 
     if (user) {
         res.render('staff-details', {
@@ -5062,7 +5062,9 @@ app.get('/api/attendance/today', async function (req, res) {
                     profile: user.profile,
                     // Add other user fields as needed
                 } : null,
-                datetime: formatDateTime(new Date(entry.date.signInTime)), // Assuming you want to display signInTime
+                datetime: formatDateTime(new Date(entry.date.signInTime)),
+                signInTime: entry.date.signInTime,
+                signOutTime: entry.date.signOutTime,
                 status: entry.status,
                 type: entry.type
             };
@@ -5083,14 +5085,10 @@ app.get('/api/hr/attendance/today', async function (req, res) {
         const today = new Date();
         today.setHours(0, 0, 0, 0); // Set hours, minutes, seconds, and milliseconds to 0 to get the start of the day
 
-        // Get the current time
-        const currentTime = new Date();
-
         // Find attendance data for today within the specified time range
         const attendanceData = await Attendance.find({
             'date.signInTime': {
                 $gte: today, // Find records where signInTime is greater than or equal to today
-                // $lte: currentTime // and less than or equal to the current time
             }
         }).sort({ 'date.signInTime': -1 }).lean();
 
@@ -5101,41 +5099,48 @@ app.get('/api/hr/attendance/today', async function (req, res) {
         const filteredData = attendanceData.map(entry => {
             const user = allUsers.find(user => user._id.toString() === entry.user.toString());
 
-            const getInitials = (str) => {
-                const names = str.split(' '); // Split the full name into an array of names
-                const initials = names.slice(0, 2).map(name => name.charAt(0).toUpperCase()); // Get the first letter of each name and capitalize it
-                return initials.join(''); // Join the initials into a single string
-            };
-
-            const formatDateTime = (dateTime) => {
-                const options = {
-                    timeZone: 'Asia/Kuala_Lumpur',
-                    hour: 'numeric', minute: 'numeric', hour12: true
-                };
-                return dateTime.toLocaleTimeString('en-MY', options);
-            };
-
             return {
                 user: user ? {
                     _id: user._id,
                     fullname: user.fullname,
-                    initials: getInitials(user.fullname),
+                    username: user.username,
                     department: user.department,
                     section: user.section,
                     profile: user.profile,
-                    // Add other user fields as needed
                 } : null,
-                datetime: formatDateTime(new Date(entry.date.signInTime)), // Assuming you want to display signInTime
+                datetime: new Date(entry.date.signInTime).toLocaleTimeString('en-MY', { timeZone: 'Asia/Kuala_Lumpur', hour: 'numeric', minute: 'numeric', hour12: true }),
+                signInTime: entry.date.signInTime,
+                signOutTime: entry.date.signOutTime,
                 status: entry.status,
                 type: entry.type
             };
         });
 
-        // Send the filtered attendance data for today to the client
-        res.json(filteredData);
-    } catch (err) {
-        console.error('Error fetching attendance data for today:', err);
-        res.status(500).json({ error: 'Internal server error' });
+        // Check if there's a search query
+        const { query } = req.query;
+        if (query) {
+            // Perform search based on the query
+            const searchResults = filteredData.filter(entry => (
+                entry.user && (
+                    entry.user.fullname.toLowerCase().includes(query.toLowerCase()) ||
+                    entry.user.username.toLowerCase().includes(query.toLowerCase()) ||
+                    entry.user.department.toLowerCase().includes(query.toLowerCase()) ||
+                    entry.user.section.toLowerCase().includes(query.toLowerCase()) ||
+                    entry.datetime.toLowerCase().includes(query.toLowerCase()) ||
+                    entry.status.toLowerCase().includes(query.toLowerCase()) ||
+                    entry.type.toLowerCase().includes(query.toLowerCase())
+                )
+            ));
+
+            console.log(searchResults);
+            return res.json(searchResults);
+        }
+
+        // If no search query, return all attendance data
+        return res.json(filteredData);
+    } catch (error) {
+        console.error('Error fetching attendance data:', error);
+        return res.status(500).json({ error: 'Internal server error' });
     }
 });
 

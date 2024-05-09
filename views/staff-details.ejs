@@ -536,7 +536,7 @@
                     <% }else{ %>
                     <tr class="position-static">
                       <td class="align-middle white-space-nowrap border-bottom-0">
-                        <p>No activity detected from <span class="fw-bold text-primary"><%= user.fullname %></span></p>
+                        <p>No leave detected from <span class="fw-bold text-primary"><%= otherUser.fullname %></span></p>
                       </td>
                     </tr>
                     <% } %>
@@ -654,7 +654,7 @@
                     <%  }); %> <% } else { %>
                     <tr class="position-static">
                       <td class="align-middle time white-space-nowrap ps-0 border-bottom-0">
-                        <p>No leave submitted from you</p>
+                        <p>No leave detected from <span class="fw-bold text-primary"><%= otherUser.fullname %></span></p>
                       </td>
                     </tr>
                     <% } %>
@@ -734,7 +734,7 @@
                     <% }else{ %>
                     <tr class="position-static">
                       <td class="align-middle white-space-nowrap border-bottom-0">
-                        <p>No activity detected from <span class="fw-bold text-primary"><%= otherUser.fullname %></span></p>
+                        <p>No attendance from <span class="fw-bold text-primary"><%= otherUser.fullname %></span></p>
                       </td>
                     </tr>
                     <% } %>
