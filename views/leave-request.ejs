@@ -106,7 +106,7 @@
 
       <div class="col-sm-6 col-md-6">
         <div class="form-floating">
-          <input type="text" class="form-control datetimepicker flatpickr-input <%= validationStartDate %>" id="floatingInputStartDate" placeholder="" name="startDate" data-options='{"disableMobile":true,"allowInput":true, "locale" : { "firstDayOfWeek" : 1}, "mode": "multiple" }' value="<%= startDate %>" required>
+          <input type="text" class="form-control datetimepicker flatpickr-input <%= validationStartDate %>" id="floatingInputStartDate" placeholder="" name="startDate" data-options='{"disableMobile":true,"allowInput":true, "locale" : { "firstDayOfWeek" : 1}}' value="<%= startDate %>" required>
           <label for="floatingInputStartDate"><span class="fa-regular fa-calendar-xmark me-2"></span>Start date</label>
           <div class="invalid-feedback">
             <%= startDateFeedback %>
@@ -116,7 +116,7 @@
 
       <div class="col-sm-6 col-md-6">
         <div class="form-floating">
-          <input type="text" class="form-control datetimepicker flatpickr-input <%= validationReturnDate %>" id="floatingInputReturnDate" placeholder="" name="returnDate" data-options='{"disableMobile":true,"allowInput":true, "locale" : { "firstDayOfWeek" : 1}, "mode": "multiple"}' value="<%= returnDate %>" required>
+          <input type="text" class="form-control datetimepicker flatpickr-input <%= validationReturnDate %>" id="floatingInputReturnDate" placeholder="" name="returnDate" data-options='{"disableMobile":true,"allowInput":true, "locale" : { "firstDayOfWeek" : 1}}' value="<%= returnDate %>" required>
           <label for="floatingInputReturnDate"><span class="fa-regular fa-calendar-check me-2"></span>Return date</label>
           <div class="invalid-feedback">
             <%= returnDateFeedback %>
@@ -196,8 +196,42 @@
       document.getElementById('leaveForm').addEventListener('click', function() {
         this.classList.add('was-validated');
         this.classList.remove('has-validated');
+
+        // Check the selected leave type
+        var selectedLeaveType = document.getElementById('floatingSelectTask').value;
+
+        // Clear all toasts
+        var toasts = document.querySelectorAll('.toast');
+        toasts.forEach(function(toast) {
+          var bsToast = bootstrap.Toast.getInstance(toast);
+          bsToast.hide();
+        });
+
+        // If the selected leave type is Emergency Leave
+        if (selectedLeaveType === 'Emergency Leave') {
+          // Add a default value to the input
+          document.getElementById('queryInput').value = 'Relief staff not required';
+          // Disable the input
+          document.getElementById('queryInput').disabled = true;
+          // Display the toast
+          var emergencyToast = new bootstrap.Toast(document.getElementById('attachAlert'));
+          emergencyToast.show();
+        } else if (selectedLeaveType === 'Hajj Leave' || selectedLeaveType === 'Hajj Leave' || selectedLeaveType === 'Sick Leave' || selectedLeaveType === 'Extended Sick Leave' ||
+          selectedLeaveType === 'Marriage Leave' || selectedLeaveType === 'Paternity Leave' || selectedLeaveType === 'Maternity Leave' || selectedLeaveType === 'Attend Exam Leave' ||
+          selectedLeaveType === 'Special Leave'
+        ) {
+
+          var otherToast = new bootstrap.Toast(document.getElementById('attachAlert'));
+          otherToast.show();
+
+        } else {
+          // If another leave type is selected, ensure the input is not disabled and clear its value
+          document.getElementById('queryInput').disabled = false;
+          document.getElementById('queryInput').value = '';
+        }
       });
     </script>
+
 
 
     <script>
@@ -731,6 +765,23 @@
 
   </div>
 
+</div>
+
+<!-- toast alert file upload -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 5">
+  <div class="d-flex">
+    <div class="toast align-items-center text-white border-0" id="attachAlert" role="alert" data-bs-autohide="false" aria-live="assertive" aria-atomic="true">
+      <div class="d-flex justify-content-between">
+        <div class="toast-body px-0 py-3">
+          <code class="text-primary">Attachment required!</code>
+        </div>
+
+        <button class="btn ms-2 p-0" type="button" data-bs-dismiss="toast" aria-label="Close">
+          <span class="uil uil-times fs-7"></span>
+        </button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- toast alert submission -->
