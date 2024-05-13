@@ -7,199 +7,242 @@
     <h5 class="text-body-tertiary fw-semibold">Tracking Participation, Absences, Presence.</h5>
   </div>
 
-  <div class="px-0 px-md-4 mb-6">
 
-    <div class="row justify-content-between mb-6">
-      <div class="col-6 col-md-4 col-xxl-2 text-center border-translucent border-start-xxl border-end-xxl-0 border-bottom-xxl-0 border-end border-bottom pb-4 pb-xxl-0 "><span class="uil fs-5 lh-1 fa-solid fa-calendar text-primary"></span>
-        <h1 class="fs-5 pt-3"><%= allUser.length %></h1>
-        <p class="fs-9 mb-0">Total Member Staffs</p>
+
+  <div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis pt-7 pb-3 border-y mb-6">
+
+    <div class="row align-items-end justify-content-between pb-4 g-3 mb-4">
+      <div class="col-auto">
+        <h3>Attendance Today</h3>
+        <p class="text-body-tertiary lh-sm mb-0">High, everyone present, no absences</p>
       </div>
-      <div class="col-6 col-md-4 col-xxl-2 text-center border-translucent border-start-xxl border-end-xxl-0 border-bottom-xxl-0 border-end-md border-bottom pb-4 pb-xxl-0"><span class="uil fs-5 lh-1 fa-solid fa-calendar-day text-info"></span>
-        <h1 class="fs-5 pt-3"><%= attendance.filter(item => item.status === 'Present').length %></h1>
-        <p class="fs-9 mb-0">Total Present</p>
-      </div>
-      <div class="col-6 col-md-4 col-xxl-2 text-center border-translucent border-start-xxl border-bottom-xxl-0 border-bottom border-end border-end-md-0 pb-4 pb-xxl-0 pt-4 pt-md-0"><span class="uil fs-5 lh-1 fa-solid fa-calendar-plus text-primary"></span>
-        <h1 class="fs-5 pt-3"><%= attendance.filter(item => item.status === 'Absent').length %></h1>
-        <p class="fs-9 mb-0">Total Absent</p>
-      </div>
-      <div class="col-6 col-md-4 col-xxl-2 text-center border-translucent border-start-xxl border-end-md border-end-xxl-0 border-bottom border-bottom-md-0 pb-4 pb-xxl-0 pt-4 pt-xxl-0"><span class="uil fs-5 lh-1 fa-solid fa-calendar-minus text-warning"></span>
-        <h1 class="fs-5 pt-3"><%= attendance.filter(item => item.status === 'Late').length %> %></h1>
-        <p class="fs-9 mb-0">Total Late</p>
-      </div>
-      <div class="col-6 col-md-4 col-xxl-2 text-center border-translucent border-start-xxl border-end border-end-xxl-0 pb-md-4 pb-xxl-0 pt-4 pt-xxl-0"><span class="uil fs-5 lh-1 fa-solid fa-calendar-check text-success"></span>
-        <h1 class="fs-5 pt-3"><%= attendance.filter(item => item.status === 'Invalid').length %> %></h1>
-        <p class="fs-9 mb-0">Total Invalid</p>
-      </div>
-      <div class="col-6 col-md-4 col-xxl-2 text-center border-translucent border-start-xxl border-end-xxl pb-md-4 pb-xxl-0 pt-4 pt-xxl-0"><span class="uil fs-5 lh-1 fa-solid fa-calendar-xmark text-danger"></span>
-        <h1 class="fs-5 pt-3"><%= attendance.filter(item => item.status === 'Leave').length %> %></h1>
-        <p class="fs-9 mb-0">Total Leave</p>
+
+      <div class="col-12 col-md-auto">
+        <div class="search-box">
+          <form class="position-relative">
+            <input class="form-control search-input search form-control-sm" type="search" id="new-searchInput" placeholder="Search team members" aria-label="Search" />
+            <span class="fas fa-search search-box-icon"></span>
+          </form>
+        </div>
       </div>
 
     </div>
+
+    <div class="px-0 px-md-4 mb-6">
+
+      <div class="row justify-content-between mb-6">
+        <div class="col-6 col-md-4 col-xxl-2 text-center pb-4 pb-xxl-0 "><span class="uil fs-5 lh-1 fa-solid fa-calendar text-primary"></span>
+          <h1 class="fs-5 pt-3"><%= allUser.length %></h1>
+          <p class="fs-9 mb-0">Total Member Staffs</p>
+        </div>
+        <div class="col-6 col-md-4 col-xxl-2 text-center pb-4 pb-xxl-0"><span class="uil fs-5 lh-1 fa-solid fa-calendar-day text-info"></span>
+          <h1 class="fs-5 pt-3"><%= attendance.filter(item => item.status === 'Present').length %></h1>
+          <p class="fs-9 mb-0">Total Present</p>
+        </div>
+        <div class="col-6 col-md-4 col-xxl-2 text-center pb-4 pb-xxl-0 pt-4 pt-md-0"><span class="uil fs-5 lh-1 fa-solid fa-calendar-plus text-primary"></span>
+          <h1 class="fs-5 pt-3"><%= allUser.length - attendance.filter(item => item.status === 'Present').length %></h1>
+          <p class="fs-9 mb-0">Total Absent</p>
+        </div>
+        <div class="col-6 col-md-4 col-xxl-2 text-center pb-4 pb-xxl-0 pt-4 pt-xxl-0"><span class="uil fs-5 lh-1 fa-solid fa-calendar-minus text-warning"></span>
+          <h1 class="fs-5 pt-3"><%= attendance.filter(item => item.status === 'Late').length %> %></h1>
+          <p class="fs-9 mb-0">Total Late</p>
+        </div>
+        <div class="col-6 col-md-4 col-xxl-2 text-center pb-md-4 pb-xxl-0 pt-4 pt-xxl-0"><span class="uil fs-5 lh-1 fa-solid fa-calendar-check text-success"></span>
+          <h1 class="fs-5 pt-3"><%= attendance.filter(item => item.status === 'Invalid').length %> %></h1>
+          <p class="fs-9 mb-0">Total Invalid</p>
+        </div>
+        <div class="col-6 col-md-4 col-xxl-2 text-center pb-md-4 pb-xxl-0 pt-4 pt-xxl-0"><span class="uil fs-5 lh-1 fa-solid fa-calendar-xmark text-danger"></span>
+          <h1 class="fs-5 pt-3"><%= attendance.filter(item => item.status === 'Leave').length %> %></h1>
+          <p class="fs-9 mb-0">Total Leave</p>
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="mb-3">
+      <div id="new-attendance" data-list='{"valueNames":["staff","department","section","attendance"],"page":10,"pagination":true}'>
+
+        <div class="table-responsive ms-n1 ps-1 scrollbar">
+          <table class="table fs-9 mb-0 border-top border-translucent">
+            <thead style="pointer-events: none;">
+              <tr>
+                <th class="sort white-space-nowrap align-middle ps-0" scope="col" style="width:20%;">STAFF</th>
+                <th class="sort align-middle text-center ps-0" scope="col" style="width:15%;">DEPARTMENT</th>
+                <th class="sort align-middle text-center ps-0" scope="col" style="width:15%;">SECTION</th>
+                <th class="sort align-middle text-center ps-0" scope="col" style="width:10%;">ATTENDANCE</th>
+                <th class="sort align-middle text-center ps-0" scope="col" style="width:10%;">STATUS</th>
+              </tr>
+            </thead>
+
+            <tbody class="list" id="new-attendance-body">
+            </tbody>
+
+          </table>
+        </div>
+        <div class="row align-items-center justify-content-center py-2 pe-0 fs-9 mt-3">
+          <div class="col-auto d-flex">
+            <button class="page-link" id="new-prevPage"><span class="fas fa-chevron-left"></span></button>
+            <ul class="mb-0 pagination" id="new-pagination"></ul>
+            <button class="page-link pe-0" id="new-nextPage"><span class="fas fa-chevron-right"></span></button>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        document.addEventListener('DOMContentLoaded', function() {
+          const newSearchInput = document.getElementById('new-searchInput');
+          const newPrevPageButton = document.getElementById('new-prevPage');
+          const newNextPageButton = document.getElementById('new-nextPage');
+          const newPaginationContainer = document.getElementById('new-pagination');
+          const newDataContainer = document.getElementById('new-attendance-body');
+          let newCurrentPage = 1;
+
+          // Function to fetch attendance data with pagination and search query
+          function fetchNewData(page, searchQuery) {
+            fetch(`/api/data/all-attendance/today?page=${page}&search=${searchQuery}`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({})
+              })
+              .then(response => response.json())
+              .then(data => {
+                // Update the table with the received attendance data
+                renderNewTable(data.data1);
+
+                // Update pagination
+                updateNewPagination(data.data2.length, 10);
+              })
+              .catch(error => {
+                console.error('Error:', error);
+              });
+          }
+
+          function updateNewPagination(totalItems, limit) {
+            const totalPages = Math.ceil(totalItems / limit);
+            const paginationContainer = document.getElementById('new-pagination');
+
+            paginationContainer.innerHTML = ''; // Clear existing pagination buttons
+
+            let startPage;
+            let endPage;
+
+            if (totalPages <= 3) {
+              startPage = 1;
+              endPage = totalPages;
+            } else if (currentPage === 1) {
+              startPage = 1;
+              endPage = 3;
+            } else if (currentPage === 2) {
+              startPage = 1;
+              endPage = 4;
+            } else if (currentPage >= totalPages - 1) {
+              endPage = totalPages;
+              startPage = Math.max(1, endPage - 4); // Display 5 buttons
+            } else {
+              startPage = currentPage - 2;
+              endPage = currentPage + 2;
+            }
+
+            if (startPage !== 1) {
+              const prevEllipsisButton = document.createElement('button');
+              prevEllipsisButton.textContent = '...';
+              prevEllipsisButton.classList.add('btn', 'pagination-button', 'mx-0', 'px-3', 'fs-10', 'border-0'); // Add Bootstrap classes
+              prevEllipsisButton.disabled = true;
+              paginationContainer.appendChild(prevEllipsisButton);
+            }
+
+            for (let page = startPage; page <= endPage; page++) {
+              const paginationButton = document.createElement('button');
+              paginationButton.textContent = page;
+              paginationButton.classList.add('btn', 'pagination-button', 'mx-0', 'px-3', 'fs-10'); // Add Bootstrap classes
+
+              if (page === currentPage) {
+                paginationButton.classList.add('btn-primary');
+              } else {
+                paginationButton.classList.remove('btn-primary');
+              }
+
+              paginationButton.addEventListener('click', () => {
+                currentPage = page;
+                fetchData(currentPage, searchInput.value, selectedDateInput.value);
+              });
+
+              paginationContainer.appendChild(paginationButton);
+            }
+
+            if (endPage < totalPages) {
+              const nextEllipsisButton = document.createElement('button');
+              nextEllipsisButton.textContent = '...';
+              nextEllipsisButton.classList.add('btn', 'pagination-button', 'mx-0', 'px-3', 'fs-10', 'border-0'); // Add Bootstrap classes
+              nextEllipsisButton.disabled = true;
+              paginationContainer.appendChild(nextEllipsisButton);
+            }
+          }
+
+          // Function to render the table with attendance data
+          function renderNewTable(data) {
+            const tbody = document.querySelector('#new-attendance-body');
+            tbody.innerHTML = '';
+
+            data.forEach(entry => {
+              // Construct HTML row for each entry
+
+              const row = `
+        <tr class="position-static border-top">
+            <td class="align-middle text-body white-space-nowrap ps-0 staff">
+                <div class="avatar avatar-2xl">
+                    <div class="avatar-name rounded-circle"><span class="fs-8">${entry.user ? entry.user.username : 'Unknown'}</span></div>
+                </div>
+                <a class="mb-0 ms-3 fw-bold fs-8" href="">${entry.user ? entry.user.fullname : 'Unknown'}</a>
+            </td>
+            <td class="align-middle text-center department ps-0">
+                <p class="fw-semibold text-body-emphasis fs-9 mb-0">${entry.user ? entry.user.department : 'Unknown'}</p>
+            </td>
+            <td class="align-middle text-center section ps-0">
+                <p class="fw-semibold text-body-emphasis fs-9 mb-0">${entry.user ? entry.user.section : 'Unknown'}</p>
+            </td>
+        </tr>`;
+              // Insert the HTML row into the table body
+              tbody.insertAdjacentHTML('beforeend', row);
+
+              const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+              const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+            });
+          }
+
+          // Event listener for search input
+          newSearchInput.addEventListener('input', function() {
+            newCurrentPage = 1; // Reset current page to 1
+            fetchNewData(newCurrentPage, this.value);
+          });
+
+          // Event listener for previous page button
+          newPrevPageButton.addEventListener('click', function() {
+            if (newCurrentPage > 1) {
+              newCurrentPage--;
+              fetchNewData(newCurrentPage, newSearchInput.value);
+            }
+          });
+
+          // Event listener for next page button
+          newNextPageButton.addEventListener('click', function() {
+            newCurrentPage++;
+            fetchNewData(newCurrentPage, newSearchInput.value);
+          });
+
+          // Initial data fetch when the page loads
+          fetchNewData(newCurrentPage, newSearchInput.value);
+        });
+      </script>
+    </div>
+
 
   </div>
 
-  <div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis pt-7 pb-3 border-y mb-6">
-    <div class="mb-3" id="team-members" data-list='{"valueNames":["member","department", "section","status","clockin"],"page":5,"pagination":true}'>
-      <div class="row align-items-end justify-content-between pb-4 g-3">
-
-        <div class="col-auto">
-          <h3>Attendance Today</h3>
-          <p class="text-body-tertiary lh-sm mb-0">High, everyone present, no absences</p>
-        </div>
-
-        <div class="col-12 col-md-auto">
-          <div class="search-box">
-            <form class="position-relative">
-              <input class="form-control search-input search form-control-sm" type="search" id="search-input" placeholder="Search team members" aria-label="Search" />
-              <span class="fas fa-search search-box-icon"></span>
-            </form>
-          </div>
-        </div>
-
-      </div>
-
-      <div class="table-responsive ms-n1 mb-0 ps-1 scrollbar border-top border-translucent">
-        <table class="table fs-9 mb-0 border-translucent">
-          <thead>
-            <th class="sort align-middle text-start" scope="col" data-sort="member" style="width:30%;">STAFF</th>
-            <th class="sort align-middle text-center" scope="col" data-sort="department" style="width:30%;">DEPARTMENT</th>
-            <th class="sort align-middle text-center" scope="col" data-sort="section" style="width:30%;">SECTION</th>
-            <th class="sort align-middle text-center" scope="col" data-sort="status" style="width:10%;">TYPE</th>
-            <th class="sort align-middle text-center" scope="col" data-sort="clockin" style="width:10%;">CLOCK HOURS</th>
-          </thead>
-
-          <tbody class="list" id="attendance-list">
-
-            <script>
-              // Assuming attendanceData, filteredData, and the searchAttendance function are already available
-
-              // Function to populate attendance table with data
-              function populateAttendanceTable(data) {
-                const tableBody = document.getElementById('attendance-list');
-                tableBody.innerHTML = ''; // Clear existing table rows
-
-                if (data.length === 0) {
-                  const row = `
-                      <tr class="position-static">
-                          <td class="align-middle">
-                               <h3 class="fs-9 fw-bold text-body mt-1 mb-0">No staff clock in yet</h3>
-                          </td>
-                      </tr>
-                  `;
-                  tableBody.insertAdjacentHTML('beforeend', row);
-                } else {
-                  data.forEach(entry => {
-                    const row = `
-                <tr class="position-static border-top">
-                    <td class="align-middle text-body white-space-nowrap ps-0 member">
-                        <div class="avatar avatar-2xl">
-                            <div class="avatar-name rounded-circle"><span class="fs-9">${entry.user ? entry.user.username : 'Unknown'}</span></div>
-                        </div>
-                        <a class="mb-0 ms-3 fw-bold fs-8" href="">${entry.user ? entry.user.fullname : 'Unknown'}</a>
-                    </td>
-                    <td class="align-middle text-center department ps-0">
-                        <p class="fw-semibold text-body-emphasis fs-9 mb-0">${entry.user.department}</p>
-                    </td>
-                    <td class="align-middle text-center section ps-0">
-                        <p class="fw-semibold text-body-emphasis fs-9 mb-0">${entry.user.section}</p>
-                    </td>
-                    <td class="align-middle text-center status ps-0">
-                        <p class="badge badge-phoenix badge-phoenix-success fs-10 mb-0">${entry.type}</p>
-                    </td>
-                    <td class="align-middle text-center clockin ps-0">
-                        <p class="badge badge-phoenix badge-phoenix-warning fs-10 mb-0">${entry.datetime}</p>
-                    </td>
-                </tr>`;
-                    tableBody.insertAdjacentHTML('beforeend', row);
-                  });
-                }
-              }
-
-              // Function to perform search
-              function searchAttendance(query) {
-                // Convert the query to lowercase for case-insensitive search
-                const searchTerm = query.toLowerCase();
-
-                // Filter attendance data based on the search query
-                const searchResults = filteredData.filter(entry => {
-                  // Check if any of the fields contain the search term
-                  return (
-                    entry.user &&
-                    (entry.user.fullname.toLowerCase().includes(searchTerm) ||
-                      entry.user.username.toLowerCase().includes(searchTerm) ||
-                      entry.user.department.toLowerCase().includes(searchTerm) ||
-                      entry.user.section.toLowerCase().includes(searchTerm) ||
-                      entry.datetime.toLowerCase().includes(searchTerm) ||
-                      entry.status.toLowerCase().includes(searchTerm) ||
-                      entry.type.toLowerCase().includes(searchTerm))
-                  );
-                });
-
-                return searchResults;
-              }
-
-              // Function to fetch data and populate table
-              async function fetchDataAndPopulateTable() {
-                try {
-                  const response = await fetch('/api/hr/attendance/today');
-                  if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                  }
-                  const data = await response.json();
-                  filteredData = data.map(entry => ({
-                    ...entry,
-                    datetime: formatDateTime(new Date(entry.signInTime))
-                  }));
-                  populateAttendanceTable(filteredData);
-                } catch (error) {
-                  console.error('Error fetching data:', error);
-                }
-              }
-
-              // Call the function initially and then every 5 seconds
-              fetchDataAndPopulateTable();
-              setInterval(fetchDataAndPopulateTable, 10000); // 5000 milliseconds = 5 seconds
-
-              // Example usage of search functionality
-              const searchInput = document.getElementById('search-input');
-              searchInput.addEventListener('input', () => {
-                const searchTerm = searchInput.value.trim(); // Get the search query from input
-                const searchResults = searchAttendance(searchTerm); // Perform search
-                populateAttendanceTable(searchResults); // Update table with search results
-              });
-
-              // Other helper functions
-              function formatDateTime(dateTime) {
-                const options = {
-                  timeZone: 'Asia/Kuala_Lumpur',
-                  hour: 'numeric',
-                  minute: 'numeric',
-                  hour12: true
-                };
-                return dateTime.toLocaleTimeString('en-MY', options);
-              }
-            </script>
-
-          </tbody>
-        </table>
-      </div>
-
-      <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
-
-        <div class="col-auto d-flex">
-          <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p><a class="fw-semibold" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semibold d-none" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
-        </div>
-
-        <div class="col-auto d-flex">
-          <button class="page-link" data-list-pagination="prev"><span class="fas fa-chevron-left"></span></button>
-          <ul class="mb-0 pagination"></ul>
-          <button class="page-link pe-0" data-list-pagination="next"><span class="fas fa-chevron-right"></span></button>
-        </div>
-      </div>
-    </div>
-
-
+  <div class="mb-3">
     <div id="all-attendance" data-list='{"valueNames":["staff","department","section","attendance"],"page":10,"pagination":true}'>
 
       <div class="mb-3">
@@ -405,36 +448,36 @@
             const totalPercentage = ((totalAttendance / daysInMonth) * 100).toFixed(0);
 
             const row = `
-                <tr class="position-static border-top">
-                    <td class="align-middle text-body white-space-nowrap ps-0 staff">
-                        <div class="avatar avatar-2xl">
-                            <div class="avatar-name rounded-circle"><span class="fs-8">${entry.user ? entry.user.username : 'Unknown'}</span></div>
-                        </div>
-                        <a class="mb-0 ms-3 fw-bold fs-8" href="">${entry.user ? entry.user.fullname : 'Unknown'}</a>
-                    </td>
-                    <td class="align-middle text-center department ps-0">
-                        <p class="fw-semibold text-body-emphasis fs-9 mb-0">${entry.user ? entry.user.department : 'Unknown'}</p>
-                    </td>
-                    <td class="align-middle text-center section ps-0">
-                        <p class="fw-semibold text-body-emphasis fs-9 mb-0">${entry.user ? entry.user.section : 'Unknown'}</p>
-                    </td>
-                    <td class="align-middle text-center attendance px-5">
-                        <p class="fs-10">${totalAttendance} / ${daysInMonth}</p>
-                        <div class="progress progress-stack mt-n3" style="height:5px;">
-                          <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar bg-primary" style="width:${totalPercentage}%" data-bs-toggle="tooltip" data-bs-placement="top" title="${totalPercentage}%"></div>
-                        </div>
-                    </td>
-                    <td class="align-middle text-center status px-5">
-                        <p class="fs-10 opacity-0">${presentCount} / ${daysInMonth}</p>
-                        <div class="progress progress-stack mt-n3" style="height:5px;">
-                          <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar bg-success" style="width:${presentPercentage}%" data-bs-toggle="tooltip" data-bs-placement="top" title="Present ${presentPercentage}% "></div>
-                          <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar bg-danger" style="width:${absentPercentage}%" data-bs-toggle="tooltip" data-bs-placement="top" title="Absent ${absentPercentage}% "></div>
-                          <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar bg-warning" style="width:${latePercentage}%" data-bs-toggle="tooltip" data-bs-placement="top" title="Late ${latePercentage}% "></div>
-                          <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar bg-info" style="width:${invalidPercentage}%" data-bs-toggle="tooltip" data-bs-placement="top" title="Invalid ${invalidPercentage}% "></div>
-                          <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar bg-success-lighter" style="width:${leavePercentage}%" data-bs-toggle="tooltip" data-bs-placement="top" title="Leave ${leavePercentage}% "></div>
-                        </div>
-                    </td>
-                </tr>`;
+                  <tr class="position-static border-top">
+                      <td class="align-middle text-body white-space-nowrap ps-0 staff">
+                          <div class="avatar avatar-2xl">
+                              <div class="avatar-name rounded-circle"><span class="fs-8">${entry.user ? entry.user.username : 'Unknown'}</span></div>
+                          </div>
+                          <a class="mb-0 ms-3 fw-bold fs-8" href="">${entry.user ? entry.user.fullname : 'Unknown'}</a>
+                      </td>
+                      <td class="align-middle text-center department ps-0">
+                          <p class="fw-semibold text-body-emphasis fs-9 mb-0">${entry.user ? entry.user.department : 'Unknown'}</p>
+                      </td>
+                      <td class="align-middle text-center section ps-0">
+                          <p class="fw-semibold text-body-emphasis fs-9 mb-0">${entry.user ? entry.user.section : 'Unknown'}</p>
+                      </td>
+                      <td class="align-middle text-center attendance px-5">
+                          <p class="fs-10">${totalAttendance} / ${daysInMonth}</p>
+                          <div class="progress progress-stack mt-n3" style="height:5px;">
+                            <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar bg-primary" style="width:${totalPercentage}%" data-bs-toggle="tooltip" data-bs-placement="top" title="${totalPercentage}%"></div>
+                          </div>
+                      </td>
+                      <td class="align-middle text-center status px-5">
+                          <p class="fs-10 opacity-0">${presentCount} / ${daysInMonth}</p>
+                          <div class="progress progress-stack mt-n3" style="height:5px;">
+                            <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar bg-success" style="width:${presentPercentage}%" data-bs-toggle="tooltip" data-bs-placement="top" title="Present ${presentPercentage}% "></div>
+                            <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar bg-danger" style="width:${absentPercentage}%" data-bs-toggle="tooltip" data-bs-placement="top" title="Absent ${absentPercentage}% "></div>
+                            <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar bg-warning" style="width:${latePercentage}%" data-bs-toggle="tooltip" data-bs-placement="top" title="Late ${latePercentage}% "></div>
+                            <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar bg-info" style="width:${invalidPercentage}%" data-bs-toggle="tooltip" data-bs-placement="top" title="Invalid ${invalidPercentage}% "></div>
+                            <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar bg-success-lighter" style="width:${leavePercentage}%" data-bs-toggle="tooltip" data-bs-placement="top" title="Leave ${leavePercentage}% "></div>
+                          </div>
+                      </td>
+                  </tr>`;
             // Insert the HTML row into the table body
             tbody.insertAdjacentHTML('beforeend', row);
 
@@ -497,9 +540,7 @@
         fetchData(currentPage, searchInput.value, selectedDateInput.value);
       });
     </script>
-
   </div>
-
 </div>
 
 <%- include('partials/private-footer.ejs') %>

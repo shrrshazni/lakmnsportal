@@ -5081,68 +5081,92 @@ app.get('/api/attendance/today', async function (req, res) {
 });
 
 // HR VIEW FOR TODAYS ATTENDANCE
-app.get('/api/hr/attendance/today', async function (req, res) {
+app.post('/api/data/all-attendance/today', isAuthenticated, async function (req, res) {
+    const searchQuery = req.query.search || ''; // Get search query from request query params
+    const page = parseInt(req.query.page) || 1; // Get page number from request query params
+    const limit = 5; // Number of items per page
+    const skip = (page - 1) * limit;
+
+    // Get today's date
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Set hours, minutes, seconds, and milliseconds to 0 to get the start of the day
+
     try {
-        // Get today's date
-        const today = new Date();
-        today.setHours(0, 0, 0, 0); // Set hours, minutes, seconds, and milliseconds to 0 to get the start of the day
+        // Create a set of all possible status types
+        const allStatusTypes = ['Present', 'Absent', 'Late', 'Invalid', 'Leave'];
+        const allUser = await User.find();
 
-        // Find attendance data for today within the specified time range
-        const attendanceData = await Attendance.find({
-            'date.signInTime': {
-                $gte: today, // Find records where signInTime is greater than or equal to today
+        // Query attendance records for today
+        const attendanceData = await Attendance.aggregate([
+            // Match attendance records for today
+            {
+                $match: {
+                    timestamp: {
+                        $gte: today, // Find records where timestamp is greater than or equal to today
+                        $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000) // Less than tomorrow
+                    }
+                }
+            },
+            // Group by user and status, count occurrences
+            {
+                $group: {
+                    _id: { user: '$user', status: '$status' },
+                    count: { $sum: 1 }
+                }
             }
-        }).sort({ 'date.signInTime': -1 }).lean();
+        ]);
 
-        // Get all users
-        const allUsers = await User.find().lean();
+        const userStatusCounts = {};
 
-        // Filter the attendance data and populate user information
-        const filteredData = attendanceData.map(entry => {
-            const user = allUsers.find(user => user._id.toString() === entry.user.toString());
+        // Iterate over all users and initialize their status counts
+        allUser.forEach(user => {
+            userStatusCounts[user._id] = {};
+            allStatusTypes.forEach(statusType => {
+                userStatusCounts[user._id][statusType] = 0;
+            });
+        });
 
+        // Update status counts based on the attendance data
+        attendanceData.forEach(({ _id, count }) => {
+            const { user, status } = _id;
+            userStatusCounts[user][status] = count;
+        });
+
+        // Combine populated attendance data with user status counts
+        const combinedData = allUser.map(user => {
+            const statusCounts = userStatusCounts[user._id];
             return {
-                user: user ? {
+                user: {
                     _id: user._id,
-                    fullname: user.fullname,
                     username: user.username,
-                    department: user.department,
+                    fullname: user.fullname,
                     section: user.section,
-                    profile: user.profile,
-                } : null,
-                datetime: new Date(entry.date.signInTime).toLocaleTimeString('en-MY', { timeZone: 'Asia/Kuala_Lumpur', hour: 'numeric', minute: 'numeric', hour12: true }),
-                signInTime: entry.date.signInTime,
-                signOutTime: entry.date.signOutTime,
-                status: entry.status,
-                type: entry.type
+                    department: user.department
+                },
+                statusCounts: statusCounts
             };
         });
 
-        // Check if there's a search query
-        const { query } = req.query;
-        if (query) {
-            // Perform search based on the query
-            const searchResults = filteredData.filter(entry => (
-                entry.user && (
-                    entry.user.fullname.toLowerCase().includes(query.toLowerCase()) ||
-                    entry.user.username.toLowerCase().includes(query.toLowerCase()) ||
-                    entry.user.department.toLowerCase().includes(query.toLowerCase()) ||
-                    entry.user.section.toLowerCase().includes(query.toLowerCase()) ||
-                    entry.datetime.toLowerCase().includes(query.toLowerCase()) ||
-                    entry.status.toLowerCase().includes(query.toLowerCase()) ||
-                    entry.type.toLowerCase().includes(query.toLowerCase())
-                )
-            ));
+        // Filter combinedData based on the search query
+        const filteredData = combinedData.filter(item => {
+            const { fullname, section, department, username } = item.user;
+            const regex = new RegExp(searchQuery, 'i');
+            return regex.test(fullname) || regex.test(section) || regex.test(department) || regex.test(username);
+        });
 
-            console.log(searchResults);
-            return res.json(searchResults);
+        // Paginate the filtered data
+        const paginatedData = filteredData.slice(skip, skip + limit);
+
+        const response = {
+            data1: paginatedData,
+            data2: filteredData
         }
 
-        // If no search query, return all attendance data
-        return res.json(filteredData);
+        // Respond with the paginated and filtered attendance data
+        res.json(response);
     } catch (error) {
         console.error('Error fetching attendance data:', error);
-        return res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 

@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'; // Import OrbitControls for camera orbiting
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'; // Import GLTFLoader for loading 3D models
-import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'; 
 import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
 
 const canvasContainer = document.getElementById('myCanvas');

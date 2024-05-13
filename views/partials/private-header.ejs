@@ -676,7 +676,7 @@
               </div>
               <div class="card-footer p-0 border-top border-translucent">
                 <div class="px-3 mt-3"> <a class="btn btn-phoenix-secondary d-flex flex-center w-100" href="/sign-out/<%= user._id %>"> <span class="me-2" data-feather="log-out"> </span>Sign out</a></div>
-                <div class="my-2 text-center fw-bold fs-10 text-body-quaternary"><a class="text-body-quaternary me-1" href="#!">Privacy policy</a>&bull;<a class="text-body-quaternary mx-1" href="#!">Terms</a>&bull;<a class="text-body-quaternary ms-1" href="#!">Cookies</a></div>
+                <div class="my-2 text-center fw-bold fs-10 text-body-quaternary"><a class="text-body-quaternary me-1" data-bs-toggle="modal" data-bs-target="#privacyModal" href="#!">Privacy policy</a>&bull;<a class="text-body-quaternary mx-1" data-bs-toggle="modal" data-bs-target="#termsModal" href="#!">Terms</a>&bull;<a class="text-body-quaternary ms-1" data-bs-toggle="modal" data-bs-target="#cookiesModal" href="#!">Cookies</a></div>
               </div>
             </div>
           </div>
@@ -707,6 +707,50 @@
         </script>
       </ul>
     </nav>
+
+    <!-- modal for terms, privacy policy -->
+
+    <div class="modal fade" id="privacyModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-lg modal-dialog-md modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="exampleModalLabel">Privacy Policy</h1>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="termsModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-lg modal-dialog-md modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="exampleModalLabel">Privacy Policy</h1>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="cookiesModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-lg modal-dialog-md modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="exampleModalLabel">Privacy Policy</h1>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- config for navbar -->
     <script>
