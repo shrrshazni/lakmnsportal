@@ -4920,6 +4920,74 @@ app.get('/scan-qr', isAuthenticated, async function (req, res) {
     }
 });
 
+//ATTENDANCE TODAY FOR ATTENDANCE PAGE
+app.get('/api/attendance/today', async function (req, res) {
+    try {
+        // Get today's date
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Set hours, minutes, seconds, and milliseconds to 0 to get the start of the day
+
+        // Get the current time
+        const currentTime = new Date();
+
+        // Find attendance data for today within the specified time range
+        const attendanceData = await Attendance.find({
+            'date.signInTime': {
+                $gte: today, // Find records where signInTime is greater than or equal to today
+                $lte: currentTime // and less than or equal to the current time
+            }
+        }).sort({ timestamp: -1 }).limit(2).lean();
+
+        // Get all users
+        const allUsers = await User.find().lean();
+
+        // Filter the attendance data and populate user information
+        const filteredData = attendanceData.map(entry => {
+            const user = allUsers.find(user => user._id.toString() === entry.user.toString());
+
+            const getInitials = (str) => {
+                const names = str.split(' '); // Split the full name into an array of names
+                const initials = names.slice(0, 2).map(name => name.charAt(0).toUpperCase()); // Get the first letter of each name and capitalize it
+                return initials.join(''); // Join the initials into a single string
+            };
+
+            const formatDateTime = (dateTime) => {
+                const options = {
+                    timeZone: 'Asia/Kuala_Lumpur',
+                    hour12: false,
+                    hour: '2-digit',
+                    minute: '2-digit'
+                };
+                return dateTime.toLocaleTimeString('en-MY', options);
+            };
+
+            return {
+                user: user ? {
+                    _id: user._id,
+                    fullname: user.fullname,
+                    initials: getInitials(user.fullname),
+                    username: user.username,
+                    department: user.department,
+                    section: user.section,
+                    profile: user.profile,
+                    // Add other user fields as needed
+                } : null,
+                datetime: formatDateTime(new Date(entry.date.signInTime)),
+                signInTime: entry.date.signInTime,
+                signOutTime: entry.date.signOutTime,
+                status: entry.status,
+                type: entry.type
+            };
+        });
+
+        // Send the filtered attendance data for today to the client
+        res.json(filteredData);
+    } catch (err) {
+        console.error('Error fetching attendance data for today:', err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 //GET ALL ATTENDANCE DATA
 app.post('/api/data/all-attendance', isAuthenticated, async function (req, res) {
     const selectedDate = req.body.date;
@@ -5012,74 +5080,6 @@ app.post('/api/data/all-attendance', isAuthenticated, async function (req, res) 
     }
 });
 
-//ATTENDANCE TODAY FOR ATTENDANCE PAGE
-app.get('/api/attendance/today', async function (req, res) {
-    try {
-        // Get today's date
-        const today = new Date();
-        today.setHours(0, 0, 0, 0); // Set hours, minutes, seconds, and milliseconds to 0 to get the start of the day
-
-        // Get the current time
-        const currentTime = new Date();
-
-        // Find attendance data for today within the specified time range
-        const attendanceData = await Attendance.find({
-            'date.signInTime': {
-                $gte: today, // Find records where signInTime is greater than or equal to today
-                $lte: currentTime // and less than or equal to the current time
-            }
-        }).sort({ timestamp: -1 }).limit(2).lean();
-
-        // Get all users
-        const allUsers = await User.find().lean();
-
-        // Filter the attendance data and populate user information
-        const filteredData = attendanceData.map(entry => {
-            const user = allUsers.find(user => user._id.toString() === entry.user.toString());
-
-            const getInitials = (str) => {
-                const names = str.split(' '); // Split the full name into an array of names
-                const initials = names.slice(0, 2).map(name => name.charAt(0).toUpperCase()); // Get the first letter of each name and capitalize it
-                return initials.join(''); // Join the initials into a single string
-            };
-
-            const formatDateTime = (dateTime) => {
-                const options = {
-                    timeZone: 'Asia/Kuala_Lumpur',
-                    hour12: false,
-                    hour: '2-digit',
-                    minute: '2-digit'
-                };
-                return dateTime.toLocaleTimeString('en-MY', options);
-            };
-
-            return {
-                user: user ? {
-                    _id: user._id,
-                    fullname: user.fullname,
-                    initials: getInitials(user.fullname),
-                    username: user.username,
-                    department: user.department,
-                    section: user.section,
-                    profile: user.profile,
-                    // Add other user fields as needed
-                } : null,
-                datetime: formatDateTime(new Date(entry.date.signInTime)),
-                signInTime: entry.date.signInTime,
-                signOutTime: entry.date.signOutTime,
-                status: entry.status,
-                type: entry.type
-            };
-        });
-
-        // Send the filtered attendance data for today to the client
-        res.json(filteredData);
-    } catch (err) {
-        console.error('Error fetching attendance data for today:', err);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-});
-
 // HR VIEW FOR TODAYS ATTENDANCE
 app.post('/api/data/all-attendance/today', isAuthenticated, async function (req, res) {
     const searchQuery = req.query.search || ''; // Get search query from request query params
@@ -5092,10 +5092,6 @@ app.post('/api/data/all-attendance/today', isAuthenticated, async function (req,
     today.setHours(0, 0, 0, 0); // Set hours, minutes, seconds, and milliseconds to 0 to get the start of the day
 
     try {
-        // Create a set of all possible status types
-        const allStatusTypes = ['Present', 'Absent', 'Late', 'Invalid', 'Leave'];
-        const allUser = await User.find();
-
         // Query attendance records for today
         const attendanceData = await Attendance.aggregate([
             // Match attendance records for today
@@ -5107,68 +5103,103 @@ app.post('/api/data/all-attendance/today', isAuthenticated, async function (req,
                     }
                 }
             },
-            // Group by user and status, count occurrences
+            // Group by user and status, include attendance type, sign-in time, and sign-out time
             {
                 $group: {
-                    _id: { user: '$user', status: '$status' },
+                    _id: { user: '$user', status: '$status', type: '$type', signInTime: '$date.signInTime', signOutTime: '$date.signOutTime', timestamp: '$timestamp' },
                     count: { $sum: 1 }
                 }
             }
         ]);
 
-        const userStatusCounts = {};
+        // Collect unique user IDs from attendanceData
+        const userIds = attendanceData.map(record => record._id.user);
 
-        // Iterate over all users and initialize their status counts
+        // Query all users from the database
+        const allUser = await User.find({});
+
+        // Create a map to quickly access user details by user ID
+        const userMap = {};
         allUser.forEach(user => {
-            userStatusCounts[user._id] = {};
-            allStatusTypes.forEach(statusType => {
-                userStatusCounts[user._id][statusType] = 0;
-            });
-        });
-
-        // Update status counts based on the attendance data
-        attendanceData.forEach(({ _id, count }) => {
-            const { user, status } = _id;
-            userStatusCounts[user][status] = count;
-        });
-
-        // Combine populated attendance data with user status counts
-        const combinedData = allUser.map(user => {
-            const statusCounts = userStatusCounts[user._id];
-            return {
-                user: {
-                    _id: user._id,
-                    username: user.username,
-                    fullname: user.fullname,
-                    section: user.section,
-                    department: user.department
-                },
-                statusCounts: statusCounts
+            userMap[user._id] = {
+                _id: user._id,
+                username: user.username,
+                fullname: user.fullname,
+                section: user.section,
+                department: user.department
             };
+        });
+
+        // Create the combined data from attendanceData and userMap
+        const combinedData = allUser.map(user => {
+            const attendanceRecord = attendanceData.find(record => record._id.user.equals(user._id));
+            return attendanceRecord ? {
+                user: userMap[user._id],
+                status: attendanceRecord._id.status,
+                type: attendanceRecord._id.type,
+                signInTime: attendanceRecord._id.signInTime,
+                signOutTime: attendanceRecord._id.signOutTime,
+                timestamp: attendanceRecord._id.timestamp,
+                count: attendanceRecord.count
+            } : {
+                user: userMap[user._id],
+                status: 'Absent',
+                type: 'Nil',
+                signInTime: null,
+                signOutTime: null,
+                timestamp: null,
+                count: 0
+            };
+        });
+
+        // Sort combinedData based on timestamp, placing users without attendance records at the end
+        combinedData.sort((a, b) => {
+            if (!a.timestamp) return 1;
+            if (!b.timestamp) return -1;
+            return new Date(a.timestamp) - new Date(b.timestamp);
         });
 
         // Filter combinedData based on the search query
         const filteredData = combinedData.filter(item => {
             const { fullname, section, department, username } = item.user;
+            const { status, type, signInTime, signOutTime } = item;
             const regex = new RegExp(searchQuery, 'i');
-            return regex.test(fullname) || regex.test(section) || regex.test(department) || regex.test(username);
+            return (
+                regex.test(fullname) ||
+                regex.test(section) ||
+                regex.test(department) ||
+                regex.test(username) ||
+                regex.test(status) ||
+                regex.test(type) ||
+                (signInTime && regex.test(new Date(signInTime).toLocaleTimeString('en-MY', { hour: 'numeric', minute: 'numeric', hour12: true, timeZone: 'Asia/Kuala_Lumpur' }))) ||
+                (signOutTime && regex.test(new Date(signOutTime).toLocaleTimeString('en-MY', { hour: 'numeric', minute: 'numeric', hour12: true, timeZone: 'Asia/Kuala_Lumpur' })))
+            );
         });
 
         // Paginate the filtered data
         const paginatedData = filteredData.slice(skip, skip + limit);
 
+        // Calculate counts for present, absent, late, leave statuses
+        const totalCounts = combinedData.reduce((acc, item) => {
+            acc.total++;
+            acc[item.status.toLowerCase()] = (acc[item.status.toLowerCase()] || 0) + 1;
+            return acc;
+        }, { total: 0, present: 0, absent: 0, late: 0, leave: 0, invalid: 0 });
+
         const response = {
             data1: paginatedData,
-            data2: filteredData
-        }
+            data2: filteredData,
+            counts: totalCounts
+        };
 
         // Respond with the paginated and filtered attendance data
         res.json(response);
     } catch (error) {
-        console.error('Error fetching attendance data:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        console.error('Error:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 });
+
 
 // QR GENERATED
 app.get('/generate-qr', async (req, res) => {
@@ -5230,8 +5261,6 @@ app.post('/process-scanned-data', isAuthenticated, async function (req, res) {
 
     var log = "";
 
-    console.log('hello');
-
     if (checkUser) {
 
         const today = new Date();
@@ -5283,28 +5312,61 @@ app.post('/process-scanned-data', isAuthenticated, async function (req, res) {
                     log = "You already sign out for today, thank you!";
                 }
             } else {
-                const currentDate = new Date();
 
-                const attendance = new Attendance({
-                    user: checkUser._id,
-                    date: {
-                        signInTime: currentDate,
-                        signOutTime: null
-                    },
-                    status: 'Present',
-                    timestamp: new Date(),
-                    type: 'sign in'
-                });
+                const currentTime = new Date();
+                const pstTime = currentTime.toLocaleString("en-MY", { timeZone: "Asia/Kuala_Lumpur" });
+                const pstHourString = pstTime.split(',')[1].trim().split(':')[0];
+                const pstHour = parseInt(pstHourString);
 
-                await attendance.save();
+                if (pstHour >= 8) {
+                    console.log('late confirmed');
+                    
+                    const currentDate = new Date();
+                    const attendance = new Attendance({
+                        user: checkUser._id,
+                        date: {
+                            signInTime: currentDate,
+                            signOutTime: null
+                        },
+                        status: 'Late',
+                        timestamp: new Date(),
+                        type: 'sign in'
+                    });
 
-                const tempAttendance = new TempAttendance({
-                    user: checkUser._id,
-                    timestamp: new Date(),
-                    type: 'sign in',
-                });
+                    await attendance.save();
 
-                await tempAttendance.save();
+                    const tempAttendance = new TempAttendance({
+                        user: checkUser._id,
+                        timestamp: new Date(),
+                        type: 'sign in',
+                    });
+
+                    await tempAttendance.save();
+
+                    log = "You have successfully signed in as late for today, thank you!";
+                } else {
+                    const currentDate = new Date();
+                    const attendance = new Attendance({
+                        user: checkUser._id,
+                        date: {
+                            signInTime: currentDate,
+                            signOutTime: null
+                        },
+                        status: 'Present',
+                        timestamp: new Date(),
+                        type: 'sign in'
+                    });
+
+                    await attendance.save();
+
+                    const tempAttendance = new TempAttendance({
+                        user: checkUser._id,
+                        timestamp: new Date(),
+                        type: 'sign in',
+                    });
+
+                    await tempAttendance.save();
+                }
 
                 console.log("New sign in attendance for today, thank you");
 
