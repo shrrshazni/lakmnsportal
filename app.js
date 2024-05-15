@@ -4226,6 +4226,133 @@ app.get('/leave/:approval/:id', async function (req, res) {
     }
 });
 
+// Function to update attendance
+const updateAttendance = async () => {
+    try {
+        const now = new Date();
+        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+        const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+
+        // Find all attendance records for today with signOutTime as null
+        const attendanceRecords = await Attendance.find({
+            'date.signInTime': { $gte: todayStart, $lt: todayEnd },
+            'date.signOutTime': null
+        });
+
+        // Update status to 'Absent' for records without signOutTime
+        for (let record of attendanceRecords) {
+            record.status = 'Invalid';
+            await record.save();
+        }
+
+        console.log('Attendance updated at 5 PM');
+    } catch (error) {
+        console.error('Error updating attendance:', error);
+    }
+};
+
+// Function to check leave on attendance
+const updateAttendanceForApprovedLeaves = async () => {
+    try {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        // Find leave requests with status 'approved' and return date of today
+        const approvedLeaves = await Leave.find({
+            status: 'approved',
+            'date.start': {
+                $gte: today
+            },
+            'date.return': {
+                $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000) // Today's end
+            }
+        });
+
+        console.log(approvedLeaves);
+
+        for (const leave of approvedLeaves) {
+
+            await Attendance.findOneAndUpdate(
+                {
+                    user: leave.user,
+                    timestamp: {
+                        $gte: today, // Greater than or equal to the start of today
+                        $lte: new Date() // Less than the current time
+                    }
+                },
+                {
+                    $set: {
+                        status: 'Leave',
+                        type: 'manual add',
+                        timestamp: new Date()
+                    }
+                },
+                { upsert: true, new: true }
+            );
+        }
+
+        console.log('Attendance records updated for leaves approved today');
+    } catch (error) {
+        console.error('Error updating attendance records:', error);
+    }
+};
+
+// Function to check and update attendance absent
+const updateAbsentAttendance = async () => {
+    try {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const endOfDay = new Date(today.getTime() + 24 * 60 * 60 * 1000);
+
+        // Find all attendance records for today
+        const attendancesToday = await Attendance.find({
+            'date.signInTime': {
+                $gte: today,
+                $lt: endOfDay
+            }
+        });
+
+        // Extract user IDs from today's attendance records
+        const attendedUserIds = attendancesToday.map(attendance => attendance.user._id);
+
+        // Find users who don't have attendance today
+        const absentUsers = await User.find({
+            _id: { $nin: attendedUserIds }
+        });
+
+        // Create new attendance records for absent users
+        for (const user of absentUsers) {
+            const newAttendance = new Attendance({
+                user: user._id,
+                type: 'invalid',
+                date: {
+                    signInTime: null,
+                    signOutTime: null
+                },
+                status: 'Absent',
+                timestamp: new Date()
+            });
+
+            await newAttendance.save();
+        }
+
+        console.log('Attendance records created for absent users');
+    } catch (error) {
+        console.error('Error creating attendance records for absent users:', error);
+    }
+};
+
+// Function to delete all qr codes data
+const clearQRCodeData = async () => {
+    try {
+        // Delete all documents in the QRCode collection
+        const result = await QRCode.deleteMany({});
+        console.log(`Deleted ${result.deletedCount} documents from the QRCode collection`);
+    } catch (error) {
+        console.error('Error clearing QRCode data:', error);
+    }
+};
+
 // SCHEDULER
 
 // CHECK EACH LEAVE VALIDITY
@@ -4363,6 +4490,46 @@ cron.schedule(
     }
 );
 
+// UPDATE ATTENDANCE TO INVALID AT 5PM
+cron.schedule(
+    '0 17 * * *',
+    () => {
+        console.log('Running cron job to update attendance');
+        updateAttendance();
+    },
+    {
+        scheduled: true,
+        timezone: 'Asia/Kuala_Lumpur' // Adjust timezone accordingly
+    }
+);
+
+// UPDATE ATTENDANCE AT 8PM
+cron.schedule(
+    '0 8 * * *',
+    () => {
+        console.log('Running cron job to update attendance at 8AM');
+        updateAbsentAttendance();
+        updateAttendanceForApprovedLeaves();
+
+    },
+    {
+        scheduled: true,
+        timezone: 'Asia/Kuala_Lumpur' // Adjust timezone accordingly
+    }
+);
+
+// CLEAR QR CODE ID FOR TODAY
+cron.schedule(
+    '0 0 * * *',
+    () => {
+        console.log('Clear qr code save for today');
+        clearQRCodeData();
+    },
+    {
+        scheduled: true,
+        timezone: 'Asia/Kuala_Lumpur' // Adjust timezone accordingly
+    }
+);
 
 
 // NOTIFICATIONS
@@ -4892,7 +5059,7 @@ const generateUniqueIdentifier = () => {
     return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 };
 
-// ATTENDACE TRIAL
+// ATTENDACE
 app.get('/attendance', async function (req, res) {
     const uniqueIdentifier = generateUniqueIdentifier();
 
@@ -4900,6 +5067,24 @@ app.get('/attendance', async function (req, res) {
         uuid: uuidv4(),
         uniqueIdentifier: uniqueIdentifier
     });
+});
+
+// ATTENDANCE TODAY FOR KP/KB
+app.get('/attendance/today/department/section', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    }).populate('sender').sort({ timestamp: -1 });
+
+    if (user) {
+        res.render('attendance-today', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4()
+        })
+    }
 });
 
 // SCAN QR GENERATED
@@ -5200,6 +5385,133 @@ app.post('/api/data/all-attendance/today', isAuthenticated, async function (req,
     }
 });
 
+app.post('/api/data/all-attendance/today/department/section', isAuthenticated, async function (req, res) {
+    const searchQuery = req.query.search || ''; // Get search query from request query params
+    const page = parseInt(req.query.page) || 1; // Get page number from request query params
+    const limit = 10; // Number of items per page
+    const skip = (page - 1) * limit;
+
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+
+    // Get today's date
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Set hours, minutes, seconds, and milliseconds to 0 to get the start of the day
+
+    try {
+        // Query attendance records for today
+        const attendanceData = await Attendance.aggregate([
+            // Match attendance records for today
+            {
+                $match: {
+                    timestamp: {
+                        $gte: today, // Find records where timestamp is greater than or equal to today
+                        $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000) // Less than tomorrow
+                    }
+                }
+            },
+            // Group by user and status, include attendance type, sign-in time, and sign-out time
+            {
+                $group: {
+                    _id: { user: '$user', status: '$status', type: '$type', signInTime: '$date.signInTime', signOutTime: '$date.signOutTime', timestamp: '$timestamp' },
+                    count: { $sum: 1 }
+                }
+            }
+        ]);
+
+        // Collect unique user IDs from attendanceData
+        const userIds = attendanceData.map(record => record._id.user);
+
+        var allUser;
+        if (user.isHeadOfDepartment) {
+            // Query all users from the database
+            allUser = await User.find({ department: user.department });
+        } else if (user.isHeadOfSection) {
+            // Query all users from the database
+            allUser = await User.find({ section: user.section });
+        }
+
+        // Create a map to quickly access user details by user ID
+        const userMap = {};
+        allUser.forEach(user => {
+            userMap[user._id] = {
+                _id: user._id,
+                username: user.username,
+                fullname: user.fullname,
+                section: user.section,
+                department: user.department
+            };
+        });
+
+        // Create the combined data from attendanceData and userMap
+        const combinedData = allUser.map(user => {
+            const attendanceRecord = attendanceData.find(record => record._id.user.equals(user._id));
+            return attendanceRecord ? {
+                user: userMap[user._id],
+                status: attendanceRecord._id.status,
+                type: attendanceRecord._id.type,
+                signInTime: attendanceRecord._id.signInTime,
+                signOutTime: attendanceRecord._id.signOutTime,
+                timestamp: attendanceRecord._id.timestamp,
+                count: attendanceRecord.count
+            } : {
+                user: userMap[user._id],
+                status: 'Absent',
+                type: 'Nil',
+                signInTime: null,
+                signOutTime: null,
+                timestamp: null,
+                count: 0
+            };
+        });
+
+        // Sort combinedData based on timestamp, placing users without attendance records at the end
+        combinedData.sort((a, b) => {
+            if (!a.timestamp) return 1;
+            if (!b.timestamp) return -1;
+            return new Date(a.timestamp) - new Date(b.timestamp);
+        });
+
+        // Filter combinedData based on the search query
+        const filteredData = combinedData.filter(item => {
+            const { fullname, section, department, username } = item.user;
+            const { status, type, signInTime, signOutTime } = item;
+            const regex = new RegExp(searchQuery, 'i');
+            return (
+                regex.test(fullname) ||
+                regex.test(section) ||
+                regex.test(department) ||
+                regex.test(username) ||
+                regex.test(status) ||
+                regex.test(type) ||
+                (signInTime && regex.test(new Date(signInTime).toLocaleTimeString('en-MY', { hour: 'numeric', minute: 'numeric', hour12: true, timeZone: 'Asia/Kuala_Lumpur' }))) ||
+                (signOutTime && regex.test(new Date(signOutTime).toLocaleTimeString('en-MY', { hour: 'numeric', minute: 'numeric', hour12: true, timeZone: 'Asia/Kuala_Lumpur' })))
+            );
+        });
+
+        // Paginate the filtered data
+        const paginatedData = filteredData.slice(skip, skip + limit);
+
+        // Calculate counts for present, absent, late, leave statuses
+        const totalCounts = combinedData.reduce((acc, item) => {
+            acc.total++;
+            acc[item.status.toLowerCase()] = (acc[item.status.toLowerCase()] || 0) + 1;
+            return acc;
+        }, { total: 0, present: 0, absent: 0, late: 0, leave: 0, invalid: 0 });
+
+        const response = {
+            data1: paginatedData,
+            data2: filteredData,
+            counts: totalCounts
+        };
+
+        // Respond with the paginated and filtered attendance data
+        res.json(response);
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
 
 // QR GENERATED
 app.get('/generate-qr', async (req, res) => {
@@ -5284,7 +5596,7 @@ app.post('/process-scanned-data', isAuthenticated, async function (req, res) {
             if (existingAttendance) {
 
                 if (existingAttendance.date.signOutTime === null) {
-                    const updateSignOut = await Attendance.findOneAndUpdate(
+                    await Attendance.findOneAndUpdate(
                         {
                             user: checkUser._id
                         },
@@ -5320,20 +5632,25 @@ app.post('/process-scanned-data', isAuthenticated, async function (req, res) {
 
                 if (pstHour >= 8) {
                     console.log('late confirmed');
-                    
-                    const currentDate = new Date();
-                    const attendance = new Attendance({
-                        user: checkUser._id,
-                        date: {
-                            signInTime: currentDate,
-                            signOutTime: null
-                        },
-                        status: 'Late',
-                        timestamp: new Date(),
-                        type: 'sign in'
-                    });
 
-                    await attendance.save();
+                    await Attendance.findOneAndUpdate(
+                        {
+                            user: checkUser._id,
+                            timestamp: {
+                                $gte: today, // Greater than or equal to the start of today
+                                $lte: new Date() // Less than the current time
+                            }
+                        },
+                        {
+                            $set: {
+                                status: 'Late',
+                                type: 'sign in',
+                                'date.signInTime': new Date(),
+                                timestamp: new Date()
+                            }
+                        },
+                        { upsert: true, new: true }
+                    );
 
                     const tempAttendance = new TempAttendance({
                         user: checkUser._id,
@@ -5345,19 +5662,24 @@ app.post('/process-scanned-data', isAuthenticated, async function (req, res) {
 
                     log = "You have successfully signed in as late for today, thank you!";
                 } else {
-                    const currentDate = new Date();
-                    const attendance = new Attendance({
-                        user: checkUser._id,
-                        date: {
-                            signInTime: currentDate,
-                            signOutTime: null
+                    await Attendance.findOneAndUpdate(
+                        {
+                            user: checkUser._id,
+                            timestamp: {
+                                $gte: today, // Greater than or equal to the start of today
+                                $lte: new Date() // Less than the current time
+                            }
                         },
-                        status: 'Present',
-                        timestamp: new Date(),
-                        type: 'sign in'
-                    });
-
-                    await attendance.save();
+                        {
+                            $set: {
+                                status: 'Present',
+                                type: 'sign in',
+                                'date.signInTime': new Date(),
+                                timestamp: new Date()
+                            }
+                        },
+                        { upsert: true, new: true }
+                    );
 
                     const tempAttendance = new TempAttendance({
                         user: checkUser._id,
@@ -5429,6 +5751,8 @@ app.get('/get-latest-scanned-data', async function (req, res) {
     }
 });
 
+
+// SUPER ADMIN
 app.get('/super-admin/update', isAuthenticated, async function (req, res) {
     const username = req.user.username;
     const user = await User.findOne({ username: username });
@@ -5455,11 +5779,6 @@ app.get('/super-admin/update', isAuthenticated, async function (req, res) {
     }
 
 });
-
-function preprocessIdentifier(identifier) {
-    // Implement preprocessing logic here (e.g., remove special characters)
-    return identifier.replace(/[^a-zA-Z0-9]/g, ''); // Remove any characters that are not alphanumeric
-}
 
 // FUNCTIONS
 

@@ -7,8 +7,6 @@
     <h5 class="text-body-tertiary fw-semibold">Tracking Participation, Absences, Presence.</h5>
   </div>
 
-
-
   <div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis pt-7 pb-3 border-y mb-6">
 
     <div class="row align-items-end justify-content-between pb-4 g-3 mb-4">
@@ -202,6 +200,15 @@
             }
 
             data.forEach(item => {
+              var badgeColour;
+              if (item.status === 'Late') {
+                badgeColour = 'danger';
+              } else if (item.status === 'Leave') {
+                badgeColour = 'info';
+              } else {
+                badgeColour = 'success';
+              }
+
               const row = document.createElement('tr');
               row.innerHTML = `
                            <td class="align-middle text-body white-space-nowrap ps-0 staff">
@@ -212,7 +219,7 @@
                            </td>
                             <td class="align-middle text-center text-body-emphasis">${item.user.department}</td>
                             <td class="align-middle text-center text-body-emphasis">${item.user.section}</td>
-                            <td class="align-middle text-center"><span class="badge badge-phoenix badge-phoenix-success fs-10">${item.status}</span></td>
+                            <td class="align-middle text-center"><span class="badge badge-phoenix badge-phoenix-${badgeColour} fs-10">${item.status}</span></td>
                             <td class="align-middle text-center"><span class="badge badge-phoenix badge-phoenix-info fs-10">${item.type}</span></td>
                             <td class="align-middle text-center"><span class="badge badge-phoenix badge-phoenix-warning fs-10">${item.signInTime ? new Date(item.signInTime).toLocaleTimeString('en-MY', { hour: 'numeric', minute: 'numeric', hour12: true, timeZone: 'Asia/Kuala_Lumpur' } ) : 'Nil'}</span></td>
                             <td class="align-middle text-center"><span class="badge badge-phoenix badge-phoenix-warning fs-10">${item.signOutTime ? new Date(item.signOutTime).toLocaleTimeString('en-MY', { hour: 'numeric', minute: 'numeric', hour12: true, timeZone: 'Asia/Kuala_Lumpur' }) : 'Nil'}</span></td>

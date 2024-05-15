@@ -171,16 +171,40 @@
               </div>
             </div>
 
-            <!-- Attendance -->
-            <li class="nav-item">
-              <!-- parent pages-->
-              <div class="nav-item-wrapper"><a class="nav-link label-1" href="/scan-qr" role="button" data-bs-toggle="" aria-expanded="false">
-                  <div class="d-flex align-items-center"><span class="nav-link-icon"><span class="mb-1" data-feather="columns"></span></span><span class="nav-link-text-wrapper"><span class="nav-link-text">Attendance</span></span>
-                  </div>
-                </a>
-              </div>
-            </li>
+            <%
+            var showAttendance;
+            if(user.isHeadOfDepartment || user.isHeadOfSection){
+                showAttendance = '';
+            } else{
+                showAttendance = 'd-none';
+            }
+            %>
 
+            <!-- Attendance -->
+            <div class="nav-item-wrapper"><a class="nav-link dropdown-indicator label-1" href="#nv-tables" role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-tables">
+                <div class="d-flex align-items-center">
+                  <div class="dropdown-indicator-icon"><span class="fas fa-caret-right"></span></div><span class="nav-link-icon"><span data-feather="book"></span></span><span class="nav-link-text">Attendance</span>
+                </div>
+              </a>
+              <div class="parent-wrapper label-1">
+                <ul class="nav collapse parent" data-bs-parent="#navbarVerticalCollapse" id="nv-tables">
+                  <li class="collapsed-nav-item-title d-none">Attendance
+                  </li>
+                  <li class="nav-item"><a class="nav-link" href="/scan-qr" data-bs-toggle="" aria-expanded="false">
+                      <div class="d-flex align-items-center"><span class="nav-link-text">Scan Attendance</span>
+                      </div>
+                    </a>
+                    <!-- more inner pages-->
+                  </li>
+                  <li class="nav-item <%= showAttendance %>"><a class="nav-link" href="/attendance/today/department/section" data-bs-toggle="" aria-expanded="false">
+                      <div class="d-flex align-items-center"><span class="nav-link-text">Today</span>
+                      </div>
+                    </a>
+                    <!-- more inner pages-->
+                  </li>
+                </ul>
+              </div>
+            </div>
             <% 
             var showHumanResource = '';
             if(user.section === 'Administration and Human Resource Management Division' || user.isChiefExec || user.isDeputyChiefExec){
@@ -773,7 +797,7 @@
       documentElement.setAttribute('data-navigation-type', 'combo');
     </script>
 
-    <!-- search bar function -->
+    <!-- search bar function
     <div class="modal fade" id="searchBoxModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="true" data-phoenix-modal="data-phoenix-modal" style="--phoenix-backdrop-opacity: 1;">
       <div class="modal-dialog">
         <div class="modal-content mt-15 rounded-pill">
@@ -913,7 +937,7 @@
           </div>
         </div>
       </div>
-    </div>
+    </div> -->
 
     <!-- main content -->
     <div class="content">

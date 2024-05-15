@@ -23,10 +23,9 @@
         <style>
           .card-container {
             perspective: 1000px;
-            opacity: 0;
             z-index: 0;
-            position: absolute;
-            top: 25vh;
+            position: relative;
+            top: 50vh;
             left: 0;
             right: 0;
             bottom: 0;
@@ -76,13 +75,11 @@
           @keyframes fadeOut {
             from {
               opacity: 1;
-              margin-top: 0;
               /* Final margin-top value */
             }
 
             to {
               opacity: 0;
-              margin-top: 0;
             }
           }
 
@@ -99,7 +96,7 @@
           }
         </style>
 
-        <div class="card-container mb-3">
+        <div class="card-container d-none mb-3">
           <div class="card mx-auto w-100 w-lg-50 mb-0" id="card">
             <div class="card-body text-center front">
               <div class="avatar avatar-4xl mb-3 mx-auto"><img class="rounded-circle border border-primary" src="/assets/img/team/avatar.webp" alt="" /></div>
@@ -155,8 +152,8 @@
           const message = document.getElementById('message');
 
           message.textContent = userResponse.message;
-          scanner.classList.add('fade-out');
-          cardContainer.classList.add('fade-in');
+          scanner.classList.add('d-none');
+          cardContainer.classList.remove('d-none');
           setTimeout(() => {
             document.getElementById('card').classList.toggle('flip');
           }, 1500);
