@@ -19,7 +19,7 @@ const { v4: uuidv4 } = require('uuid');
 const { send } = require('process');
 const fs = require('fs').promises;
 const qr = require('qrcode');
-const { timeStamp } = require('console');
+const { timeStamp, time } = require('console');
 const { type } = require('os');
 // const twilio = require('twilio');
 
@@ -4346,35 +4346,17 @@ const updateAbsentAttendance = async () => {
     try {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        const endOfDay = new Date(today.getTime() + 24 * 60 * 60 * 1000);
 
-        // Find all attendance records for today
-        const attendancesToday = await Attendance.find({
-            'date.signInTime': {
-                $gte: today,
-                $lt: endOfDay
-            }
-        });
+        // Find all users
+        const allUsers = await User.find();
 
-        // Extract user IDs from today's attendance records
-        const attendedUserIds = attendancesToday.map(
-            attendance => attendance.user._id
-        );
-
-        // Find users who don't have attendance today
-        const absentUsers = await User.find({
-            _id: { $nin: attendedUserIds }
-        });
-
-        // Create new attendance records for absent users
-        for (const user of absentUsers) {
+        // Create new attendance records marking them as absent
+        for (const user of allUsers) {
             const newAttendance = new Attendance({
                 user: user._id,
                 type: 'invalid',
-                date: {
-                    signInTime: null,
-                    signOutTime: null
-                },
+                signInTime: null,
+                signOutTime: null,
                 status: 'Absent',
                 timestamp: new Date()
             });
@@ -4382,7 +4364,7 @@ const updateAbsentAttendance = async () => {
             await newAttendance.save();
         }
 
-        console.log('Attendance records created for absent users');
+        console.log('Attendance records created for all users as absent');
     } catch (error) {
         console.error('Error creating attendance records for absent users:', error);
     }
@@ -4395,6 +4377,12 @@ const clearQRCodeData = async () => {
         const result = await QRCode.deleteMany({});
         console.log(
             `Deleted ${result.deletedCount} documents from the QRCode collection`
+        );
+
+        const tempAttendance = await TempAttendance.deleteMany({});
+
+        console.log(
+            `Deleted ${tempAttendance.deletedCount} documents from the temporary attendance`
         );
     } catch (error) {
         console.error('Error clearing QRCode data:', error);
@@ -4538,7 +4526,7 @@ cron.schedule(
     }
 );
 
-// UPDATE ATTENDANCE AT 8PM
+// UPDATE ATTENDANCE AT 8AM
 cron.schedule(
     '0 8 * * *',
     () => {
@@ -5718,24 +5706,6 @@ app.post('/save-qr-data', async function (req, res) {
         createdAt: new Date()
     });
 
-    const checkTempAttendance = await TempAttendance.find();
-
-    if (checkTempAttendance.length <= 1) {
-        const deleteAll = await TempAttendance.deleteMany();
-        // console.log(deleteAll);
-    } else {
-        const excludedDocumentId = await TempAttendance.findOne().sort({
-            timestamp: -1
-        });
-        // console.log(excludedDocumentId);
-
-        if (!excludedDocumentId) {
-            console.log('No matching document found');
-        } else {
-            await TempAttendance.deleteMany({ _id: { $ne: excludedDocumentId } });
-        }
-    }
-
     res.status(200).send('QR code data received and saved successfully');
 });
 
@@ -5761,11 +5731,13 @@ app.post('/process-scanned-data', isAuthenticated, async function (req, res) {
 
             log = 'You qr code is invalid, try to scan latest qr code!';
         } else {
+
             const existingAttendance = await Attendance.findOne({
+
                 user: checkUser._id,
                 timestamp: {
-                    $gte: today, // Greater than or equal to the start of today
-                    $lte: new Date() // Less than the current time
+                    $gte: today,
+                    $lte: new Date()
                 }
             });
 
@@ -5802,13 +5774,16 @@ app.post('/process-scanned-data', isAuthenticated, async function (req, res) {
                 ) {
                     const currentTime = new Date();
                     const pstTime = currentTime.toLocaleString('en-MY', {
-                        timeZone: 'Asia/Kuala_Lumpur'
+                        timeZone: 'Asia/Kuala_Lumpur',
+                        hour12: false,
                     });
                     const pstHourString = pstTime.split(',')[1].trim().split(':')[0];
                     const pstHour = parseInt(pstHourString);
 
+                    console.log(pstHour);
+
                     if (pstHour >= 8) {
-                        console.log('late confirmed');
+                        console.log('Clock in late confirmed');
 
                         await Attendance.findOneAndUpdate(
                             {

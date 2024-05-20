@@ -183,7 +183,7 @@
           // Function to update the counts in the HTML
           function updateCounts(counts) {
             document.getElementById('totalStaff').innerText = counts.total;
-            document.getElementById('totalPresent').innerText = counts.present;
+            document.getElementById('totalPresent').innerText = counts.present + counts.late;
             document.getElementById('totalAbsent').innerText = counts.absent;
             document.getElementById('totalLate').innerText = counts.late;
             document.getElementById('totalInvalid').innerText = counts.invalid || 0; // Assuming 'invalid' is a count you may calculate
