@@ -5213,8 +5213,6 @@ app.get('/api/attendance/today', async function (req, res) {
             .limit(2)
             .lean();
 
-        console.log(attendanceData);
-
         // Get all users
         const allUsers = await User.find().lean();
 
@@ -5772,7 +5770,7 @@ app.post('/process-scanned-data', isAuthenticated, async function (req, res) {
             });
 
             if (existingAttendance) {
-                if (existingAttendance.date.signInTime !== null && existingAttendance.date.signOutTime) {
+                if (existingAttendance.date.signInTime !== null && existingAttendance.date.signOutTime === null) {
                     await Attendance.findOneAndUpdate(
                         {
                             user: checkUser._id
@@ -5786,6 +5784,7 @@ app.post('/process-scanned-data', isAuthenticated, async function (req, res) {
                             new: true
                         }
                     );
+
                     console.log('You have successfully signed out for today, thank you');
 
                     const tempAttendance = new TempAttendance({
