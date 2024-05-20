@@ -126,7 +126,6 @@
   <script>
     function decodeOnce(codeReader, selectedDeviceId) {
       codeReader.decodeFromInputVideoDevice(selectedDeviceId, 'video').then((result) => {
-
         sendScannedDataToServer(result.text);
       }).catch((err) => {
         console.error(err);
@@ -134,7 +133,7 @@
     }
 
     function sendScannedDataToServer(data) {
-      fetch('/process-scanned-data', {
+      fetch('/api/qrcode/process-data', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -144,9 +143,8 @@
             id: '<%= user._id %>'
           })
         })
-        .then(response => response.json()) // Parse response JSON
+        .then(response => response.json())
         .then(userResponse => {
-
           const cardContainer = document.querySelector('.card-container');
           const scanner = document.getElementById('scanner');
           const message = document.getElementById('message');
@@ -157,7 +155,6 @@
           setTimeout(() => {
             document.getElementById('card').classList.toggle('flip');
           }, 500);
-
         })
         .catch(error => {
           console.error('Error processing scanned data:', error);
@@ -165,24 +162,29 @@
     }
 
     window.addEventListener('load', function() {
-      let codeReader;
-      let selectedDeviceId;
+      let codeReader = new ZXing.BrowserQRCodeReader();
 
       function startScan() {
-        codeReader = new ZXing.BrowserQRCodeReader();
-        console.log('ZXing code reader initialized');
-
-        // Always decode once, no need for changing video source
         codeReader.getVideoInputDevices().then((videoInputDevices) => {
-          if (videoInputDevices.length >= 1) {
-            // Find the environment camera if available
-            const environmentCamera = videoInputDevices.find(device => device.label.toLowerCase().includes('environment') || device.label.toLowerCase().includes('rear'));
-            if (environmentCamera) {
-              selectedDeviceId = environmentCamera.deviceId;
-            } else {
-              selectedDeviceId = videoInputDevices[0].deviceId;
+          let selectedDeviceId = null;
+
+          // Prioritize environment (rear) camera
+          for (const device of videoInputDevices) {
+            if (device.label.toLowerCase().includes('environment') || device.label.toLowerCase().includes('rear')) {
+              selectedDeviceId = device.deviceId;
+              break; // Use the first found environment camera and break out of the loop
             }
+          }
+
+          // Fallback to the first device if no environment/rear camera is found
+          if (!selectedDeviceId && videoInputDevices.length > 0) {
+            selectedDeviceId = videoInputDevices[0].deviceId;
+          }
+
+          if (selectedDeviceId) {
             decodeOnce(codeReader, selectedDeviceId);
+          } else {
+            console.error('No video input devices found');
           }
         }).catch((err) => {
           console.error(err);
@@ -195,16 +197,13 @@
         button.classList.add('d-none');
         title.classList.add('d-none');
 
-        if (codeReader) {
-          codeReader.reset();
-          document.getElementById('result').textContent = '';
-          startScan();
-        } else {
-          startScan();
-        }
+        codeReader.reset();
+        document.getElementById('result').textContent = '';
+        startScan();
       });
     });
   </script>
+
 
 </div>
 <%- include('partials/private-footer.ejs') %>

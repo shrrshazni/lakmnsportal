@@ -98,7 +98,7 @@
 
           // Function to fetch attendance data with pagination and search query
           function fetchAttendanceData(page, searchQuery) {
-            fetch(`/api/data/all-attendance/today/department/section?page=${page}&search=${searchQuery}`, {
+            fetch(`/api/data/all-attendance/today/hod?page=${page}&search=${searchQuery}`, {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json'

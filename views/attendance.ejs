@@ -1,6 +1,6 @@
 <%- include('partials/public-header') %>
 
-<div class="mb-0 mt-3 p-4 h-100">
+<div class="mb-0 mt-3 p-4 h-100 overflow-hidden">
 
   <div class="row align-items-end justify-content-between p-lg-3 p-1 pb-0 g-3">
 
@@ -89,7 +89,7 @@
     }
   </style>
 
-  <div class="mb-0">
+  <div class="mb-0 mt-n5">
 
     <div class="row gy-3 gx-6" style="min-height: 50vh;">
 
@@ -110,7 +110,7 @@
             async function updateQRCode() {
               try {
                 // Generate a new QR code
-                const response = await fetch('/generate-qr');
+                const response = await fetch('/api/qrcode/generate');
                 if (!response.ok) {
                   throw new Error('Network response was not ok');
                 }
@@ -142,7 +142,7 @@
                 // Perform any actions to save the QR code data here
                 // console.log('Saving QR code data:', qrData);
 
-                const response = await fetch('/save-qr-data', {
+                const response = await fetch('/api/qrcode/save-data', {
                   method: 'POST',
                   headers: {
                     'Content-Type': 'application/json'
@@ -171,12 +171,12 @@
 
         <div class="mb-3 row g-3" style="height: 100%;">
 
-          <div style="height: 50%;">
+          <div class="scrollbar-overlay" style="height: 23.5vh;">
             <div id="attendance-container" class="px-3 py-2"></div>
 
             <script>
               function fetchDataAndPopulateContainer() {
-                fetch('/api/attendance/today') // Fetch attendance data for today within a specific time range
+                fetch('/api/all-attendance/today/all') // Fetch attendance data for today within a specific time range
                   .then(response => response.json())
                   .then(data => {
                     const container = document.getElementById('attendance-container');
@@ -188,7 +188,7 @@
                     } else {
                       data.forEach(entry => {
                         const entryWrapperDiv = document.createElement('div');
-                        entryWrapperDiv.classList.add('border', 'rounded-3', 'px-3', 'py-4', 'mb-2');
+                        entryWrapperDiv.classList.add('border', 'rounded-3', 'px-5', 'py-2', 'mb-1');
 
                         const entryDiv = document.createElement('div');
                         entryDiv.classList.add('d-flex', 'justify-content-between', 'align-items-center');
@@ -197,7 +197,7 @@
                         avatarNameLinkDiv.classList.add('d-flex', 'align-items-center');
 
                         const avatarDiv = document.createElement('div');
-                        avatarDiv.classList.add('avatar', 'avatar-3xl');
+                        avatarDiv.classList.add('avatar', 'avatar-2xl');
                         const avatarNamePara = document.createElement('p'); // Create a <p> element
                         avatarNamePara.classList.add('avatar-name', 'rounded-circle'); // Add classes to the <p> element
                         avatarNamePara.innerHTML = `<span class="fs-8 fw-bold fst-italic">${entry.user ? entry.user.username : 'Unknown'}</span>`; // Set inner HTML content
@@ -213,9 +213,9 @@
                         const sectionTypeDiv = document.createElement('div');
                         sectionTypeDiv.classList.add('d-flex', 'flex-column', 'align-items-center');
 
-                        const sectionPara = document.createElement('p');
-                        sectionPara.classList.add('fw-semibold', 'text-body-emphasis', 'fs-9', 'mb-1', 'text-center');
-                        sectionPara.textContent = entry.user.section;
+                        // const sectionPara = document.createElement('p');
+                        // sectionPara.classList.add('fw-semibold', 'text-body-emphasis', 'fs-9', 'mb-1', 'text-center');
+                        // sectionPara.textContent = entry.user.section;
 
                         const typeBadge = document.createElement('p');
                         typeBadge.classList.add('badge', 'badge-phoenix', 'fs-10', 'mb-0');
@@ -228,7 +228,7 @@
 
                         typeBadge.textContent = entry.type;
 
-                        sectionTypeDiv.appendChild(sectionPara);
+                        // sectionTypeDiv.appendChild(sectionPara);
                         sectionTypeDiv.appendChild(typeBadge);
 
                         entryDiv.appendChild(avatarNameLinkDiv);
@@ -246,7 +246,7 @@
 
               // Call the function initially and then every 5 seconds
               fetchDataAndPopulateContainer();
-              setInterval(fetchDataAndPopulateContainer, 5000); // 5000 milliseconds = 5 seconds
+              setInterval(fetchDataAndPopulateContainer, 2500); // 5000 milliseconds = 5 seconds
             </script>
 
           </div>
@@ -368,8 +368,8 @@
             }
           </style>
 
-          <div class="d-none mt-5 mb-4" id="latest-attendance">
-            <div id="id-card" class="d-flex justify-content-center align-items-center mb-0" style="height: 50%;">
+          <div class="d-none mt-8 mb-4" id="latest-attendance">
+            <div id="id-card" class="d-flex justify-content-center align-items-center mb-0" style="height: 100%;">
               <div class="card border border-gray-200 glow-on-hover mb-2" id="attendance-card">
                 <lottie-player id="lottie-player" class="mx-auto mt-n3 position-absolute end-0 top-0" src="https://lottie.host/9286c4fc-dca4-4d7f-b918-85480656a0cf/bLVZCz5laC.json" speed="1" style="width: 110px; height: 110px;" direction="1" mode="normal"></lottie-player>
                 <div class="card-body text-center">
@@ -393,7 +393,7 @@
 
           <script>
             async function fetchLatestScannedData() {
-              fetch('/get-latest-scanned-data') // Fetch attendance data for today within a specific time range
+              fetch('/api/qrcode/get-latest') // Fetch attendance data for today within a specific time range
                 .then(response => response.json())
                 .then(data => {
                   const message = document.getElementById('message');

@@ -401,7 +401,7 @@ passport.deserializeUser(async function (id, done) {
     }
 });
 
-// CHECK AUTH USER
+//CHECK AUTH USER
 const isAuthenticated = (req, res, next) => {
     if (req.isAuthenticated()) {
         return next();
@@ -409,7 +409,7 @@ const isAuthenticated = (req, res, next) => {
     res.redirect('/landing'); // Redirect to the login page if not authenticated
 };
 
-// EMAIL TRANSPORTER
+//EMAIL TRANSPORTER
 let transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -418,7 +418,7 @@ let transporter = nodemailer.createTransport({
     }
 });
 
-// PHONE TRANSPORTER
+//PHONE TRANSPORTER
 // const accountSid = "ACafc8b0a422560f0091b2855b4482326a";
 // const authToken = "4e7acc459aaed9ecf0fd426308f89e61";
 // const client = twilio(accountSid, authToken);
@@ -426,7 +426,8 @@ let transporter = nodemailer.createTransport({
 
 // BASIC USER PART
 
-// HOME
+
+//HOME
 app.get('/', isAuthenticated, async function (req, res) {
     const username = req.user.username;
     const user = await User.findOne({ username: username });
@@ -640,511 +641,7 @@ app.get('/', isAuthenticated, async function (req, res) {
     }
 });
 
-// FETCH API
-
-// ECHARTS
-
-// USER'S LEAVE TYPE
-app.get(
-    '/api/echarts/leaveType/:id',
-    isAuthenticated,
-    async function (req, res) {
-        const { id } = req.params;
-        const userLeave = await UserLeave.findOne({ user: id })
-            .populate('user')
-            .exec();
-
-        if (!userLeave) {
-            return res.status(404).json({ error: 'User leave data not found' });
-        }
-        res.json(userLeave);
-    }
-);
-
-app.get('/api/leave/selectedmonth', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-
-    if (user) {
-        try {
-            const selectedMonth = req.query.month;
-
-            // Determine the start and end dates of the selected month
-            const startOfMonth = moment(`${selectedMonth} 1, 2024`, 'MMMM D, YYYY');
-            const endOfMonth = startOfMonth.clone().endOf('month');
-
-            // Retrieve leave records for the selected month
-            const leaveRecords = await Leave.find({
-                'date.start': {
-                    $gte: startOfMonth.toDate(),
-                    $lt: endOfMonth.toDate()
-                }
-            });
-
-            // Initialize count object for each day
-            const leaveCounts = {};
-
-            // Iterate through each day of the month
-            for (let day = 1; day <= endOfMonth.date(); day++) {
-                leaveCounts[day] = { approved: 0, denied: 0 };
-
-                // Check if there are leave records for the current day
-                const recordsForDay = leaveRecords.filter(
-                    record => moment(record.date.start).date() === day
-                );
-
-                // Count approved and denied leaves for the current day
-                recordsForDay.forEach(record => {
-                    const status = record.status;
-
-                    if (status === 'approved') {
-                        leaveCounts[day].approved++;
-                    } else if (status === 'denied') {
-                        leaveCounts[day].denied++;
-                    }
-                });
-            }
-
-            res.json(leaveCounts);
-        } catch (error) {
-            console.error('Error fetching leave data:', error);
-            res.status(500).json({ error: 'Internal Server Error' });
-        }
-    }
-});
-
-app.get('/api/leave/totalcount', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-
-    if (user) {
-        try {
-            const selectedMonth = req.query.month;
-
-            // Determine the start and end dates of the selected month
-            const startOfMonth = moment(`${selectedMonth} 1, 2024`, 'MMMM D, YYYY');
-            const endOfMonth = startOfMonth.clone().endOf('month');
-
-            // Retrieve leave records for the selected month with 'approved' status
-            const leaveRecords = await Leave.find({
-                'date.start': {
-                    $gte: startOfMonth.toDate(),
-                    $lt: endOfMonth.toDate()
-                },
-                status: 'approved'
-            });
-
-            // Calculate the total approved leave count
-            const totalApprovedLeave = leaveRecords.length;
-
-            // Return the result
-            res.json({ totalLeaveCount: totalApprovedLeave });
-        } catch (error) {
-            console.error('Error fetching total leave count:', error);
-            res.status(500).json({ error: 'Internal Server Error' });
-        }
-    }
-});
-
-app.get(
-    '/api/leave/pending-invalid',
-    isAuthenticated,
-    async function (req, res) {
-        const username = req.user.username;
-        const user = await User.findOne({ username: username });
-
-        if (user) {
-            const currentDate = new Date();
-            const sevenDaysAgo = new Date(currentDate);
-            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-            // Assuming 'Leave' is your Mongoose model
-            const leaveData = await Leave.find({
-                'date.start': {
-                    $gte: sevenDaysAgo,
-                    $lte: currentDate
-                }
-            }).select('date.start status invalid');
-
-            // Create an object to store counts for each date
-            const dateCounts = {};
-
-            // Initialize counts for all dates in the range
-            let currentDatePointer = new Date(sevenDaysAgo);
-            while (currentDatePointer <= currentDate) {
-                const formattedDate = currentDatePointer.toISOString().split('T')[0];
-                dateCounts[formattedDate] = { pending: 0, invalid: 0, percentage: 0 };
-                currentDatePointer.setDate(currentDatePointer.getDate() + 1);
-            }
-
-            // Process the retrieved data
-            leaveData.forEach(entry => {
-                const formattedDate = entry.date.start.toISOString().split('T')[0];
-
-                // Update counts for the date
-                dateCounts[formattedDate].pending += entry.status === 'pending' ? 1 : 0;
-                dateCounts[formattedDate].invalid += entry.status === 'invalid' ? 1 : 0;
-            });
-
-            // Calculate percentage for each date
-            Object.keys(dateCounts).forEach(date => {
-                const total = dateCounts[date].pending + dateCounts[date].invalid;
-                dateCounts[date].percentage =
-                    total > 0 ? (dateCounts[date].pending / total) * 100 : 0;
-            });
-
-            let totalPending = 0;
-            let totalInvalid = 0;
-
-            Object.keys(dateCounts).forEach(date => {
-                totalPending += dateCounts[date].pending;
-                totalInvalid += dateCounts[date].invalid;
-            });
-
-            const totalPercentagePending =
-                totalPending + totalInvalid > 0
-                    ? (totalPending / (totalPending + totalInvalid)) * 100
-                    : 0;
-            const totalPercentageInvalid = 100 - totalPercentagePending;
-
-            // find previous 7 days
-
-            const fourteenDaysAgo = new Date(currentDate);
-            fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
-
-            const leaveDataPrevious7Days = await Leave.find({
-                'date.start': {
-                    $gte: fourteenDaysAgo,
-                    $lt: sevenDaysAgo
-                }
-            }).select('date.start status invalid');
-
-            const dateCountsPrevious7Days = {};
-
-            let currentDatePointerPrevious7Days = new Date(fourteenDaysAgo);
-            while (currentDatePointerPrevious7Days < sevenDaysAgo) {
-                const formattedDate = currentDatePointerPrevious7Days
-                    .toISOString()
-                    .split('T')[0];
-                dateCountsPrevious7Days[formattedDate] = {
-                    pending: 0,
-                    invalid: 0,
-                    percentage: 0
-                };
-                currentDatePointerPrevious7Days.setDate(
-                    currentDatePointerPrevious7Days.getDate() + 1
-                );
-            }
-
-            leaveDataPrevious7Days.forEach(entry => {
-                const formattedDate = entry.date.start.toISOString().split('T')[0];
-
-                if (!dateCountsPrevious7Days[formattedDate]) {
-                    dateCountsPrevious7Days[formattedDate] = {
-                        pending: 0,
-                        invalid: 0,
-                        percentage: 0
-                    };
-                }
-
-                // Update counts for the date
-                dateCountsPrevious7Days[formattedDate].pending +=
-                    entry.status === 'pending' ? 1 : 0;
-                dateCountsPrevious7Days[formattedDate].invalid +=
-                    entry.status === 'invalid' ? 1 : 0;
-            });
-
-            Object.keys(dateCountsPrevious7Days).forEach(date => {
-                const total =
-                    dateCountsPrevious7Days[date].pending +
-                    dateCountsPrevious7Days[date].invalid;
-                dateCountsPrevious7Days[date].percentage =
-                    total > 0 ? (dateCountsPrevious7Days[date].pending / total) * 100 : 0;
-            });
-
-            let totalPendingPrevious7Days = 0;
-            let totalInvalidPrevious7Days = 0;
-
-            Object.keys(dateCountsPrevious7Days).forEach(date => {
-                totalPendingPrevious7Days += dateCountsPrevious7Days[date].pending;
-                totalInvalidPrevious7Days += dateCountsPrevious7Days[date].invalid;
-            });
-
-            const totalPercentagePendingPrevious7Days =
-                totalPendingPrevious7Days + totalInvalidPrevious7Days > 0
-                    ? (totalPendingPrevious7Days /
-                        (totalPendingPrevious7Days + totalInvalidPrevious7Days)) *
-                    100
-                    : 0;
-
-            const differencePending =
-                totalPercentagePending - totalPercentagePendingPrevious7Days;
-
-            const formattedDifferencePending =
-                (differencePending >= 0 ? '+' : '-') +
-                Math.abs(differencePending).toFixed(2);
-
-            const responseData = {
-                dateCounts,
-                totalPercentagePending,
-                totalPercentageInvalid,
-                totalPending,
-                formattedDifferencePending
-            };
-
-            res.json(responseData);
-        }
-    }
-);
-
-app.get('/api/leave/submmitted', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-
-    if (user) {
-        try {
-            const currentDate = new Date();
-            const fourteenDaysAgo = new Date(currentDate);
-            fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
-
-            const sevenDaysAgo = new Date(currentDate);
-            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-            // Assuming 'Leave' is your Mongoose model
-            const leaveDataLast14Days = await Leave.find({
-                timestamp: {
-                    $gte: fourteenDaysAgo,
-                    $lte: sevenDaysAgo
-                },
-                status: 'submitted'
-            });
-
-            const leaveDataLast7Days = await Leave.find({
-                timestamp: {
-                    $gte: sevenDaysAgo,
-                    $lte: currentDate
-                },
-                status: 'submitted'
-            });
-
-            // Create an object to store submitted counts for each day
-            const submittedCountsLast14Days = {};
-            const submittedCountsLast7Days = {};
-
-            // Initialize counts for all dates in the range
-            let currentDatePointerLast14Days = new Date(fourteenDaysAgo);
-            let currentDatePointerLast7Days = new Date(sevenDaysAgo);
-
-            while (currentDatePointerLast14Days <= currentDate) {
-                const formattedDate = currentDatePointerLast14Days
-                    .toISOString()
-                    .split('T')[0];
-                submittedCountsLast14Days[formattedDate] = 0;
-                currentDatePointerLast14Days.setDate(
-                    currentDatePointerLast14Days.getDate() + 1
-                );
-            }
-
-            while (currentDatePointerLast7Days <= currentDate) {
-                const formattedDate = currentDatePointerLast7Days
-                    .toISOString()
-                    .split('T')[0];
-                submittedCountsLast7Days[formattedDate] = 0;
-                currentDatePointerLast7Days.setDate(
-                    currentDatePointerLast7Days.getDate() + 1
-                );
-            }
-
-            // Process the retrieved data for the last 14 days
-            leaveDataLast14Days.forEach(entry => {
-                // Assuming 'timestamp' is a valid field in your Leave model
-                const formattedDate = new Date(entry.timestamp)
-                    .toISOString()
-                    .split('T')[0];
-
-                // Update submitted counts for the date
-                submittedCountsLast14Days[formattedDate]++;
-            });
-
-            // Process the retrieved data for the last 7 days
-            leaveDataLast7Days.forEach(entry => {
-                // Assuming 'timestamp' is a valid field in your Leave model
-                const formattedDate = new Date(entry.timestamp)
-                    .toISOString()
-                    .split('T')[0];
-
-                // Update submitted counts for the date
-                submittedCountsLast7Days[formattedDate]++;
-            });
-
-            const totalSubmittedLast14Days = leaveDataLast14Days.length;
-            const totalSubmitted = leaveDataLast7Days.length;
-            const totalPercentageLast7 =
-                (totalSubmitted / (totalSubmitted + totalSubmittedLast14Days)) * 100;
-            const totalPercentageLast14 =
-                (totalSubmittedLast14Days /
-                    (totalSubmitted + totalSubmittedLast14Days)) *
-                100;
-            const differencePercentage = totalPercentageLast7 - totalPercentageLast14;
-            const formattedDifference =
-                totalSubmitted > 0
-                    ? (differencePercentage >= 0 ? '+' : '-') +
-                    Math.abs(differencePercentage).toFixed(2)
-                    : 0 + '%';
-
-            // Create a single JSON object to send as the response
-            const responseDataSubmittedCountsLast7Days = {
-                submittedCountsLast7Days,
-                totalSubmitted,
-                formattedDifference
-            };
-
-            res.json(responseDataSubmittedCountsLast7Days);
-        } catch (error) {
-            console.error('Error:', error);
-            res.status(500).json({ error: 'Internal Server Error' });
-        }
-    }
-});
-
-app.get('/api/leave/status', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-
-    if (user) {
-        const currentDate = new Date();
-        const sevenDaysAgo = new Date(currentDate);
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-        // Assuming 'Leave' is your Mongoose model
-        const leaveDataLast7Days = await Leave.find({
-            timestamp: {
-                $gte: sevenDaysAgo,
-                $lte: currentDate
-            }
-        }).select('status');
-
-        // Initialize counts for each status
-        let submittedCount = 0;
-        let pendingCount = 0;
-        let invalidCount = 0;
-        let deniedCount = 0;
-        let approvedCount = 0;
-
-        // Process the retrieved data for the last 7 days
-        leaveDataLast7Days.forEach(entry => {
-            switch (entry.status) {
-                case 'submitted':
-                    submittedCount++;
-                    break;
-                case 'pending':
-                    pendingCount++;
-                    break;
-                case 'invalid':
-                    invalidCount++;
-                    break;
-                case 'denied':
-                    deniedCount++;
-                    break;
-                case 'approved':
-                    approvedCount++;
-                    break;
-            }
-        });
-
-        // Calculate percentages
-        const totalLeaves = leaveDataLast7Days.length;
-        const percentageSubmitted =
-            totalLeaves > 0 ? ((submittedCount / totalLeaves) * 100).toFixed(0) : 0;
-        const percentagePending =
-            totalLeaves > 0 ? ((pendingCount / totalLeaves) * 100).toFixed(0) : 0;
-        const percentageInvalid =
-            totalLeaves > 0 ? ((invalidCount / totalLeaves) * 100).toFixed(0) : 0;
-        const percentageDenied =
-            totalLeaves > 0 ? ((deniedCount / totalLeaves) * 100).toFixed(0) : 0;
-        const percentageApproved =
-            totalLeaves > 0 ? ((approvedCount / totalLeaves) * 100).toFixed(0) : 0;
-
-        // Create a single JSON object to send as the response
-        const responseDataLast7Days = {
-            percentageSubmitted,
-            percentagePending,
-            percentageInvalid,
-            percentageDenied,
-            percentageApproved,
-            totalLeaves
-        };
-
-        // Respond with the data
-        res.json(responseDataLast7Days);
-    }
-});
-
-app.get(
-    '/api/staff/overview/department-section',
-    isAuthenticated,
-    async function (req, res) {
-        const username = req.user.username;
-        const user = await User.findOne({ username: username });
-
-        if (user) {
-            const allUser = await User.find();
-
-            // Create Sets to store unique departments and sections
-            const uniqueDepartments = new Set();
-            const uniqueSections = new Set();
-
-            // Iterate through the users and add their departments and sections to the sets
-            allUser.forEach(user => {
-                if (user.department) {
-                    uniqueDepartments.add(user.department);
-                }
-
-                if (user.section) {
-                    uniqueSections.add(user.section);
-                }
-            });
-
-            // Convert Sets to Arrays
-            const departments = Array.from(uniqueDepartments);
-            const sections = Array.from(uniqueSections);
-
-            // Create objects to store user counts for each department and section
-            const userCountByDepartment = {};
-            const userCountBySection = {};
-
-            // Initialize counts to zero for each department and section
-            departments.forEach(department => {
-                userCountByDepartment[department] = 0;
-            });
-
-            sections.forEach(section => {
-                userCountBySection[section] = 0;
-            });
-
-            // Update counts based on user data
-            allUser.forEach(user => {
-                if (user.department) {
-                    userCountByDepartment[user.department]++;
-                }
-
-                if (user.section) {
-                    userCountBySection[user.section]++;
-                }
-            });
-
-            const responseData = {
-                userCountByDepartment,
-                userCountBySection
-            };
-
-            res.json(responseData);
-        }
-    }
-);
-
-// STAFF DETAILS
-
+//STAFF DETAILS
 app.get('/staff/details/:id', isAuthenticated, async function (req, res) {
     const username = req.user.username;
     const user = await User.findOne({ username: username });
@@ -1424,112 +921,109 @@ app.get('/delete/:content/:id', isAuthenticated, async function (req, res) {
 });
 
 // SEARCH STAFF IN SAME DEPARTMENT
-app.get(
-    '/search/staff/assignee-relief',
-    isAuthenticated,
-    async function (req, res) {
-        const username = req.user.username;
-        const user = await User.findOne({ username: username });
-        const query = req.query.query;
+app.get('/search/staff/assignee-relief', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const query = req.query.query;
 
-        try {
-            let results;
-            if (query && query.trim() !== '') {
-                if (user.isChiefExec) {
-                    const deputyChiefExecQuery = {
-                        isDeputyChiefExec: true,
-                        fullname: { $regex: query, $options: 'i' }
-                    };
+    try {
+        let results;
+        if (query && query.trim() !== '') {
+            if (user.isChiefExec) {
+                const deputyChiefExecQuery = {
+                    isDeputyChiefExec: true,
+                    fullname: { $regex: query, $options: 'i' }
+                };
 
-                    const managementQuery = {
-                        isManagement: true,
-                        fullname: { $regex: query, $options: 'i' }
-                    };
+                const managementQuery = {
+                    isManagement: true,
+                    fullname: { $regex: query, $options: 'i' }
+                };
 
-                    const personalAssistant = {
-                        isPersonalAssistant: true,
-                        fullname: { $regex: query, $options: 'i' }
-                    };
+                const personalAssistant = {
+                    isPersonalAssistant: true,
+                    fullname: { $regex: query, $options: 'i' }
+                };
 
-                    results = await User.find({
-                        $or: [deputyChiefExecQuery, managementQuery, personalAssistant]
-                    });
-                } else if (user.isDeputyChiefExec) {
-                    const managementQuery = {
-                        isManagement: true,
-                        fullname: { $regex: query, $options: 'i' }
-                    };
+                results = await User.find({
+                    $or: [deputyChiefExecQuery, managementQuery, personalAssistant]
+                });
+            } else if (user.isDeputyChiefExec) {
+                const managementQuery = {
+                    isManagement: true,
+                    fullname: { $regex: query, $options: 'i' }
+                };
 
-                    const personalAssistant = {
-                        isPersonalAssistant: true,
-                        fullname: { $regex: query, $options: 'i' }
-                    };
+                const personalAssistant = {
+                    isPersonalAssistant: true,
+                    fullname: { $regex: query, $options: 'i' }
+                };
 
-                    const headOfDepartment = {
-                        isHeadOfDepartment: true,
-                        fullname: { $regex: query, $options: 'i' }
-                    };
+                const headOfDepartment = {
+                    isHeadOfDepartment: true,
+                    fullname: { $regex: query, $options: 'i' }
+                };
 
-                    results = await User.find({
-                        $or: [headOfDepartment, managementQuery, personalAssistant]
-                    });
-                } else if (user.isHeadOfDepartment) {
-                    results = await User.find({
-                        department: user.department,
-                        fullname: { $regex: query, $options: 'i' }
-                    });
-                } else if (user.isPersonalAssistant) {
-                    const departmentQuery = {
-                        department: user.department,
-                        fullname: { $regex: query, $options: 'i' }
-                    };
-
-                    const personalAssistant = {
-                        isPersonalAssistant: true,
-                        fullname: { $regex: query, $options: 'i' }
-                    };
-
-                    results = await User.find({
-                        $or: [departmentQuery, personalAssistant]
-                    });
-                } else {
-                    results = await User.find({
-                        section: user.section,
-                        fullname: { $regex: query, $options: 'i' }
-                    });
-                }
-            } else if (user.isAdmin) {
+                results = await User.find({
+                    $or: [headOfDepartment, managementQuery, personalAssistant]
+                });
+            } else if (user.isHeadOfDepartment) {
+                results = await User.find({
+                    department: user.department,
+                    fullname: { $regex: query, $options: 'i' }
+                });
+            } else if (user.isPersonalAssistant) {
                 const departmentQuery = {
                     department: user.department,
                     fullname: { $regex: query, $options: 'i' }
                 };
 
-                const admin = {
-                    isAdmin: true,
+                const personalAssistant = {
+                    isPersonalAssistant: true,
                     fullname: { $regex: query, $options: 'i' }
                 };
 
                 results = await User.find({
-                    $or: [departmentQuery, admin]
+                    $or: [departmentQuery, personalAssistant]
                 });
             } else {
-                results = [];
+                results = await User.find({
+                    section: user.section,
+                    fullname: { $regex: query, $options: 'i' }
+                });
             }
+        } else if (user.isAdmin) {
+            const departmentQuery = {
+                department: user.department,
+                fullname: { $regex: query, $options: 'i' }
+            };
 
-            res.json(results);
-        } catch (err) {
-            console.error(err);
-            res.status(500).send('Internal Server Error');
+            const admin = {
+                isAdmin: true,
+                fullname: { $regex: query, $options: 'i' }
+            };
+
+            results = await User.find({
+                $or: [departmentQuery, admin]
+            });
+        } else {
+            results = [];
         }
+
+        res.json(results);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Internal Server Error');
     }
+}
 );
 
-// LANDINGPAGE
+//LANDINGPAGE
 app.get('/landing', async function (req, res) {
     res.render('landing-page');
 });
 
-// AUTH
+//AUTH
 
 //SIGNUP
 app
@@ -1617,7 +1111,7 @@ app
         });
     });
 
-// SIGNIN
+//SIGNIN
 app
     .get('/sign-in', async function (req, res) {
         res.render('sign-in', {
@@ -2031,7 +1525,7 @@ app
         }
     });
 
-// SIGNOUT
+//SIGNOUT
 app.get('/sign-out/:id', async function (req, res) {
     req.session.destroy(function (err) {
         if (err) {
@@ -2062,7 +1556,7 @@ app.get('/sign-out/:id', async function (req, res) {
     }
 });
 
-// PROFILE
+//PROFILE
 app.get('/profile', isAuthenticated, async function (req, res) {
     const username = req.user.username;
     const user = await User.findOne({ username: username });
@@ -2121,7 +1615,7 @@ app.get('/profile', isAuthenticated, async function (req, res) {
     }
 });
 
-// SETTINGS
+//SETTINGS
 app
     .get('/settings', isAuthenticated, async function (req, res) {
         const username = req.user.username;
@@ -2329,53 +1823,50 @@ app
         }
     });
 
-app.post(
-    '/settings/upload/profile-image',
-    isAuthenticated,
-    async function (req, res) {
-        const username = req.user.username;
-        const user = await User.find({ username: username });
+app.post('/settings/upload/profile-image', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.find({ username: username });
 
-        if (user) {
-            if (!req.files || Object.keys(req.files).length === 0) {
-                console.log('There is no files selected');
+    if (user) {
+        if (!req.files || Object.keys(req.files).length === 0) {
+            console.log('There is no files selected');
 
-                res.redirect('/settings');
-            } else {
-                console.log('There are files try to be uploaded');
+            res.redirect('/settings');
+        } else {
+            console.log('There are files try to be uploaded');
 
-                // No file with the report ID found, proceed with file upload
-                for (const file of Object.values(req.files)) {
-                    const upload = __dirname + '/public/uploads/' + file.name;
-                    const pathUpload = '/uploads/' + file.name;
-                    const today = new Date();
-                    const type = path.extname(file.name);
+            // No file with the report ID found, proceed with file upload
+            for (const file of Object.values(req.files)) {
+                const upload = __dirname + '/public/uploads/' + file.name;
+                const pathUpload = '/uploads/' + file.name;
+                const today = new Date();
+                const type = path.extname(file.name);
 
-                    await file.mv(upload);
+                await file.mv(upload);
 
-                    // Calculate file size in megabytes
-                    const fileSizeInBytes = (await fs.stat(upload)).size;
-                    const fileSizeInMB = fileSizeInBytes / (1024 * 1024);
+                // Calculate file size in megabytes
+                const fileSizeInBytes = (await fs.stat(upload)).size;
+                const fileSizeInMB = fileSizeInBytes / (1024 * 1024);
 
-                    console.log(fileSizeInMB);
+                console.log(fileSizeInMB);
 
-                    await User.findOneAndUpdate(
-                        {
-                            username: username
-                        },
-                        {
-                            profile: pathUpload
-                        },
-                        { upsert: true, new: true }
-                    );
-                }
-
-                console.log('Done upload files!');
-
-                res.redirect('/settings');
+                await User.findOneAndUpdate(
+                    {
+                        username: username
+                    },
+                    {
+                        profile: pathUpload
+                    },
+                    { upsert: true, new: true }
+                );
             }
+
+            console.log('Done upload files!');
+
+            res.redirect('/settings');
         }
     }
+}
 );
 
 app.get('/info/:type/:method/:id', async function (req, res) {
@@ -2480,7 +1971,7 @@ app.get('/info/:type/:method/:id', async function (req, res) {
     }
 });
 
-// FULL CALENDAR
+//FULL CALENDAR
 
 app.get('/calendar', isAuthenticated, async function (req, res) {
     const username = req.user.username;
@@ -2498,7 +1989,7 @@ app.get('/calendar', isAuthenticated, async function (req, res) {
     });
 });
 
-// LEAVE
+//LEAVE
 
 // REQUEST
 app
@@ -4257,139 +3748,1838 @@ app.get('/leave/:approval/:id', async function (req, res) {
     }
 });
 
-// Function to update attendance
-const updateAttendance = async () => {
-    try {
-        const now = new Date();
-        const todayStart = new Date(
-            now.getFullYear(),
-            now.getMonth(),
-            now.getDate(),
+//HUMAN RESOURCES
+app.get('/human-resource/staff-members/overview', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    }).populate('sender');
+
+    const allUser = await User.find();
+    const uniqueDepartments = new Set();
+    const uniqueSection = new Set();
+
+    allUser.forEach(user => {
+        if (user.department) {
+            uniqueDepartments.add(user.department);
+        }
+    });
+
+    allUser.forEach(user => {
+        if (user.section) {
+            uniqueSection.add(user.section);
+        }
+    });
+
+    const departments = Array.from(uniqueDepartments);
+    const sections = Array.from(uniqueSection);
+
+    if (user) {
+        res.render('hr-staffmembers-overview', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4(),
+            departments: departments,
+            sections: sections,
+            // all data
+            allUser: allUser,
+            show: '',
+            alert: ''
+        });
+    }
+}
+);
+
+app
+    .get('/human-resource/staff-members/add-staff', isAuthenticated, async function (req, res) {
+        const username = req.user.username;
+        const user = await User.findOne({ username: username });
+        const notifications = await Notification.find({
+            recipient: user._id,
+            read: false
+        }).populate('sender');
+
+        if (user) {
+            res.render('hr-staffmembers-addstaff', {
+                user: user,
+                notifications: notifications,
+                uuid: uuidv4(),
+                // all data
+                show: '',
+                alert: ''
+            });
+        }
+    }
+    )
+    .post('/human-resource/staff-members/add-staff', isAuthenticated, async function (req, res) {
+        const username = req.user.username;
+        const user1 = await User.findOne({ username: username });
+        const notifications = await Notification.find({
+            recipient: user1._id,
+            read: false
+        }).populate('sender');
+
+        // for successful
+        const allUser = await User.find();
+        const uniqueDepartments = new Set();
+        const uniqueSection = new Set();
+
+        allUser.forEach(user => {
+            if (user.department) {
+                uniqueDepartments.add(user.department);
+            }
+        });
+
+        allUser.forEach(user => {
+            if (user.section) {
+                uniqueSection.add(user.section);
+            }
+        });
+
+        const departments = Array.from(uniqueDepartments);
+        const sections = Array.from(uniqueSection);
+
+        if (user1) {
+            if (
+                !req.body.fullname ||
+                !req.body.username ||
+                !req.body.email ||
+                !req.body.password ||
+                !req.body.position ||
+                !req.body.grade ||
+                !req.body.department ||
+                !req.body.gender
+            ) {
+                res.render('hr-staffmembers-addstaff', {
+                    user: user1,
+                    notifications: notifications,
+                    uuid: uuidv4(),
+                    show: 'show',
+                    alert: 'Sign up unsuccessful'
+                });
+            }
+
+            const newUser = new User({
+                fullname: req.body.fullname,
+                username: req.body.username,
+                email: req.body.email,
+                nric: '',
+                phone: '',
+                profile: '',
+                age: 0,
+                address: '',
+                dateEmployed: '1974-07-04T00:00:00.000+00:00',
+                birthdate: '1974-07-04T00:00:00.000+00:00',
+                department: req.body.department,
+                section: req.body.section,
+                gender: req.body.gender,
+                grade: req.body.grade,
+                position: req.body.position,
+                education: '',
+                marital: 'single',
+                classification: req.body.class,
+                isChiefExec: false,
+                isDeputyChiefExec: false,
+                isHeadOfDepartment: false,
+                isHeadOfSection: false,
+                isAdmin: false,
+                isManagement: false,
+                isPersonalAssistant: false
+            });
+
+            User.register(newUser, req.body.password, function (err, user) {
+                if (err) {
+                    console.log(err);
+                    res.render('hr-staffmembers-addstaff', {
+                        user: user1,
+                        notifications: notifications,
+                        uuid: uuidv4(),
+                        show: 'show',
+                        alert: err
+                    });
+                } else {
+                    const newUserLeave = new UserLeave({
+                        user: user._id,
+                        annual: { leave: 14, taken: 0 },
+                        sick: { leave: 14, taken: 0 },
+                        sickExtended: { leave: 60, taken: 0 },
+                        emergency: { leave: 0, taken: 0 },
+                        paternity: { leave: 3, taken: 0 },
+                        maternity: { leave: 60, taken: 0 },
+                        bereavement: { leave: 3, taken: 0 },
+                        study: { leave: 3, taken: 0 },
+                        marriage: { leave: 3, taken: 0 },
+                        attendExam: { leave: 5, taken: 0 },
+                        hajj: { leave: 40, taken: 0 },
+                        unpaid: { taken: 0 },
+                        special: { leave: 3, taken: 0 }
+                    });
+
+                    newUserLeave.save();
+
+                    passport.authenticate('local')(req, res, function () {
+                        res.render('hr-staffmembers-overview', {
+                            user: user1,
+                            notifications: notifications,
+                            uuid: uuidv4(),
+                            departments: departments,
+                            sections: sections,
+                            // all data
+                            allUser: allUser,
+                            show: 'show',
+                            alert: 'Sign up successful'
+                        });
+                    });
+                }
+            });
+        }
+    }
+    );
+
+app.get('/human-resource/leave/overview', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    }).populate('sender');
+
+    const allLeave = await Leave.find();
+    const allUser = await User.find();
+
+    if (user) {
+        res.render('hr-leave-overview', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4(),
+            // all data
+            allLeave: allLeave,
+            allUser: allUser
+        });
+    }
+}
+);
+
+app.get('/human-resource/leave/balances', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    }).populate('sender');
+
+    const allUserLeave = await UserLeave.find();
+    const allUser = await User.find();
+
+    if (user) {
+        res.render('hr-leave-balances', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4(),
+            // all data
+            allUserLeave: allUserLeave,
+            allUser: allUser
+        });
+    }
+}
+);
+
+app.get('/human-resource/attendance/overview', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    })
+        .populate('sender')
+        .sort({ timestamp: -1 });
+
+    if (user) {
+        const currentDate = new Date();
+        const startOfToday = new Date(
+            currentDate.getFullYear(),
+            currentDate.getMonth(),
+            currentDate.getDate(),
             0,
             0,
             0
         );
-        const todayEnd = new Date(
-            now.getFullYear(),
-            now.getMonth(),
-            now.getDate(),
+        const endOfToday = new Date(
+            currentDate.getFullYear(),
+            currentDate.getMonth(),
+            currentDate.getDate(),
             23,
             59,
             59
         );
 
-        // Find all attendance records for today with signOutTime as null
-        const attendanceRecords = await Attendance.find({
-            'date.signInTime': { $gte: todayStart, $lt: todayEnd },
-            'date.signOutTime': null
+        const attendance = await Attendance.find({
+            timestamp: { $gte: startOfToday, $lte: endOfToday }
+        }).sort({ timestamp: -1 });
+
+        const allUser = await User.find();
+
+        res.render('hr-attendance-overview', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4(),
+            allUser: allUser,
+            attendance: attendance
         });
-
-        // Update status to 'Absent' for records without signOutTime
-        for (let record of attendanceRecords) {
-            record.status = 'Invalid';
-            await record.save();
-        }
-
-        console.log('Attendance updated at 5 PM');
-    } catch (error) {
-        console.error('Error updating attendance:', error);
     }
-};
+}
+);
 
-// Function to check leave on attendance
-const updateAttendanceForApprovedLeaves = async () => {
-    try {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+//ATTENDANCE
+app.get('/attendance', async function (req, res) {
+    const uniqueIdentifier = generateUniqueIdentifier();
 
-        // Find leave requests with status 'approved' and return date of today
-        const approvedLeaves = await Leave.find({
-            status: 'approved',
-            'date.start': {
-                $gte: today
-            },
-            'date.return': {
-                $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000) // Today's end
-            }
+    res.render('attendance', {
+        uuid: uuidv4(),
+        uniqueIdentifier: uniqueIdentifier
+    });
+});
+
+// SCAN QR PAGE
+app.get('/scan-qr', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    })
+        .populate('sender')
+        .sort({ timestamp: -1 });
+
+    if (user) {
+        res.render('scan', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4()
         });
+    }
+});
 
-        console.log(approvedLeaves);
+// ATTENDANCE TODAY FOR HOD PAGE
+app.get('/attendance/today/department/section', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    })
+        .populate('sender')
+        .sort({ timestamp: -1 });
 
-        for (const leave of approvedLeaves) {
-            await Attendance.findOneAndUpdate(
+    if (user) {
+        res.render('attendance-today', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4()
+        });
+    }
+}
+);
+
+
+//SUPER ADMIN
+app.get('/super-admin/update', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+
+    if (user.isSuperAdmin) {
+        const allUsers = await User.find();
+
+        // Iterate through each user
+        for (const user of allUsers) {
+            // Update the user's additional information
+            await User.findOneAndUpdate(
+                { section: 'Administration and Human Resource Management Division' },
                 {
-                    user: leave.user,
-                    timestamp: {
-                        $gte: today, // Greater than or equal to the start of today
-                        $lte: new Date() // Less than the current time
-                    }
-                },
-                {
-                    $set: {
-                        status: 'Leave',
-                        type: 'manual add',
-                        timestamp: new Date()
-                    }
+                    department: ''
                 },
                 { upsert: true, new: true }
             );
         }
 
-        console.log('Attendance records updated for leaves approved today');
-    } catch (error) {
-        console.error('Error updating attendance records:', error);
-    }
-};
+        console.log('All user has been updated');
 
-// Function to check and update attendance absent
-const updateAbsentAttendance = async () => {
+        res.redirect('/');
+    }
+});
+
+//NOTIFICATIONS
+app.get('/notifications/history', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    })
+        .populate('sender')
+        .sort({ timestamp: -1 });
+
+    // find notification based on date
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Set time to the beginning of the day
+
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+
+    const firstDayOfWeek = new Date(today);
+    firstDayOfWeek.setDate(today.getDate() - today.getDay()); // Set to the first day of the week (Sunday)
+    firstDayOfWeek.setHours(0, 0, 0, 0); // Set time to the beginning of the day
+
+    const lastDayOfWeek = new Date(firstDayOfWeek);
+    lastDayOfWeek.setDate(firstDayOfWeek.getDate() + 6); // Set to the last day of the week (Saturday)
+    lastDayOfWeek.setHours(23, 59, 59, 999);
+
+    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+    const notificationsToday = await Notification.find({
+        recipient: user._id,
+        timestamp: {
+            $gte: today,
+            $lt: tomorrow
+        }
+    })
+        .populate('sender')
+        .sort({ timestamp: -1, read: -1 });
+
+    const notificationsYesterday = await Notification.find({
+        recipient: user._id,
+        timestamp: {
+            $gte: yesterday,
+            $lt: today
+        }
+    })
+        .populate('sender')
+        .sort({ timestamp: -1, read: -1 });
+
+    const notificationsThisWeek = await Notification.find({
+        recipient: user._id,
+        timestamp: {
+            $gte: firstDayOfWeek,
+            $lte: lastDayOfWeek
+        }
+    })
+        .populate('sender')
+        .sort({ timestamp: -1, read: -1 });
+
+    const notificationsThisMonth = await Notification.find({
+        recipient: user._id,
+        timestamp: {
+            $gte: firstDayOfMonth,
+            $lte: lastDayOfMonth
+        }
+    })
+        .populate('sender')
+        .sort({ timestamp: -1, read: -1 });
+
+    if (user) {
+        res.render('notifications', {
+            user: user,
+            notifications: notifications,
+            notificationsToday: notificationsToday,
+            notificationsYesterday: notificationsYesterday,
+            notificationsThisWeek: notificationsThisWeek,
+            notificationsThisMonth: notificationsThisMonth
+        });
+    }
+});
+
+app.get('/markAsRead/:id', isAuthenticated, async function (req, res) {
+    const id = req.params.id;
+    console.log(id);
+
+    const update = await Notification.findByIdAndUpdate(
+        { _id: id },
+        { read: true },
+        { new: true }
+    );
+
+    if (update) {
+        res.redirect(update.url);
+    } else {
+        console.log('There is error for the update for notifications');
+        res.redirect('/');
+    }
+});
+
+app.get('/markAllAsRead', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    })
+        .populate('sender')
+        .sort({ timestamp: -1 });
+
+    const update = await Notification.updateMany(
+        { recipient: user._id },
+        { read: true },
+        { new: true }
+    );
+
+    if (update) {
+        res.redirect('/');
+    } else {
+        console.log('There is error for the update for notifications');
+        res.redirect('/');
+    }
+});
+
+//FILES
+
+// UPLOAD
+app.post('/files/upload', isAuthenticated, async (reqFiles, resFiles) => {
+    const username = reqFiles.user.username;
+    const user = await User.findOne({ username: username });
+
+    if (!reqFiles.files || Object.keys(reqFiles.files).length === 0) {
+        console.log('There is no files selected');
+    } else {
+        console.log('There are files try to be uploaded');
+
+        const uuid = reqFiles.body.uuid;
+        const origin = reqFiles.body.origin;
+
+        // No file with the report ID found, proceed with file upload
+        for (const file of Object.values(reqFiles.files)) {
+            const upload = __dirname + '/public/uploads/' + file.name;
+            const pathUpload = '/uploads/' + file.name;
+            const today = new Date();
+            const type = path.extname(file.name);
+
+            await file.mv(upload);
+
+            // Calculate file size in megabytes
+            const fileSizeInBytes = (await fs.stat(upload)).size;
+            const fileSizeInMB = fileSizeInBytes / (1024 * 1024);
+
+            console.log(fileSizeInMB);
+
+            const newFile = new File({
+                uuid: uuid,
+                user: user._id,
+                name: file.name,
+                path: pathUpload,
+                date: today,
+                type: type,
+                origin: origin,
+                size: fileSizeInMB.toFixed(2) + ' MB'
+            });
+
+            newFile.save();
+        }
+
+        console.log('Done upload files!');
+    }
+});
+
+// DOWNLOAD
+app.get('/files/download/:id', async function (req, res) {
+    const _id = req.params.id;
+
+    const file = await File.findOne({ _id: _id });
+
+    if (file) {
+        const filePath = __dirname + '/public/uploads/' + file.name;
+
+        res.download(filePath, file.name);
+        console.log('Downloading file');
+    }
+});
+
+// DELETE USING FILES ID
+app.get('/files/delete/:id', async function (req, res) {
+    const _id = req.params.id;
+
+    const deleted = await File.findOneAndDelete({ _id: _id });
+
+    if (deleted) {
+        const filePath = __dirname + '/public/uploads/' + deleted.name;
+        console.log('File selected is deleted!');
+        await fs.unlink(filePath);
+
+        res.redirect('/');
+    } else {
+        console.log('There must be something wrong in deleting the files!');
+        res.redirect('/');
+    }
+});
+
+// DELETE USING FILES UUID
+app.get('/files/delete/cancel/:uuid', async function (req, res) {
+    const uuid = req.params.uuid;
+
+    const filesToDelete = await File.find({ uuid: uuid });
+    const deletedFiles = await File.deleteMany({ uuid: uuid });
+
+    if (deletedFiles.deletedCount > 0) {
+        console.log(`${deletedFiles.deletedCount} files are deleted!`);
+
+        for (const deletedFile of filesToDelete) {
+            const filePath = __dirname + '/public/uploads/' + deletedFile.name;
+            await fs.unlink(filePath);
+        }
+
+        res.redirect('/');
+    } else {
+        console.log('No files found or there was an error deleting files.');
+        res.redirect('/');
+    }
+});
+
+// FECTH API
+
+// STATUS UPDATE
+app.post('/status-update', isAuthenticated, async (req, res) => {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const status = req.body.status;
+
+    const update = await Info.findOneAndUpdate(
+        { user: user._id },
+        { $set: { status: status } },
+        { upsert: true, new: true, useFindAndModify: false }
+    );
+
+    if (update) {
+        console.log('Status update accomplished! ');
+        res.redirect('/');
+    } else {
+        console.log('Status update failed!');
+        res.redirect('/');
+    }
+});
+
+//GET ALL ATTENDANCE DATA PER MONTH ON SELECTED DATE
+app.post('/api/data/all-attendance/per-month', isAuthenticated, async function (req, res) {
+    const selectedDate = req.body.date;
+    const searchQuery = req.query.search || ''; // Get search query from request query params
+    const page = parseInt(req.query.page) || 1; // Get page number from request query params
+    const limit = 10; // Number of items per page
+    const skip = (page - 1) * limit; // Calculate the number of items to skip
+
+    // Extract month and year from the selected date
+    const [month, year] = selectedDate.split('/');
+
     try {
+        // Create a set of all possible status types
+        const allStatusTypes = ['Present', 'Absent', 'Late', 'Invalid', 'Leave'];
+        const allUser = await User.find();
+
+        // Query attendance records based on the month and year
+        const attendanceData = await Attendance.aggregate([
+            // Match attendance records for the selected month and year
+            {
+                $match: {
+                    timestamp: {
+                        $gte: new Date(`${year}-${month}-01`),
+                        $lt: new Date(`${year}-${parseInt(month) + 1}-01`)
+                    }
+                }
+            },
+            // Group by user and status, count occurrences
+            {
+                $group: {
+                    _id: { user: '$user', status: '$status' },
+                    count: { $sum: 1 }
+                }
+            }
+        ]);
+
+        const userStatusCounts = {};
+
+        // Iterate over all users and initialize their status counts
+        allUser.forEach(user => {
+            userStatusCounts[user._id] = {};
+            allStatusTypes.forEach(statusType => {
+                userStatusCounts[user._id][statusType] = 0;
+            });
+        });
+
+        // Update status counts based on the attendance data
+        attendanceData.forEach(({ _id, count }) => {
+            const { user, status } = _id;
+            userStatusCounts[user][status] = count;
+        });
+
+        // Combine populated attendance data with user status counts
+        const combinedData = allUser.map(user => {
+            const statusCounts = userStatusCounts[user._id];
+            return {
+                user: {
+                    _id: user._id,
+                    username: user.username,
+                    fullname: user.fullname,
+                    section: user.section,
+                    department: user.department
+                },
+                statusCounts: statusCounts
+            };
+        });
+
+        // Filter combinedData based on the search query
+        const filteredData = combinedData.filter(item => {
+            const { fullname, section, department, username } = item.user;
+            const regex = new RegExp(searchQuery, 'i');
+            return (
+                regex.test(fullname) ||
+                regex.test(section) ||
+                regex.test(department) ||
+                regex.test(username)
+            );
+        });
+
+        // Paginate the filtered data
+        const paginatedData = filteredData.slice(skip, skip + limit);
+
+        const response = {
+            data1: paginatedData,
+            data2: filteredData
+        };
+
+        console.log(filteredData.length);
+
+        // Respond with the paginated and filtered attendance data
+        res.json(response);
+    } catch (error) {
+        console.error('Error fetching attendance data:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+}
+);
+
+// ATTENDACE TODAY DATA FOR ALL
+app.get('/api/all-attendance/today/all', async function (req, res) {
+    try {
+        // Get today's date
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Set hours, minutes, seconds, and milliseconds to 0 to get the start of the day
+
+        // Get the current time
+        const currentTime = new Date();
+
+        // Find attendance data for today within the specified time range
+        const attendanceData = await Attendance.find({
+            'date.signInTime': {
+                $gte: today, // Find records where signInTime is greater than or equal to today
+                $lte: currentTime // and less than or equal to the current time
+            }
+        })
+            .sort({ timestamp: -1 })
+            .lean();
+
+        // Get all users
+        const allUsers = await User.find().lean();
+
+        // Filter the attendance data and populate user information
+        const filteredData = attendanceData.map(entry => {
+            const user = allUsers.find(
+                user => user._id.toString() === entry.user.toString()
+            );
+
+            const getInitials = str => {
+                const names = str.split(' '); // Split the full name into an array of names
+                const initials = names
+                    .slice(0, 2)
+                    .map(name => name.charAt(0).toUpperCase()); // Get the first letter of each name and capitalize it
+                return initials.join(''); // Join the initials into a single string
+            };
+
+            const formatDateTime = dateTime => {
+                const options = {
+                    timeZone: 'Asia/Kuala_Lumpur',
+                    hour12: false,
+                    hour: '2-digit',
+                    minute: '2-digit'
+                };
+                return dateTime.toLocaleTimeString('en-MY', options);
+            };
+
+            return {
+                user: user
+                    ? {
+                        _id: user._id,
+                        fullname: user.fullname,
+                        initials: getInitials(user.fullname),
+                        username: user.username,
+                        department: user.department,
+                        section: user.section,
+                        profile: user.profile
+                        // Add other user fields as needed
+                    }
+                    : null,
+                datetime: formatDateTime(new Date(entry.date.signInTime)),
+                signInTime: entry.date.signInTime,
+                signOutTime: entry.date.signOutTime,
+                status: entry.status,
+                type: entry.type
+            };
+        });
+
+        // Send the filtered attendance data for today to the client
+        res.json(filteredData);
+    } catch (err) {
+        console.error('Error fetching attendance data for today:', err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// ATTENDACE TODAY DATA FOR HR
+app.post('/api/data/all-attendance/today/human-resources', isAuthenticated, async function (req, res) {
+    const searchQuery = req.query.search || ''; // Get search query from request query params
+    const page = parseInt(req.query.page) || 1; // Get page number from request query params
+    const limit = 5; // Number of items per page
+    const skip = (page - 1) * limit;
+
+    // Get today's date
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Set hours, minutes, seconds, and milliseconds to 0 to get the start of the day
+
+    try {
+        // Query attendance records for today
+        const attendanceData = await Attendance.aggregate([
+            // Match attendance records for today
+            {
+                $match: {
+                    timestamp: {
+                        $gte: today, // Find records where timestamp is greater than or equal to today
+                        $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000) // Less than tomorrow
+                    }
+                }
+            },
+            // Group by user and status, include attendance type, sign-in time, and sign-out time
+            {
+                $group: {
+                    _id: {
+                        user: '$user',
+                        status: '$status',
+                        type: '$type',
+                        signInTime: '$date.signInTime',
+                        signOutTime: '$date.signOutTime',
+                        timestamp: '$timestamp'
+                    },
+                    count: { $sum: 1 }
+                }
+            }
+        ]);
+
+        // Collect unique user IDs from attendanceData
+        const userIds = attendanceData.map(record => record._id.user);
+
+        // Query all users from the database
+        const allUser = await User.find({});
+
+        // Create a map to quickly access user details by user ID
+        const userMap = {};
+        allUser.forEach(user => {
+            userMap[user._id] = {
+                _id: user._id,
+                username: user.username,
+                fullname: user.fullname,
+                section: user.section,
+                department: user.department
+            };
+        });
+
+        // Create the combined data from attendanceData and userMap
+        const combinedData = allUser.map(user => {
+            const attendanceRecord = attendanceData.find(record =>
+                record._id.user.equals(user._id)
+            );
+            return attendanceRecord
+                ? {
+                    user: userMap[user._id],
+                    status: attendanceRecord._id.status,
+                    type: attendanceRecord._id.type,
+                    signInTime: attendanceRecord._id.signInTime,
+                    signOutTime: attendanceRecord._id.signOutTime,
+                    timestamp: attendanceRecord._id.timestamp,
+                    count: attendanceRecord.count
+                }
+                : {
+                    user: userMap[user._id],
+                    status: 'Absent',
+                    type: 'Nil',
+                    signInTime: null,
+                    signOutTime: null,
+                    timestamp: null,
+                    count: 0
+                };
+        });
+
+        // Sort combinedData based on timestamp, placing users without attendance records at the end
+        combinedData.sort((a, b) => {
+            if (!a.timestamp) return 1;
+            if (!b.timestamp) return -1;
+            return new Date(b.timestamp) - new Date(a.timestamp);
+        });
+
+        // Filter combinedData based on the search query
+        const filteredData = combinedData.filter(item => {
+            const { fullname, section, department, username } = item.user;
+            const { status, type, signInTime, signOutTime } = item;
+            const regex = new RegExp(searchQuery, 'i');
+            return (
+                regex.test(fullname) ||
+                regex.test(section) ||
+                regex.test(department) ||
+                regex.test(username) ||
+                regex.test(status) ||
+                regex.test(type) ||
+                (signInTime &&
+                    regex.test(
+                        new Date(signInTime).toLocaleTimeString('en-MY', {
+                            hour: 'numeric',
+                            minute: 'numeric',
+                            hour12: true,
+                            timeZone: 'Asia/Kuala_Lumpur'
+                        })
+                    )) ||
+                (signOutTime &&
+                    regex.test(
+                        new Date(signOutTime).toLocaleTimeString('en-MY', {
+                            hour: 'numeric',
+                            minute: 'numeric',
+                            hour12: true,
+                            timeZone: 'Asia/Kuala_Lumpur'
+                        })
+                    ))
+            );
+        });
+
+        // Paginate the filtered data
+        const paginatedData = filteredData.slice(skip, skip + limit);
+
+        // Calculate counts for present, absent, late, leave statuses
+        const totalCounts = combinedData.reduce(
+            (acc, item) => {
+                acc.total++;
+                acc[item.status.toLowerCase()] =
+                    (acc[item.status.toLowerCase()] || 0) + 1;
+                return acc;
+            },
+            { total: 0, present: 0, absent: 0, late: 0, leave: 0, invalid: 0 }
+        );
+
+        const response = {
+            data1: paginatedData,
+            data2: filteredData,
+            counts: totalCounts
+        };
+
+        // Respond with the paginated and filtered attendance data
+        res.json(response);
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+}
+);
+
+// ATTENDACE TODAY DATA FOR HOD
+app.post('/api/data/all-attendance/today/hod', isAuthenticated, async function (req, res) {
+    const searchQuery = req.query.search || ''; // Get search query from request query params
+    const page = parseInt(req.query.page) || 1; // Get page number from request query params
+    const limit = 10; // Number of items per page
+    const skip = (page - 1) * limit;
+
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+
+    // Get today's date
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Set hours, minutes, seconds, and milliseconds to 0 to get the start of the day
+
+    try {
+        // Query attendance records for today
+        const attendanceData = await Attendance.aggregate([
+            // Match attendance records for today
+            {
+                $match: {
+                    timestamp: {
+                        $gte: today, // Find records where timestamp is greater than or equal to today
+                        $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000) // Less than tomorrow
+                    }
+                }
+            },
+            // Group by user and status, include attendance type, sign-in time, and sign-out time
+            {
+                $group: {
+                    _id: {
+                        user: '$user',
+                        status: '$status',
+                        type: '$type',
+                        signInTime: '$date.signInTime',
+                        signOutTime: '$date.signOutTime',
+                        timestamp: '$timestamp'
+                    },
+                    count: { $sum: 1 }
+                }
+            }
+        ]);
+
+        // Collect unique user IDs from attendanceData
+        const userIds = attendanceData.map(record => record._id.user);
+
+        var allUser;
+        if (user.isHeadOfDepartment) {
+            // Query all users from the database
+            allUser = await User.find({ department: user.department });
+        } else if (user.isHeadOfSection) {
+            // Query all users from the database
+            allUser = await User.find({ section: user.section });
+        }
+
+        // Create a map to quickly access user details by user ID
+        const userMap = {};
+        allUser.forEach(user => {
+            userMap[user._id] = {
+                _id: user._id,
+                username: user.username,
+                fullname: user.fullname,
+                section: user.section,
+                department: user.department
+            };
+        });
+
+        // Create the combined data from attendanceData and userMap
+        const combinedData = allUser.map(user => {
+            const attendanceRecord = attendanceData.find(record =>
+                record._id.user.equals(user._id)
+            );
+            return attendanceRecord
+                ? {
+                    user: userMap[user._id],
+                    status: attendanceRecord._id.status,
+                    type: attendanceRecord._id.type,
+                    signInTime: attendanceRecord._id.signInTime,
+                    signOutTime: attendanceRecord._id.signOutTime,
+                    timestamp: attendanceRecord._id.timestamp,
+                    count: attendanceRecord.count
+                }
+                : {
+                    user: userMap[user._id],
+                    status: 'Absent',
+                    type: 'Nil',
+                    signInTime: null,
+                    signOutTime: null,
+                    timestamp: null,
+                    count: 0
+                };
+        });
+
+        // Sort combinedData based on timestamp, placing users without attendance records at the end
+        combinedData.sort((a, b) => {
+            if (!a.timestamp) return 1;
+            if (!b.timestamp) return -1;
+            return new Date(b.timestamp) - new Date(a.timestamp);
+        });
+
+        // Filter combinedData based on the search query
+        const filteredData = combinedData.filter(item => {
+            const { fullname, section, department, username } = item.user;
+            const { status, type, signInTime, signOutTime } = item;
+            const regex = new RegExp(searchQuery, 'i');
+            return (
+                regex.test(fullname) ||
+                regex.test(section) ||
+                regex.test(department) ||
+                regex.test(username) ||
+                regex.test(status) ||
+                regex.test(type) ||
+                (signInTime &&
+                    regex.test(
+                        new Date(signInTime).toLocaleTimeString('en-MY', {
+                            hour: 'numeric',
+                            minute: 'numeric',
+                            hour12: true,
+                            timeZone: 'Asia/Kuala_Lumpur'
+                        })
+                    )) ||
+                (signOutTime &&
+                    regex.test(
+                        new Date(signOutTime).toLocaleTimeString('en-MY', {
+                            hour: 'numeric',
+                            minute: 'numeric',
+                            hour12: true,
+                            timeZone: 'Asia/Kuala_Lumpur'
+                        })
+                    ))
+            );
+        });
+
+        // Paginate the filtered data
+        const paginatedData = filteredData.slice(skip, skip + limit);
+
+        // Calculate counts for present, absent, late, leave statuses
+        const totalCounts = combinedData.reduce(
+            (acc, item) => {
+                acc.total++;
+                acc[item.status.toLowerCase()] =
+                    (acc[item.status.toLowerCase()] || 0) + 1;
+                return acc;
+            },
+            { total: 0, present: 0, absent: 0, late: 0, leave: 0, invalid: 0 }
+        );
+
+        const response = {
+            data1: paginatedData,
+            data2: filteredData,
+            counts: totalCounts
+        };
+
+        // Respond with the paginated and filtered attendance data
+        res.json(response);
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+}
+);
+
+// QR CODE API
+app.get('/api/qrcode/generate', async (req, res) => {
+    const uniqueIdentifier = generateUniqueIdentifier();
+
+    try {
+        const qrCodeImage = await qr.toDataURL(uniqueIdentifier, {
+            type: 'image/png',
+            errorCorrectionLevel: 'H',
+            color: { dark: '#3874ff', light: '#ffffff' }, // Set the color (dark is the main color, light is the background color)
+            width: 400,
+            margin: 0 // Set the width of the QR code
+        });
+
+        res.json({ qrCodeImage, uniqueIdentifier });
+    } catch (error) {
+        console.error('Error generating QR code:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+app.post('/api/qrcode/save-data', async function (req, res) {
+    const qrData = req.body.qrData;
+    // console.log('Received QR code data:', qrData);
+
+    // Save the raw URL in the database
+    await QRCode.create({
+        uniqueId: qrData,
+        createdAt: new Date()
+    });
+
+    res.status(200).send('QR code data received and saved successfully');
+});
+
+app.post('/api/qrcode/process-data', isAuthenticated, async function (req, res) {
+    const scannedData = req.body.scannedData;
+    const id = req.body.id;
+
+    console.log('Received scanned data from client:', scannedData);
+    console.log('Id received is:', id);
+
+    const checkUser = await User.findOne({ _id: id });
+
+    var log = '';
+
+    if (checkUser) {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
-        // Find all users
-        const allUsers = await User.find();
+        const checkQrCode = await QRCode.findOne({ uniqueId: id });
 
-        // Create new attendance records marking them as absent
-        for (const user of allUsers) {
-            const newAttendance = new Attendance({
-                user: user._id,
-                type: 'invalid',
-                signInTime: null,
-                signOutTime: null,
-                status: 'Absent',
-                timestamp: new Date()
+        if (checkQrCode) {
+            console.log('You qr code is invalid, try to scan latest qr code!');
+
+            log = 'You qr code is invalid, try to scan latest qr code!';
+        } else {
+            const existingAttendance = await Attendance.findOne({
+                user: checkUser._id,
+                timestamp: {
+                    $gte: today,
+                    $lte: new Date()
+                }
             });
 
-            await newAttendance.save();
+            if (existingAttendance) {
+                if (
+                    existingAttendance.date.signInTime !== null &&
+                    existingAttendance.date.signOutTime === null
+                ) {
+                    await Attendance.findOneAndUpdate(
+                        {
+                            user: checkUser._id
+                        },
+                        {
+                            'date.signOutTime': new Date(),
+                            type: 'sign out'
+                        },
+                        {
+                            upsert: true,
+                            new: true
+                        }
+                    );
+
+                    console.log('You have successfully signed out for today, thank you');
+
+                    const tempAttendance = new TempAttendance({
+                        user: checkUser._id,
+                        timestamp: new Date(),
+                        type: 'sign out'
+                    });
+
+                    await tempAttendance.save();
+
+                    log = 'You have successfully signed out for today, thank you!';
+                } else if (
+                    existingAttendance.date.signInTime === null &&
+                    existingAttendance.date.signOutTime === null
+                ) {
+                    const currentTime = new Date();
+                    const pstTime = currentTime.toLocaleString('en-MY', {
+                        timeZone: 'Asia/Kuala_Lumpur',
+                        hour12: false
+                    });
+                    const pstHourString = pstTime.split(',')[1].trim().split(':')[0];
+                    const pstHour = parseInt(pstHourString);
+
+                    console.log(pstHour);
+
+                    if (pstHour >= 8) {
+                        console.log('Clock in late confirmed');
+
+                        await Attendance.findOneAndUpdate(
+                            {
+                                user: checkUser._id,
+                                timestamp: {
+                                    $gte: today, // Greater than or equal to the start of today
+                                    $lte: new Date() // Less than the current time
+                                }
+                            },
+                            {
+                                $set: {
+                                    status: 'Late',
+                                    type: 'sign in',
+                                    'date.signInTime': new Date(),
+                                    timestamp: new Date()
+                                }
+                            },
+                            { upsert: true, new: true }
+                        );
+
+                        const tempAttendance = new TempAttendance({
+                            user: checkUser._id,
+                            timestamp: new Date(),
+                            type: 'sign in'
+                        });
+
+                        await tempAttendance.save();
+
+                        log =
+                            'You have successfully signed in as late for today, thank you!';
+                    } else {
+                        await Attendance.findOneAndUpdate(
+                            {
+                                user: checkUser._id,
+                                timestamp: {
+                                    $gte: today, // Greater than or equal to the start of today
+                                    $lte: new Date() // Less than the current time
+                                }
+                            },
+                            {
+                                $set: {
+                                    status: 'Present',
+                                    type: 'sign in',
+                                    'date.signInTime': new Date(),
+                                    timestamp: new Date()
+                                }
+                            },
+                            { upsert: true, new: true }
+                        );
+
+                        const tempAttendance = new TempAttendance({
+                            user: checkUser._id,
+                            timestamp: new Date(),
+                            type: 'sign in'
+                        });
+
+                        await tempAttendance.save();
+
+                        log = 'You have successfully signed in for today, thank you!';
+                    }
+                } else {
+                    console.log('You already sign out for today.');
+                    log = 'You already sign out for today, thank you!';
+                }
+            } else {
+                console.log(
+                    'The attendance for the user doesnt exist, please check the user id'
+                );
+                log =
+                    'The attendance for the user doesnt exist, please check the user id';
+            }
         }
 
-        console.log('Attendance records created for all users as absent');
-    } catch (error) {
-        console.error('Error creating attendance records for absent users:', error);
-    }
-};
+        const response = {
+            user: checkUser,
+            message: log
+        };
 
-// Function to delete all qr codes data
-const clearQRCodeData = async () => {
+        // console.log(response);
+        res.json(response);
+    }
+});
+
+app.get('/api/qrcode/get-latest', async function (req, res) {
     try {
-        // Delete all documents in the QRCode collection
-        const result = await QRCode.deleteMany({});
-        console.log(
-            `Deleted ${result.deletedCount} documents from the QRCode collection`
-        );
+        const tempAttendance = await TempAttendance.findOne()
+            .sort({ timestamp: -1 })
+            .lean();
+        var message = '';
+        var response = '';
 
-        const tempAttendance = await TempAttendance.deleteMany({});
+        if (tempAttendance) {
+            const allUser = await User.find();
+            const user = allUser.find(
+                user => user._id.toString() === tempAttendance.user.toString()
+            );
 
-        console.log(
-            `Deleted ${tempAttendance.deletedCount} documents from the temporary attendance`
-        );
+            if (tempAttendance.type === 'sign in') {
+                message = 'Have sign in, welcome!';
+            } else if (tempAttendance.type === 'sign out') {
+                message = 'Have sign out, have a good rest!';
+            } else if (tempAttendance.type === 'meeting') {
+                message = 'Welcome to the meeting room!';
+            } else if (tempAttendance.type === 'events') {
+                message = 'Thank you for your participation!';
+            } else if (tempAttendance.type === 'invalid') {
+                message = 'PLease try again!';
+            }
+
+            response = {
+                temp: tempAttendance,
+                user: user,
+                message: message
+            };
+        } else {
+            // Handle the case when tempAttendance is null
+            message = 'No attendance record found.';
+            response = {
+                temp: null,
+                user: null,
+                message: message
+            };
+        }
+
+        res.json(response);
     } catch (error) {
-        console.error('Error clearing QRCode data:', error);
+        console.error('Error fetching latest scanned data:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
-};
+});
 
-// SCHEDULER
+// ECHARTS
+// USER'S LEAVE TYPE
+app.get('/api/echarts/leaveType/:id', isAuthenticated, async function (req, res) {
+    const { id } = req.params;
+    const userLeave = await UserLeave.findOne({ user: id })
+        .populate('user')
+        .exec();
+
+    if (!userLeave) {
+        return res.status(404).json({ error: 'User leave data not found' });
+    }
+    res.json(userLeave);
+}
+);
+
+app.get('/api/leave/selectedmonth', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+
+    if (user) {
+        try {
+            const selectedMonth = req.query.month;
+
+            // Determine the start and end dates of the selected month
+            const startOfMonth = moment(`${selectedMonth} 1, 2024`, 'MMMM D, YYYY');
+            const endOfMonth = startOfMonth.clone().endOf('month');
+
+            // Retrieve leave records for the selected month
+            const leaveRecords = await Leave.find({
+                'date.start': {
+                    $gte: startOfMonth.toDate(),
+                    $lt: endOfMonth.toDate()
+                }
+            });
+
+            // Initialize count object for each day
+            const leaveCounts = {};
+
+            // Iterate through each day of the month
+            for (let day = 1; day <= endOfMonth.date(); day++) {
+                leaveCounts[day] = { approved: 0, denied: 0 };
+
+                // Check if there are leave records for the current day
+                const recordsForDay = leaveRecords.filter(
+                    record => moment(record.date.start).date() === day
+                );
+
+                // Count approved and denied leaves for the current day
+                recordsForDay.forEach(record => {
+                    const status = record.status;
+
+                    if (status === 'approved') {
+                        leaveCounts[day].approved++;
+                    } else if (status === 'denied') {
+                        leaveCounts[day].denied++;
+                    }
+                });
+            }
+
+            res.json(leaveCounts);
+        } catch (error) {
+            console.error('Error fetching leave data:', error);
+            res.status(500).json({ error: 'Internal Server Error' });
+        }
+    }
+});
+
+app.get('/api/leave/totalcount', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+
+    if (user) {
+        try {
+            const selectedMonth = req.query.month;
+
+            // Determine the start and end dates of the selected month
+            const startOfMonth = moment(`${selectedMonth} 1, 2024`, 'MMMM D, YYYY');
+            const endOfMonth = startOfMonth.clone().endOf('month');
+
+            // Retrieve leave records for the selected month with 'approved' status
+            const leaveRecords = await Leave.find({
+                'date.start': {
+                    $gte: startOfMonth.toDate(),
+                    $lt: endOfMonth.toDate()
+                },
+                status: 'approved'
+            });
+
+            // Calculate the total approved leave count
+            const totalApprovedLeave = leaveRecords.length;
+
+            // Return the result
+            res.json({ totalLeaveCount: totalApprovedLeave });
+        } catch (error) {
+            console.error('Error fetching total leave count:', error);
+            res.status(500).json({ error: 'Internal Server Error' });
+        }
+    }
+});
+
+app.get('/api/leave/pending-invalid', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+
+    if (user) {
+        const currentDate = new Date();
+        const sevenDaysAgo = new Date(currentDate);
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+        // Assuming 'Leave' is your Mongoose model
+        const leaveData = await Leave.find({
+            'date.start': {
+                $gte: sevenDaysAgo,
+                $lte: currentDate
+            }
+        }).select('date.start status invalid');
+
+        // Create an object to store counts for each date
+        const dateCounts = {};
+
+        // Initialize counts for all dates in the range
+        let currentDatePointer = new Date(sevenDaysAgo);
+        while (currentDatePointer <= currentDate) {
+            const formattedDate = currentDatePointer.toISOString().split('T')[0];
+            dateCounts[formattedDate] = { pending: 0, invalid: 0, percentage: 0 };
+            currentDatePointer.setDate(currentDatePointer.getDate() + 1);
+        }
+
+        // Process the retrieved data
+        leaveData.forEach(entry => {
+            const formattedDate = entry.date.start.toISOString().split('T')[0];
+
+            // Update counts for the date
+            dateCounts[formattedDate].pending += entry.status === 'pending' ? 1 : 0;
+            dateCounts[formattedDate].invalid += entry.status === 'invalid' ? 1 : 0;
+        });
+
+        // Calculate percentage for each date
+        Object.keys(dateCounts).forEach(date => {
+            const total = dateCounts[date].pending + dateCounts[date].invalid;
+            dateCounts[date].percentage =
+                total > 0 ? (dateCounts[date].pending / total) * 100 : 0;
+        });
+
+        let totalPending = 0;
+        let totalInvalid = 0;
+
+        Object.keys(dateCounts).forEach(date => {
+            totalPending += dateCounts[date].pending;
+            totalInvalid += dateCounts[date].invalid;
+        });
+
+        const totalPercentagePending =
+            totalPending + totalInvalid > 0
+                ? (totalPending / (totalPending + totalInvalid)) * 100
+                : 0;
+        const totalPercentageInvalid = 100 - totalPercentagePending;
+
+        // find previous 7 days
+
+        const fourteenDaysAgo = new Date(currentDate);
+        fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+
+        const leaveDataPrevious7Days = await Leave.find({
+            'date.start': {
+                $gte: fourteenDaysAgo,
+                $lt: sevenDaysAgo
+            }
+        }).select('date.start status invalid');
+
+        const dateCountsPrevious7Days = {};
+
+        let currentDatePointerPrevious7Days = new Date(fourteenDaysAgo);
+        while (currentDatePointerPrevious7Days < sevenDaysAgo) {
+            const formattedDate = currentDatePointerPrevious7Days
+                .toISOString()
+                .split('T')[0];
+            dateCountsPrevious7Days[formattedDate] = {
+                pending: 0,
+                invalid: 0,
+                percentage: 0
+            };
+            currentDatePointerPrevious7Days.setDate(
+                currentDatePointerPrevious7Days.getDate() + 1
+            );
+        }
+
+        leaveDataPrevious7Days.forEach(entry => {
+            const formattedDate = entry.date.start.toISOString().split('T')[0];
+
+            if (!dateCountsPrevious7Days[formattedDate]) {
+                dateCountsPrevious7Days[formattedDate] = {
+                    pending: 0,
+                    invalid: 0,
+                    percentage: 0
+                };
+            }
+
+            // Update counts for the date
+            dateCountsPrevious7Days[formattedDate].pending +=
+                entry.status === 'pending' ? 1 : 0;
+            dateCountsPrevious7Days[formattedDate].invalid +=
+                entry.status === 'invalid' ? 1 : 0;
+        });
+
+        Object.keys(dateCountsPrevious7Days).forEach(date => {
+            const total =
+                dateCountsPrevious7Days[date].pending +
+                dateCountsPrevious7Days[date].invalid;
+            dateCountsPrevious7Days[date].percentage =
+                total > 0 ? (dateCountsPrevious7Days[date].pending / total) * 100 : 0;
+        });
+
+        let totalPendingPrevious7Days = 0;
+        let totalInvalidPrevious7Days = 0;
+
+        Object.keys(dateCountsPrevious7Days).forEach(date => {
+            totalPendingPrevious7Days += dateCountsPrevious7Days[date].pending;
+            totalInvalidPrevious7Days += dateCountsPrevious7Days[date].invalid;
+        });
+
+        const totalPercentagePendingPrevious7Days =
+            totalPendingPrevious7Days + totalInvalidPrevious7Days > 0
+                ? (totalPendingPrevious7Days /
+                    (totalPendingPrevious7Days + totalInvalidPrevious7Days)) *
+                100
+                : 0;
+
+        const differencePending =
+            totalPercentagePending - totalPercentagePendingPrevious7Days;
+
+        const formattedDifferencePending =
+            (differencePending >= 0 ? '+' : '-') +
+            Math.abs(differencePending).toFixed(2);
+
+        const responseData = {
+            dateCounts,
+            totalPercentagePending,
+            totalPercentageInvalid,
+            totalPending,
+            formattedDifferencePending
+        };
+
+        res.json(responseData);
+    }
+}
+);
+
+app.get('/api/leave/submmitted', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+
+    if (user) {
+        try {
+            const currentDate = new Date();
+            const fourteenDaysAgo = new Date(currentDate);
+            fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+
+            const sevenDaysAgo = new Date(currentDate);
+            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+            // Assuming 'Leave' is your Mongoose model
+            const leaveDataLast14Days = await Leave.find({
+                timestamp: {
+                    $gte: fourteenDaysAgo,
+                    $lte: sevenDaysAgo
+                },
+                status: 'submitted'
+            });
+
+            const leaveDataLast7Days = await Leave.find({
+                timestamp: {
+                    $gte: sevenDaysAgo,
+                    $lte: currentDate
+                },
+                status: 'submitted'
+            });
+
+            // Create an object to store submitted counts for each day
+            const submittedCountsLast14Days = {};
+            const submittedCountsLast7Days = {};
+
+            // Initialize counts for all dates in the range
+            let currentDatePointerLast14Days = new Date(fourteenDaysAgo);
+            let currentDatePointerLast7Days = new Date(sevenDaysAgo);
+
+            while (currentDatePointerLast14Days <= currentDate) {
+                const formattedDate = currentDatePointerLast14Days
+                    .toISOString()
+                    .split('T')[0];
+                submittedCountsLast14Days[formattedDate] = 0;
+                currentDatePointerLast14Days.setDate(
+                    currentDatePointerLast14Days.getDate() + 1
+                );
+            }
+
+            while (currentDatePointerLast7Days <= currentDate) {
+                const formattedDate = currentDatePointerLast7Days
+                    .toISOString()
+                    .split('T')[0];
+                submittedCountsLast7Days[formattedDate] = 0;
+                currentDatePointerLast7Days.setDate(
+                    currentDatePointerLast7Days.getDate() + 1
+                );
+            }
+
+            // Process the retrieved data for the last 14 days
+            leaveDataLast14Days.forEach(entry => {
+                // Assuming 'timestamp' is a valid field in your Leave model
+                const formattedDate = new Date(entry.timestamp)
+                    .toISOString()
+                    .split('T')[0];
+
+                // Update submitted counts for the date
+                submittedCountsLast14Days[formattedDate]++;
+            });
+
+            // Process the retrieved data for the last 7 days
+            leaveDataLast7Days.forEach(entry => {
+                // Assuming 'timestamp' is a valid field in your Leave model
+                const formattedDate = new Date(entry.timestamp)
+                    .toISOString()
+                    .split('T')[0];
+
+                // Update submitted counts for the date
+                submittedCountsLast7Days[formattedDate]++;
+            });
+
+            const totalSubmittedLast14Days = leaveDataLast14Days.length;
+            const totalSubmitted = leaveDataLast7Days.length;
+            const totalPercentageLast7 =
+                (totalSubmitted / (totalSubmitted + totalSubmittedLast14Days)) * 100;
+            const totalPercentageLast14 =
+                (totalSubmittedLast14Days /
+                    (totalSubmitted + totalSubmittedLast14Days)) *
+                100;
+            const differencePercentage = totalPercentageLast7 - totalPercentageLast14;
+            const formattedDifference =
+                totalSubmitted > 0
+                    ? (differencePercentage >= 0 ? '+' : '-') +
+                    Math.abs(differencePercentage).toFixed(2)
+                    : 0 + '%';
+
+            // Create a single JSON object to send as the response
+            const responseDataSubmittedCountsLast7Days = {
+                submittedCountsLast7Days,
+                totalSubmitted,
+                formattedDifference
+            };
+
+            res.json(responseDataSubmittedCountsLast7Days);
+        } catch (error) {
+            console.error('Error:', error);
+            res.status(500).json({ error: 'Internal Server Error' });
+        }
+    }
+});
+
+app.get('/api/leave/status', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+
+    if (user) {
+        const currentDate = new Date();
+        const sevenDaysAgo = new Date(currentDate);
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+        // Assuming 'Leave' is your Mongoose model
+        const leaveDataLast7Days = await Leave.find({
+            timestamp: {
+                $gte: sevenDaysAgo,
+                $lte: currentDate
+            }
+        }).select('status');
+
+        // Initialize counts for each status
+        let submittedCount = 0;
+        let pendingCount = 0;
+        let invalidCount = 0;
+        let deniedCount = 0;
+        let approvedCount = 0;
+
+        // Process the retrieved data for the last 7 days
+        leaveDataLast7Days.forEach(entry => {
+            switch (entry.status) {
+                case 'submitted':
+                    submittedCount++;
+                    break;
+                case 'pending':
+                    pendingCount++;
+                    break;
+                case 'invalid':
+                    invalidCount++;
+                    break;
+                case 'denied':
+                    deniedCount++;
+                    break;
+                case 'approved':
+                    approvedCount++;
+                    break;
+            }
+        });
+
+        // Calculate percentages
+        const totalLeaves = leaveDataLast7Days.length;
+        const percentageSubmitted =
+            totalLeaves > 0 ? ((submittedCount / totalLeaves) * 100).toFixed(0) : 0;
+        const percentagePending =
+            totalLeaves > 0 ? ((pendingCount / totalLeaves) * 100).toFixed(0) : 0;
+        const percentageInvalid =
+            totalLeaves > 0 ? ((invalidCount / totalLeaves) * 100).toFixed(0) : 0;
+        const percentageDenied =
+            totalLeaves > 0 ? ((deniedCount / totalLeaves) * 100).toFixed(0) : 0;
+        const percentageApproved =
+            totalLeaves > 0 ? ((approvedCount / totalLeaves) * 100).toFixed(0) : 0;
+
+        // Create a single JSON object to send as the response
+        const responseDataLast7Days = {
+            percentageSubmitted,
+            percentagePending,
+            percentageInvalid,
+            percentageDenied,
+            percentageApproved,
+            totalLeaves
+        };
+
+        // Respond with the data
+        res.json(responseDataLast7Days);
+    }
+});
+
+app.get('/api/staff/overview/department-section', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+
+    if (user) {
+        const allUser = await User.find();
+
+        // Create Sets to store unique departments and sections
+        const uniqueDepartments = new Set();
+        const uniqueSections = new Set();
+
+        // Iterate through the users and add their departments and sections to the sets
+        allUser.forEach(user => {
+            if (user.department) {
+                uniqueDepartments.add(user.department);
+            }
+
+            if (user.section) {
+                uniqueSections.add(user.section);
+            }
+        });
+
+        // Convert Sets to Arrays
+        const departments = Array.from(uniqueDepartments);
+        const sections = Array.from(uniqueSections);
+
+        // Create objects to store user counts for each department and section
+        const userCountByDepartment = {};
+        const userCountBySection = {};
+
+        // Initialize counts to zero for each department and section
+        departments.forEach(department => {
+            userCountByDepartment[department] = 0;
+        });
+
+        sections.forEach(section => {
+            userCountBySection[section] = 0;
+        });
+
+        // Update counts based on user data
+        allUser.forEach(user => {
+            if (user.department) {
+                userCountByDepartment[user.department]++;
+            }
+
+            if (user.section) {
+                userCountBySection[user.section]++;
+            }
+        });
+
+        const responseData = {
+            userCountByDepartment,
+            userCountBySection
+        };
+
+        res.json(responseData);
+    }
+}
+);
+
+//SCHEDULER
 
 // CHECK EACH LEAVE VALIDITY
 cron.schedule(
@@ -4540,12 +5730,12 @@ cron.schedule(
     }
 );
 
-// UPDATE ATTENDANCE TO INVALID AT 5PM
+// UPDATE ATTENDANCE TO INVALID AT 
 cron.schedule(
-    '0 17 * * *',
+    '59 23 * * *',
     () => {
         console.log('Running cron job to update attendance');
-        updateAttendance();
+        updateAttendanceEndOfDays();
     },
     {
         scheduled: true,
@@ -4565,1381 +5755,6 @@ cron.schedule(
         timezone: 'Asia/Kuala_Lumpur' // Adjust timezone accordingly
     }
 );
-
-// NOTIFICATIONS
-app.get('/notifications/history', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    })
-        .populate('sender')
-        .sort({ timestamp: -1 });
-
-    // find notification based on date
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Set time to the beginning of the day
-
-    const tomorrow = new Date(today);
-    tomorrow.setDate(today.getDate() + 1);
-
-    const yesterday = new Date(today);
-    yesterday.setDate(today.getDate() - 1);
-
-    const firstDayOfWeek = new Date(today);
-    firstDayOfWeek.setDate(today.getDate() - today.getDay()); // Set to the first day of the week (Sunday)
-    firstDayOfWeek.setHours(0, 0, 0, 0); // Set time to the beginning of the day
-
-    const lastDayOfWeek = new Date(firstDayOfWeek);
-    lastDayOfWeek.setDate(firstDayOfWeek.getDate() + 6); // Set to the last day of the week (Saturday)
-    lastDayOfWeek.setHours(23, 59, 59, 999);
-
-    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-    const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-
-    const notificationsToday = await Notification.find({
-        recipient: user._id,
-        timestamp: {
-            $gte: today,
-            $lt: tomorrow
-        }
-    })
-        .populate('sender')
-        .sort({ timestamp: -1, read: -1 });
-
-    const notificationsYesterday = await Notification.find({
-        recipient: user._id,
-        timestamp: {
-            $gte: yesterday,
-            $lt: today
-        }
-    })
-        .populate('sender')
-        .sort({ timestamp: -1, read: -1 });
-
-    const notificationsThisWeek = await Notification.find({
-        recipient: user._id,
-        timestamp: {
-            $gte: firstDayOfWeek,
-            $lte: lastDayOfWeek
-        }
-    })
-        .populate('sender')
-        .sort({ timestamp: -1, read: -1 });
-
-    const notificationsThisMonth = await Notification.find({
-        recipient: user._id,
-        timestamp: {
-            $gte: firstDayOfMonth,
-            $lte: lastDayOfMonth
-        }
-    })
-        .populate('sender')
-        .sort({ timestamp: -1, read: -1 });
-
-    if (user) {
-        res.render('notifications', {
-            user: user,
-            notifications: notifications,
-            notificationsToday: notificationsToday,
-            notificationsYesterday: notificationsYesterday,
-            notificationsThisWeek: notificationsThisWeek,
-            notificationsThisMonth: notificationsThisMonth
-        });
-    }
-});
-
-app.get('/markAsRead/:id', isAuthenticated, async function (req, res) {
-    const id = req.params.id;
-    console.log(id);
-
-    const update = await Notification.findByIdAndUpdate(
-        { _id: id },
-        { read: true },
-        { new: true }
-    );
-
-    if (update) {
-        res.redirect(update.url);
-    } else {
-        console.log('There is error for the update for notifications');
-        res.redirect('/');
-    }
-});
-
-app.get('/markAllAsRead', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    })
-        .populate('sender')
-        .sort({ timestamp: -1 });
-
-    const update = await Notification.updateMany(
-        { recipient: user._id },
-        { read: true },
-        { new: true }
-    );
-
-    if (update) {
-        res.redirect('/');
-    } else {
-        console.log('There is error for the update for notifications');
-        res.redirect('/');
-    }
-});
-
-// FILES
-
-// UPLOAD
-app.post('/files/upload', isAuthenticated, async (reqFiles, resFiles) => {
-    const username = reqFiles.user.username;
-    const user = await User.findOne({ username: username });
-
-    if (!reqFiles.files || Object.keys(reqFiles.files).length === 0) {
-        console.log('There is no files selected');
-    } else {
-        console.log('There are files try to be uploaded');
-
-        const uuid = reqFiles.body.uuid;
-        const origin = reqFiles.body.origin;
-
-        // No file with the report ID found, proceed with file upload
-        for (const file of Object.values(reqFiles.files)) {
-            const upload = __dirname + '/public/uploads/' + file.name;
-            const pathUpload = '/uploads/' + file.name;
-            const today = new Date();
-            const type = path.extname(file.name);
-
-            await file.mv(upload);
-
-            // Calculate file size in megabytes
-            const fileSizeInBytes = (await fs.stat(upload)).size;
-            const fileSizeInMB = fileSizeInBytes / (1024 * 1024);
-
-            console.log(fileSizeInMB);
-
-            const newFile = new File({
-                uuid: uuid,
-                user: user._id,
-                name: file.name,
-                path: pathUpload,
-                date: today,
-                type: type,
-                origin: origin,
-                size: fileSizeInMB.toFixed(2) + ' MB'
-            });
-
-            newFile.save();
-        }
-
-        console.log('Done upload files!');
-    }
-});
-
-// DOWNLOAD
-app.get('/files/download/:id', async function (req, res) {
-    const _id = req.params.id;
-
-    const file = await File.findOne({ _id: _id });
-
-    if (file) {
-        const filePath = __dirname + '/public/uploads/' + file.name;
-
-        res.download(filePath, file.name);
-        console.log('Downloading file');
-    }
-});
-
-// DELETE USING FILES ID
-app.get('/files/delete/:id', async function (req, res) {
-    const _id = req.params.id;
-
-    const deleted = await File.findOneAndDelete({ _id: _id });
-
-    if (deleted) {
-        const filePath = __dirname + '/public/uploads/' + deleted.name;
-        console.log('File selected is deleted!');
-        await fs.unlink(filePath);
-
-        res.redirect('/');
-    } else {
-        console.log('There must be something wrong in deleting the files!');
-        res.redirect('/');
-    }
-});
-
-// DELETE USING FILES UUID
-app.get('/files/delete/cancel/:uuid', async function (req, res) {
-    const uuid = req.params.uuid;
-
-    const filesToDelete = await File.find({ uuid: uuid });
-    const deletedFiles = await File.deleteMany({ uuid: uuid });
-
-    if (deletedFiles.deletedCount > 0) {
-        console.log(`${deletedFiles.deletedCount} files are deleted!`);
-
-        for (const deletedFile of filesToDelete) {
-            const filePath = __dirname + '/public/uploads/' + deletedFile.name;
-            await fs.unlink(filePath);
-        }
-
-        res.redirect('/');
-    } else {
-        console.log('No files found or there was an error deleting files.');
-        res.redirect('/');
-    }
-});
-
-// FECTH API
-
-app.post('/status-update', isAuthenticated, async (req, res) => {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const status = req.body.status;
-
-    const update = await Info.findOneAndUpdate(
-        { user: user._id },
-        { $set: { status: status } },
-        { upsert: true, new: true, useFindAndModify: false }
-    );
-
-    if (update) {
-        console.log('Status update accomplished! ');
-        res.redirect('/');
-    } else {
-        console.log('Status update failed!');
-        res.redirect('/');
-    }
-});
-
-// HUMAN RESOURCES
-app.get(
-    '/human-resource/staff-members/overview',
-    isAuthenticated,
-    async function (req, res) {
-        const username = req.user.username;
-        const user = await User.findOne({ username: username });
-        const notifications = await Notification.find({
-            recipient: user._id,
-            read: false
-        }).populate('sender');
-
-        const allUser = await User.find();
-        const uniqueDepartments = new Set();
-        const uniqueSection = new Set();
-
-        allUser.forEach(user => {
-            if (user.department) {
-                uniqueDepartments.add(user.department);
-            }
-        });
-
-        allUser.forEach(user => {
-            if (user.section) {
-                uniqueSection.add(user.section);
-            }
-        });
-
-        const departments = Array.from(uniqueDepartments);
-        const sections = Array.from(uniqueSection);
-
-        if (user) {
-            res.render('hr-staffmembers-overview', {
-                user: user,
-                notifications: notifications,
-                uuid: uuidv4(),
-                departments: departments,
-                sections: sections,
-                // all data
-                allUser: allUser,
-                show: '',
-                alert: ''
-            });
-        }
-    }
-);
-
-app
-    .get(
-        '/human-resource/staff-members/add-staff',
-        isAuthenticated,
-        async function (req, res) {
-            const username = req.user.username;
-            const user = await User.findOne({ username: username });
-            const notifications = await Notification.find({
-                recipient: user._id,
-                read: false
-            }).populate('sender');
-
-            if (user) {
-                res.render('hr-staffmembers-addstaff', {
-                    user: user,
-                    notifications: notifications,
-                    uuid: uuidv4(),
-                    // all data
-                    show: '',
-                    alert: ''
-                });
-            }
-        }
-    )
-    .post(
-        '/human-resource/staff-members/add-staff',
-        isAuthenticated,
-        async function (req, res) {
-            const username = req.user.username;
-            const user1 = await User.findOne({ username: username });
-            const notifications = await Notification.find({
-                recipient: user1._id,
-                read: false
-            }).populate('sender');
-
-            // for successful
-            const allUser = await User.find();
-            const uniqueDepartments = new Set();
-            const uniqueSection = new Set();
-
-            allUser.forEach(user => {
-                if (user.department) {
-                    uniqueDepartments.add(user.department);
-                }
-            });
-
-            allUser.forEach(user => {
-                if (user.section) {
-                    uniqueSection.add(user.section);
-                }
-            });
-
-            const departments = Array.from(uniqueDepartments);
-            const sections = Array.from(uniqueSection);
-
-            if (user1) {
-                if (
-                    !req.body.fullname ||
-                    !req.body.username ||
-                    !req.body.email ||
-                    !req.body.password ||
-                    !req.body.position ||
-                    !req.body.grade ||
-                    !req.body.department ||
-                    !req.body.gender
-                ) {
-                    res.render('hr-staffmembers-addstaff', {
-                        user: user1,
-                        notifications: notifications,
-                        uuid: uuidv4(),
-                        show: 'show',
-                        alert: 'Sign up unsuccessful'
-                    });
-                }
-
-                const newUser = new User({
-                    fullname: req.body.fullname,
-                    username: req.body.username,
-                    email: req.body.email,
-                    nric: '',
-                    phone: '',
-                    profile: '',
-                    age: 0,
-                    address: '',
-                    dateEmployed: '1974-07-04T00:00:00.000+00:00',
-                    birthdate: '1974-07-04T00:00:00.000+00:00',
-                    department: req.body.department,
-                    section: req.body.section,
-                    gender: req.body.gender,
-                    grade: req.body.grade,
-                    position: req.body.position,
-                    education: '',
-                    marital: 'single',
-                    classification: req.body.class,
-                    isChiefExec: false,
-                    isDeputyChiefExec: false,
-                    isHeadOfDepartment: false,
-                    isHeadOfSection: false,
-                    isAdmin: false,
-                    isManagement: false,
-                    isPersonalAssistant: false
-                });
-
-                User.register(newUser, req.body.password, function (err, user) {
-                    if (err) {
-                        console.log(err);
-                        res.render('hr-staffmembers-addstaff', {
-                            user: user1,
-                            notifications: notifications,
-                            uuid: uuidv4(),
-                            show: 'show',
-                            alert: err
-                        });
-                    } else {
-                        const newUserLeave = new UserLeave({
-                            user: user._id,
-                            annual: { leave: 14, taken: 0 },
-                            sick: { leave: 14, taken: 0 },
-                            sickExtended: { leave: 60, taken: 0 },
-                            emergency: { leave: 0, taken: 0 },
-                            paternity: { leave: 3, taken: 0 },
-                            maternity: { leave: 60, taken: 0 },
-                            bereavement: { leave: 3, taken: 0 },
-                            study: { leave: 3, taken: 0 },
-                            marriage: { leave: 3, taken: 0 },
-                            attendExam: { leave: 5, taken: 0 },
-                            hajj: { leave: 40, taken: 0 },
-                            unpaid: { taken: 0 },
-                            special: { leave: 3, taken: 0 }
-                        });
-
-                        newUserLeave.save();
-
-                        passport.authenticate('local')(req, res, function () {
-                            res.render('hr-staffmembers-overview', {
-                                user: user1,
-                                notifications: notifications,
-                                uuid: uuidv4(),
-                                departments: departments,
-                                sections: sections,
-                                // all data
-                                allUser: allUser,
-                                show: 'show',
-                                alert: 'Sign up successful'
-                            });
-                        });
-                    }
-                });
-            }
-        }
-    );
-
-app.get(
-    '/human-resource/leave/overview',
-    isAuthenticated,
-    async function (req, res) {
-        const username = req.user.username;
-        const user = await User.findOne({ username: username });
-        const notifications = await Notification.find({
-            recipient: user._id,
-            read: false
-        }).populate('sender');
-
-        const allLeave = await Leave.find();
-        const allUser = await User.find();
-
-        if (user) {
-            res.render('hr-leave-overview', {
-                user: user,
-                notifications: notifications,
-                uuid: uuidv4(),
-                // all data
-                allLeave: allLeave,
-                allUser: allUser
-            });
-        }
-    }
-);
-
-app.get(
-    '/human-resource/leave/balances',
-    isAuthenticated,
-    async function (req, res) {
-        const username = req.user.username;
-        const user = await User.findOne({ username: username });
-        const notifications = await Notification.find({
-            recipient: user._id,
-            read: false
-        }).populate('sender');
-
-        const allUserLeave = await UserLeave.find();
-        const allUser = await User.find();
-
-        if (user) {
-            res.render('hr-leave-balances', {
-                user: user,
-                notifications: notifications,
-                uuid: uuidv4(),
-                // all data
-                allUserLeave: allUserLeave,
-                allUser: allUser
-            });
-        }
-    }
-);
-
-app.get(
-    '/human-resource/attendance/overview',
-    isAuthenticated,
-    async function (req, res) {
-        const username = req.user.username;
-        const user = await User.findOne({ username: username });
-        const notifications = await Notification.find({
-            recipient: user._id,
-            read: false
-        })
-            .populate('sender')
-            .sort({ timestamp: -1 });
-
-        if (user) {
-            const currentDate = new Date();
-            const startOfToday = new Date(
-                currentDate.getFullYear(),
-                currentDate.getMonth(),
-                currentDate.getDate(),
-                0,
-                0,
-                0
-            );
-            const endOfToday = new Date(
-                currentDate.getFullYear(),
-                currentDate.getMonth(),
-                currentDate.getDate(),
-                23,
-                59,
-                59
-            );
-
-            const attendance = await Attendance.find({
-                timestamp: { $gte: startOfToday, $lte: endOfToday }
-            }).sort({ timestamp: -1 });
-
-            const allUser = await User.find();
-
-            res.render('hr-attendance-overview', {
-                user: user,
-                notifications: notifications,
-                uuid: uuidv4(),
-                allUser: allUser,
-                attendance: attendance
-            });
-        }
-    }
-);
-
-// Function to generate a unique identifier (replace this with your own logic)
-const generateUniqueIdentifier = () => {
-    return (
-        Math.random().toString(36).substring(2, 15) +
-        Math.random().toString(36).substring(2, 15)
-    );
-};
-
-// ATTENDACE
-app.get('/attendance', async function (req, res) {
-    const uniqueIdentifier = generateUniqueIdentifier();
-
-    res.render('attendance', {
-        uuid: uuidv4(),
-        uniqueIdentifier: uniqueIdentifier
-    });
-});
-
-// ATTENDANCE TODAY FOR KP/KB
-app.get(
-    '/attendance/today/department/section',
-    isAuthenticated,
-    async function (req, res) {
-        const username = req.user.username;
-        const user = await User.findOne({ username: username });
-        const notifications = await Notification.find({
-            recipient: user._id,
-            read: false
-        })
-            .populate('sender')
-            .sort({ timestamp: -1 });
-
-        if (user) {
-            res.render('attendance-today', {
-                user: user,
-                notifications: notifications,
-                uuid: uuidv4()
-            });
-        }
-    }
-);
-
-// SCAN QR GENERATED
-app.get('/scan-qr', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    })
-        .populate('sender')
-        .sort({ timestamp: -1 });
-
-    if (user) {
-        res.render('scan', {
-            user: user,
-            notifications: notifications,
-            uuid: uuidv4()
-        });
-    }
-});
-
-//ATTENDANCE TODAY FOR ATTENDANCE PAGE
-app.get('/api/attendance/today', async function (req, res) {
-    try {
-        // Get today's date
-        const today = new Date();
-        today.setHours(0, 0, 0, 0); // Set hours, minutes, seconds, and milliseconds to 0 to get the start of the day
-
-        // Get the current time
-        const currentTime = new Date();
-
-        // Find attendance data for today within the specified time range
-        const attendanceData = await Attendance.find({
-            'date.signInTime': {
-                $gte: today, // Find records where signInTime is greater than or equal to today
-                $lte: currentTime // and less than or equal to the current time
-            }
-        })
-            .sort({ timestamp: -1 })
-            .limit(2)
-            .lean();
-
-        // Get all users
-        const allUsers = await User.find().lean();
-
-        // Filter the attendance data and populate user information
-        const filteredData = attendanceData.map(entry => {
-            const user = allUsers.find(
-                user => user._id.toString() === entry.user.toString()
-            );
-
-            const getInitials = str => {
-                const names = str.split(' '); // Split the full name into an array of names
-                const initials = names
-                    .slice(0, 2)
-                    .map(name => name.charAt(0).toUpperCase()); // Get the first letter of each name and capitalize it
-                return initials.join(''); // Join the initials into a single string
-            };
-
-            const formatDateTime = dateTime => {
-                const options = {
-                    timeZone: 'Asia/Kuala_Lumpur',
-                    hour12: false,
-                    hour: '2-digit',
-                    minute: '2-digit'
-                };
-                return dateTime.toLocaleTimeString('en-MY', options);
-            };
-
-            return {
-                user: user
-                    ? {
-                        _id: user._id,
-                        fullname: user.fullname,
-                        initials: getInitials(user.fullname),
-                        username: user.username,
-                        department: user.department,
-                        section: user.section,
-                        profile: user.profile
-                        // Add other user fields as needed
-                    }
-                    : null,
-                datetime: formatDateTime(new Date(entry.date.signInTime)),
-                signInTime: entry.date.signInTime,
-                signOutTime: entry.date.signOutTime,
-                status: entry.status,
-                type: entry.type
-            };
-        });
-
-        // Send the filtered attendance data for today to the client
-        res.json(filteredData);
-    } catch (err) {
-        console.error('Error fetching attendance data for today:', err);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-});
-
-//GET ALL ATTENDANCE DATA
-app.post(
-    '/api/data/all-attendance',
-    isAuthenticated,
-    async function (req, res) {
-        const selectedDate = req.body.date;
-        const searchQuery = req.query.search || ''; // Get search query from request query params
-        const page = parseInt(req.query.page) || 1; // Get page number from request query params
-        const limit = 10; // Number of items per page
-        const skip = (page - 1) * limit; // Calculate the number of items to skip
-
-        // Extract month and year from the selected date
-        const [month, year] = selectedDate.split('/');
-
-        try {
-            // Create a set of all possible status types
-            const allStatusTypes = ['Present', 'Absent', 'Late', 'Invalid', 'Leave'];
-            const allUser = await User.find();
-
-            // Query attendance records based on the month and year
-            const attendanceData = await Attendance.aggregate([
-                // Match attendance records for the selected month and year
-                {
-                    $match: {
-                        timestamp: {
-                            $gte: new Date(`${year}-${month}-01`),
-                            $lt: new Date(`${year}-${parseInt(month) + 1}-01`)
-                        }
-                    }
-                },
-                // Group by user and status, count occurrences
-                {
-                    $group: {
-                        _id: { user: '$user', status: '$status' },
-                        count: { $sum: 1 }
-                    }
-                }
-            ]);
-
-            const userStatusCounts = {};
-
-            // Iterate over all users and initialize their status counts
-            allUser.forEach(user => {
-                userStatusCounts[user._id] = {};
-                allStatusTypes.forEach(statusType => {
-                    userStatusCounts[user._id][statusType] = 0;
-                });
-            });
-
-            // Update status counts based on the attendance data
-            attendanceData.forEach(({ _id, count }) => {
-                const { user, status } = _id;
-                userStatusCounts[user][status] = count;
-            });
-
-            // Combine populated attendance data with user status counts
-            const combinedData = allUser.map(user => {
-                const statusCounts = userStatusCounts[user._id];
-                return {
-                    user: {
-                        _id: user._id,
-                        username: user.username,
-                        fullname: user.fullname,
-                        section: user.section,
-                        department: user.department
-                    },
-                    statusCounts: statusCounts
-                };
-            });
-
-            // Filter combinedData based on the search query
-            const filteredData = combinedData.filter(item => {
-                const { fullname, section, department, username } = item.user;
-                const regex = new RegExp(searchQuery, 'i');
-                return (
-                    regex.test(fullname) ||
-                    regex.test(section) ||
-                    regex.test(department) ||
-                    regex.test(username)
-                );
-            });
-
-            // Paginate the filtered data
-            const paginatedData = filteredData.slice(skip, skip + limit);
-
-            const response = {
-                data1: paginatedData,
-                data2: filteredData
-            };
-
-            console.log(filteredData.length);
-
-            // Respond with the paginated and filtered attendance data
-            res.json(response);
-        } catch (error) {
-            console.error('Error fetching attendance data:', error);
-            res.status(500).json({ error: 'Internal server error' });
-        }
-    }
-);
-
-// HR VIEW FOR TODAYS ATTENDANCE
-app.post(
-    '/api/data/all-attendance/today',
-    isAuthenticated,
-    async function (req, res) {
-        const searchQuery = req.query.search || ''; // Get search query from request query params
-        const page = parseInt(req.query.page) || 1; // Get page number from request query params
-        const limit = 5; // Number of items per page
-        const skip = (page - 1) * limit;
-
-        // Get today's date
-        const today = new Date();
-        today.setHours(0, 0, 0, 0); // Set hours, minutes, seconds, and milliseconds to 0 to get the start of the day
-
-        try {
-            // Query attendance records for today
-            const attendanceData = await Attendance.aggregate([
-                // Match attendance records for today
-                {
-                    $match: {
-                        timestamp: {
-                            $gte: today, // Find records where timestamp is greater than or equal to today
-                            $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000) // Less than tomorrow
-                        }
-                    }
-                },
-                // Group by user and status, include attendance type, sign-in time, and sign-out time
-                {
-                    $group: {
-                        _id: {
-                            user: '$user',
-                            status: '$status',
-                            type: '$type',
-                            signInTime: '$date.signInTime',
-                            signOutTime: '$date.signOutTime',
-                            timestamp: '$timestamp'
-                        },
-                        count: { $sum: 1 }
-                    }
-                }
-            ]);
-
-            // Collect unique user IDs from attendanceData
-            const userIds = attendanceData.map(record => record._id.user);
-
-            // Query all users from the database
-            const allUser = await User.find({});
-
-            // Create a map to quickly access user details by user ID
-            const userMap = {};
-            allUser.forEach(user => {
-                userMap[user._id] = {
-                    _id: user._id,
-                    username: user.username,
-                    fullname: user.fullname,
-                    section: user.section,
-                    department: user.department
-                };
-            });
-
-            // Create the combined data from attendanceData and userMap
-            const combinedData = allUser.map(user => {
-                const attendanceRecord = attendanceData.find(record =>
-                    record._id.user.equals(user._id)
-                );
-                return attendanceRecord
-                    ? {
-                        user: userMap[user._id],
-                        status: attendanceRecord._id.status,
-                        type: attendanceRecord._id.type,
-                        signInTime: attendanceRecord._id.signInTime,
-                        signOutTime: attendanceRecord._id.signOutTime,
-                        timestamp: attendanceRecord._id.timestamp,
-                        count: attendanceRecord.count
-                    }
-                    : {
-                        user: userMap[user._id],
-                        status: 'Absent',
-                        type: 'Nil',
-                        signInTime: null,
-                        signOutTime: null,
-                        timestamp: null,
-                        count: 0
-                    };
-            });
-
-            // Sort combinedData based on timestamp, placing users without attendance records at the end
-            combinedData.sort((a, b) => {
-                if (!a.timestamp) return 1;
-                if (!b.timestamp) return -1;
-                return new Date(a.timestamp) - new Date(b.timestamp);
-            });
-
-            // Filter combinedData based on the search query
-            const filteredData = combinedData.filter(item => {
-                const { fullname, section, department, username } = item.user;
-                const { status, type, signInTime, signOutTime } = item;
-                const regex = new RegExp(searchQuery, 'i');
-                return (
-                    regex.test(fullname) ||
-                    regex.test(section) ||
-                    regex.test(department) ||
-                    regex.test(username) ||
-                    regex.test(status) ||
-                    regex.test(type) ||
-                    (signInTime &&
-                        regex.test(
-                            new Date(signInTime).toLocaleTimeString('en-MY', {
-                                hour: 'numeric',
-                                minute: 'numeric',
-                                hour12: true,
-                                timeZone: 'Asia/Kuala_Lumpur'
-                            })
-                        )) ||
-                    (signOutTime &&
-                        regex.test(
-                            new Date(signOutTime).toLocaleTimeString('en-MY', {
-                                hour: 'numeric',
-                                minute: 'numeric',
-                                hour12: true,
-                                timeZone: 'Asia/Kuala_Lumpur'
-                            })
-                        ))
-                );
-            });
-
-            // Paginate the filtered data
-            const paginatedData = filteredData.slice(skip, skip + limit);
-
-            // Calculate counts for present, absent, late, leave statuses
-            const totalCounts = combinedData.reduce(
-                (acc, item) => {
-                    acc.total++;
-                    acc[item.status.toLowerCase()] =
-                        (acc[item.status.toLowerCase()] || 0) + 1;
-                    return acc;
-                },
-                { total: 0, present: 0, absent: 0, late: 0, leave: 0, invalid: 0 }
-            );
-
-            const response = {
-                data1: paginatedData,
-                data2: filteredData,
-                counts: totalCounts
-            };
-
-            // Respond with the paginated and filtered attendance data
-            res.json(response);
-        } catch (error) {
-            console.error('Error:', error);
-            res.status(500).json({ error: 'Internal Server Error' });
-        }
-    }
-);
-
-app.post(
-    '/api/data/all-attendance/today/department/section',
-    isAuthenticated,
-    async function (req, res) {
-        const searchQuery = req.query.search || ''; // Get search query from request query params
-        const page = parseInt(req.query.page) || 1; // Get page number from request query params
-        const limit = 10; // Number of items per page
-        const skip = (page - 1) * limit;
-
-        const username = req.user.username;
-        const user = await User.findOne({ username: username });
-
-        // Get today's date
-        const today = new Date();
-        today.setHours(0, 0, 0, 0); // Set hours, minutes, seconds, and milliseconds to 0 to get the start of the day
-
-        try {
-            // Query attendance records for today
-            const attendanceData = await Attendance.aggregate([
-                // Match attendance records for today
-                {
-                    $match: {
-                        timestamp: {
-                            $gte: today, // Find records where timestamp is greater than or equal to today
-                            $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000) // Less than tomorrow
-                        }
-                    }
-                },
-                // Group by user and status, include attendance type, sign-in time, and sign-out time
-                {
-                    $group: {
-                        _id: {
-                            user: '$user',
-                            status: '$status',
-                            type: '$type',
-                            signInTime: '$date.signInTime',
-                            signOutTime: '$date.signOutTime',
-                            timestamp: '$timestamp'
-                        },
-                        count: { $sum: 1 }
-                    }
-                }
-            ]);
-
-            // Collect unique user IDs from attendanceData
-            const userIds = attendanceData.map(record => record._id.user);
-
-            var allUser;
-            if (user.isHeadOfDepartment) {
-                // Query all users from the database
-                allUser = await User.find({ department: user.department });
-            } else if (user.isHeadOfSection) {
-                // Query all users from the database
-                allUser = await User.find({ section: user.section });
-            }
-
-            // Create a map to quickly access user details by user ID
-            const userMap = {};
-            allUser.forEach(user => {
-                userMap[user._id] = {
-                    _id: user._id,
-                    username: user.username,
-                    fullname: user.fullname,
-                    section: user.section,
-                    department: user.department
-                };
-            });
-
-            // Create the combined data from attendanceData and userMap
-            const combinedData = allUser.map(user => {
-                const attendanceRecord = attendanceData.find(record =>
-                    record._id.user.equals(user._id)
-                );
-                return attendanceRecord
-                    ? {
-                        user: userMap[user._id],
-                        status: attendanceRecord._id.status,
-                        type: attendanceRecord._id.type,
-                        signInTime: attendanceRecord._id.signInTime,
-                        signOutTime: attendanceRecord._id.signOutTime,
-                        timestamp: attendanceRecord._id.timestamp,
-                        count: attendanceRecord.count
-                    }
-                    : {
-                        user: userMap[user._id],
-                        status: 'Absent',
-                        type: 'Nil',
-                        signInTime: null,
-                        signOutTime: null,
-                        timestamp: null,
-                        count: 0
-                    };
-            });
-
-            // Sort combinedData based on timestamp, placing users without attendance records at the end
-            combinedData.sort((a, b) => {
-                if (!a.timestamp) return 1;
-                if (!b.timestamp) return -1;
-                return new Date(a.timestamp) - new Date(b.timestamp);
-            });
-
-            // Filter combinedData based on the search query
-            const filteredData = combinedData.filter(item => {
-                const { fullname, section, department, username } = item.user;
-                const { status, type, signInTime, signOutTime } = item;
-                const regex = new RegExp(searchQuery, 'i');
-                return (
-                    regex.test(fullname) ||
-                    regex.test(section) ||
-                    regex.test(department) ||
-                    regex.test(username) ||
-                    regex.test(status) ||
-                    regex.test(type) ||
-                    (signInTime &&
-                        regex.test(
-                            new Date(signInTime).toLocaleTimeString('en-MY', {
-                                hour: 'numeric',
-                                minute: 'numeric',
-                                hour12: true,
-                                timeZone: 'Asia/Kuala_Lumpur'
-                            })
-                        )) ||
-                    (signOutTime &&
-                        regex.test(
-                            new Date(signOutTime).toLocaleTimeString('en-MY', {
-                                hour: 'numeric',
-                                minute: 'numeric',
-                                hour12: true,
-                                timeZone: 'Asia/Kuala_Lumpur'
-                            })
-                        ))
-                );
-            });
-
-            // Paginate the filtered data
-            const paginatedData = filteredData.slice(skip, skip + limit);
-
-            // Calculate counts for present, absent, late, leave statuses
-            const totalCounts = combinedData.reduce(
-                (acc, item) => {
-                    acc.total++;
-                    acc[item.status.toLowerCase()] =
-                        (acc[item.status.toLowerCase()] || 0) + 1;
-                    return acc;
-                },
-                { total: 0, present: 0, absent: 0, late: 0, leave: 0, invalid: 0 }
-            );
-
-            const response = {
-                data1: paginatedData,
-                data2: filteredData,
-                counts: totalCounts
-            };
-
-            // Respond with the paginated and filtered attendance data
-            res.json(response);
-        } catch (error) {
-            console.error('Error:', error);
-            res.status(500).json({ error: 'Internal Server Error' });
-        }
-    }
-);
-
-// QR GENERATED
-app.get('/generate-qr', async (req, res) => {
-    const uniqueIdentifier = generateUniqueIdentifier();
-
-    try {
-        const qrCodeImage = await qr.toDataURL(uniqueIdentifier, {
-            type: 'image/png',
-            errorCorrectionLevel: 'H',
-            color: { dark: '#3874ff', light: '#ffffff' }, // Set the color (dark is the main color, light is the background color)
-            width: 400,
-            margin: 0 // Set the width of the QR code
-        });
-
-        res.json({ qrCodeImage, uniqueIdentifier });
-    } catch (error) {
-        console.error('Error generating QR code:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-});
-
-app.post('/save-qr-data', async function (req, res) {
-    const qrData = req.body.qrData;
-    // console.log('Received QR code data:', qrData);
-
-    // Save the raw URL in the database
-    await QRCode.create({
-        uniqueId: qrData,
-        createdAt: new Date()
-    });
-
-    res.status(200).send('QR code data received and saved successfully');
-});
-
-app.post('/process-scanned-data', isAuthenticated, async function (req, res) {
-    const scannedData = req.body.scannedData;
-    const id = req.body.id;
-
-    console.log('Received scanned data from client:', scannedData);
-    console.log('Id received is:', id);
-
-    const checkUser = await User.findOne({ _id: id });
-
-    var log = '';
-
-    if (checkUser) {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        const checkQrCode = await QRCode.findOne({ uniqueId: id });
-
-        if (checkQrCode) {
-            console.log('You qr code is invalid, try to scan latest qr code!');
-
-            log = 'You qr code is invalid, try to scan latest qr code!';
-        } else {
-
-            const existingAttendance = await Attendance.findOne({
-
-                user: checkUser._id,
-                timestamp: {
-                    $gte: today,
-                    $lte: new Date()
-                }
-            });
-
-            if (existingAttendance) {
-                if (existingAttendance.date.signInTime !== null && existingAttendance.date.signOutTime === null) {
-                    await Attendance.findOneAndUpdate(
-                        {
-                            user: checkUser._id
-                        },
-                        {
-                            'date.signOutTime': new Date(),
-                            type: 'sign out'
-                        },
-                        {
-                            upsert: true,
-                            new: true
-                        }
-                    );
-
-                    console.log('You have successfully signed out for today, thank you');
-
-                    const tempAttendance = new TempAttendance({
-                        user: checkUser._id,
-                        timestamp: new Date(),
-                        type: 'sign out'
-                    });
-
-                    await tempAttendance.save();
-
-                    log = 'You have successfully signed out for today, thank you!';
-                } else if (
-                    existingAttendance.date.signInTime === null &&
-                    existingAttendance.date.signOutTime === null
-                ) {
-                    const currentTime = new Date();
-                    const pstTime = currentTime.toLocaleString('en-MY', {
-                        timeZone: 'Asia/Kuala_Lumpur',
-                        hour12: false,
-                    });
-                    const pstHourString = pstTime.split(',')[1].trim().split(':')[0];
-                    const pstHour = parseInt(pstHourString);
-
-                    console.log(pstHour);
-
-                    if (pstHour >= 8) {
-                        console.log('Clock in late confirmed');
-
-                        await Attendance.findOneAndUpdate(
-                            {
-                                user: checkUser._id,
-                                timestamp: {
-                                    $gte: today, // Greater than or equal to the start of today
-                                    $lte: new Date() // Less than the current time
-                                }
-                            },
-                            {
-                                $set: {
-                                    status: 'Late',
-                                    type: 'sign in',
-                                    'date.signInTime': new Date(),
-                                    timestamp: new Date()
-                                }
-                            },
-                            { upsert: true, new: true }
-                        );
-
-                        const tempAttendance = new TempAttendance({
-                            user: checkUser._id,
-                            timestamp: new Date(),
-                            type: 'sign in'
-                        });
-
-                        await tempAttendance.save();
-
-                        log =
-                            'You have successfully signed in as late for today, thank you!';
-                    } else {
-                        await Attendance.findOneAndUpdate(
-                            {
-                                user: checkUser._id,
-                                timestamp: {
-                                    $gte: today, // Greater than or equal to the start of today
-                                    $lte: new Date() // Less than the current time
-                                }
-                            },
-                            {
-                                $set: {
-                                    status: 'Present',
-                                    type: 'sign in',
-                                    'date.signInTime': new Date(),
-                                    timestamp: new Date()
-                                }
-                            },
-                            { upsert: true, new: true }
-                        );
-
-                        const tempAttendance = new TempAttendance({
-                            user: checkUser._id,
-                            timestamp: new Date(),
-                            type: 'sign in'
-                        });
-
-                        await tempAttendance.save();
-
-                        log = 'You have successfully signed in for today, thank you!';
-                    }
-                } else {
-                    console.log('You already sign out for today.');
-                    log = 'You already sign out for today, thank you!';
-                }
-            } else {
-                console.log(
-                    'The attendance for the user doesnt exist, please check the user id'
-                );
-                log =
-                    'The attendance for the user doesnt exist, please check the user id';
-            }
-        }
-
-        const response = {
-            user: checkUser,
-            message: log
-        };
-
-        // console.log(response);
-        res.json(response);
-    }
-});
-
-app.get('/get-latest-scanned-data', async function (req, res) {
-    try {
-        const tempAttendance = await TempAttendance.findOne()
-            .sort({ timestamp: -1 })
-            .lean();
-        var message = '';
-        var response = '';
-
-        if (tempAttendance) {
-            const allUser = await User.find();
-            const user = allUser.find(
-                user => user._id.toString() === tempAttendance.user.toString()
-            );
-
-            if (tempAttendance.type === 'sign in') {
-                message = 'Have sign in, welcome!';
-            } else if (tempAttendance.type === 'sign out') {
-                message = 'Have sign out, have a good rest!';
-            } else if (tempAttendance.type === 'meeting') {
-                message = 'Welcome to the meeting room!';
-            } else if (tempAttendance.type === 'events') {
-                message = 'Thank you for your participation!';
-            } else if (tempAttendance.type === 'invalid') {
-                message = 'PLease try again!';
-            }
-
-            response = {
-                temp: tempAttendance,
-                user: user,
-                message: message
-            };
-        } else {
-            // Handle the case when tempAttendance is null
-            message = 'No attendance record found.';
-            response = {
-                temp: null,
-                user: null,
-                message: message
-            };
-        }
-
-        res.json(response);
-    } catch (error) {
-        console.error('Error fetching latest scanned data:', error);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-});
-
-// SUPER ADMIN
-app.get('/super-admin/update', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-
-    if (user.isSuperAdmin) {
-        const allUsers = await User.find();
-
-        // Iterate through each user
-        for (const user of allUsers) {
-            // Update the user's additional information
-            await User.findOneAndUpdate(
-                { section: 'Administration and Human Resource Management Division' },
-                {
-                    department: ''
-                },
-                { upsert: true, new: true }
-            );
-        }
-
-        console.log('All user has been updated');
-
-        res.redirect('/');
-    }
-});
 
 // FUNCTIONS
 
@@ -6972,6 +6787,147 @@ isDateInRange = function (startDate, endDate) {
 
     // Check if the current date is between the start and end dates
     return startDateObj <= currentDate && currentDate <= endDateObj;
+};
+
+// Function to generate a unique identifier (replace this with your own logic)
+const generateUniqueIdentifier = () => {
+    return (
+        Math.random().toString(36).substring(2, 15) +
+        Math.random().toString(36).substring(2, 15)
+    );
+};
+
+// FOR SCHEDULER
+// Function to update attendance
+const updateAttendanceEndOfDays = async () => {
+    try {
+        const now = new Date();
+        const todayStart = new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate(),
+            0,
+            0,
+            0
+        );
+        const todayEnd = new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate(),
+            23,
+            59,
+            59
+        );
+
+        // Find all attendance records for today with signOutTime as null
+        const attendanceRecords = await Attendance.find({
+            'date.signInTime': { $gte: todayStart, $lt: todayEnd },
+            'date.signOutTime': null
+        });
+
+        // Update status to 'Absent' for records without signOutTime
+        for (let record of attendanceRecords) {
+            record.status = 'Invalid';
+            await record.save();
+        }
+
+        console.log('Attendance updated at 5 PM');
+    } catch (error) {
+        console.error('Error updating attendance:', error);
+    }
+};
+
+// Function to check leave on attendance
+const updateAttendanceForApprovedLeaves = async () => {
+    try {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        // Find leave requests with status 'approved' and return date of today
+        const approvedLeaves = await Leave.find({
+            status: 'approved',
+            'date.start': {
+                $gte: today
+            },
+            'date.return': {
+                $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000) // Today's end
+            }
+        });
+
+        console.log(approvedLeaves);
+
+        for (const leave of approvedLeaves) {
+            await Attendance.findOneAndUpdate(
+                {
+                    user: leave.user,
+                    timestamp: {
+                        $gte: today, // Greater than or equal to the start of today
+                        $lte: new Date() // Less than the current time
+                    }
+                },
+                {
+                    $set: {
+                        status: 'Leave',
+                        type: 'manual add',
+                        timestamp: new Date()
+                    }
+                },
+                { upsert: true, new: true }
+            );
+        }
+
+        console.log('Attendance records updated for leaves approved today');
+    } catch (error) {
+        console.error('Error updating attendance records:', error);
+    }
+};
+
+// Function to check and update attendance absent
+const updateAbsentAttendance = async () => {
+    try {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        // Find all users
+        const allUsers = await User.find();
+
+        // Create new attendance records marking them as absent
+        for (const user of allUsers) {
+            const newAttendance = new Attendance({
+                user: user._id,
+                type: 'invalid',
+                signInTime: null,
+                signOutTime: null,
+                status: 'Absent',
+                timestamp: new Date()
+            });
+
+            await newAttendance.save();
+        }
+
+        console.log('Attendance records created for all users as absent');
+    } catch (error) {
+        console.error('Error creating attendance records for absent users:', error);
+    }
+};
+
+// Function to delete all qr codes data
+const clearQRCodeData = async () => {
+    try {
+        // Delete all documents in the QRCode collection
+        const result = await QRCode.deleteMany({});
+        console.log(
+            `Deleted ${result.deletedCount} documents from the QRCode collection`
+        );
+
+        const tempAttendance = await TempAttendance.deleteMany({});
+
+        console.log(
+            `Deleted ${tempAttendance.deletedCount} documents from the temporary attendance`
+        );
+    } catch (error) {
+        console.error('Error clearing QRCode data:', error);
+    }
 };
 
 // PORT INITIALIZATION ON CLOUD OR LOCAL (5001)
