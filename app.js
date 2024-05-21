@@ -3974,17 +3974,109 @@ app.get('/human-resource/leave/balances', isAuthenticated, async function (req, 
     const allUser = await User.find();
 
     if (user) {
+
         res.render('hr-leave-balances', {
             user: user,
             notifications: notifications,
             uuid: uuidv4(),
             // all data
             allUserLeave: allUserLeave,
-            allUser: allUser
+            allUser: allUser,
+            show: '',
+            alert: ''
         });
     }
 }
 );
+
+app.get('/human-resource/leave/balances/update/:id', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    }).populate('sender');
+
+    const checkUser = req.params.id;
+
+    if (user) {
+        const userLeave = await UserLeave.findOne({ user: checkUser })
+            .populate('user')
+            .exec();
+
+        res.render('hr-leave-balances-update', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4(),
+            userLeave: userLeave,
+        });
+    }
+}).post('/human-resource/leave/balances/update/:id', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    }).populate('sender');
+
+    const userId = req.params.id;
+    const {
+        annual, sick, sickExtended, attendexam,
+        emergency, marriage, paternity, unpaid, special
+    } = req.body;
+
+    const allUserLeave = await UserLeave.find();
+    const allUser = await User.find();
+    const userLeave = await UserLeave.findOne({ user: userId })
+        .populate('user')
+        .exec();
+
+    const updatedFields = {
+        'annual.leave': parseInt(annual, 10),
+        'sick.leave': parseInt(sick, 10),
+        'sickExtended.leave': parseInt(sickExtended, 10),
+        'attendExam.leave': parseInt(attendexam, 10),
+        'emergency.taken': parseInt(emergency, 10),
+        'marriage.taken': parseInt(marriage, 10),
+        'paternity.taken': parseInt(paternity, 10),
+        'unpaid.taken': parseInt(unpaid, 10),
+        'special.taken': parseInt(special, 10)
+    }
+
+    try {
+        const updatedLeave = await UserLeave.findOneAndUpdate(
+            { user: userId },
+            { $set: updatedFields },
+            { new: true, useFindAndModify: false }
+        );
+
+        if (!updatedLeave) {
+            console.log('Failed to update');
+        }
+
+        res.render('hr-leave-balances', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4(),
+            // all data
+            allUserLeave: allUserLeave,
+            allUser: allUser,
+            show: 'show',
+            alert: userLeave.user.fullname + ' leave balances updated!'
+        });
+    } catch (err) {
+        res.render('hr-leave-balances', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4(),
+            // all data
+            allUserLeave: allUserLeave,
+            allUser: allUser,
+            show: 'show',
+            alert: userLeave.user.fullname + ' leave balances update failed!'
+        });
+    }
+});
 
 app.get('/human-resource/attendance/overview', isAuthenticated, async function (req, res) {
     const username = req.user.username;
@@ -5042,7 +5134,15 @@ app.post('/api/qrcode/process-data', isAuthenticated, async function (req, res) 
 
 app.get('/api/qrcode/get-latest', async function (req, res) {
     try {
-        const tempAttendance = await TempAttendance.findOne()
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const tempAttendance = await TempAttendance.findOne({
+            timestamp: {
+                $gte: today, // Greater than or equal to the start of today
+                $lte: new Date() // Less than the current time
+            }
+        })
             .sort({ timestamp: -1 })
             .lean();
         var message = '';

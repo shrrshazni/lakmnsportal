@@ -143,7 +143,7 @@
                 <div class="btn-reveal-trigger position-static">
                   <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs-10" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fas fa-ellipsis-h fs-10"></span></button>
                   <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item" href="/staff/details/<%= leave.user %>">View</a><a class="dropdown-item d-none" href="#!">Export</a>
-                    <div class="dropdown-divider d-none"></div><a class="dropdown-item" href="#!">Edit</a>
+                    <div class="dropdown-divider d-none"></div><a class="dropdown-item" href="/human-resource/leave/balances/update/<%= leave.user %>">Update</a>
                     <div class="dropdown-divider d-none"></div><a class="dropdown-item d-none text-danger" href="#!">Remove</a>
                   </div>
                 </div>
@@ -175,4 +175,22 @@
 
   </div>
 </div>
+
+<!-- toast alert submission -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 5">
+  <div class="d-flex">
+    <div class="toast <%= show %> align-items-center text-white border-0" role="alert" data-bs-autohide="false" aria-live="assertive" aria-atomic="true">
+      <div class="d-flex justify-content-between">
+        <div class="toast-body px-0 py-3">
+          <code class="text-primary"><%= alert %></code>
+        </div>
+
+        <button class="btn ms-2 p-0" type="button" data-bs-dismiss="toast" aria-label="Close">
+          <span class="uil uil-times fs-7"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <%- include('partials/private-footer.ejs') %>
