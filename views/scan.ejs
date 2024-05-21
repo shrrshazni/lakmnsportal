@@ -174,16 +174,17 @@
 
         // Always decode once, no need for changing video source
         codeReader.getVideoInputDevices().then((videoInputDevices) => {
-          if (videoInputDevices.length >= 1) {
+          if (videoInputDevices.length > 1) {
             // Find the environment camera if available
             const environmentCamera = videoInputDevices.find(device => device.label.toLowerCase().includes('environment') || device.label.toLowerCase().includes('rear'));
             if (environmentCamera) {
               selectedDeviceId = environmentCamera.deviceId;
-            } else {
-              selectedDeviceId = videoInputDevices[0].deviceId;
             }
-            decodeOnce(codeReader, selectedDeviceId);
+          } else {
+            selectedDeviceId = videoInputDevices[0].deviceId;
           }
+
+          decodeOnce(codeReader, selectedDeviceId);
         }).catch((err) => {
           console.error(err);
         });
