@@ -5032,13 +5032,13 @@ app.post('/api/qrcode/process-data', isAuthenticated, async function (req, res) 
                             user: checkUser._id,
                             timestamp: {
                                 $gte: today, // Greater than or equal to the beginning of today
-                                $lte: now // Less than or equal to the current time
+                                $lte: new Date() // Less than or equal to the current time
                             }
                         },
                         {
                             'date.signOutTime': new Date(),
                             type: 'sign out',
-                            status : 'Present'
+                            status: 'Present'
                         },
                         {
                             upsert: true,
