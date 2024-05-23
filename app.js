@@ -82,6 +82,10 @@ const attendanceDatabase = mongoose.createConnection(
     'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/attendance'
 );
 
+const tenderDatabase = mongoose.createConnection(
+    'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/tender'
+);
+
 // SCHEMA INITIALIZATION
 
 // FOR USER DATABASE
@@ -362,6 +366,44 @@ const qrCodeSchema = new mongoose.Schema({
     }
 });
 
+// TENDER
+const tenderSchema = new mongoose.Schema({
+    id: {
+        type: String,
+        required: true
+    },
+    title: {
+        type: String,
+        required: true
+    },
+    description: {
+        type: String,
+        required: true
+    },
+    category: {
+        type: String,
+        required: true
+    },
+    deadline: {
+        type: Date,
+        required: true
+    },
+    budget: {
+        type: Number,
+        required: true
+    },
+    location: {
+        type: String,
+        required: true
+    },
+    postedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    }
+});
+
+
 //mongoose passport-local
 userSchema.plugin(passportLocalMongoose);
 userSchema.plugin(findOrCreate);
@@ -380,6 +422,7 @@ const TempAttendance = attendanceDatabase.model(
     TempAttendanceSchema
 );
 const QRCode = attendanceDatabase.model('QRCode', qrCodeSchema);
+const Tender = tenderDatabase.model('Tender', tenderSchema);
 
 passport.use(User.createStrategy());
 
