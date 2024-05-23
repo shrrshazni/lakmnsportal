@@ -5038,7 +5038,8 @@ app.post('/api/qrcode/process-data', isAuthenticated, async function (req, res) 
                         {
                             'date.signOutTime': new Date(),
                             type: 'sign out',
-                            status: 'Present'
+                            status: 'Present',
+                            timestamp: new Date()
                         },
                         {
                             upsert: true,
