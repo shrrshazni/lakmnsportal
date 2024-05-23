@@ -15,9 +15,10 @@ function formatDate(inputDate) {
   <nav class="mb-2" aria-label="breadcrumb">
     <ol class="breadcrumb mb-0">
       <li class="breadcrumb-item"><a href="#!">Human Resources</a></li>
-      <li class="breadcrumb-item"><a href="#!">Leave</a></li>
-      <li class="breadcrumb-item"><a href="#!">Balances</a></li>
+      <li class="breadcrumb-item"><a href="#!">Leave Update</a></li>
+      <li class="breadcrumb-item active" aria-current="page"><%= userLeave.user.fullname %></li>
       <li class="breadcrumb-item active" aria-current="page"><%= userLeave.user.username %></li>
+      <li class="breadcrumb-item active" aria-current="page"><%= userLeave.user.classification %> <%= userLeave.user.grade %></li>
     </ol>
   </nav>
 
@@ -29,93 +30,71 @@ function formatDate(inputDate) {
 
     <div class="col-12 col-xxl-9 order-1 order-xxl-0">
 
-      <div class="row g-3 mb-3">
-        <div class="col-12 col-md-6">
-          <div class="form-floating">
-            <input type="text" name="username" class="form-control" value="<%= userLeave.user.username %>" disabled />
-            <label class="form-label" for="username">Username</label>
-            <div class="invalid-feedback">
-              Please enter username
-            </div>
-          </div>
-        </div>
-
-        <div class="col-12 col-md-6">
-          <div class="form-floating">
-            <input type="text" name="fullname" class="form-control" value="<%= userLeave.user.fullname %>" disabled />
-            <label class="form-label" for="fullname">Full Name</label>
-            <div class="invalid-feedback">
-              Please enter full name
-            </div>
-          </div>
-        </div>
-
-        <div class="col-12 col-md-6">
-          <div class="form-floating">
-            <input type="text" name="grade" class="form-control" value="<%= userLeave.user.grade %>" disabled />
-            <label class="form-label" for="grade">Grade</label>
-            <div class="invalid-feedback">
-              Please enter grade
-            </div>
-          </div>
-        </div>
-
-        <div class="col-12 col-md-6">
-          <div class="form-floating">
-            <input type="text" name="classification" class="form-control" value="<%= userLeave.user.classification %>" disabled />
-            <label class="form-label" for="classification">Classification</label>
-            <div class="invalid-feedback">
-              Please enter classification
-            </div>
-          </div>
-        </div>
-      </div>
-
       <form class="row g-3 mb-6 has-validation" action="/human-resource/leave/balances/update/<%= userLeave.user._id %>" method="post" id="leaveForm">
 
-        <div class="col-12 col-md-4">
+        <div class="col-12 col-md-6">
           <div class="form-floating">
-            <input type="number" name="annual" class="form-control" placeholder="" required />
-            <label class="form-label" for="annual">Annual Leave</label>
+            <input type="number" name="annualtotal" class="form-control" placeholder="" />
+            <label class="form-label" for="annualtotal">Annual Leave Total</label>
             <div class="invalid-feedback">
-              Please enter annual leave balances
+              Please enter annual leave total
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+          <div class="form-floating">
+            <input type="number" name="annualtaken" class="form-control" placeholder="" />
+            <label class="form-label" for="annualtaken">Annual Leave Taken</label>
+            <div class="invalid-feedback">
+              Please enter annual leave taken
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+          <div class="form-floating">
+            <input type="number" name="sicktotal" class="form-control" placeholder="" />
+            <label class="form-label" for="sicktotal">Sick Leave Total</label>
+            <div class="invalid-feedback">
+              Please enter sick leave total
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+          <div class="form-floating">
+            <input type="number" name="sicktaken" class="form-control" placeholder="" />
+            <label class="form-label" for="sicktaken">Sick Leave Taken</label>
+            <div class="invalid-feedback">
+              Please enter sick leave taken
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+          <div class="form-floating">
+            <input type="number" name="sickExtendedTotal" class="form-control" placeholder="" />
+            <label class="form-label" for="sickExtendedTotal">Sick Extended Leave Total</label>
+            <div class="invalid-feedback">
+              Please enter sick extended total
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+          <div class="form-floating">
+            <input type="number" name="sickExtendedTaken" class="form-control" placeholder="" />
+            <label class="form-label" for="sickExtendedTaken">Sick Extended Leave Taken</label>
+            <div class="invalid-feedback">
+              Please enter sick extended taken
             </div>
           </div>
         </div>
 
         <div class="col-12 col-md-4">
           <div class="form-floating">
-            <input type="number" name="sick" class="form-control" placeholder="" required />
-            <label class="form-label" for="sick">Sick Leave</label>
-            <div class="invalid-feedback">
-              Please enter sick leave balances
-            </div>
-          </div>
-        </div>
-
-        <div class="col-12 col-md-4">
-          <div class="form-floating">
-            <input type="number" name="sickExtended" class="form-control" placeholder="" required />
-            <label class="form-label" for="sickExtended">Sick Extended Leave</label>
-            <div class="invalid-feedback">
-              Please enter sick extended balances
-            </div>
-          </div>
-        </div>
-
-        <div class="col-12 col-md-4">
-          <div class="form-floating">
-            <input type="number" name="attendexam" class="form-control" placeholder="" required />
-            <label class="form-label" for="attendexam">Attend Exam Leave</label>
-            <div class="invalid-feedback">
-              Please enter attend exam balances
-            </div>
-          </div>
-        </div>
-
-        <div class="col-12 col-md-4">
-          <div class="form-floating">
-            <input type="number" name="emergency" class="form-control" placeholder="" required />
+            <input type="number" name="emergency" class="form-control" placeholder="" />
             <label class="form-label" for="emergency">Emergency Leave Taken</label>
             <div class="invalid-feedback">
               Please enter emergency leave taken
@@ -125,7 +104,17 @@ function formatDate(inputDate) {
 
         <div class="col-12 col-md-4">
           <div class="form-floating">
-            <input type="number" name="marriage" class="form-control" placeholder="" required />
+            <input type="number" name="attendexam" class="form-control" placeholder="" />
+            <label class="form-label" for="attendexam">Attend Exam Leave Taken</label>
+            <div class="invalid-feedback">
+              Please enter attend exam taken
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-4">
+          <div class="form-floating">
+            <input type="number" name="marriage" class="form-control" placeholder="" />
             <label class="form-label" for="marriage">Marriage Leave Taken</label>
             <div class="invalid-feedback">
               Please enter marriage leave taken
@@ -135,7 +124,7 @@ function formatDate(inputDate) {
 
         <div class="col-12 col-md-4">
           <div class="form-floating">
-            <input type="number" name="paternity" class="form-control" placeholder="" required />
+            <input type="number" name="paternity" class="form-control" placeholder="" />
             <label class="form-label" for="paternity">Paternity Leave Taken</label>
             <div class="invalid-feedback">
               Please enter paternity leave taken
@@ -145,7 +134,7 @@ function formatDate(inputDate) {
 
         <div class="col-12 col-md-4">
           <div class="form-floating">
-            <input type="number" name="unpaid" class="form-control" placeholder="" required />
+            <input type="number" name="unpaid" class="form-control" placeholder="" />
             <label class="form-label" for="unpaid">Unpaid Leave Taken</label>
             <div class="invalid-feedback">
               Please enter unpaid leave taken
@@ -155,7 +144,7 @@ function formatDate(inputDate) {
 
         <div class="col-12 col-md-4">
           <div class="form-floating">
-            <input type="number" name="special" class="form-control" placeholder="" required />
+            <input type="number" name="special" class="form-control" placeholder="" />
             <label class="form-label" for="special">Special Leave Taken</label>
             <div class="invalid-feedback">
               Please enter special leave taken
@@ -178,13 +167,7 @@ function formatDate(inputDate) {
         </div>
 
       </form>
-
-      <script>
-        document.getElementById('leaveForm').addEventListener('click', function() {
-          this.classList.add('was-validated');
-          this.classList.remove('has-validated');
-        });
-      </script>
+      
     </div>
 
     <div class="col-12 col-xxl-3 mb-6 order-0 order-xxl-1">

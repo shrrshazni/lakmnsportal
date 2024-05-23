@@ -24,7 +24,7 @@
 
   <div class="col-12 col-lg-9 order-1 order-xxl-0">
 
-    <div class="border p-3 mb-3 rounded-3">
+    <div class="border p-3 mb-3 rounded-3 d-none" id="dropzoneContainer">
       <form class="dropzone dropzone-multiple p-3 mb-4 bg-subtle" id="dropzone" data-dropzone="data-dropzone" action="/files/upload" data-options='{"url":"/files/upload","paramName": "file"}'>
         <div class="dz-message" data-dz-message="data-dz-message">
           <img class="me-2" src="../../../assets/img/icons/cloud-upload.svg" width="25" alt="" />Drop your files here
@@ -60,7 +60,7 @@
       </form>
     </div>
 
-    <div class="mb-6">
+    <div class="mb-6 d-none" id="uploadButtonContainer">
       <div class="row g-3 justify-content-end">
         <div class="col-auto">
           <button class="btn btn-phoenix-primary loading-upload-button" type="submit" id="uploadFiles">
@@ -104,7 +104,7 @@
         </div>
       </div>
 
-      <div class="col-sm-6 col-md-6">
+      <div class="col-sm-6 col-md-6 mb-3">
         <div class="form-floating">
           <input type="text" class="form-control datetimepicker flatpickr-input <%= validationStartDate %>" id="floatingInputStartDate" placeholder="" name="startDate" data-options='{"disableMobile":true,"allowInput":true, "locale" : { "firstDayOfWeek" : 1}}' value="<%= startDate %>" required>
           <label for="floatingInputStartDate"><span class="fa-regular fa-calendar-xmark me-2"></span>Start date</label>
@@ -114,7 +114,7 @@
         </div>
       </div>
 
-      <div class="col-sm-6 col-md-6">
+      <div class="col-sm-6 col-md-6 mb-3">
         <div class="form-floating">
           <input type="text" class="form-control datetimepicker flatpickr-input <%= validationReturnDate %>" id="floatingInputReturnDate" placeholder="" name="returnDate" data-options='{"disableMobile":true,"allowInput":true, "locale" : { "firstDayOfWeek" : 1}}' value="<%= returnDate %>" required>
           <label for="floatingInputReturnDate"><span class="fa-regular fa-calendar-check me-2"></span>End date</label>
@@ -123,47 +123,6 @@
           </div>
         </div>
       </div>
-
-      <!-- <script>
-        document.getElementById('floatingSelectTask').addEventListener('change', function() {
-          var selectedLeaveType = this.value;
-
-          // Add logic to determine the minDate based on the selectedLeaveType
-          var minDate;
-
-          if (selectedLeaveType === 'Annual Leave') {
-            minDate = '2024-01-01'; // Update with your logic
-          } else if (selectedLeaveType === 'Half Day Leave') {
-            minDate = '2024-03-01'; // Update with your logic
-          } else if (selectedLeaveType === 'Sick Leave') {
-            minDate = '2024-03-05'; // Update with your logic
-          }
-          // Add more conditions for other leave types as needed...
-
-          // Update the minDate in the Flatpickr options
-          var flatpickrInput = document.getElementById('floatingInputStartDate');
-          var flatpickrOptions = JSON.parse(flatpickrInput.getAttribute('data-options'));
-          flatpickrOptions.minDate = minDate;
-          flatpickrInput.setAttribute('data-options', JSON.stringify(flatpickrOptions));
-        });
-      </script> -->
-
-      <div class="col-12 col-md-8 mb-0">
-        <div id="selectedNames" class="d-flex flex-wrap border border-300 rounded-3 px-2" style="min-height: 3rem"></div>
-      </div>
-
-      <div class="col-6 col-md-4 mb-3">
-        <div class="form-floating">
-          <input type="text" name="query" id="queryInput" class="form-control" placeholder="Search staff name" required />
-          <label class="form-label" for="queryInput">Search Relief Staff</label>
-          <div class="invalid-feedback">
-            Please select relief staff
-          </div>
-        </div>
-        <div id="results" class="mt-3 mb-3 col-12"></div>
-      </div>
-
-      <input type="hidden" id="selectedNamesInput" name="selectedNames" value="<%= Array.isArray(selectedNames) ? selectedNames.join(',') : '' %>" />
 
       <div class="col-12 gy-6 mt-0">
         <div class="form-floating">
@@ -174,6 +133,24 @@
           <label for="floatingProjectOverview">Purpose of leave</label>
         </div>
       </div>
+
+      <div class="col-12 col-md-8 mb-0">
+        <div id="selectedNames" class="d-flex flex-wrap border border-300 rounded-3 px-2" style="min-height: 3rem"></div>
+      </div>
+
+      <div class="col-6 col-md-4 mb-3">
+        <div class="form-floating">
+          <input type="text" name="query" id="queryInput" class="form-control" placeholder="Search staff name" />
+          <label class="form-label" for="queryInput">Search Relief Staff</label>
+          <div class="invalid-feedback">
+            Please select relief staff
+          </div>
+        </div>
+        <div id="results" class="mt-3 mb-3 col-12"></div>
+      </div>
+
+      <input type="hidden" id="selectedNamesInput" name="selectedNames" value="<%= Array.isArray(selectedNames) ? selectedNames.join(',') : '' %>" />
+
 
       <div class="col-12 gy-6">
         <div class="row g-3 justify-content-end">
@@ -193,46 +170,51 @@
     </form>
 
     <script>
-      document.getElementById('leaveForm').addEventListener('click', function() {
-        this.classList.add('was-validated');
-        this.classList.remove('has-validated');
-
-        // Check the selected leave type
-        var selectedLeaveType = document.getElementById('floatingSelectTask').value;
+      document.getElementById('floatingSelectTask').addEventListener('change', function() {
+        var selectedLeaveType = this.value;
 
         // Clear all toasts
         var toasts = document.querySelectorAll('.toast');
         toasts.forEach(function(toast) {
           var bsToast = bootstrap.Toast.getInstance(toast);
-          bsToast.hide();
+          if (bsToast) bsToast.hide();
         });
 
-        // If the selected leave type is Emergency Leave
-        if (selectedLeaveType === 'Emergency Leave') {
-          // Add a default value to the input
-          document.getElementById('queryInput').value = 'Relief staff not required';
-          // Disable the input
-          document.getElementById('queryInput').disabled = true;
-          // Display the toast
-          var emergencyToast = new bootstrap.Toast(document.getElementById('attachAlert'));
-          emergencyToast.show();
-        } else if (selectedLeaveType === 'Hajj Leave' || selectedLeaveType === 'Hajj Leave' || selectedLeaveType === 'Sick Leave' || selectedLeaveType === 'Extended Sick Leave' ||
-          selectedLeaveType === 'Marriage Leave' || selectedLeaveType === 'Paternity Leave' || selectedLeaveType === 'Maternity Leave' || selectedLeaveType === 'Attend Exam Leave' ||
-          selectedLeaveType === 'Special Leave'
-        ) {
+        // Dropzone and upload button containers
+        var dropzoneContainer = document.getElementById('dropzoneContainer');
+        var uploadButtonContainer = document.getElementById('uploadButtonContainer');
+
+        if (selectedLeaveType === 'Annual Leave' || selectedLeaveType === 'Half Day Leave') {
+          dropzoneContainer.classList.add('d-none');
+          uploadButtonContainer.classList.add('d-none');
+        } else {
+          dropzoneContainer.classList.remove('d-none');
+          uploadButtonContainer.classList.remove('d-none');
 
           var otherToast = new bootstrap.Toast(document.getElementById('attachAlert'));
           otherToast.show();
+        }
 
+        // Handle Emergency Leave case
+        if (selectedLeaveType === 'Emergency Leave') {
+          document.getElementById('queryInput').value = 'Relief staff not required';
+          document.getElementById('queryInput').disabled = true;
         } else {
-          // If another leave type is selected, ensure the input is not disabled and clear its value
           document.getElementById('queryInput').disabled = false;
           document.getElementById('queryInput').value = '';
         }
       });
+
+      document.getElementById('leaveForm').addEventListener('click', function(event) {
+        this.classList.add('was-validated');
+        this.classList.remove('has-validated');
+
+        if (!this.checkValidity()) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+      });
     </script>
-
-
 
     <script>
       $(document).ready(function() {

@@ -3889,7 +3889,7 @@ app
                 isPersonalAssistant: false
             });
 
-            User.register(newUser, req.body.password, function (err, user) {
+            User.register(newUser, req.body.password, async function (err, user) {
                 if (err) {
                     console.log(err);
                     res.render('hr-staffmembers-addstaff', {
@@ -3900,6 +3900,7 @@ app
                         alert: err
                     });
                 } else {
+                    // Create a new UserLeave document for the user
                     const newUserLeave = new UserLeave({
                         user: user._id,
                         annual: { leave: 14, taken: 0 },
@@ -3917,7 +3918,14 @@ app
                         special: { leave: 3, taken: 0 }
                     });
 
-                    newUserLeave.save();
+                    await newUserLeave.save();
+
+                    // Update the info.status for the new user
+                    await Info.findOneAndUpdate(
+                        { user: user._id },
+                        { $set: { status: 'New staff' } },
+                        { upsert: true }
+                    );
 
                     passport.authenticate('local')(req, res, function () {
                         res.render('hr-staffmembers-overview', {
@@ -3935,8 +3943,8 @@ app
                 }
             });
         }
-    }
-    );
+    });
+
 
 app.get('/human-resource/leave/overview', isAuthenticated, async function (req, res) {
     const username = req.user.username;
@@ -4021,8 +4029,9 @@ app.get('/human-resource/leave/balances/update/:id', isAuthenticated, async func
 
     const userId = req.params.id;
     const {
-        annual, sick, sickExtended, attendexam,
-        emergency, marriage, paternity, unpaid, special
+        annualtotal, annualtaken, sicktotal, sicktaken,
+        sickExtendedTotal, sickExtendedTaken, emergency,
+        attendexam, marriage, paternity, unpaid, special
     } = req.body;
 
     const allUserLeave = await UserLeave.find();
@@ -4031,17 +4040,29 @@ app.get('/human-resource/leave/balances/update/:id', isAuthenticated, async func
         .populate('user')
         .exec();
 
-    const updatedFields = {
-        'annual.leave': parseInt(annual, 10),
-        'sick.leave': parseInt(sick, 10),
-        'sickExtended.leave': parseInt(sickExtended, 10),
-        'attendExam.leave': parseInt(attendexam, 10),
-        'emergency.taken': parseInt(emergency, 10),
-        'marriage.taken': parseInt(marriage, 10),
-        'paternity.taken': parseInt(paternity, 10),
-        'unpaid.taken': parseInt(unpaid, 10),
-        'special.taken': parseInt(special, 10)
-    }
+    // Initialize an empty object to store the fields to update
+    const updatedFields = {};
+
+    // Helper function to add fields to updatedFields if they have a value
+    const addFieldIfExists = (field, value) => {
+        if (value !== undefined && value !== '') {
+            updatedFields[field] = parseInt(value, 10);
+        }
+    };
+
+    // Add fields to updatedFields only if they have a value
+    addFieldIfExists('annual.leave', annualtotal);
+    addFieldIfExists('annual.taken', annualtaken);
+    addFieldIfExists('sick.leave', sicktotal);
+    addFieldIfExists('sick.taken', sicktaken);
+    addFieldIfExists('sickExtended.leave', sickExtendedTotal);
+    addFieldIfExists('sickExtended.taken', sickExtendedTaken);
+    addFieldIfExists('emergency.taken', emergency);
+    addFieldIfExists('attendExam.taken', attendexam);
+    addFieldIfExists('marriage.taken', marriage);
+    addFieldIfExists('paternity.taken', paternity);
+    addFieldIfExists('unpaid.taken', unpaid);
+    addFieldIfExists('special.taken', special);
 
     try {
         const updatedLeave = await UserLeave.findOneAndUpdate(
@@ -4058,7 +4079,6 @@ app.get('/human-resource/leave/balances/update/:id', isAuthenticated, async func
             user: user,
             notifications: notifications,
             uuid: uuidv4(),
-            // all data
             allUserLeave: allUserLeave,
             allUser: allUser,
             show: 'show',
@@ -4069,7 +4089,6 @@ app.get('/human-resource/leave/balances/update/:id', isAuthenticated, async func
             user: user,
             notifications: notifications,
             uuid: uuidv4(),
-            // all data
             allUserLeave: allUserLeave,
             allUser: allUser,
             show: 'show',
@@ -5816,7 +5835,7 @@ cron.schedule(
     }
 );
 
-// UPDATE ATTENDANCE AT 6AM
+// UPDATE ATTENDANCE AT 12:01AM
 cron.schedule(
     '1 0 * * *',
     () => {
@@ -6931,7 +6950,7 @@ const updateAttendanceEndOfDays = async () => {
             await record.save();
         }
 
-        console.log('Attendance updated at 5 PM');
+        console.log('Attendance updated at 11:59PM');
     } catch (error) {
         console.error('Error updating attendance:', error);
     }
