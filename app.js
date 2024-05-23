@@ -5029,11 +5029,16 @@ app.post('/api/qrcode/process-data', isAuthenticated, async function (req, res) 
                 ) {
                     await Attendance.findOneAndUpdate(
                         {
-                            user: checkUser._id
+                            user: checkUser._id,
+                            timestamp: {
+                                $gte: today, // Greater than or equal to the beginning of today
+                                $lte: now // Less than or equal to the current time
+                            }
                         },
                         {
                             'date.signOutTime': new Date(),
-                            type: 'sign out'
+                            type: 'sign out',
+                            status : 'Present'
                         },
                         {
                             upsert: true,
