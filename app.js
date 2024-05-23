@@ -5716,9 +5716,9 @@ cron.schedule(
     }
 );
 
-// UPDATE ATTENDANCE AT 8AM
+// UPDATE ATTENDANCE AT 6AM
 cron.schedule(
-    '0 8 * * *',
+    '1 0 * * *',
     () => {
         console.log('Running cron job to update attendance at 8AM');
         updateAbsentAttendance();
