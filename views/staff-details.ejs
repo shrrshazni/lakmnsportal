@@ -52,8 +52,8 @@
                 }
                 %>
                 <div class="col-12 col-xxl-auto">
-                  <% if(user.profile === '' ){ user.profile = '/assets/img/team/avatar.webp' ; } %>
-                  <div class="avatar avatar-5xl <%= showOnline %>"><img class="rounded-circle border border-primary" src="<%= user.profile %>" alt="" /></div>
+                  <% if(otherUser.profile === '' ){ otherUser.profile = '/assets/img/team/avatar.webp' ; } %>
+                  <div class="avatar avatar-5xl <%= showOnline %>"><img class="rounded-circle border border-primary" src="<%= otherUser.profile %>" alt="" /></div>
                 </div>
                 <div class="col-12 col-sm-auto flex-1 text-md-start text-center">
                   <h3 class="fw-bold mb-3 mt-3"><%= otherUser.fullname %></h3>
