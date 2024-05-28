@@ -262,10 +262,21 @@
                   <a class="fw-bold fs-9 fs-md-8" href="/leave/details/<%= leaves._id %>"><%= leaves.type %></a>
                 </td>
                 <td class="align-middle text-body white-space-nowrap reliefstaff ps-3">
-                  <% 
-                                const checkUserRelief = allUser.find(check => check._id.toString() === leaves.assignee[0].toString());
-                              %>
-                  <a class="mb-0 fs-9" href="/staff/details/<%= checkUserRelief._id %>"><%= checkUserRelief.fullname %></a>
+                  <%
+                    let userReliefName;
+                    let userLink;
+
+                    if(leaves.assignee[0] === undefined){
+                      userReliefName = '-';
+                      userLink = '#';
+                    }else{
+                      const checkUserRelief = allUser.find(check => check._id.toString() === leaves.assignee[0].toString());
+                      userReliefName = checkUserRelief.fullname;
+                      userLink = '/staff/details/'+checkUserRelief._id;
+                    }
+                    
+                  %>
+                  <a class="mb-0 fs-9" href="<%= userLink %>"><%= userReliefName %></a>
                 </td>
                 <td class="align-middle white-space-nowrap startdate text-center ps-3 py-4">
                   <p class="mb-0 fs-9 text-body"><%= formatDate(leaves.date.start) %></p>

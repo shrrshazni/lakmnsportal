@@ -903,9 +903,21 @@
               </td>
 
               <td class="align-middle text-body white-space-nowrap reliefstaff ps-3">
-                <% 
-                console.log(leave.assignee[0]);
-                %>
+                <%
+                let userReliefName;
+                let userLink;
+
+                if(leaves.assignee[0] === undefined){
+                  userReliefName = '-';
+                  userLink = '#';
+                }else{
+                  const checkUserRelief = allUser.find(check => check._id.toString() === leaves.assignee[0].toString());
+                  userReliefName = checkUserRelief.fullname;
+                  userLink = '/staff/details/'+checkUserRelief._id;
+                }
+                
+              %>
+                <a class="mb-0 fs-9" href="<%= userLink %>"><%= userReliefName %></a>
               </td>
 
               <td class="align-middle white-space-nowrap text-center startdate ps-0">
