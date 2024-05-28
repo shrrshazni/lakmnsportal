@@ -32,7 +32,7 @@
   </div>
   <div class="row g-0 g-md-4 g-xl-6">
 
-    <div class="col-md-5 col-lg-5 col-xl-4">
+    <div class="col-md-5 col-lg-5 col-xl-3">
       <div class="sticky-leads-sidebar">
         <div class="lead-details-offcanvas bg-body scrollbar phoenix-offcanvas phoenix-offcanvas-fixed" id="productFilterColumn">
           <div class="d-flex justify-content-between align-items-center mb-2 d-md-none">
@@ -56,7 +56,7 @@
                   <div class="avatar avatar-5xl <%= showOnline %>"><img class="rounded-circle border border-primary" src="<%= otherUser.profile %>" alt="" /></div>
                 </div>
                 <div class="col-12 col-sm-auto flex-1 text-md-start text-center">
-                  <h3 class="fw-bold mb-3 mt-3"><%= otherUser.fullname %></h3>
+                  <h4 class="fw-bold mb-3 mt-3"><%= otherUser.fullname %></h4>
                   <p class="mb-3"><%= otherUser.position %></p>
                   <p class="fw-semibold text-primary fst-italic">"<%= info.status %>"</p>
                 </div>
@@ -65,31 +65,36 @@
           </div>
           <div class="card mb-3">
             <div class="card-body">
-              <div class="d-flex align-items-center mb-5">
-                <h3>About staff</h3>
+              <div class="d-flex align-items-center mb-4">
+                <h4>About staff</h4>
               </div>
-              <div class="mb-4">
+              <div class="mb-2">
+                <div class="d-flex align-items-center mb-1"><span class="me-2 uil uil-user"> </span>
+                  <h5 class="text-body-highlight mb-0">Work ID</h5>
+                </div><p class="text-primary"><%= otherUser.username %></a>
+              </div>
+              <div class="mb-2">
                 <div class="d-flex align-items-center mb-1"><span class="me-2 uil uil-envelope-alt"> </span>
                   <h5 class="text-body-highlight mb-0">Email</h5>
                 </div><a href="mailto:<%= otherUser.email %>"><%= otherUser.email %></a>
               </div>
-              <div class="mb-4">
+              <div class="mb-2">
                 <div class="d-flex align-items-center mb-1"><span class="me-2 uil uil-phone"> </span>
                   <h5 class="text-body-highlight mb-0">Phone</h5>
                 </div><a href="tel:+6<%= otherUser.phone %>">+6<%= otherUser.phone %> </a>
               </div>
-              <div class="mb-4">
+              <div class="mb-2">
                 <div class="d-flex align-items-center mb-1"><span class="me-2 uil uil-home"> </span>
                   <h5 class="text-body-highlight mb-0">Office Number</h5>
                 </div><a href="tel:+6<%= otherUser.officePhone %>">+6<%= otherUser.officePhone %> </a>
               </div>
-              <div class="mb-4">
+              <div class="mb-2">
                 <div class="d-flex align-items-center mb-1"><span class="me-2 uil uil-building"></span>
                   <h5 class="text-body-highlight mb-0">Department</h5>
                 </div>
                 <p class="text-primary"><%= otherUser.department %> </p>
               </div>
-              <div class="mb-4">
+              <div class="mb-2">
                 <div class="d-flex align-items-center mb-1"><span class="me-2 uil uil-globe"></span>
                   <h5 class="text-body-highlight mb-0">Section</h5>
                 </div>
@@ -124,9 +129,9 @@
             <div class="carousel dashboard-carousel slide carousel-fade position-relative rounded-3" id="carousel-2">
               <div class="carousel-inner">
 
-                <div class="carousel-item active" style="height: 375px;">
+                <div class="carousel-item active" style="height: 350px;">
 
-                  <div class="card" style="height: 375px;">
+                  <div class="card" style="height: 350px;">
                     <div class="card-body">
                       <h5 class="text-body-emphasis text-nowrap">Leave Balances</h5>
                       <div class="mx-auto mt-n10" id="leave-type-chart-carousel" style="height:400px; width: 250px;"></div>
@@ -310,7 +315,7 @@
 
                 <div class="carousel-item false">
 
-                  <div class="card" style="height: 375px;">
+                  <div class="card" style="height: 350px;">
 
                     <div class="bg-holder d-block bg-card" style="background-image:url(/assets/img/spot-illustrations/32.png);background-position: top right;">
                     </div>
@@ -318,16 +323,6 @@
                     </div>
                   </div>
 
-                </div>
-
-                <div class="carousel-item false d-none">
-                  <div class="card" style="height: 375px;">
-
-                    <div class="card-body d-none">
-                      <p>Hello world 2</p>
-                    </div>
-
-                  </div>
                 </div>
 
               </div>
@@ -343,7 +338,7 @@
       </div>
     </div>
 
-    <div class="col-md-7 col-lg-7 col-xl-8">
+    <div class="col-md-7 col-lg-7 col-xl-9">
       <div class="lead-details-container">
         <nav class="navbar pb-4 px-0 sticky-top bg-body nav-underline-scrollspy" id="navbar-staffs-detail">
           <ul class="nav nav-underline fs-9">
@@ -485,7 +480,8 @@
 
           </div>
 
-          <div class="mb-8" style="min-height: 25vh;" id="scrollspyActivities">
+          <div class="mb-8" style="min-height: 25vh;">
+            <h2 class="mb-4" id="scrollspyActivities">Activities</h2>
             <div class="border-bottom border-translucent mt-3" id="activities" data-list='{"valueNames":["title","type","description","date","time"],"page":5,"pagination":true}'>
               <div class="row align-items-end justify-content-between pb-4 g-3">
 
@@ -556,7 +552,8 @@
             </div>
           </div>
 
-          <div class="mb-8" style="min-height: 25vh;" id="scrollspyLeaves">
+          <div class="mb-8" style="min-height: 25vh;">
+            <h2 class="mb-4" id="scrollspyLeaves">Leaves</h2>
             <div class="border-bottom border-translucent mt-3" id="leaves" data-list='{"valueNames":["type","reliefstaff","startdate","returndate","status"],"page":5,"pagination":true}'>
               <div class="row align-items-end justify-content-between pb-4 g-3">
 
@@ -685,7 +682,8 @@
             </div>
           </div>
 
-          <div class="mb-8" style="min-height: 25vh;" id="scrollspyAttendances">
+          <div class="mb-8" style="min-height: 25vh;">
+            <h2 class="mb-4" id="scrollspyAttendances">Attendances</h2>
             <div class="border-bottom border-translucent mt-3" id="attendance" data-list='{"valueNames":["date","clockin","clockout"],"page":5,"pagination":true}'>
               <div class="row align-items-end justify-content-between pb-4 g-3">
 
@@ -708,7 +706,6 @@
                       <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="date" style="width:15%;min-width: 150px;">Date</th>
                       <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="clockin" style="width:15%;min-width: 100px;">Clock In</th>
                       <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="clockout" style="width:15%;min-width: 100px;">Clock Out</th>
-                      <th class="sort align-middle text-end" scope="col" style="width: 10%"></th>
                     </tr>
                   </thead>
 
@@ -726,7 +723,7 @@
                         }
 
                         let signInTime;
-                        if(item.date.signOutTime === null){
+                        if(item.date.signInTime === null){
                             signInTime = 'nil';
                         } else{
                             signInTime = item.date.signInTime.toLocaleTimeString('en-UK', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone : 'Asia/Kuala_Lumpur' });
@@ -738,16 +735,6 @@
                       <td class="date align-middle text-center py-2 ps-0 fs-9"><%= item.timestamp.toLocaleDateString('en-UK', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></td>
                       <td class="clockin align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-success"><%= signInTime %></span></td>
                       <td class="clockin align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-warning"><%= signOutTime %></span></td>
-                      <td class="align-middle text-end white-space-nowrap ps-0 action">
-                        <div class="font-sans-serif btn-reveal-trigger position-static">
-                          <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs--2" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
-                            <span class="fas fa-ellipsis-h fs-9"></span>
-                          </button>
-                          <div class="dropdown-menu dropdown-menu-end py-2">
-                            <a class="dropdown-item" href="/">View</a>
-                          </div>
-                        </div>
-                      </td>
                     </tr>
                     <% }); %>
                     <% }else{ %>
@@ -773,8 +760,8 @@
             </div>
           </div>
 
-          <div id="scrollspyAttachments">
-            <h2 class="mb-4">Attachments</h2>
+          <div>
+            <h2 class="mb-4" id="scrollspyAttachments">Attachments</h2>
 
             <div class="overflow-x-hidden vh-50 scrollbar w-100">
               <%

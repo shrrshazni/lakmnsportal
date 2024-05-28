@@ -312,16 +312,6 @@
 
         </div>
 
-        <div class="carousel-item false d-none">
-          <div class="card" style="height: 375px;">
-
-            <div class="card-body">
-              <p>Hello world 2</p>
-            </div>
-
-          </div>
-        </div>
-
       </div>
       <div class="carousel-indicators">
         <button class="active" type="button" data-bs-target="#carousel-1" data-bs-slide-to="0" aria-current="true" aria-label="Slide 1"></button>
@@ -477,11 +467,13 @@
           </tr>
           <% }); %>
           <% }else { %>
+
           <tr class="position-static">
-            <td class="mb-0 fs-9 text-body">
-              <p>There is no user found in your department</p>
+            <td class="align-middle time white-space-nowrap ps-0 border-bottom-0 text-center fs-9">
+              <p>There is no team member found</p>
             </td>
           </tr>
+          
           <% } %>
         </tbody>
       </table>
