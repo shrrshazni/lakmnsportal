@@ -30,18 +30,18 @@
         <table class="table fs-9 mb-0 border-top border-translucent">
           <thead>
             <tr>
-              <th class="sort white-space-nowrap align-middle ps-0" scope="col" data-sort="staff" style="width:15%;">STAFF</th>
+              <th class="sort white-space-nowrap align-middle ps-0" scope="col" data-sort="staff" style="width:20%;">STAFF</th>
               <th class="sort align-middle ps-3" scope="col" data-sort="annual" style="width:auto;">ANNUAL</th>
               <th class="sort align-middle ps-3" scope="col" data-sort="sick" style="width:auto;">SICK</th>
               <th class="sort align-middle ps-3" scope="col" data-sort="sickextended" style="width:auto;">SICK EXTENDED</th>
-              <th class="sort align-middle ps-3" scope="col" data-sort="emergency" style="width:auto;">EMERGENCY</th>
-              <th class="sort align-middle ps-3" scope="col" data-sort="marriage" style="width:auto;">MARRIAGE</th>
-              <th class="sort align-middle ps-3" scope="col" data-sort="paternity" style="width:auto;">PATERNITY</th>
-              <th class="sort align-middle ps-3" scope="col" data-sort="maternity" style="width:auto;">MATERNITY</th>
-              <th class="sort align-middle ps-3" scope="col" data-sort="attendexam" style="width:auto;">ATTEND EXAM</th>
-              <th class="sort align-middle ps-3" scope="col" data-sort="hajj" style="width:auto;">HAJJ</th>
-              <th class="sort align-middle ps-3" scope="col" data-sort="special" style="width:auto;">SPECIAL</th>
-              <th class="sort align-middle ps-3" scope="col" data-sort="unpaid" style="width:auto;">UNPAID</th>
+              <th class="sort align-middle ps-3" scope="col" data-sort="emergency" style="width:auto;">EMERGENCY TAKEN</th>
+              <th class="sort align-middle ps-3" scope="col" data-sort="marriage" style="width:auto;">MARRIAGE TAKEN</th>
+              <th class="sort align-middle ps-3" scope="col" data-sort="paternity" style="width:auto;">PATERNITY TAKEN</th>
+              <th class="sort align-middle ps-3" scope="col" data-sort="maternity" style="width:auto;">MATERNITY TAKEN</th>
+              <th class="sort align-middle ps-3" scope="col" data-sort="attendexam" style="width:auto;">ATTEND EXAM TAKEN</th>
+              <th class="sort align-middle ps-3" scope="col" data-sort="hajj" style="width:auto;">HAJJ TAKEN</th>
+              <th class="sort align-middle ps-3" scope="col" data-sort="special" style="width:auto;">SPECIAL TAKEN</th>
+              <th class="sort align-middle ps-3" scope="col" data-sort="unpaid" style="width:auto;">UNPAID TAKEN</th>
               <th class="sort align-middle text-end" scope="col" style="width:5%;"></th>
             </tr>
           </thead>
@@ -50,45 +50,8 @@
             <% allUserLeave.forEach(leave => { %>
 
             <% 
-                  var marriage = '';
-                  var maternity = '';
-                  var paternity = '';
-                  var attendExam = '';
-                  var hajj = '';
-                  var special = '';
-
-                  const checkUser = allUser.find(check => check._id.toString() === leave.user.toString());
-
-                  if(leave.marriage.taken > 0){
-                    marriage = 0;
-                  }else {
-                    marriage = leave.marriage.leave;
-                  }
-
-                  if(checkUser.gender === 'Male'){
-                    maternity = 0;
-                  }else{
-                    maternity = leave.maternity.leave;
-                  }
-
-                  if(checkUser.gender === 'Female' || leave.paternity.taken > 6){
-                    paternity = 0;
-                  } else {
-                    paternity = leave.paternity.leave;
-                  }
-
-                  if(leave.hajj.taken > 0){
-                    hajj = 0;
-                  }else{
-                    hajj = leave.hajj.leave;
-                  }
-
-                  if(leave.special.taken > 7){
-                    special = 0;
-                  }else {
-                    special = leave.special.leave;
-                  }
-                %>
+            const checkUser = allUser.find(check => check._id.toString() === leave.user.toString());
+            %>
 
             <tr class="position-static">
               <td class="align-middle text-body ps-0 staff">
@@ -112,27 +75,27 @@
               </td>
 
               <td class="align-middle text-body text-center white-space-nowrap marriage ps-0">
-                <p class="mb-0 fs-8 fw-bold"><%= marriage %></p>
+                <p class="mb-0 fs-8 fw-bold"><%= leave.marriage.taken %></p>
               </td>
 
               <td class="align-middle text-body text-center white-space-nowrap paternity ps-0">
-                <p class="mb-0 fs-8 fw-bold"><%= paternity %></p>
+                <p class="mb-0 fs-8 fw-bold"><%= leave.paternity.taken %></p>
               </td>
 
               <td class="align-middle text-body text-center white-space-nowrap maternity ps-0">
-                <p class="mb-0 fs-8 fw-bold"><%= maternity %></p>
+                <p class="mb-0 fs-8 fw-bold"><%= leave.maternity.taken %></p>
               </td>
 
               <td class="align-middle text-body text-center white-space-nowrap attendexam ps-0">
-                <p class="mb-0 fs-8 fw-bold"><%= leave.attendExam.leave - leave.attendExam.taken %></p>
+                <p class="mb-0 fs-8 fw-bold"><%= leave.attendExam.taken %></p>
               </td>
 
               <td class="align-middle text-body text-center white-space-nowrap hajj ps-0">
-                <p class="mb-0 fs-8 fw-bold"><%= hajj %></p>
+                <p class="mb-0 fs-8 fw-bold"><%= leave.hajj.taken %></p>
               </td>
 
               <td class="align-middle text-body text-center white-space-nowrap special ps-0">
-                <p class="mb-0 fs-8 fw-bold"><%= special %></p>
+                <p class="mb-0 fs-8 fw-bold"><%= leave.special.taken %></p>
               </td>
 
               <td class="align-middle text-body text-center white-space-nowrap unpaid ps-0">

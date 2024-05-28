@@ -904,9 +904,8 @@
 
               <td class="align-middle text-body white-space-nowrap reliefstaff ps-3">
                 <% 
-                  const checkUserRelief = allUser.find(check => check._id.toString() === leave.assignee[0].toString());
+                console.log(leave.assignee[0]);
                 %>
-                <a class="mb-0 fs-9" href="/staff/details/<%= checkUserRelief._id %>"><%= checkUserRelief.fullname %></a>
               </td>
 
               <td class="align-middle white-space-nowrap text-center startdate ps-0">

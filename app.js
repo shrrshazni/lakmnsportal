@@ -376,31 +376,35 @@ const tenderSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    description: {
-        type: String,
-        required: true
-    },
-    category: {
-        type: String,
-        required: true
-    },
-    deadline: {
-        type: Date,
-        required: true
+    date: {
+        start: { type: String },
+        deadline: {
+            type: Date,
+            required: true
+        }
     },
     budget: {
         type: Number,
         required: true
     },
-    location: {
-        type: String,
-        required: true
-    },
-    postedBy: {
+    twc: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
         required: true
     }
+});
+
+tenderCompanySchema = new mongoose.Schema({
+    name: { type: String, required: true },
+    registration: { type: String, required: true },
+    email: { type: String, required: true },
+    documents: [
+        {
+            tenderId: { type: String },
+            budgetSub: { type: Number },
+            fileId: { type: String }
+
+        }
+    ]
 });
 
 
@@ -423,6 +427,7 @@ const TempAttendance = attendanceDatabase.model(
 );
 const QRCode = attendanceDatabase.model('QRCode', qrCodeSchema);
 const Tender = tenderDatabase.model('Tender', tenderSchema);
+const TenderCompany = tenderDatabase.model('TenderCompany', tenderCompanySchema);
 
 passport.use(User.createStrategy());
 
@@ -3791,6 +3796,57 @@ app.get('/leave/:approval/:id', async function (req, res) {
     }
 });
 
+//ATTENDANCE
+app.get('/attendance', async function (req, res) {
+    const uniqueIdentifier = generateUniqueIdentifier();
+
+    res.render('attendance', {
+        uuid: uuidv4(),
+        uniqueIdentifier: uniqueIdentifier
+    });
+});
+
+// SCAN QR PAGE
+app.get('/scan-qr', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    })
+        .populate('sender')
+        .sort({ timestamp: -1 });
+
+    if (user) {
+        res.render('scan', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4()
+        });
+    }
+});
+
+// ATTENDANCE TODAY FOR HOD PAGE
+app.get('/attendance/today/department/section', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    })
+        .populate('sender')
+        .sort({ timestamp: -1 });
+
+    if (user) {
+        res.render('attendance-today', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4()
+        });
+    }
+}
+);
+
 //HUMAN RESOURCES
 app.get('/human-resource/staff-members/overview', isAuthenticated, async function (req, res) {
     const username = req.user.username;
@@ -4118,15 +4174,7 @@ app.get('/human-resource/leave/balances/update/:id', isAuthenticated, async func
             console.log('Failed to update');
         }
 
-        res.render('hr-leave-balances', {
-            user: user,
-            notifications: notifications,
-            uuid: uuidv4(),
-            allUserLeave: allUserLeave,
-            allUser: allUser,
-            show: 'show',
-            alert: userLeave.user.fullname + ' leave balances updated!'
-        });
+        res.redirect('/human-resource/leave/balances/update/' + userId);
     } catch (err) {
         res.render('hr-leave-balances', {
             user: user,
@@ -4186,18 +4234,12 @@ app.get('/human-resource/attendance/overview', isAuthenticated, async function (
 }
 );
 
-//ATTENDANCE
-app.get('/attendance', async function (req, res) {
-    const uniqueIdentifier = generateUniqueIdentifier();
+//PROCUREMENT
 
-    res.render('attendance', {
-        uuid: uuidv4(),
-        uniqueIdentifier: uniqueIdentifier
-    });
-});
+//TENDER 
 
-// SCAN QR PAGE
-app.get('/scan-qr', isAuthenticated, async function (req, res) {
+//TENDER REGISTER
+app.get('/procurement/tender/register', isAuthenticated, async function (req, res) {
     const username = req.user.username;
     const user = await User.findOne({ username: username });
     const notifications = await Notification.find({
@@ -4208,16 +4250,16 @@ app.get('/scan-qr', isAuthenticated, async function (req, res) {
         .sort({ timestamp: -1 });
 
     if (user) {
-        res.render('scan', {
+        res.render('procurement-tender-register', {
             user: user,
             notifications: notifications,
-            uuid: uuidv4()
-        });
+            uuid: uuidv4(),
+        })
     }
 });
 
-// ATTENDANCE TODAY FOR HOD PAGE
-app.get('/attendance/today/department/section', isAuthenticated, async function (req, res) {
+//TENDER LIST
+app.get('/procurement/tender/register', isAuthenticated, async function (req, res) {
     const username = req.user.username;
     const user = await User.findOne({ username: username });
     const notifications = await Notification.find({
@@ -4228,15 +4270,13 @@ app.get('/attendance/today/department/section', isAuthenticated, async function 
         .sort({ timestamp: -1 });
 
     if (user) {
-        res.render('attendance-today', {
+        res.render('procurement-tender-list', {
             user: user,
             notifications: notifications,
-            uuid: uuidv4()
-        });
+            uuid: uuidv4(),
+        })
     }
-}
-);
-
+});
 
 //SUPER ADMIN
 app.get('/super-admin/update', isAuthenticated, async function (req, res) {
@@ -5888,7 +5928,7 @@ cron.schedule(
 cron.schedule(
     '1 0 * * *',
     () => {
-        console.log('Running cron job to update attendance at 8AM');
+        console.log('Running cron job to update attendance at 1201AM');
         updateAbsentAttendance();
         updateAttendanceForApprovedLeaves();
     },
