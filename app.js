@@ -4145,7 +4145,7 @@ app.get('/human-resource/leave/balances/update/:id', isAuthenticated, async func
     // Helper function to add fields to updatedFields if they have a value
     const addFieldIfExists = (field, value) => {
         if (value !== undefined && value !== '') {
-            updatedFields[field] = parseInt(value, 10);
+            updatedFields[field] = parseFloat(value, 10).toFixed(1);
         }
     };
 
