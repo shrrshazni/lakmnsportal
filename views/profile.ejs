@@ -439,11 +439,19 @@
                 } else{
                     signOutTime = item.date.signOutTime.toLocaleTimeString('en-UK', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone : 'Asia/Kuala_Lumpur' });
                 }
+
+                
+                let signInTime;
+                if(item.date.signInTime === null){
+                    signInTime = 'Nil';
+                } else{
+                    signInTime = item.date.signInTime.toLocaleTimeString('en-UK', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone : 'Asia/Kuala_Lumpur' });
+                }
               %>
               <tr class="position-static">
                 <td class="type align-middle fw-semibold text-start py-2 ps-0 fs-9 fs-md-8 text-body-highlight"><%= item.status %></td>
                 <td class="date align-middle text-center py-2 ps-0 fs-9"><%= item.timestamp.toLocaleDateString('en-UK', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></td>
-                <td class="clockin align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-success"><%= item.date.signInTime.toLocaleTimeString('en-UK', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone : 'Asia/Kuala_Lumpur' }) %></span></td>
+                <td class="clockin align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-success"><%= signInTime %></span></td>
                 <td class="clockin align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-warning"><%= signOutTime %></span></td>
                 <td class="align-middle text-end white-space-nowrap ps-0 action">
                   <div class="font-sans-serif btn-reveal-trigger position-static">
@@ -537,10 +545,6 @@
                 if (years < 1) {
                     years = 0;
                 }
-                
-                console.log("Years:", years);
-                console.log("Months:", months);
-                console.log("Days:", days);
 
                 var currentyears = "";
                 var currentmonths = "";

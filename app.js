@@ -1626,8 +1626,6 @@ app.get('/profile', isAuthenticated, async function (req, res) {
         timestamp: -1
     });
 
-    console.log(attendance);
-
     const date = getDateFormat2();
 
     // calculate user's age
@@ -4903,7 +4901,7 @@ app.post('/api/data/all-attendance/today/hod', isAuthenticated, async function (
                 $match: {
                     timestamp: {
                         $gte: today, // Find records where timestamp is greater than or equal to today
-                        $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000) // Less than tomorrow
+                        $lt: new Date() // Less than tomorrow
                     }
                 }
             },
