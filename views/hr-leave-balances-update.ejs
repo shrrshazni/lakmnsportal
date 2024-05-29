@@ -18,7 +18,6 @@ function formatDate(inputDate) {
       <li class="breadcrumb-item"><a href="#!">Leave Update</a></li>
       <li class="breadcrumb-item active" aria-current="page"><%= userLeave.user.fullname %></li>
       <li class="breadcrumb-item active" aria-current="page"><%= userLeave.user.username %></li>
-      <li class="breadcrumb-item active" aria-current="page"><%= userLeave.user.classification %> <%= userLeave.user.grade %></li>
     </ol>
   </nav>
 
@@ -30,7 +29,7 @@ function formatDate(inputDate) {
 
     <div class="col-12 col-xxl-9 order-1 order-xxl-0">
 
-      <form class="row g-3 mb-6 has-validation" action="/human-resource/leave/balances/update/<%= userLeave.user._id %>" method="post" id="leaveForm">
+      <form class="row g-3 mb-6 has-validation" action="/human-resource/staff-members/overview/update/<%= userLeave.user._id %>" method="post" id="leaveForm">
 
         <div class="col-12 col-md-6">
           <div class="form-floating">
@@ -167,14 +166,14 @@ function formatDate(inputDate) {
         </div>
 
       </form>
-      
+
     </div>
 
     <div class="col-12 col-xxl-3 mb-6 order-0 order-xxl-1">
 
       <div class="card mb-3">
         <div class="card-body">
-          <h5 class="mb-3 text-center"><%= userLeave.user.fullname %>'s Leave Balances</h5>
+          <h5 class="mb-3 text-center">Leave Balances</h5>
 
           <div class="mx-auto mt-n5" id="leave-type-chart-carousel" style="height:300px; width: 250px;"></div>
 

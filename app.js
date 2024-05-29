@@ -3889,6 +3889,65 @@ app.get('/human-resource/staff-members/overview', isAuthenticated, async functio
 }
 );
 
+app.get('/human-resource/staff-members/overview/update/:id', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    }).populate('sender');
+
+    const userId = req.params.id;
+
+    if (user) {
+        const otherUser = await User.findOne({ _id: userId });
+        console.log(otherUser);
+
+        res.render('hr-staffmembers-overview-update', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4(),
+            // data
+            otherUser: otherUser
+        });
+    }
+}).post('/human-resource/staff-members/overview/update/:id', isAuthenticated, async function (req, res) {
+    const userId = req.params.id;
+
+    const {
+        fullname, classification, grade, position, department, section, dateEmployed
+    } = req.body;
+
+    // Initialize updatedFields with the extracted values
+    const updatedFields = { fullname, classification, grade, position, department, section, dateEmployed };
+
+    // Function to filter out empty fields
+    const filterEmptyFields = (fields) => {
+        const filteredFields = {};
+        for (const key in fields) {
+            if (fields[key] !== undefined && fields[key] !== null && fields[key] !== '') {
+                filteredFields[key] = fields[key];
+            }
+        }
+        return filteredFields;
+    };
+
+    // Filter out empty fields
+    const nonEmptyUpdatedFields = filterEmptyFields(updatedFields);
+
+    const updatedUser = await User.findOneAndUpdate(
+        { _id: userId },
+        { $set: nonEmptyUpdatedFields },
+        { new: true, useFindAndModify: false, runValidators: true }
+    );
+
+    if (!updatedUser) {
+        console.log('Failed to update');
+    }
+
+    res.redirect('/human-resource/staff-members/overview/update/' + userId);
+});
+
 app
     .get('/human-resource/staff-members/add-staff', isAuthenticated, async function (req, res) {
         const username = req.user.username;
