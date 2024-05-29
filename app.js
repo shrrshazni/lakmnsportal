@@ -21,7 +21,44 @@ const fs = require('fs').promises;
 const qr = require('qrcode');
 const { timeStamp, time } = require('console');
 const { type } = require('os');
+const requestIp = require('request-ip');
 // const twilio = require('twilio');
+
+// IP CHECK
+// Middleware to restrict access based on IP address
+// Middleware to restrict access based on IP address range
+const restrictAccess = (req, res, next) => {
+    const clientIp = requestIp.getClientIp(req);
+    const [startIp, endIp] = ['192.168.1.0', '192.168.1.999'];
+
+    const loopbackIPv4 = '127.0.0.1';
+    const loopbackIPv6 = '::1';
+
+    // Check if the client IP is a loopback address
+    if (clientIp === loopbackIPv4 || clientIp === loopbackIPv6) {
+        // Allow access for loopback addresses
+        next();
+    } else if (isInRange(clientIp, startIp, endIp)) {
+        // Check if the client IP falls within the specified range
+        next();
+    } else {
+        // Deny access for other IP addresses
+        res.status(403).send('Access forbidden: you are not on the local network');
+    }
+};
+
+// Function to check if an IP address is within a specific range
+const isInRange = (ip, startIp, endIp) => {
+    const start = ipToNumber(startIp);
+    const end = ipToNumber(endIp);
+    const client = ipToNumber(ip);
+    return client >= start && client <= end;
+};
+
+// Function to convert IP address to a number
+const ipToNumber = (ip) => {
+    return ip.split('.').reduce((acc, octet) => (acc << 8) + parseInt(octet, 10), 0);
+};
 
 const mongoURI =
     'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/session';
@@ -393,7 +430,7 @@ const tenderSchema = new mongoose.Schema({
     }
 });
 
-tenderCompanySchema = new mongoose.Schema({
+const tenderCompanySchema = new mongoose.Schema({
     name: { type: String, required: true },
     registration: { type: String, required: true },
     email: { type: String, required: true },
@@ -472,9 +509,12 @@ let transporter = nodemailer.createTransport({
 // const client = twilio(accountSid, authToken);
 // const verifySid = "VAfe5663f4ddd898cce9936534b3abf99a";
 
+// TEST FOR RESTRICT ACCESS
+app.use('/restricted-link', restrictAccess, (req, res) => {
+    res.send('This is a restricted link that can only be accessed from the local network.');
+});
+
 // BASIC USER PART
-
-
 //HOME
 app.get('/', isAuthenticated, async function (req, res) {
     const username = req.user.username;
@@ -688,6 +728,8 @@ app.get('/', isAuthenticated, async function (req, res) {
         });
     }
 });
+
+
 
 //STAFF DETAILS
 app.get('/staff/details/:id', isAuthenticated, async function (req, res) {

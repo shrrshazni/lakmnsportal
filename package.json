@@ -47,6 +47,7 @@
     "passport-local-mongoose": "^8.0.0",
     "path": "^0.12.7",
     "qrcode": "^1.5.3",
+    "request-ip": "^3.3.0",
     "slick-carousel": "^1.8.1",
     "sortablejs": "^1.15.1",
     "swiper": "^11.0.5",

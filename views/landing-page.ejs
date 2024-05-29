@@ -106,17 +106,8 @@
           <label class="mb-0 theme-control-toggle-label theme-control-toggle-dark" for="themeControlToggleSm" data-bs-toggle="tooltip" data-bs-placement="left" title="Switch theme"><span class="icon" data-feather="sun"></span></label>
         </div>
       </div>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+      <button class="navbar-toggler d-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
       <div class="collapse navbar-collapse" id="navbarSupportedContent">
-        <div class="border-bottom border-translucent border-bottom-lg-0 mb-2">
-          <div class="search-box d-inline d-lg-none">
-            <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
-              <input class="form-control search-input search rounded-pill my-4" type="search" placeholder="Search" aria-label="Search" />
-              <span class="fas fa-search search-box-icon"></span>
-
-            </form>
-          </div>
-        </div>
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
           <li class="nav-item border-bottom border-translucent border-bottom-lg-0 d-none"><a class="nav-link lh-1 py-0 fs-9 fw-bold py-3" aria-current="page" href="#">Home</a></li>
           <li class="nav-item border-bottom border-translucent border-bottom-lg-0 d-none"><a class="nav-link lh-1 py-0 fs-9 fw-bold py-3" href="#gallery">Gallery</a></li>
@@ -129,156 +120,14 @@
               <label class="mb-0 theme-control-toggle-label theme-control-toggle-dark" for="themeControlToggle" data-bs-toggle="tooltip" data-bs-placement="left" title="Switch theme"><span class="icon" data-feather="sun"></span></label>
             </div>
           </div>
-          <a class="text-body-tertiary text-body-emphasis-hover px-2 d-none d-lg-inline lh-sm" href="#" data-bs-toggle="modal" data-bs-target="#searchBoxModal"><span class="d-none" data-feather="search" style="height: 20px; width: 20px;"></span></a><a class="btn btn-link text-body order-1 order-lg-0 ps-4 me-lg-2 d-none" href="/sign-up">Sign Up</a><a class="btn btn-phoenix-primary order-0" href="/sign-in"><span class="fw-bold">Sign In</span></a>
+          <!-- <a class="btn btn-phoenix-primary order-0" href="/sign-in"><span class="fw-bold">Sign In</span></a> -->
         </div>
       </div>
     </nav>
   </div>
 
-  <!-- search bar -->
-  <!-- <div class="modal fade" id="searchBoxModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="true" data-phoenix-modal="data-phoenix-modal" style="--phoenix-backdrop-opacity: 1;">
-    <div class="modal-dialog">
-      <div class="modal-content mt-15 rounded-pill">
-        <div class="modal-body p-0">
-          <div class="search-box navbar-top-search-box" data-list='{"valueNames":["title"]}' style="width: auto;">
-            <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
-              <input class="form-control search-input fuzzy-search rounded-pill form-control-lg" type="search" placeholder="Search..." aria-label="Search" />
-              <span class="fas fa-search search-box-icon"></span>
-
-            </form>
-            <div class="btn-close position-absolute end-0 top-50 translate-middle cursor-pointer shadow-none" data-bs-dismiss="search">
-              <button class="btn btn-link p-0" aria-label="Close"></button>
-            </div>
-            <div class="dropdown-menu border start-0 py-0 overflow-hidden w-100">
-              <div class="scrollbar-overlay" style="max-height: 30rem;">
-                <div class="list pb-3">
-                  <h6 class="dropdown-header text-body-highlight fs-10 py-2">24 <span class="text-body-quaternary">results</span></h6>
-                  <hr class="my-0" />
-                  <h6 class="dropdown-header text-body-highlight fs-9 border-bottom border-translucent py-2 lh-sm">Recently Searched </h6>
-                  <div class="py-2"><a class="dropdown-item" href="../../apps/e-commerce/landing/product-details.html">
-                      <div class="d-flex align-items-center">
-
-                        <div class="fw-normal text-body-highlight title"><span class="fa-solid fa-clock-rotate-left" data-fa-transform="shrink-2"></span> Store Macbook</div>
-                      </div>
-                    </a>
-                    <a class="dropdown-item" href="../../apps/e-commerce/landing/product-details.html">
-                      <div class="d-flex align-items-center">
-
-                        <div class="fw-normal text-body-highlight title"> <span class="fa-solid fa-clock-rotate-left" data-fa-transform="shrink-2"></span> MacBook Air - 13″</div>
-                      </div>
-                    </a>
-
-                  </div>
-                  <hr class="my-0" />
-                  <h6 class="dropdown-header text-body-highlight fs-9 border-bottom border-translucent py-2 lh-sm">Products</h6>
-                  <div class="py-2"><a class="dropdown-item py-2 d-flex align-items-center" href="../../apps/e-commerce/landing/product-details.html">
-                      <div class="file-thumbnail me-2"><img class="h-100 w-100 fit-cover rounded-3" src="../../assets/img/products/60x60/3.png" alt="" /></div>
-                      <div class="flex-1">
-                        <h6 class="mb-0 text-body-highlight title">MacBook Air - 13″</h6>
-                        <p class="fs-10 mb-0 d-flex text-body-tertiary"><span class="fw-medium text-body-tertiary text-opactity-85">8GB Memory - 1.6GHz - 128GB Storage</span></p>
-                      </div>
-                    </a>
-                    <a class="dropdown-item py-2 d-flex align-items-center" href="../../apps/e-commerce/landing/product-details.html">
-                      <div class="file-thumbnail me-2"><img class="img-fluid" src="../../assets/img/products/60x60/3.png" alt="" /></div>
-                      <div class="flex-1">
-                        <h6 class="mb-0 text-body-highlight title">MacBook Pro - 13″</h6>
-                        <p class="fs-10 mb-0 d-flex text-body-tertiary"><span class="fw-medium text-body-tertiary text-opactity-85 ms-2">30 Sep at 12:30 PM</span></p>
-                      </div>
-                    </a>
-
-                  </div>
-                  <hr class="my-0" />
-                  <h6 class="dropdown-header text-body-highlight fs-9 border-bottom border-translucent py-2 lh-sm">Quick Links</h6>
-                  <div class="py-2"><a class="dropdown-item" href="../../apps/e-commerce/landing/product-details.html">
-                      <div class="d-flex align-items-center">
-
-                        <div class="fw-normal text-body-highlight title"><span class="fa-solid fa-link text-body" data-fa-transform="shrink-2"></span> Support MacBook House</div>
-                      </div>
-                    </a>
-                    <a class="dropdown-item" href="../../apps/e-commerce/landing/product-details.html">
-                      <div class="d-flex align-items-center">
-
-                        <div class="fw-normal text-body-highlight title"> <span class="fa-solid fa-link text-body" data-fa-transform="shrink-2"></span> Store MacBook″</div>
-                      </div>
-                    </a>
-
-                  </div>
-                  <hr class="my-0" />
-                  <h6 class="dropdown-header text-body-highlight fs-9 border-bottom border-translucent py-2 lh-sm">Files</h6>
-                  <div class="py-2"><a class="dropdown-item" href="../../apps/e-commerce/landing/product-details.html">
-                      <div class="d-flex align-items-center">
-
-                        <div class="fw-normal text-body-highlight title"><span class="fa-solid fa-file-zipper text-body" data-fa-transform="shrink-2"></span> Library MacBook folder.rar</div>
-                      </div>
-                    </a>
-                    <a class="dropdown-item" href="../../apps/e-commerce/landing/product-details.html">
-                      <div class="d-flex align-items-center">
-
-                        <div class="fw-normal text-body-highlight title"> <span class="fa-solid fa-file-lines text-body" data-fa-transform="shrink-2"></span> Feature MacBook extensions.txt</div>
-                      </div>
-                    </a>
-                    <a class="dropdown-item" href="../../apps/e-commerce/landing/product-details.html">
-                      <div class="d-flex align-items-center">
-
-                        <div class="fw-normal text-body-highlight title"> <span class="fa-solid fa-image text-body" data-fa-transform="shrink-2"></span> MacBook Pro_13.jpg</div>
-                      </div>
-                    </a>
-
-                  </div>
-                  <hr class="my-0" />
-                  <h6 class="dropdown-header text-body-highlight fs-9 border-bottom border-translucent py-2 lh-sm">Members</h6>
-                  <div class="py-2"><a class="dropdown-item py-2 d-flex align-items-center" href="../../pages/members.html">
-                      <div class="avatar avatar-l status-online  me-2 text-body">
-                        <img class="rounded-circle " src="../../assets/img/team/40x40/10.webp" alt="" />
-
-                      </div>
-                      <div class="flex-1">
-                        <h6 class="mb-0 text-body-highlight title">Carry Anna</h6>
-                        <p class="fs-10 mb-0 d-flex text-body-tertiary">anna@technext.it</p>
-                      </div>
-                    </a>
-                    <a class="dropdown-item py-2 d-flex align-items-center" href="../../pages/members.html">
-                      <div class="avatar avatar-l  me-2 text-body">
-                        <img class="rounded-circle " src="../../assets/img/team/40x40/12.webp" alt="" />
-
-                      </div>
-                      <div class="flex-1">
-                        <h6 class="mb-0 text-body-highlight title">John Smith</h6>
-                        <p class="fs-10 mb-0 d-flex text-body-tertiary">smith@technext.it</p>
-                      </div>
-                    </a>
-
-                  </div>
-                  <hr class="my-0" />
-                  <h6 class="dropdown-header text-body-highlight fs-9 border-bottom border-translucent py-2 lh-sm">Related Searches</h6>
-                  <div class="py-2"><a class="dropdown-item" href="../../apps/e-commerce/landing/product-details.html">
-                      <div class="d-flex align-items-center">
-
-                        <div class="fw-normal text-body-highlight title"><span class="fa-brands fa-firefox-browser text-body" data-fa-transform="shrink-2"></span> Search in the Web MacBook</div>
-                      </div>
-                    </a>
-                    <a class="dropdown-item" href="../../apps/e-commerce/landing/product-details.html">
-                      <div class="d-flex align-items-center">
-
-                        <div class="fw-normal text-body-highlight title"> <span class="fa-brands fa-chrome text-body" data-fa-transform="shrink-2"></span> Store MacBook″</div>
-                      </div>
-                    </a>
-
-                  </div>
-                </div>
-                <div class="text-center">
-                  <p class="fallback fw-bold fs-7 d-none">No Result Found.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div> -->
-
   <!-- hero section -->
-  <section class="pb-2 overflow-hidden" id="home">
+  <section class="pb-2 overflow-hidden shadow-lg" id="home">
     <div class="hero-header-container-alternate position-relative">
       <div class="container-small px-lg-5 px-xxl-3">
         <div class="row align-items-center">
@@ -446,18 +295,15 @@
 
   <section class="bg-body dark__bg-gray-1000 pb-10 overflow-hidden">
 
-    <div class="container-small px-lg-10 px-xxl-3">
+    <div class="container-small px-lg-8 px-xxl-2 px-3">
       <div class="row justify-content-center">
         <div class="col-12 text-center px-md-13">
-          <div class="card py-md-5 px-md-13 border-0 z-1 shadow-lg">
-            <!--/.bg-holder-->
+          <div class="card py-md-3 px-md-10 border-0 z-1 shadow-lg">
 
             <div class="card-body position-relative">
-              <div class="d-dark-none mb-4 text-center"><img src="/assets/img/spot-illustrations/22.png" alt="" style="width: 100%;"></div>
-              <div class="d-light-none mb-4 txt-center"><img src="/assets/img/spot-illustrations/dark_22.png" alt="" style="width: 100%;"></div>
 
               <!-- <p class="fw-bold"><span class="text-primary fs-6"></span></p> -->
-              <h1 class="fs-5 fs-sm-4 fs-lg-3 fw-bold lh-sm mb-3">Join<span class="gradient-text-primary fw-bold mx-2">lakmnsportal</span><span>today</span></h1>
+              <h1 class="fs-5 fs-sm-4 fs-lg-3 fw-bold lh-sm">Join<span class="gradient-text-primary fw-bold mx-2">lakmnsportal</span><span>today</span></h1>
               <!-- <form class="d-flex justify-content-center mb-3 px-xxl-15">
                 <div class="d-grid d-sm-block"></div>
                 <input class="form-control me-3" id="ctaEmail1" type="email" placeholder="Email" aria-describedby="ctaEmail1" />
@@ -478,7 +324,7 @@
   <!-- footer begin ============================-->
   <section class="bg-dark dark__bg-gray-1000" data-bs-theme="dark">
 
-    <div class="container-small px-lg-7 px-xxl-3 mt-n13 mt-lg-n3">
+    <div class="container-small px-lg-7 px-xxl-3">
       <div class="row gx-xxl-8 gy-5 align-items-center mb-5">
         <div class="col-xl-auto text-center"><a href="#"><img src="../../assets/img/icons/logo.png" height="48" alt="" /></a></div>
         <div class="col-xl-auto flex-1">
