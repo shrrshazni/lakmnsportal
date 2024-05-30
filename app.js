@@ -1623,10 +1623,39 @@ app.get('/reset-password/:id', async function (req, res) {
     console.log(id);
 
     res.render('reset-password', {
-        id: id
+        id: id,
+        show: '',
+        alert: ''
     });
+
 }).post('/reset-password/id', async function (rrq, res) {
     const id = req.params.id;
+    const user = await User.findOne({ _id: id });
+
+    await user.setPassword(req.body.newPassword);
+    const updatePassword = await user.save();
+
+    if (updatePassword) {
+
+        res.render('sign-in', {
+            validationUsername: '',
+            validationPassword: '',
+            // input value
+            username: '',
+            password: '',
+            // toast
+            toastShow: 'show',
+            toastMsg: 'Reset password successful!'
+        });
+
+    } else {
+
+        res.render('reset-password', {
+            id: id,
+            show: 'show',
+            alert: 'Update password failed!'
+        });
+    }
 });
 
 //SIGNOUT
@@ -4847,7 +4876,7 @@ app.get('/api/all-attendance/today/all', async function (req, res) {
 app.post('/api/data/all-attendance/today/human-resources', isAuthenticated, async function (req, res) {
     const searchQuery = req.query.search || ''; // Get search query from request query params
     const page = parseInt(req.query.page) || 1; // Get page number from request query params
-    const limit = 5; // Number of items per page
+    const limit = 10; // Number of items per page
     const skip = (page - 1) * limit;
 
     // Get today's date
@@ -5164,7 +5193,7 @@ app.get('/api/qrcode/generate', async (req, res) => {
         const qrCodeImage = await qr.toDataURL(uniqueIdentifier, {
             type: 'image/png',
             errorCorrectionLevel: 'H',
-            color: { dark: '#3874ff', light: '#ffffff' }, // Set the color (dark is the main color, light is the background color)
+            color: { dark: '#22438f', light: '#ffffff' }, // Set the color (dark is the main color, light is the background color)
             width: 400,
             margin: 0 // Set the width of the QR code
         });

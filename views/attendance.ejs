@@ -89,13 +89,13 @@
     }
   </style>
 
-  <div class="mb-0 mt-n5">
+  <div class="mb-6 mt-n5">
 
     <div class="row gy-3 gx-6" style="min-height: 50vh;">
 
       <div class="col-md-6 mb-0 p-lg-5 p-3 pe-none">
 
-        <div class="container rounded-5 border border-gray p-4 p-lg-6" style="background-color: #3874ff;">
+        <div class="container rounded-5 border border-gray p-4 p-lg-6" style="background-color: #22438f;">
           <div class="qr-code-container text-center p-1 p-lg-4 rounded-2 mb-10" style="background-color: #FFF;">
             <img id="qrCode" class="w-100 border border-light border-1">
           </div>
@@ -469,10 +469,42 @@
         </div>
 
       </div>
+
     </div>
 
   </div>
 
+</div>
+
+<style>
+  .slider {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .slide-text {
+    display: inline-block;
+    white-space: nowrap;
+    font-size: 3rem;
+    animation: slide-right 15s linear infinite;
+  }
+
+  @keyframes slide-right {
+    0% {
+      transform: translateX(100vw);
+    }
+
+    100% {
+      transform: translateX(-100vw);
+    }
+  }
+</style>
+
+<div class="mb-3">
+  <div class="slider">
+    <div class="slide-text fw-bold fst-italic">Selamat Menyambut Hari Gawai daripada Kak Azah Projek</div>
+  </div>
 </div>
 
 <%- include('partials/public-footer.ejs') %>

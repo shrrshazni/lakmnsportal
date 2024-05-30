@@ -308,7 +308,7 @@
 
       <div class="card mb-3">
         <div class="card-body">
-          <h5 class="mb-3">Leave Balances</h5>
+          <h5 class="mb-3">Leave Entitlements</h5>
 
           <div class="mx-auto mt-n5" id="leave-type-chart-carousel" style="height:300px; width: 250px;"></div>
 
@@ -534,7 +534,7 @@
 
             <div class="d-flex align-items-center mb-1">
               <span class="d-inline-block bg-info-light bullet-item me-2"></span>
-              <p class="mb-0 fw-semibold text-body lh-sm flex-1">Annual Leave Balance</p>
+              <p class="mb-0 fw-semibold text-body lh-sm flex-1">Annual Leave</p>
             </div>
 
             <div style="position: relative;">
@@ -573,7 +573,7 @@
 
             <div class="d-flex align-items-center mb-1">
               <span class="d-inline-block bg-warning-light bullet-item me-2"></span>
-              <p class="mb-0 fw-semibold text-body lh-sm flex-1">Sick Extended</p>
+              <p class="mb-0 fw-semibold text-body lh-sm flex-1">Sick Extended Leave</p>
             </div>
 
             <div style="position: relative;">
@@ -584,25 +584,6 @@
                 </svg>
               </div>
               <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(-10%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.sickExtended.leave - userLeave.sickExtended.taken %></span>
-            </div>
-
-          </div>
-
-          <div class="align-items-center justify-content-between d-flex mb-0 mt-n2">
-
-            <div class="d-flex align-items-center mb-1">
-              <span class="d-inline-block bg-danger-light bullet-item me-2"></span>
-              <p class="mb-0 fw-semibold text-body lh-sm flex-1">Emergency Leave Taken</p>
-            </div>
-
-            <div style="position: relative;">
-              <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:100">
-                <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
-                  <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
-                  <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
-                </svg>
-              </div>
-              <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.emergency.taken %></span>
             </div>
 
           </div>
@@ -702,25 +683,6 @@
 
           </div>
 
-          <div class="align-items-center justify-content-between d-flex mb-0">
-
-            <div class="d-flex align-items-center mb-1">
-              <span class="d-inline-block bg-primary bullet-item me-2"></span>
-              <p class="mb-0 fw-semibold text-body lh-sm flex-1">Unpaid Leave Taken</p>
-            </div>
-
-            <div style="position: relative;">
-              <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:100">
-                <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
-                  <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
-                  <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
-                </svg>
-              </div>
-              <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.unpaid.taken %></span>
-            </div>
-
-          </div>
-
           <div class="align-items-center justify-content-between d-flex mb-0 <%= showSpecial %>">
 
             <div class="d-flex align-items-center mb-1">
@@ -736,6 +698,44 @@
                 </svg>
               </div>
               <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.special.leave %></span>
+            </div>
+
+          </div>
+
+          <div class="align-items-center justify-content-between d-flex mb-0 mt-n2">
+
+            <div class="d-flex align-items-center mb-1">
+              <span class="d-inline-block bg-danger-light bullet-item me-2"></span>
+              <p class="mb-0 fw-semibold text-body lh-sm flex-1">Emergency Leave Taken</p>
+            </div>
+
+            <div style="position: relative;">
+              <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:100">
+                <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
+                  <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
+                  <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
+                </svg>
+              </div>
+              <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.emergency.taken %></span>
+            </div>
+
+          </div>
+
+          <div class="align-items-center justify-content-between d-flex mb-0">
+
+            <div class="d-flex align-items-center mb-1">
+              <span class="d-inline-block bg-primary bullet-item me-2"></span>
+              <p class="mb-0 fw-semibold text-body lh-sm flex-1">Unpaid Leave Taken</p>
+            </div>
+
+            <div style="position: relative;">
+              <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:100">
+                <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
+                  <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
+                  <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
+                </svg>
+              </div>
+              <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.unpaid.taken %></span>
             </div>
 
           </div>

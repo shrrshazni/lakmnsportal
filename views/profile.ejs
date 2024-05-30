@@ -111,8 +111,8 @@
     <ul class="nav nav-underline fs-9 flex-nowrap mb-3 pb-1" id="myTab" role="tablist">
       <li class="nav-item me-3"><a class="nav-link text-nowrap active" id="orders-tab" data-bs-toggle="tab" href="#tab-activity" role="tab" aria-controls="tab-orders" aria-selected="true"><span class="fa-solid fa-clock me-2"></span>Activity<span class="text-body-tertiary fw-normal"> (<%= activities.length %>)</span></a></li>
       <li class="nav-item me-3"><a class="nav-link text-nowrap" id="reviews-tab" data-bs-toggle="tab" href="#tab-leave" role="tab" aria-controls="tab-orders" aria-selected="true"><span class="fa-solid fa-calendar me-2"></span>Leave<span class="text-body-tertiary fw-normal"></span></a></li>
-      <li class="nav-item me-3"><a class="nav-link text-nowrap" id="wishlist-tab" data-bs-toggle="tab" href="#tab-attachment" role="tab" aria-controls="tab-orders" aria-selected="true"><span class="fa-solid fa-clipboard me-2"></span>Attachments</a></li>
       <li class="nav-item me-3"><a class="nav-link text-nowrap" id="wishlist-tab" data-bs-toggle="tab" href="#tab-attendance" role="tab" aria-controls="tab-orders" aria-selected="true"><span class="fa-solid fa-clipboard-user me-2"></span>Attendances</a></li>
+      <li class="nav-item me-3"><a class="nav-link text-nowrap" id="wishlist-tab" data-bs-toggle="tab" href="#tab-attachment" role="tab" aria-controls="tab-orders" aria-selected="true"><span class="fa-solid fa-clipboard me-2"></span>Attachments</a></li>
       <li class="nav-item me-3"><a class="nav-link text-nowrap" id="wishlist-tab" data-bs-toggle="tab" href="#tab-personal" role="tab" aria-controls="tab-orders" aria-selected="true"><span class="fa-solid fa-user me-2"></span>Personal</a></li>
     </ul>
   </div>
@@ -193,7 +193,7 @@
 
     <div class="tab-pane fade" id="tab-leave" role="tabpanel" aria-labelledby="leaves-tab">
 
-      <div class="border-bottom border-translucent mt-3" id="leaves" data-list='{"valueNames":["type","reliefstaff","startdate","returndate","status"],"page":5,"pagination":true}'>
+      <div class="border-bottom-0 border-translucent mt-3" id="leaves" data-list='{"valueNames":["type","reliefstaff","startdate","returndate","status"],"page":5,"pagination":true}'>
         <div class="row align-items-end justify-content-between pb-4 g-3">
 
           <div class="col-12 col-md-auto">
@@ -206,6 +206,10 @@
           </div>
 
         </div>
+
+        <% if (leave && leave.length>0) { %>
+        <!-- table item -->
+        <% leave.forEach(function(leaves) { %>
         <div class="table-responsive ms-n1 ps-1 scrollbar">
           <table class="table fs-9 mb-0 border-top border-translucent">
             <thead>
@@ -240,9 +244,6 @@
             %>
 
             <tbody class="list" id="project-summary-table-body">
-              <% if (leave && leave.length>0) { %>
-              <!-- table item -->
-              <% leave.forEach(function(leaves) { %>
 
               <% 
                    var statusColor = '';
@@ -298,10 +299,92 @@
                   </div>
                 </td>
               </tr>
-              <%  }); %> <% } else { %>
+            </tbody>
+          </table>
+        </div>
+        <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
+          <div class="col-auto d-flex">
+            <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p><a class="fw-semibold" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semibold d-none" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
+          </div>
+          <div class="col-auto d-flex">
+            <button class="page-link" data-list-pagination="prev"><span class="fas fa-chevron-left"></span></button>
+            <ul class="mb-0 pagination"></ul>
+            <button class="page-link pe-0" data-list-pagination="next"><span class="fas fa-chevron-right"></span></button>
+          </div>
+        </div>
+        <%  }); %> <% } else { %>
+        <p class="fs-8 text-center">No leave submitted</p>
+        <% } %>
+      </div>
+
+    </div>
+
+    <div class="tab-pane fade" id="tab-attendance" role="tabpanel" aria-labelledby="attendance-tab">
+      <div class="border-bottom border-translucent mt-3" id="attendance" data-list='{"valueNames":["type","date","clockin","clockout"],"page":5,"pagination":true}'>
+        <div class="row align-items-end justify-content-between pb-4 g-3">
+
+          <div class="col-12 col-md-auto">
+            <div class="search-box">
+              <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
+                <input class="form-control search-input search form-control-sm" type="search" placeholder="Search team members" aria-label="Search" />
+                <span class="fas fa-search search-box-icon"></span>
+              </form>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="table-responsive ms-n1 ps-1 scrollbar">
+          <table class="table fs-9 mb-0 border-top border-translucent">
+            <thead>
+              <tr>
+                <th class="sort align-middle ps-0 text-start text-uppercase" scope="col" data-sort="date" style="width:15%;min-width: 150px;">Date</th>
+                <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="type" style="width:15%;min-width: 100px;">Status</th>
+                <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="clockin" style="width:15%;min-width: 100px;">Clock In</th>
+                <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="clockout" style="width:15%;min-width: 100px;">Clock Out</th>
+              </tr>
+            </thead>
+
+            <tbody class="list" id="attendance-table-content">
+              <% if(attendance && attendance.length > 0){ %>
+              <% attendance.forEach(item => { %>
+
+              <% 
+                
+                let signOutTime;
+                if(item.date.signOutTime === null){
+                    signOutTime = 'Nil';
+                } else{
+                    signOutTime = item.date.signOutTime.toLocaleTimeString('en-MY', {hour: 'numeric',minute: 'numeric', hour12: true, timeZone : 'Asia/Kuala_Lumpur' });
+                }
+                
+                let signInTime;
+                if(item.date.signInTime === null){
+                    signInTime = 'Nil';
+                } else{
+                    signInTime = item.date.signInTime.toLocaleTimeString('en-MY', { hour: 'numeric',minute: 'numeric', hour12: true, timeZone : 'Asia/Kuala_Lumpur' });
+                }
+
+                var badgeColour;
+                if (item.status === 'Late') {
+                  badgeColour = 'danger';
+                } else if (item.status === 'Leave') {
+                  badgeColour = 'info';
+                } else {
+                  badgeColour = 'success';
+                }
+              %>
               <tr class="position-static">
-                <td class="align-middle white-space-nowrap ps-0 border-bottom-0 fs-9 text-center">
-                  <p class="">No leave submitted from you</p>
+                <td class="date align-middle fw-semibold text-start py-2 ps-0 fs-9"><%= item.timestamp.toLocaleDateString('en-UK', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></td>
+                <td class="type align-middle fw-semibold text-center py-2 ps-0 fs-9 fs-md-8 text-body-highlight"><span class="badge badge-phoenix fs-10 badge-phoenix-<%= badgeColour %>"><%= item.status %></span></td>
+                <td class="clockin align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-success"><%= signInTime %></span></td>
+                <td class="clockin align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-warning"><%= signOutTime %></span></td>
+              </tr>
+              <% }); %>
+              <% }else{ %>
+              <tr class="position-static">
+                <td class="align-middle white-space-nowrap border-bottom-0">
+                  <p>No activity detected from <span class="fw-bold text-primary"><%= user.fullname %></span></p>
                 </td>
               </tr>
               <% } %>
@@ -319,7 +402,6 @@
           </div>
         </div>
       </div>
-
     </div>
 
     <div class="tab-pane fade" id="tab-attachment" role="tabpanel" aria-labelledby="attachment-tab">
@@ -327,28 +409,28 @@
       <div class="mb-3 mt-3">
         <div class="overflow-x-hidden vh-50 scrollbar w-100">
           <%
-            const formatDateFile = (date) => {
-              const options = { day: 'numeric', month: 'short', hour: 'numeric', minute: 'numeric', hour12: true };
-              const formattedDate = new Intl.DateTimeFormat('en-US', options).format(date);
-            
-              // Add day suffix (st, nd, rd, or th)
-              const day = date.getDate();
-              const daySuffix = (day) => {
-                if (day >= 11 && day <= 13) {
-                  return 'th';
-                }
-                const lastDigit = day % 10;
-                switch (lastDigit) {
-                  case 1: return 'st';
-                  case 2: return 'nd';
-                  case 3: return 'rd';
-                  default: return 'th';
-                   }
+              const formatDateFile = (date) => {
+                const options = { day: 'numeric', month: 'short', hour: 'numeric', minute: 'numeric', hour12: true };
+                const formattedDate = new Intl.DateTimeFormat('en-US', options).format(date);
+              
+                // Add day suffix (st, nd, rd, or th)
+                const day = date.getDate();
+                const daySuffix = (day) => {
+                  if (day >= 11 && day <= 13) {
+                    return 'th';
+                  }
+                  const lastDigit = day % 10;
+                  switch (lastDigit) {
+                    case 1: return 'st';
+                    case 2: return 'nd';
+                    case 3: return 'rd';
+                    default: return 'th';
+                     }
+                };
+              
+                return formattedDate.replace(/(\d+)/, (match, p1) => `${p1}${daySuffix(day)}`);
               };
-            
-              return formattedDate.replace(/(\d+)/, (match, p1) => `${p1}${daySuffix(day)}`);
-            };
-          %>
+            %>
 
           <% const modalFiles = files.filter((file) => file.user.toString() === user._id.toString() && file.origin !== 'leave'); %>
           <% const lastIndexFile = modalFiles.length - 1; var borderModalFile = ''; %>
@@ -356,12 +438,12 @@
           <% modalFiles.forEach((file, index) => { %>
 
           <% 
-                if(index === lastIndexFile){
-                    borderModalFile = 'border-bottom';
-                } else {
-                    borderModalFile = '';
-                }
-              %>
+                  if(index === lastIndexFile){
+                      borderModalFile = 'border-bottom';
+                  } else {
+                      borderModalFile = '';
+                  }
+                %>
 
           <% if(file.type === '.png' || file.type === '.webp' || file.type === '.jpg' || file.type === '.jpeg' || file.type === '.gif' ){ %>
           <div class="border-top <%= borderModalFile %> border-dashed px-0 pt-4 pb-3">
@@ -408,83 +490,6 @@
 
         </div>
 
-      </div>
-    </div>
-
-    <div class="tab-pane fade" id="tab-attendance" role="tabpanel" aria-labelledby="attendance-tab">
-      <div class="border-bottom border-translucent mt-3" id="attendance" data-list='{"valueNames":["date","clockin","clockout"],"page":5,"pagination":true}'>
-        <div class="row align-items-end justify-content-between pb-4 g-3">
-
-          <div class="col-12 col-md-auto">
-            <div class="search-box">
-              <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
-                <input class="form-control search-input search form-control-sm" type="search" placeholder="Search team members" aria-label="Search" />
-                <span class="fas fa-search search-box-icon"></span>
-              </form>
-            </div>
-          </div>
-
-        </div>
-
-        <div class="table-responsive ms-n1 ps-1 scrollbar">
-          <table class="table fs-9 mb-0 border-top border-translucent">
-            <thead>
-              <tr>
-                <th class="sort align-middle ps-0 text-start text-uppercase" scope="col" data-sort="type" style="width:15%;min-width: 100px;">Status</th>
-                <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="date" style="width:15%;min-width: 150px;">Date</th>
-                <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="clockin" style="width:15%;min-width: 100px;">Clock In</th>
-                <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="clockout" style="width:15%;min-width: 100px;">Clock Out</th>
-              </tr>
-            </thead>
-
-            <tbody class="list" id="attendance-table-content">
-              <% if(attendance && attendance.length > 0){ %>
-              <% attendance.forEach(item => { %>
-
-              <% 
-                
-                let signOutTime;
-                if(item.date.signOutTime === null){
-                    signOutTime = 'Nil';
-                } else{
-                    signOutTime = item.date.signOutTime.toLocaleTimeString('en-UK', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone : 'Asia/Kuala_Lumpur' });
-                }
-
-                
-                let signInTime;
-                if(item.date.signInTime === null){
-                    signInTime = 'Nil';
-                } else{
-                    signInTime = item.date.signInTime.toLocaleTimeString('en-UK', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone : 'Asia/Kuala_Lumpur' });
-                }
-              %>
-              <tr class="position-static">
-                <td class="type align-middle fw-semibold text-start py-2 ps-0 fs-9 fs-md-8 text-body-highlight"><%= item.status %></td>
-                <td class="date align-middle text-center py-2 ps-0 fs-9"><%= item.timestamp.toLocaleDateString('en-UK', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></td>
-                <td class="clockin align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-success"><%= signInTime %></span></td>
-                <td class="clockin align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-warning"><%= signOutTime %></span></td>
-              </tr>
-              <% }); %>
-              <% }else{ %>
-              <tr class="position-static">
-                <td class="align-middle white-space-nowrap border-bottom-0">
-                  <p>No activity detected from <span class="fw-bold text-primary"><%= user.fullname %></span></p>
-                </td>
-              </tr>
-              <% } %>
-            </tbody>
-          </table>
-        </div>
-        <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
-          <div class="col-auto d-flex">
-            <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p><a class="fw-semibold" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semibold d-none" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
-          </div>
-          <div class="col-auto d-flex">
-            <button class="page-link" data-list-pagination="prev"><span class="fas fa-chevron-left"></span></button>
-            <ul class="mb-0 pagination"></ul>
-            <button class="page-link pe-0" data-list-pagination="next"><span class="fas fa-chevron-right"></span></button>
-          </div>
-        </div>
       </div>
     </div>
 
