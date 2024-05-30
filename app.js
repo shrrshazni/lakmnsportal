@@ -4229,7 +4229,7 @@ app.get('/human-resource/leave/balances/update/:id', isAuthenticated, async func
     const {
         annualtotal, annualtaken, sicktotal, sicktaken,
         sickExtendedTotal, sickExtendedTaken, emergency,
-        attendexam, marriage, paternity, unpaid, special
+        attendexam, marriage, paternity, unpaid, special, hajj
     } = req.body;
 
     const allUserLeave = await UserLeave.find();
@@ -4261,6 +4261,7 @@ app.get('/human-resource/leave/balances/update/:id', isAuthenticated, async func
     addFieldIfExists('paternity.taken', paternity);
     addFieldIfExists('unpaid.taken', unpaid);
     addFieldIfExists('special.taken', special);
+    addFieldIfExists('hajj.taken', hajj);
 
     try {
         const updatedLeave = await UserLeave.findOneAndUpdate(
