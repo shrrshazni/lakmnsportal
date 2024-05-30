@@ -1,5 +1,5 @@
 {
-  "name": "lakmns-portal",
+  "name": "lakmnsportal",
   "version": "1.0.0",
   "description": "Multipurpose app to be used closed staff user.",
   "main": "app.js",
@@ -53,5 +53,13 @@
     "swiper": "^11.0.5",
     "twilio": "^5.0.1",
     "uuid": "^9.0.1"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shrrshazni/lakmnsportal.git"
+  },
+  "bugs": {
+    "url": "https://github.com/shrrshazni/lakmnsportal/issues"
+  },
+  "homepage": "https://github.com/shrrshazni/lakmnsportal#readme"
 }
