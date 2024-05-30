@@ -54,51 +54,52 @@
             %>
 
             <tr class="position-static">
-              <td class="align-middle text-body ps-0 staff">
-                <a class="mb-0 fw-bold fs-8" href="/staff/details/<%= checkUser._id %>"><%= checkUser.fullname %></a>
+
+              <td class="align-middle text-body ps-0">
+                <a class="mb-0 fw-bold fs-8 staff" href="/staff/details/<%= checkUser._id %>"><%= checkUser.fullname %></a>
               </td>
 
-              <td class="align-middle text-body text-center white-space-nowrap annual ps-0">
+              <td class="align-middle text-body text-center white-space-nowrap ps-0 annual">
                 <p class="mb-0 fs-8 fw-bold"><%= leave.annual.leave - leave.annual.taken %></p>
               </td>
 
-              <td class="align-middle text-body text-center white-space-nowrap sick ps-0">
+              <td class="align-middle text-body text-center white-space-nowrap ps-0 sick">
                 <p class="mb-0 fs-8 fw-bold"><%= leave.sick.leave - leave.sick.taken %></p>
               </td>
 
-              <td class="align-middle text-body text-center white-space-nowrap sickextended ps-0">
+              <td class="align-middle text-body text-center white-space-nowrap ps-0 sickextended">
                 <p class="mb-0 fs-8 fw-bold"><%= leave.sickExtended.leave - leave.sickExtended.taken %></p>
               </td>
 
-              <td class="align-middle text-body text-center white-space-nowrap emergency ps-0">
+              <td class="align-middle text-body text-center white-space-nowrap ps-0 emergency">
                 <p class="mb-0 fs-8 fw-bold"><%= leave.emergency.taken %></p>
               </td>
 
-              <td class="align-middle text-body text-center white-space-nowrap marriage ps-0">
+              <td class="align-middle text-body text-center white-space-nowrap ps-0 marriage">
                 <p class="mb-0 fs-8 fw-bold"><%= leave.marriage.taken %></p>
               </td>
 
-              <td class="align-middle text-body text-center white-space-nowrap paternity ps-0">
+              <td class="align-middle text-body text-center white-space-nowrap ps-0 paternity">
                 <p class="mb-0 fs-8 fw-bold"><%= leave.paternity.taken %></p>
               </td>
 
-              <td class="align-middle text-body text-center white-space-nowrap maternity ps-0">
+              <td class="align-middle text-body text-center white-space-nowrap ps-0 maternity">
                 <p class="mb-0 fs-8 fw-bold"><%= leave.maternity.taken %></p>
               </td>
 
-              <td class="align-middle text-body text-center white-space-nowrap attendexam ps-0">
+              <td class="align-middle text-body text-center white-space-nowrap ps-0 attendexam">
                 <p class="mb-0 fs-8 fw-bold"><%= leave.attendExam.taken %></p>
               </td>
 
-              <td class="align-middle text-body text-center white-space-nowrap hajj ps-0">
+              <td class="align-middle text-body text-center white-space-nowrap ps-0 hajj">
                 <p class="mb-0 fs-8 fw-bold"><%= leave.hajj.taken %></p>
               </td>
 
-              <td class="align-middle text-body text-center white-space-nowrap special ps-0">
+              <td class="align-middle text-body text-center white-space-nowrap ps-0 special">
                 <p class="mb-0 fs-8 fw-bold"><%= leave.special.taken %></p>
               </td>
 
-              <td class="align-middle text-body text-center white-space-nowrap unpaid ps-0">
+              <td class="align-middle text-body text-center white-space-nowrap ps-0 unpaid">
                 <p class="mb-0 fs-8 fw-bold"><%= leave.unpaid.taken %></p>
               </td>
 

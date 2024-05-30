@@ -292,7 +292,7 @@
           <div class="card" style="height: 375px;">
             <div class="card-body">
 
-              <h5 class="text-body-emphasis text-nowrap">Leave Balances</h5>
+              <h5 class="text-body-emphasis text-nowrap">Leave Entitlements</h5>
               <div class="mx-auto mt-n7" id="leave-type-chart-carousel" style="height:400px; width: 250px;"></div>
 
               <script>
@@ -473,7 +473,7 @@
               <p>There is no team member found</p>
             </td>
           </tr>
-          
+
           <% } %>
         </tbody>
       </table>
@@ -1321,7 +1321,7 @@
 
     <div class="row g-3 mb-3">
       <div class="col-12 col-md-6">
-        <h3 class="text-body-emphasis text-nowrap">Leave Balances</h3>
+        <h3 class="text-body-emphasis text-nowrap">Leave Entitlements</h3>
         <p class="text-body-tertiary mb-md-7"></p>
         <div class="d-flex align-items-center justify-content-between">
           <p class="mb-0 fw-bold">Leave Type </p>
@@ -1338,10 +1338,6 @@
         <div class="d-flex align-items-center mb-1"><span class="d-inline-block bg-warning-light bullet-item me-2"></span>
           <p class="mb-0 fw-semibold text-body lh-sm flex-1">Sick Extended Leave</p>
           <h5 class="mb-0 text-body"><%= userLeave.sickExtended.leave %></h5>
-        </div>
-        <div class="d-flex align-items-center mb-1"><span class="d-inline-block bg-danger-light bullet-item me-2"></span>
-          <p class="mb-0 fw-semibold text-body lh-sm flex-1">Emergency Leave Taken</p>
-          <h5 class="mb-0 text-body"><%= userLeave.emergency.taken %></h5>
         </div>
         <div class="d-flex align-items-center mb-1 <%= marriage %>"><span class="d-inline-block bg-danger-dark bullet-item me-2"></span>
           <p class="mb-0 fw-semibold text-body lh-sm flex-1">Marriage Leave</p>
@@ -1363,13 +1359,17 @@
           <p class="mb-0 fw-semibold text-body lh-sm flex-1">Hajj Leave</p>
           <h5 class="mb-0 text-body"><%= userLeave.hajj.leave %></h5>
         </div>
+        <div class="d-flex align-items-center mb-1 <%= special %>"><span class="d-inline-block bg-warning-lighter bullet-item me-2"></span>
+          <p class="mb-0 fw-semibold text-body lh-sm flex-1">Special Leave</p>
+          <h5 class="mb-0 text-body"><%= userLeave.special.leave %></h5>
+        </div>
         <div class="d-flex align-items-center mb-1"><span class="d-inline-block bg-primary bullet-item me-2"></span>
           <p class="mb-0 fw-semibold text-body lh-sm flex-1">Unpaid Leave Taken</p>
           <h5 class="mb-0 text-body"><%= userLeave.unpaid.taken %></h5>
         </div>
-        <div class="d-flex align-items-center mb-1 <%= special %>"><span class="d-inline-block bg-warning-lighter bullet-item me-2"></span>
-          <p class="mb-0 fw-semibold text-body lh-sm flex-1">Special Leave</p>
-          <h5 class="mb-0 text-body"><%= userLeave.special.leave %></h5>
+        <div class="d-flex align-items-center mb-1"><span class="d-inline-block bg-danger-light bullet-item me-2"></span>
+          <p class="mb-0 fw-semibold text-body lh-sm flex-1">Emergency Leave Taken</p>
+          <h5 class="mb-0 text-body"><%= userLeave.emergency.taken %></h5>
         </div>
         <a class="btn btn-outline-primary mt-5" href="/leave/history">See History<span class="fas fa-angle-right ms-2 fs-10 text-center"></span></a>
       </div>

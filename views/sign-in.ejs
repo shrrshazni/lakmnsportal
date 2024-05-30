@@ -27,7 +27,7 @@
               <input class="form-control <%= validationUsername %> form-icon-input" id="username" type="text" name="username" value="<%= username %>" placeholder="Username" /><span class="fas fa-user text-900 fs--1 form-icon"></span>
               <div class="valid-feedback">Looks good!</div>
               <div class="invalid-feedback">
-                Username required
+                Username required/incorrect
               </div>
             </div>
           </div>
@@ -38,15 +38,16 @@
               <div class="container px-0">
                 <div>
                   <input class="form-control <%= validationPassword %> form-icon-input" id="password" type="password" name="password" value="<%= password %>" placeholder="Password" /><span class="fas fa-key text-900 fs--1 form-icon"></span>
+                  <div class="valid-feedback">Looks good!</div>
+                  <div class="invalid-feedback">
+                    Required/Incorrect, at least 1 digit with minimum 4 character
+                  </div>
                 </div>
-                <span type="button" class="position-absolute end-0 top-0 mt-2 me-3" id="togglePassword">
+                <span type="button" class="position-absolute end-0 top-0 mt-2 me-6" id="togglePassword">
                   <i class="fa fa-eye-slash" aria-hidden="true" width="15" height="15"></i>
                 </span>
               </div>
-              <div class="valid-feedback">Looks good!</div>
-              <div class="invalid-feedback">
-                Required, at least 1 digit with minimum 4 character
-              </div>
+
             </div>
 
             <script>

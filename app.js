@@ -729,8 +729,6 @@ app.get('/', isAuthenticated, async function (req, res) {
     }
 });
 
-
-
 //STAFF DETAILS
 app.get('/staff/details/:id', isAuthenticated, async function (req, res) {
     const username = req.user.username;
@@ -1612,8 +1610,24 @@ app
                     'We have seen reset password link and 5 digit code to your email, please do check it.'
             });
         } else {
+            res.render('forgot-password', {
+                show: 'show',
+                alert:
+                    'The email address you have entered are not registered in lakmnsportal, please do check your email again.'
+            });
         }
     });
+
+app.get('/reset-password/:id', async function (req, res) {
+    const id = req.params.id;
+    console.log(id);
+
+    res.render('reset-password', {
+        id: id
+    });
+}).post('/reset-password/id', async function (rrq, res) {
+    const id = req.params.id;
+});
 
 //SIGNOUT
 app.get('/sign-out/:id', async function (req, res) {
