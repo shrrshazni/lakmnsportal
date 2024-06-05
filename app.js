@@ -3986,7 +3986,6 @@ app.get('/human-resource/staff-members/overview/update/:id', isAuthenticated, as
 
     if (user) {
         const otherUser = await User.findOne({ _id: userId });
-        console.log(otherUser);
 
         res.render('hr-staffmembers-overview-update', {
             user: user,
@@ -4019,6 +4018,17 @@ app.get('/human-resource/staff-members/overview/update/:id', isAuthenticated, as
 
     // Filter out empty fields
     const nonEmptyUpdatedFields = filterEmptyFields(updatedFields);
+
+    // Function to check boolean fields
+    const isFieldTrue = (field) => field && field !== 'no' && field !== 'Select an option';
+
+    // Update boolean fields
+    nonEmptyUpdatedFields.isOfficer = isFieldTrue(isOfficer);
+    nonEmptyUpdatedFields.isAdmin = isFieldTrue(isAdmin);
+    nonEmptyUpdatedFields.isHeadOfDepartment = isFieldTrue(isHeadOfDepartment);
+    nonEmptyUpdatedFields.isHeadOfSection = isFieldTrue(isHeadOfSection);
+    nonEmptyUpdatedFields.isManagement = isFieldTrue(isManagement);
+    nonEmptyUpdatedFields.isPersonalAssistant = isFieldTrue(isPersonalAssistant);
 
     const updatedUser = await User.findOneAndUpdate(
         { _id: userId },
@@ -4102,6 +4112,9 @@ app
                 });
             }
 
+            // Process boolean fields
+            const isFieldTrue = (field) => field && field !== 'no' && field !== 'Select an option';
+
             const newUser = new User({
                 fullname: req.body.fullname,
                 username: req.body.username,
@@ -4123,11 +4136,11 @@ app
                 classification: req.body.class,
                 isChiefExec: false,
                 isDeputyChiefExec: false,
-                isHeadOfDepartment: false,
-                isHeadOfSection: false,
-                isAdmin: false,
-                isManagement: false,
-                isPersonalAssistant: false
+                isHeadOfDepartment: isFieldTrue(req.body.isHeadOfDepartment),
+                isHeadOfSection: isFieldTrue(req.body.isHeadOfSection),
+                isAdmin: isFieldTrue(req.body.isAdmin),
+                isManagement: isFieldTrue(req.body.isManagement),
+                isPersonalAssistant: isFieldTrue(req.body.isPersonalAssistant)
             });
 
             User.register(newUser, req.body.password, async function (err, user) {
@@ -7196,18 +7209,19 @@ const updateAttendanceForApprovedLeaves = async () => {
 
         // Find leave requests with status 'approved' and return date of today
         const approvedLeaves = await Leave.find({
-            status: 'approved',
-            'date.start': {
-                $gte: today
-            },
-            'date.return': {
-                $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000) // Today's end
+            status: 'approved'
+        });
+
+        let todayLeaves = [];
+
+        approvedLeaves.forEach(leave => {
+            if (isDateInRange(leave.date.start, leave.date.return)) {
+                todayLeaves.push(leave);
             }
         });
 
-        console.log(approvedLeaves);
+        for (const leave of todayLeaves) {
 
-        for (const leave of approvedLeaves) {
             await Attendance.findOneAndUpdate(
                 {
                     user: leave.user,
@@ -7225,6 +7239,7 @@ const updateAttendanceForApprovedLeaves = async () => {
                 },
                 { upsert: true, new: true }
             );
+
         }
 
         console.log('Attendance records updated for leaves approved today');

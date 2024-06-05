@@ -97,6 +97,128 @@
           </div>
         </div>
 
+        <hr>
+
+        <% 
+
+        let isAdmin;
+        let isOfficer;
+        let isManagement;
+        let isHeadOfDepartment;
+        let isHeadOfSection;
+        let isPersonalAssistant;
+
+        if(otherUser.isAdmin === false){
+            isAdmin = "no";
+        } else {
+            isAdmin = "yes";
+        }
+
+        if(otherUser.isOfficer === false){
+            isOfficer = "no";
+        } else {
+            isOfficer = "yes";
+        }
+        
+        if(otherUser.isManagement === false){
+            isManagement = "no";
+        } else {
+            isManagement = "yes";
+        }
+        
+        if(otherUser.isHeadOfDepartment === false){
+            isHeadOfDepartment = "no";
+        } else {
+            isHeadOfDepartment = "yes";
+        }
+        
+        if(otherUser.isHeadOfSection === false){
+            isHeadOfSection = "no";
+        } else {
+            isHeadOfSection = "yes";
+        }
+        
+        if(otherUser.isPersonalAssistant === false){
+            isPersonalAssistant = "no";
+        } else {
+            isPersonalAssistant = "yes";
+        }
+        
+
+        %>
+
+        <div class="col-12 col-md-4">
+          <div class="form-floating">
+            <select class="form-select" id="floatingSelectTask" name="isOfficer">
+              <option value="<%= isOfficer %>" selected><%= isOfficer %></option>
+              <option value="yes">Yes</option>
+              <option value="no">No</option>
+            </select>
+            <div class="invalid-feedback">Please select an option</div>
+            <label for="floatingSelectTask">Officer</label>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-4">
+          <div class="form-floating">
+            <select class="form-select" id="floatingSelectTask" name="isAdmin">
+              <option value="<%= isAdmin %>" selected><%= isAdmin %></option>
+              <option value="yes">Yes</option>
+              <option value="no">No</option>
+            </select>
+            <div class="invalid-feedback">Please select an option</div>
+            <label for="floatingSelectTask">Admin</label>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-4">
+          <div class="form-floating">
+            <select class="form-select" id="floatingSelectTask" name="isHeadOfDepartment">
+              <option value="<%= isHeadOfDepartment %>" selected><%= isHeadOfDepartment %></option>
+              <option value="yes">Yes</option>
+              <option value="no">No</option>
+            </select>
+            <div class="invalid-feedback">Please select an option</div>
+            <label for="floatingSelectTask">Head of Department</label>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-4">
+          <div class="form-floating">
+            <select class="form-select" id="floatingSelectTask" name="isHeadOfSection">
+              <option value="<%= isHeadOfSection %>" selected><%= isHeadOfSection %></option>
+              <option value="yes">Yes</option>
+              <option value="no">No</option>
+            </select>
+            <div class="invalid-feedback">Please select an option</div>
+            <label for="floatingSelectTask">Head of Section</label>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-4">
+          <div class="form-floating">
+            <select class="form-select" id="floatingSelectTask" name="isManagement">
+              <option value="<%= isManagement %>" selected><%= isManagement %></option>
+              <option value="yes">Yes</option>
+              <option value="no">No</option>
+            </select>
+            <div class="invalid-feedback">Please select an option</div>
+            <label for="floatingSelectTask">Management</label>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-4">
+          <div class="form-floating">
+            <select class="form-select" id="floatingSelectTask" name="isPersonalAssistant">
+              <option value="<%= isPersonalAssistant %>" selected><%= isPersonalAssistant %></option>
+              <option value="yes">Yes</option>
+              <option value="no">No</option>
+            </select>
+            <div class="invalid-feedback">Please select an option</div>
+            <label for="floatingSelectTask">Personal Assistant</label>
+          </div>
+        </div>
+
         <div class="col-12 gy-6">
           <div class="row g-3 justify-content-end">
             <div class="col-auto">
@@ -159,6 +281,7 @@
               </div>
             </div>
           </div>
+
           <div class="border-top border-dashed pt-4">
             <div class="">
               <div class="">
@@ -177,6 +300,7 @@
               </div>
             </div>
           </div>
+
         </div>
       </div>
 
