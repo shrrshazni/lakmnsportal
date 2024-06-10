@@ -4434,32 +4434,6 @@ app.get('/procurement/tender/register', isAuthenticated, async function (req, re
     }
 });
 
-//SUPER ADMIN
-app.get('/super-admin/update', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-
-    if (user.isSuperAdmin) {
-        const allUsers = await User.find();
-
-        // Iterate through each user
-        for (const user of allUsers) {
-            // Update the user's additional information
-            await User.findOneAndUpdate(
-                { section: 'Administration and Human Resource Management Division' },
-                {
-                    department: ''
-                },
-                { upsert: true, new: true }
-            );
-        }
-
-        console.log('All user has been updated');
-
-        res.redirect('/');
-    }
-});
-
 //NOTIFICATIONS
 app.get('/notifications/history', isAuthenticated, async function (req, res) {
     const username = req.user.username;
@@ -5943,6 +5917,32 @@ app.get('/api/staff/overview/department-section', isAuthenticated, async functio
 }
 );
 
+//SUPER ADMIN
+app.get('/super-admin/update', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+
+    if (user.isSuperAdmin) {
+        const allUsers = await User.find();
+
+        // Iterate through each user
+        for (const user of allUsers) {
+            // Update the user's additional information
+            await User.findOneAndUpdate(
+                { section: 'Administration and Human Resource Management Division' },
+                {
+                    department: ''
+                },
+                { upsert: true, new: true }
+            );
+        }
+
+        console.log('All user has been updated');
+
+        res.redirect('/');
+    }
+});
+
 //SCHEDULER
 
 // CHECK EACH LEAVE VALIDITY
@@ -6119,6 +6119,22 @@ cron.schedule(
         timezone: 'Asia/Kuala_Lumpur' // Adjust timezone accordingly
     }
 );
+
+// TEMPORARY 
+app.get('/temp', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    }).populate('sender');
+
+    res.render('temp', {
+        user: user,
+        notifications: notifications,
+        uuid: uuidv4(),
+    });
+});
 
 // FUNCTIONS
 
