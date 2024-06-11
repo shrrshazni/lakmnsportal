@@ -823,6 +823,24 @@ app.post('/task/add', isAuthenticated, async function (req, res) {
             const task = newTask.save();
 
             if (task) {
+                // activity
+                const activityUser = new Activity({
+                    user: user._id,
+                    date: new Date(),
+                    title: 'Add Assignee on Task',
+                    type: 'Task',
+                    description:
+                        user.fullname +
+                        ' has add assignee '
+                        + assignee[0].username +
+                        ' at '
+                        + getDateFormat2(new Date())
+                });
+
+                activityUser.save();
+
+                console.log('New activity submitted', activityUser);
+
                 console.log('New task added');
                 res.redirect('/');
             }
@@ -855,6 +873,24 @@ app.post('/update/:content/:id', isAuthenticated, async function (req, res) {
             );
 
             if (update) {
+                // activity
+                const activityUser = new Activity({
+                    user: user._id,
+                    date: new Date(),
+                    title: 'Update Task Description',
+                    type: 'Task',
+                    description:
+                        user.fullname +
+                        ' has update task description '
+                        + update.name +
+                        ' at '
+                        + getDateFormat2(new Date())
+                });
+
+                activityUser.save();
+
+                console.log('New activity submitted', activityUser);
+
                 console.log('Description task has been updated');
                 res.redirect('/');
             } else {
@@ -871,6 +907,24 @@ app.post('/update/:content/:id', isAuthenticated, async function (req, res) {
             );
 
             if (update) {
+                // activity
+                const activityUser = new Activity({
+                    user: user._id,
+                    date: new Date(),
+                    title: 'Update/Add Task Description',
+                    type: 'Task',
+                    description:
+                        user.fullname +
+                        ' has update/add task description '
+                        + update.name +
+                        ' at '
+                        + getDateFormat2(new Date())
+                });
+
+                activityUser.save();
+
+                console.log('New activity submitted', activityUser);
+
                 console.log('Subtask added');
                 res.redirect('/');
             } else {
@@ -917,6 +971,24 @@ app.post('/update/:content/:id', isAuthenticated, async function (req, res) {
             );
 
             if (update) {
+                // activity
+                const activityUser = new Activity({
+                    user: user._id,
+                    date: new Date(),
+                    title: 'Update Task Content',
+                    type: 'Task',
+                    description:
+                        user.fullname +
+                        ' has update task content '
+                        + update.name +
+                        ' at '
+                        + getDateFormat2(new Date())
+                });
+
+                activityUser.save();
+
+                console.log('New activity submitted', activityUser);
+
                 console.log('Update task success');
                 res.redirect('/');
             } else {
@@ -962,6 +1034,22 @@ app.post('/update/:content/:id', isAuthenticated, async function (req, res) {
 
                     newFile.save();
                 }
+
+                // activity
+                const activityUser = new Activity({
+                    user: user._id,
+                    date: new Date(),
+                    title: 'Upload File for Task',
+                    type: 'Task',
+                    description:
+                        user.fullname +
+                        ' has upload file at '
+                        + getDateFormat2(new Date())
+                });
+
+                activityUser.save();
+
+                console.log('New activity submitted', activityUser);
 
                 console.log('Done upload files!');
             }
@@ -1378,7 +1466,7 @@ app
 
         if (checkEmail) {
             let mailOptions = {
-                from: 'shrrshazni@gmail.com',
+                from: 'protech@lakmns.org',
                 to: checkEmail.email,
                 subject: 'lakmnsportal - Reset Password',
                 html: emailHTML,
@@ -1693,6 +1781,21 @@ app
                     }
 
                     if (updateUser) {
+                        // activity
+                        const activityUser = new Activity({
+                            user: user._id,
+                            date: new Date(),
+                            title: 'Update profile',
+                            type: 'Profile',
+                            description:
+                                user.fullname +
+                                ' has update their profile at' + getDateFormat2(today)
+                        });
+
+                        activityUser.save();
+
+                        console.log('New activity submitted', activityUser);
+
                         console.log('Update successful');
                         res.render('settings', {
                             user: user,
@@ -1786,6 +1889,21 @@ app.post('/settings/upload/profile-image', isAuthenticated, async function (req,
                 );
             }
 
+            // activity
+            const activityUser = new Activity({
+                user: user._id,
+                date: new Date(),
+                title: 'Update profile',
+                type: 'Profile',
+                description:
+                    user.fullname +
+                    ' has update their profile at' + getDateFormat2(today)
+            });
+
+            activityUser.save();
+
+            console.log('New activity submitted', activityUser);
+
             console.log('Done upload files!');
 
             res.redirect('/settings');
@@ -1817,7 +1935,7 @@ app.get('/info/:type/:method/:id', async function (req, res) {
                 });
             });
             let mailOptions = {
-                from: 'shrrshazni@gmail.com',
+                from: 'protech@lakmns.org',
                 to: user.email,
                 subject: 'lakmnsportal - Email Verification',
                 html: emailHTML
@@ -2666,7 +2784,7 @@ app
                 // turn off the email notications
                 // send email to the recipient
                 // let mailOptions = {
-                //     from: 'shrrshazni@gmail.com',
+                //     from: 'protech@lakmns.org',
                 //     to: sendEmail,
                 //     subject: 'lakmnsportal - Approval Leave Request',
                 //     html: `
@@ -3075,7 +3193,7 @@ app.get('/leave/:approval/:id', async function (req, res) {
             // turn off the email notications
             // send email to the recipient
             // let mailOptions = {
-            //     from: 'shrrshazni@gmail.com',
+            //     from: 'protech@lakmns.org',
             //     to: nextApprovalRecipientEmail.email,
             //     subject: 'lakmnsportal - Approval Leave Follow up',
             //     html: `
@@ -3202,7 +3320,7 @@ app.get('/leave/:approval/:id', async function (req, res) {
                 // turn off the email notications
                 // send email to the recipient
                 // let mailOptions = {
-                //     from: 'shrrshazni@gmail.com',
+                //     from: 'protech@lakmns.org',
                 //     to: sendEmail,
                 //     subject: 'lakmnsportal - Approval Leave Request',
                 //     html: `
@@ -3402,7 +3520,7 @@ app.get('/leave/:approval/:id', async function (req, res) {
             // turn off the email notications
             // send email to the recipient
             // let mailOptions = {
-            //     from: 'shrrshazni@gmail.com',
+            //     from: 'protech@lakmns.org',
             //     to: firstlRecipientEmail.email,
             //     subject: 'lakmnsportal - Approval Leave Follow up',
             //     html: `
@@ -3611,7 +3729,7 @@ app.get('/leave/:approval/:id', async function (req, res) {
                 // turn off the email notications
                 // send email to the recipient
                 // let mailOptions = {
-                //     from: 'shrrshazni@gmail.com',
+                //     from: 'protech@lakmns.org',
                 //     to: firstlRecipientEmail.email,
                 //     subject: 'lakmnsportal - Approval Leave Follow up',
                 //     html: `
@@ -3816,6 +3934,24 @@ app.get('/human-resource/staff-members/overview/update/:id', isAuthenticated, as
 
     if (!updatedUser) {
         console.log('Failed to update');
+    } else {
+        // activity
+        const activityUser = new Activity({
+            user: user._id,
+            date: new Date(),
+            title: 'Update Staff Data',
+            type: 'Admin',
+            description:
+                user.fullname +
+                ' has update staff '
+                + updatedUser.username +
+                ' at '
+                + getDateFormat2(new Date())
+        });
+
+        activityUser.save();
+
+        console.log('New activity submitted', activityUser);
     }
 
     res.redirect('/human-resource/staff-members/overview/update/' + userId);
@@ -3958,6 +4094,24 @@ app
                         { $set: { status: 'New staff' } },
                         { upsert: true }
                     );
+
+                    // activity
+                    const activityUser = new Activity({
+                        user: user1._id,
+                        date: new Date(),
+                        title: 'Add new staff',
+                        type: 'Admin HR',
+                        description:
+                            user1.fullname +
+                            ' has add staff '
+                            + newUserLeave.username +
+                            ' at '
+                            + getDateFormat2(new Date())
+                    });
+
+                    activityUser.save();
+
+                    console.log('New activity submitted', activityUser);
 
                     passport.authenticate('local')(req, res, function () {
                         res.render('hr-staffmembers-overview', {
@@ -4104,8 +4258,28 @@ app.get('/human-resource/leave/balances/update/:id', isAuthenticated, async func
             { new: true, useFindAndModify: false }
         );
 
+        const findUser = await User.findOne({ _id: userId });
+
         if (!updatedLeave) {
             console.log('Failed to update');
+        } else {
+            // activity
+            const activityUser = new Activity({
+                user: user._id,
+                date: new Date(),
+                title: 'Update staff leave balances',
+                type: 'Admin',
+                description:
+                    user.fullname +
+                    ' has update staff leave balances '
+                    + findUser.username +
+                    ' at '
+                    + getDateFormat2(new Date())
+            });
+
+            activityUser.save();
+
+            console.log('New activity submitted', activityUser);
         }
 
         res.redirect('/human-resource/leave/balances/update/' + userId);
@@ -5048,6 +5222,21 @@ app.post('/api/qrcode/process-data', isAuthenticated, async function (req, res) 
 
                     await tempAttendance.save();
 
+                    // activity
+                    const activityUser = new Activity({
+                        user: checkUser._id,
+                        date: new Date(),
+                        title: 'Sign out for today',
+                        type: 'Attendance',
+                        description:
+                            checkUser.fullname +
+                            ' has sign out for ' + getDateFormat2(today)
+                    });
+
+                    activityUser.save();
+
+                    console.log('New activity submitted', activityUser);
+
                     log = 'You have successfully signed out for today, thank you!';
                 } else if (
                     existingAttendance.date.signInTime === null &&
@@ -5093,6 +5282,21 @@ app.post('/api/qrcode/process-data', isAuthenticated, async function (req, res) 
 
                         await tempAttendance.save();
 
+                        // activity
+                        const activityUser = new Activity({
+                            user: checkUser._id,
+                            date: new Date(),
+                            title: 'Sign in late for today',
+                            type: 'Attendance',
+                            description:
+                                checkUser.fullname +
+                                ' has sign in late for ' + getDateFormat2(today)
+                        });
+
+                        activityUser.save();
+
+                        console.log('New activity submitted', activityUser);
+
                         log =
                             'You have successfully signed in as late for today, thank you!';
                     } else {
@@ -5123,6 +5327,21 @@ app.post('/api/qrcode/process-data', isAuthenticated, async function (req, res) 
 
                         await tempAttendance.save();
 
+                        // activity
+                        const activityUser = new Activity({
+                            user: checkUser._id,
+                            date: new Date(),
+                            title: 'Sign in for today',
+                            type: 'Attendance',
+                            description:
+                                checkUser.fullname +
+                                ' has sign in for ' + getDateFormat2(today)
+                        });
+
+                        activityUser.save();
+
+                        console.log('New activity submitted', activityUser);
+
                         log = 'You have successfully signed in for today, thank you!';
                     }
                 } else {
@@ -5143,7 +5362,6 @@ app.post('/api/qrcode/process-data', isAuthenticated, async function (req, res) 
             message: log
         };
 
-        // console.log(response);
         res.json(response);
     }
 });
