@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Email</title>
+</head>
+
+<body style="margin: 0; padding: 5rem 8rem; font-family: Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 1.5; color: #333; text-align: left; background-color: #f8f9fa; -webkit-text-size-adjust: 100%; -webkit-tap-highlight-color: rgba(0, 0, 0, 0);">
+  <div class="card" style="position: relative; display: flex; flex-direction: column; min-width: 0; height: auto; color: #333; word-wrap: break-word; background-color: #fff; background-clip: border-box; border: 1px solid #ddd; border-radius: 0.5rem; box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075); margin-top: 2rem; margin-right: auto; margin-left: auto; max-width: 1000px; padding: 1.25rem;">
+    <div class="card-body" style="flex: 1 1 auto; padding: 0.5rem; color: #333;">
+      <div class="text-center" style="text-align: center;">
+        <img src="https://live.staticflickr.com/65535/53784347840_5a7210c8d1_o.png" alt="logo" width="75" style="vertical-align: middle;">
+        <p class="logo-text" style="line-height: 1.2; font-weight: 600; letter-spacing: -0.04em; margin-top: 0; color: orange; margin-left: 0.5rem; margin-bottom: 1rem; font-size: 1.4rem;">lakmns<span style="color: #333;">portal</span></p>
+      </div>
+
+      <div class="text-center" style="margin-right: 2rem; margin-left: 2rem; margin-bottom: 2rem; text-align: center;">
+        <hr style="margin: 1rem 0; color: #ddd; border: 0; border-top: 1px solid #ddd; opacity: 1;">
+        <img class="mb-5" src="https://live.staticflickr.com/65535/53782990522_751f44d534_o.png" alt="" style="vertical-align: middle; width: 100%; margin-bottom: 1rem;">
+
+        <a href="https://www.lakmnsportal.com/reset-password/<%= checkEmail._id %>" class="btn btn-outline-primary" style="display: inline-block; padding: 0.625rem 1.5rem; font-weight: 700; line-height: 1.2; color: #3874ff; text-align: center; vertical-align: middle; cursor: pointer; border: 1px solid #3874ff; border-radius: 0.25rem; background-color: transparent; box-shadow: initial; font-size: 3.81rem; transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out; text-decoration: none;">Click Here</a>
+
+        <div class="text-start" style="text-align: left;">
+          <p>Dear <strong style="font-style: italic;"><%= checkEmail.fullname %></strong>,</p>
+          <p>To regain access, click button above to reset your forgotten password. Secure your account with a new password.If you've already changed your password, kindly disregard this message.</p>
+
+          <p class="mb-3" style="margin-bottom: 1rem;">Regards</p>
+        </div>
+
+        <hr style="margin: 1rem 0; color: #ddd; border: 0; border-top: 1px solid #ddd; opacity: 1;">
+
+        <div class="d-flex justify-content-between text-start" style="display: flex; justify-content: space-between;">
+          <div>
+            <p class="text-body-tertiary" style="color: #777;">Made by <a href="#" style="color: #007bff; text-decoration: none;">LAKMNS PROTECH&nbsp;</a></p>
+          </div>
+
+          <div>
+            <p>of 2024 &copy;<a class="mx-1" href="https://www.lakmnsportal.com" style="color: #007bff; text-decoration: none; margin-right: 0.25rem; margin-left: 0.25rem;">lakmnsportal</a></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>

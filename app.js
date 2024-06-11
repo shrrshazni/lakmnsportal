@@ -498,8 +498,8 @@ const isAuthenticated = (req, res, next) => {
 let transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-        user: 'shrrshazni@gmail.com',
-        pass: 'hzjlhfyspfyynndw'
+        user: 'protech@lakmns.org',
+        pass: 'wkwgjdxlsdaxozgu'
     }
 });
 
@@ -1359,235 +1359,29 @@ app
             .substring(0, 5)
             .toUpperCase();
 
-        const style = `
-    <style>
-    body.bg-dark {
-      background-color: #343a40!important;
-    }
+        // const emailData = {
+        //     checkEmail : checkEmail,
+        //     uuid : randomAlphaNumeric,
+        // };
 
-    .mb-4 {
-      margin-bottom: 1.5rem!important;
-    }
+        // console.log(emailData.checkEmail);
+        // console.log(emailData.uuid);
 
-    .mt-4 {
-      margin-top: 1.5rem!important;
-    }
+        const emailHTML = await new Promise((resolve, reject) => {
+            app.render('email', { uuid: randomAlphaNumeric, checkEmail: checkEmail }, (err, html) => {
+                if (err) reject(err);
+                else resolve(html);
+            });
+        });
 
-    .d-flex {
-      display: flex!important;
-    }
-
-    .justify-content-center {
-      justify-content: center!important;
-    }
-
-    .text-light {
-      color: #f8f9fa!important;
-    }
-
-    .container {
-      width: 100%;
-      padding-right: 20vw;
-      padding-left: 20vw;
-      margin-right: auto;
-      margin-left: auto;
-    }
-
-    .card {
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      min-width: 0;
-      word-wrap: break-word;
-      background-color: #fff;
-      background-clip: border-box;
-      border: 1px solid rgba(0, 0, 0, 0.125);
-      border-radius: .25rem;
-    }
-
-    .mb-5 {
-      margin-bottom: 3rem!important;
-    }
-
-    .p-5 {
-      padding: 3.125rem!important;
-    }
-
-    .text-center {
-      text-align: center!important;
-    }
-
-    .mb-3 {
-      margin-bottom: 1rem!important;
-    }
-
-    .fst-italic {
-      font-style: italic!important;
-    }
-
-    .fw-bold {
-      font-weight: bold!important;
-    }
-
-    .fst-underline {
-      text-decoration: underline!important;
-    }
-
-    .fa-brands {
-      font-family: "Font Awesome 5 Brands"!important;
-    }
-
-    .fa-facebook,
-    .fa-linkedin-in {
-      font-size: 2rem!important;
-    }
-
-    .list-unstyled {
-      padding-left: 0;
-      list-style: none;
-    }
-
-    .list-unstyled>a {
-      text-decoration: none;
-      color: inherit;
-    }
-
-    .border-end {
-      border-right: 1px solid rgba(0, 0, 0, 0.125);
-    }
-
-    .border-dashed {
-      border-style: dashed!important;
-    }
-
-    .gap-3 {
-      gap: 1rem!important;
-    }
-
-    .pe-xl-5,
-    .pe-xxl-8 {
-      padding-right: 3.125rem!important;
-    }
-
-    .w-75 {
-      width: 75%!important;
-    }
-
-    .w-md-100 {
-      width: 100%!important;
-    }
-
-    .mx-auto {
-      margin-right: auto!important;
-      margin-left: auto!important;
-    }
-
-    .d-flex.align-items-center {
-      display: flex;
-      align-items: center!important;
-    }
-
-    .justify-content-center {
-      justify-content: center!important;
-    }
-
-    .text-white {
-      color: #fff!important;
-    }
-
-    .border-top {
-      border-top: 1px solid rgba(0, 0, 0, 0.125)!important;
-    }
-
-    .d-sm-flex {
-      display: flex!important;
-    }
-
-    .text-body-tertiary {
-      color: #6c757d!important;
-    }
-
-    .mb-0 {
-      margin-bottom: 0!important;
-    }
-    </style> `;
+        console.log(emailHTML);
 
         if (checkEmail) {
             let mailOptions = {
                 from: 'shrrshazni@gmail.com',
                 to: checkEmail.email,
                 subject: 'lakmnsportal - Reset Password',
-                html: `
-            <html>
-
-            <head>
-              <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-
-              ${style}
-              
-            </head>
-            
-            <body class="bg-dark">
-            
-              <div class="mb-4 mt-4 d-flex justify-content-center">
-                <img src="" alt="">
-                <h3 style="color: orange;">lakmns<span class="text-light">portal</span></h3>
-              </div>
-            
-              <div class="container" style="padding: 0 20vw 0 20vw;">
-            
-                <div class="card mb-5" style="min-height: 30vh;">
-                  <div class="card-body p-5">
-                    <p>Dear <span class="fw-bold fst-italic">${checkEmail.fullname}</span>,</p>
-                    <p class="mb-5">Here is the code needed for you to reset your password later and please keep it safe. Click the link <span class="fw-bold fst-italic fst-underline"><a href="http://localhost:5002/reset-password/${checkEmail._id}/${randomAlphaNumeric}">HERE</a></span> to reset your password.</p>
-            
-                    <h1 class="text-center mb-5">${randomAlphaNumeric}</h1>
-            
-                    <p class="mb-3">
-                      When a user requests a password reset via email, the system sends a message containing a link or instructions to reset their forgotten password. This process typically involves verifying the user's identity through security questions or a confirmation email.
-                      Once verified, users can create a new password, ensuring secure access to their account while maintaining confidentiality.
-                    </p>
-            
-                    <p class="mb-5">You can always change your username or password later in your User Settings. Learn more about our recent changes to usernames in our support article.</p>
-            
-                    <p class="mb-3">Thank you.</p>
-            
-                    <p class="mb-3 fst-italic">lakmnsportal</p>
-            
-                  </div>
-                </div>
-            
-                <div class="row gx-xxl-8 gy-5 align-items-center mb-5">
-                  <div class="col-xl-auto flex-1">
-                    <ul class="list-unstyled d-flex justify-content-center flex-wrap mb-0 border-end border-dashed gap-3 pe-xl-5 pe-xxl-8 w-75 w-md-100 mx-auto">
-                      <li><a class="" href="">Contact us</a></li>
-                      <li><a class="" href="">Newsroom</a></li>
-                      <li><a class="" href="">Opportunities</a></li>
-                      <li><a class="" href="">Support</a></li>
-                      <li><a class="" href="">FAQ</a></li>
-                    </ul>
-                  </div>
-                  <div class="col-xl-auto">
-                    <div class="d-flex align-items-center justify-content-center gap-5"><a class="text-white" href="#!"> <span class="fa-brands fa-facebook" style="font-size: 2rem;"></span></a><a class="text-white" href="#!"> <span class="fa-brands fa-linkedin-in" style="font-size: 2rem;"></span></a></div>
-                  </div>
-                </div>
-                <hr class="border-top" />
-                <div class="d-sm-flex flex-between-center text-center">
-                  <p class="text-body-tertiary mb-0">Copyright © LAKMNS</p>
-                  <p class="text-body-tertiary mb-0">Made by <a href="#">LAKMNS PROTECH</a></p>
-                </div>
-            
-              </div>
-
-              <script src="https://kit.fontawesome.com/d0a7e80aad.js" crossorigin="anonymous"></script>
-              <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-            
-            </body>
-            
-            
-            
-            </html>
-            `
+                html: emailHTML,
             };
 
             transporter.sendMail(mailOptions, (error, info) => {
@@ -1607,7 +1401,7 @@ app
             res.render('forgot-password', {
                 show: 'show',
                 alert:
-                    'We have seen reset password link and 5 digit code to your email, please do check it.'
+                    'We have seen reset password link and 5 alpha-numeric code to your email, please do check it.'
             });
         } else {
             res.render('forgot-password', {
@@ -2016,33 +1810,17 @@ app.get('/info/:type/:method/:id', async function (req, res) {
         var method = req.params.method;
 
         if (type === 'email' && method === 'verification') {
+            const emailHTML = await new Promise((resolve, reject) => {
+                app.render('email-verified', { user: user }, (err, html) => {
+                    if (err) reject(err);
+                    else resolve(html);
+                });
+            });
             let mailOptions = {
                 from: 'shrrshazni@gmail.com',
                 to: user.email,
                 subject: 'lakmnsportal - Email Verification',
-                html: `
-                  <html>
-                    <head>
-                      <style>
-                        body {
-                          font-family: 'Arial', sans-serif;
-                          background-color: #f4f4f4;
-                          color: #333;
-                        }
-                        p {
-                          margin-bottom: 20px;
-                        }
-                        a {
-                          color: #3498db;
-                        }
-                      </style>
-                    </head>
-                    <body>
-                      <h1>Leave Request</h1>
-                      <p>Please click here to confirm your email to be verified, <a href="http://localhost:5002/info/email/confirm/${user._id}">lakmnsportal</a></p>
-                    </body>
-                  </html>
-                `
+                html: emailHTML
             };
 
             transporter.sendMail(mailOptions, (error, info) => {
@@ -6121,7 +5899,7 @@ cron.schedule(
 );
 
 // TEMPORARY 
-app.get('/temp', isAuthenticated, async function (req, res) {
+app.get('/email', isAuthenticated, async function (req, res) {
     const username = req.user.username;
     const user = await User.findOne({ username: username });
     const notifications = await Notification.find({
@@ -6129,7 +5907,7 @@ app.get('/temp', isAuthenticated, async function (req, res) {
         read: false
     }).populate('sender');
 
-    res.render('temp', {
+    res.render('email', {
         user: user,
         notifications: notifications,
         uuid: uuidv4(),
