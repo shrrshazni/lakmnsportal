@@ -5919,18 +5919,34 @@ app.get('/super-admin/update', isAuthenticated, async function (req, res) {
     const user = await User.findOne({ username: username });
 
     if (user.isSuperAdmin) {
-        const allUsers = await User.find();
+        try {
+            // Find all users
+            const allUsers = await User.find();
 
-        // Iterate through each user
-        for (const user of allUsers) {
-            // Update the user's additional information
-            await User.findOneAndUpdate(
-                { section: 'Administration and Human Resource Management Division' },
-                {
-                    department: ''
-                },
-                { upsert: true, new: true }
-            );
+            // Iterate through each user
+            for (const user of allUsers) {
+                // Find the corresponding info document for this user
+                const existingInfo = await Info.findOne({ user: user._id });
+
+                // If no info document exists for this user, create a new one
+                if (!existingInfo) {
+                    const newInfo = new Info({
+                        user: user._id,
+                        status: "Will be updated",
+                        emailVerified: false,
+                        phoneVerified: false,
+                        isOnline: false,
+                        lastSeen: new Date()
+                    });
+
+                    // Save the new info document
+                    await newInfo.save();
+                }
+            }
+
+            console.log('Info updated for all users successfully.');
+        } catch (error) {
+            console.error('Error updating info for all users:', error);
         }
 
         console.log('All user has been updated');

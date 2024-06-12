@@ -362,7 +362,7 @@
             <td class="align-middle text-body white-space-nowrap ps-0 member">
 
               <%
-              const checkOnline = allInfo.find(item => item.user.toString() === department._id.toString());
+              const checkOnline = allInfo.find(item => item.user && department && item.user.toString() === department._id.toString());
 
               var showOnline = '';
               if(checkOnline.isOnline === true){
