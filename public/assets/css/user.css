@@ -27,6 +27,31 @@
   visibility: hidden;
 }
 
+.loading-upload {
+  cursor: not-allowed;
+  pointer-events: none;
+  position: relative;
+}
+
+/* Customize the loading spinner animation */
+.loading-upload::after {
+  content: '';
+  border: 3.25px solid #3874ff; /* Light gray border */
+  border-top: 3.25px solid transparent; /* Blue border for the spinner */
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  animation: spin 0.8s linear infinite; /* Rotate the spinner */
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.loading-upload .button-text {
+  visibility: hidden;
+}
+
 @keyframes spin {
   0% {
     transform: translate(-50%, -50%) rotate(0deg);
@@ -144,14 +169,13 @@
 /* extra bootstrap settings */
 
 @media (min-width: 768px) {
-    .h-md-40 {
-        height: 40vh !important;
-    }
+  .h-md-40 {
+    height: 40vh !important;
+  }
 }
 
 @media (max-width: 480px) {
-    .h-sm-35 {
-        height: 35vh !important;
-    }
+  .h-sm-35 {
+    height: 35vh !important;
+  }
 }
-

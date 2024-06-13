@@ -61,11 +61,11 @@
   // button loading function
   $(document).ready(function() {
     $('.loading-upload-button').on('click', function() {
-      $('.loading-upload-button').addClass('loading');
+      $('.loading-upload-button').addClass('loading-upload');
       $('.content-upload-button').addClass('noshow');
 
       setTimeout(function() {
-        $('.loading-upload-button').removeClass('loading');
+        $('.loading-upload-button').removeClass('loading-upload');
         $('.content-upload-button').removeClass('noshow');
       }, 2500);
     });

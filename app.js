@@ -22,29 +22,41 @@ const qr = require('qrcode');
 const { timeStamp, time } = require('console');
 const { type } = require('os');
 const requestIp = require('request-ip');
-// const twilio = require('twilio');
 
 // IP CHECK
 // Middleware to restrict access based on IP address
-// Middleware to restrict access based on IP address range
 const restrictAccess = (req, res, next) => {
     const clientIp = requestIp.getClientIp(req);
-    const [startIp, endIp] = ['192.168.1.0', '192.168.1.999'];
+    const allowedIpRangeStart = '192.168.1.0';
+    const allowedIpRangeEnd = '192.168.1.255';
 
     const loopbackIPv4 = '127.0.0.1';
     const loopbackIPv6 = '::1';
 
+    // Normalize IPv4-mapped IPv6 addresses (e.g., ::ffff:192.168.1.1)
+    const normalizedIp = normalizeIp(clientIp);
+    console.log(clientIp);
+
     // Check if the client IP is a loopback address
-    if (clientIp === loopbackIPv4 || clientIp === loopbackIPv6) {
+    if (normalizedIp === loopbackIPv4 || normalizedIp === loopbackIPv6) {
         // Allow access for loopback addresses
         next();
-    } else if (isInRange(clientIp, startIp, endIp)) {
+    } else if (isInRange(normalizedIp, allowedIpRangeStart, allowedIpRangeEnd)) {
         // Check if the client IP falls within the specified range
         next();
     } else {
         // Deny access for other IP addresses
         res.status(403).send('Access forbidden: you are not on the local network');
     }
+};
+
+// Normalize IP address to handle IPv4-mapped IPv6 addresses
+const normalizeIp = (ip) => {
+    // If the IP is an IPv4-mapped IPv6 address, convert it to IPv4
+    if (ip.startsWith('::ffff:')) {
+        return ip.split(':').reverse()[0];
+    }
+    return ip;
 };
 
 // Function to check if an IP address is within a specific range
@@ -2648,12 +2660,12 @@ app
                         userLeave: userLeave,
                         selectedNames: '',
                         // data
-                        type: type,
+                        type: '',
                         startDate: startDate,
                         returnDate: returnDate,
                         purpose: purpose,
                         // validation
-                        validationType: '',
+                        validationType: 'is-invalid',
                         validationStartDate: 'is-invalid',
                         validationReturnDate: 'is-invalid',
                         validationPurpose: '',
@@ -2672,12 +2684,12 @@ app
                         userLeave: userLeave,
                         selectedNames: '',
                         // data
-                        type: type,
+                        type: '',
                         startDate: startDate,
                         returnDate: returnDate,
                         purpose: purpose,
                         // validation
-                        validationType: '',
+                        validationType: 'is-invalid',
                         validationStartDate: '',
                         validationReturnDate: '',
                         validationPurpose: '',
@@ -4607,7 +4619,7 @@ app.get('/files/delete/cancel/:uuid', async function (req, res) {
             await fs.unlink(filePath);
         }
 
-        res.redirect('/');
+        res.redirect('/leave/request');
     } else {
         console.log('No files found or there was an error deleting files.');
         res.redirect('/');
