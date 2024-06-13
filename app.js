@@ -22,6 +22,7 @@ const qr = require('qrcode');
 const { timeStamp, time } = require('console');
 const { type } = require('os');
 const requestIp = require('request-ip');
+const methodOverride = require('method-override');
 
 // IP CHECK
 // Middleware to restrict access based on IP address
@@ -77,10 +78,13 @@ const mongoURI =
 
 const app = express();
 
+app.set('trust proxy', true);
+app.use(requestIp.mw());
 app.use(fileUpload());
 app.use(bodyParser.json());
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(methodOverride('_method')); 
 app.use(express.static('public'));
 
 // mongoose session option
