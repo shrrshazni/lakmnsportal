@@ -1,32 +1,29 @@
 <%- include('partials/public-header') %>
 
-<div class="mb-0 mt-3 p-4 min-vh-50 overflow-hidden">
+<div class="py-2 px-3 py-lg-5 px-lg-7 min-vh-50 overflow-hidden">
+  <% 
+                              
+    var currentDate = new Date();
+        
+    // Get the day of the week, day of the month, month, and year
+    var dayOfWeek = currentDate.toLocaleDateString('en-US', { weekday: 'long' });
+    var dayOfMonth = currentDate.toLocaleDateString('en-US', { day: '2-digit' });
+    var month = currentDate.toLocaleDateString('en-US', { month: 'long' });
+    var year = currentDate.toLocaleDateString('en-US', { year: 'numeric' });
+        
+    // Construct the formatted date string
+    var formattedDate = dayOfMonth + " " + month + ", " + year;
+        
+    %>
 
-  <div class="row align-items-end justify-content-between p-lg-3 p-1 pb-0 g-3">
+  <div class="d-flex justify-content-between text-start mb-3">
 
-    <div class="col-6 col-md-auto">
-      <div class="text-start">
-        <% 
-                            
-        var currentDate = new Date();
-            
-        // Get the day of the week, day of the month, month, and year
-        var dayOfWeek = currentDate.toLocaleDateString('en-US', { weekday: 'long' });
-        var dayOfMonth = currentDate.toLocaleDateString('en-US', { day: '2-digit' });
-        var month = currentDate.toLocaleDateString('en-US', { month: 'long' });
-        var year = currentDate.toLocaleDateString('en-US', { year: 'numeric' });
-            
-        // Construct the formatted date string
-        var formattedDate = dayOfMonth + " " + month + ", " + year;
-            
-        %>
-
-        <h2 class="fs-5 fs-lg-4"><%= formattedDate %></h2>
-      </div>
+    <div>
+      <h2 class="fs-6 fs-lg-4"><%= formattedDate %></h2>
     </div>
 
-    <div class="col-6 col-md-auto">
-      <h2 class="text-end fs-5 fs-lg-4" id="currentTime"></h2>
+    <div>
+      <h2 class="text-end fs-6 fs-lg-4" id="currentTime"></h2>
 
       <script>
         function updateTime() {
@@ -60,451 +57,380 @@
 
   </div>
 
-  <style>
-    .qr-code-container {
-      max-width: 100%;
-      /* Ensure the container does not exceed the viewport width */
-    }
+  <div class="row g-3">
 
-    #qrCode {
-      width: 100%;
-      /* Initially set the image width to 100% */
-      height: auto;
-      /* Maintain aspect ratio */
-    }
+    <div class="col-12 col-md-6 text-center">
 
-    /* Media queries for different viewport sizes */
-    @media screen and (min-width: 768px) {
-      #qrCode {
-        width: 70%;
-        /* Adjust the width for larger screens */
-      }
-    }
+      <div class="rounded-5 border border-primary border-2 p-4 p-lg-5">
+        <img id="qrCode" class="w-100 h-100 border border-light border-1">
+      </div>
 
-    @media screen and (min-width: 1024px) {
-      #qrCode {
-        width: 50%;
-        /* Adjust the width for even larger screens */
-      }
-    }
-  </style>
 
-  <div class="mb-6 mt-n5">
+      <script>
+        document.addEventListener('DOMContentLoaded', function() {
+          let previousQRData = null;
 
-    <div class="row gy-3 gx-6" style="min-height: 50vh;">
+          async function updateQRCode() {
+            try {
+              // Generate a new QR code
+              const response = await fetch('/api/qrcode/generate');
+              if (!response.ok) {
+                throw new Error('Network response was not ok');
+              }
+              const data = await response.json();
 
-      <div class="col-md-6 mb-0 p-lg-5 p-3 pe-none">
+              // Update the src attribute of the QR code image
+              document.getElementById('qrCode').src = data.qrCodeImage;
 
-        <div class="container rounded-5 border border-gray p-4 p-lg-6" style="background-color: #22438f;">
-          <div class="qr-code-container text-center p-1 p-lg-4 rounded-2 mb-10" style="background-color: #FFF;">
-            <img id="qrCode" class="w-100 border border-light border-1">
-          </div>
+              // Save the previous QR code data
+              if (previousQRData) {
+                await saveQRData(previousQRData);
+              }
 
-          <h1 class="text-center fst-italic fs-lg-3 fs-4" style="color: #FFF;">LAKMNS</h1>
-        </div>
+              // Update the previous QR data to the new one
+              previousQRData = data.uniqueIdentifier;
+
+              console.log('QR code updated successfully');
+            } catch (error) {
+              console.error('Error updating QR code:', error);
+            }
+          }
+
+          updateQRCode();
+
+          setInterval(updateQRCode, 15000);
+
+          async function saveQRData(qrData) {
+            try {
+              // Perform any actions to save the QR code data here
+              // console.log('Saving QR code data:', qrData);
+
+              const response = await fetch('/api/qrcode/save-data', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  qrData: qrData
+                })
+              });
+
+              if (!response.ok) {
+                throw new Error('Network response was not ok');
+              }
+
+              // console.log('QR code data successfully saved');
+            } catch (error) {
+              console.error('Error saving QR code data:', error);
+            }
+          }
+
+        });
+      </script>
+
+    </div>
+
+    <div class="col-12 col-md-6">
+
+      <div class="scrollbar-overlay">
+
+        <div id="attendance-container" class="border border-primary border-1 rounded-5"></div>
 
         <script>
-          document.addEventListener('DOMContentLoaded', function() {
-            let previousQRData = null;
+          function fetchDataAndPopulateContainer() {
+            fetch('/api/all-attendance/today/all') // Fetch attendance data for today within a specific time range
+              .then(response => response.json())
+              .then(data => {
+                const container = document.getElementById('attendance-container');
+                container.innerHTML = ''; // Clear existing content
 
-            async function updateQRCode() {
-              try {
-                // Generate a new QR code
-                const response = await fetch('/api/qrcode/generate');
-                if (!response.ok) {
-                  throw new Error('Network response was not ok');
+                if (data.length === 0) {
+                  console.log('No attendance records found');
+                  container.innerHTML = '<h3 class="fs-5 fw-bold mt-1 text-center border rounded-3 p-5 mb-2">No staff clock in yet</h3>';
+                } else {
+                  data.forEach(entry => {
+                    const entryWrapperDiv = document.createElement('div');
+                    entryWrapperDiv.classList.add('px-5', 'py-3', 'mb-1');
+
+                    const entryDiv = document.createElement('div');
+                    entryDiv.classList.add('d-flex', 'justify-content-between', 'align-items-center');
+
+                    const avatarNameLinkDiv = document.createElement('div');
+                    avatarNameLinkDiv.classList.add('d-flex', 'align-items-center');
+
+                    const avatarDiv = document.createElement('div');
+                    avatarDiv.classList.add('avatar', 'avatar-2xl');
+                    const avatarNamePara = document.createElement('p'); // Create a <p> element
+                    avatarNamePara.classList.add('avatar-name', 'rounded-circle'); // Add classes to the <p> element
+                    avatarNamePara.innerHTML = `<span class="fs-8 fw-bold fst-italic">${entry.user ? entry.user.username : 'Unknown'}</span>`; // Set inner HTML content
+                    avatarDiv.appendChild(avatarNamePara);
+
+                    const nameLink = document.createElement('a');
+                    nameLink.classList.add('mb-0', 'ms-3', 'fw-bold', 'fs-8');
+                    nameLink.textContent = entry.user ? entry.user.fullname : 'Unknown';
+
+                    avatarNameLinkDiv.appendChild(avatarDiv);
+                    avatarNameLinkDiv.appendChild(nameLink);
+
+                    const sectionTypeDiv = document.createElement('div');
+                    sectionTypeDiv.classList.add('d-flex', 'flex-column', 'align-items-center');
+
+                    // const sectionPara = document.createElement('p');
+                    // sectionPara.classList.add('fw-semibold', 'text-body-emphasis', 'fs-9', 'mb-1', 'text-center');
+                    // sectionPara.textContent = entry.user.section;
+
+                    const typeBadge = document.createElement('p');
+                    typeBadge.classList.add('badge', 'badge-phoenix', 'fs-10', 'mb-0');
+
+                    if (entry.type === 'sign out') {
+                      typeBadge.classList.add('badge-phoenix-danger');
+                    } else if (entry.type === 'sign in') {
+                      typeBadge.classList.add('badge-phoenix-success');
+                    }
+
+                    typeBadge.textContent = entry.type;
+
+                    // sectionTypeDiv.appendChild(sectionPara);
+                    sectionTypeDiv.appendChild(typeBadge);
+
+                    entryDiv.appendChild(avatarNameLinkDiv);
+                    entryDiv.appendChild(sectionTypeDiv);
+                    entryWrapperDiv.appendChild(entryDiv);
+                    container.appendChild(entryWrapperDiv);
+
+                  });
                 }
-                const data = await response.json();
+              })
+              .catch(error => {
+                console.error('Error fetching data:', error);
+              });
+          }
 
-                // Update the src attribute of the QR code image
-                document.getElementById('qrCode').src = data.qrCodeImage;
-
-                // Save the previous QR code data
-                if (previousQRData) {
-                  await saveQRData(previousQRData);
-                }
-
-                // Update the previous QR data to the new one
-                previousQRData = data.uniqueIdentifier;
-
-                console.log('QR code updated successfully');
-              } catch (error) {
-                console.error('Error updating QR code:', error);
-              }
-            }
-
-            updateQRCode();
-
-            setInterval(updateQRCode, 15000);
-
-            async function saveQRData(qrData) {
-              try {
-                // Perform any actions to save the QR code data here
-                // console.log('Saving QR code data:', qrData);
-
-                const response = await fetch('/api/qrcode/save-data', {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json'
-                  },
-                  body: JSON.stringify({
-                    qrData: qrData
-                  })
-                });
-
-                if (!response.ok) {
-                  throw new Error('Network response was not ok');
-                }
-
-                // console.log('QR code data successfully saved');
-              } catch (error) {
-                console.error('Error saving QR code data:', error);
-              }
-            }
-
-          });
+          // Call the function initially and then every 5 seconds
+          fetchDataAndPopulateContainer();
+          setInterval(fetchDataAndPopulateContainer, 2500); // 5000 milliseconds = 5 seconds
         </script>
 
       </div>
 
-      <div class="col-md-6 mt-n2 mt-lg-0 py-7 px-0">
+      <style>
+        :root {
+          --card-gradient-colors: #FFF, #F8FFAE, #b5ffae;
+          --glow-colors: #36ba3c;
+          --message-colors: ;
+        }
 
-        <div class="mb-3 row g-3" style="height: 100%;">
+        @keyframes glow {
+          0% {
+            opacity: 0;
+          }
 
-          <div class="scrollbar-overlay" style="height: 24.5vh;">
-            <div id="attendance-container" class="px-3 py-2"></div>
+          100% {
+            opacity: 1;
+          }
+        }
 
-            <script>
-              function fetchDataAndPopulateContainer() {
-                fetch('/api/all-attendance/today/all') // Fetch attendance data for today within a specific time range
-                  .then(response => response.json())
-                  .then(data => {
-                    const container = document.getElementById('attendance-container');
-                    container.innerHTML = ''; // Clear existing content
+        #latest-attendance {
+          transform: ease;
+        }
 
-                    if (data.length === 0) {
-                      console.log('No attendance records found');
-                      container.innerHTML = '<h3 class="fs-5 fw-bold mt-1 text-center border rounded-3 p-5 mb-2">No staff clock in yet</h3>';
-                    } else {
-                      data.forEach(entry => {
-                        const entryWrapperDiv = document.createElement('div');
-                        entryWrapperDiv.classList.add('border', 'rounded-3', 'px-5', 'py-2', 'mb-1');
+        #id-card {
+          perspective: 1000px;
+        }
 
-                        const entryDiv = document.createElement('div');
-                        entryDiv.classList.add('d-flex', 'justify-content-between', 'align-items-center');
+        #message {
+          background-color: var(--message-colors);
+        }
 
-                        const avatarNameLinkDiv = document.createElement('div');
-                        avatarNameLinkDiv.classList.add('d-flex', 'align-items-center');
+        #attendance-card {
+          width: 300px;
+          height: 400px;
+          border-radius: 15px;
+          position: relative;
+          overflow: hidden;
+          animation: rotateCard 3.5s infinite alternate;
+          transform-origin: center;
+          opacity: 1;
+          margin: 0 auto;
+        }
 
-                        const avatarDiv = document.createElement('div');
-                        avatarDiv.classList.add('avatar', 'avatar-2xl');
-                        const avatarNamePara = document.createElement('p'); // Create a <p> element
-                        avatarNamePara.classList.add('avatar-name', 'rounded-circle'); // Add classes to the <p> element
-                        avatarNamePara.innerHTML = `<span class="fs-8 fw-bold fst-italic">${entry.user ? entry.user.username : 'Unknown'}</span>`; // Set inner HTML content
-                        avatarDiv.appendChild(avatarNamePara);
+        .box-shadow {
+          box-shadow: 0 0 15px var(--glow-colors);
+        }
 
-                        const nameLink = document.createElement('a');
-                        nameLink.classList.add('mb-0', 'ms-3', 'fw-bold', 'fs-8');
-                        nameLink.textContent = entry.user ? entry.user.fullname : 'Unknown';
+        @keyframes rotateCard {
+          from {
+            transform: rotateY(-20deg);
+          }
 
-                        avatarNameLinkDiv.appendChild(avatarDiv);
-                        avatarNameLinkDiv.appendChild(nameLink);
+          to {
+            transform: rotateY(20deg);
+          }
+        }
 
-                        const sectionTypeDiv = document.createElement('div');
-                        sectionTypeDiv.classList.add('d-flex', 'flex-column', 'align-items-center');
+        .card-body {
+          padding: 20px;
+        }
 
-                        // const sectionPara = document.createElement('p');
-                        // sectionPara.classList.add('fw-semibold', 'text-body-emphasis', 'fs-9', 'mb-1', 'text-center');
-                        // sectionPara.textContent = entry.user.section;
+        .glow-on-hover {
+          width: 100%;
+          height: 100%;
+          border: none;
+          outline: none;
+          background: none;
+          cursor: pointer;
+          position: absolute;
+          top: 0;
+          left: 0;
+          z-index: 1;
+          border-radius: inherit;
+          overflow: hidden;
+        }
 
-                        const typeBadge = document.createElement('p');
-                        typeBadge.classList.add('badge', 'badge-phoenix', 'fs-10', 'mb-0');
+        .glow-on-hover:before {
+          content: '';
+          background: linear-gradient(45deg, var(--card-gradient-colors));
+          position: absolute;
+          top: -50%;
+          left: -50%;
+          width: 200%;
+          height: 200%;
+          z-index: -1;
+          opacity: 0;
+          animation: glow 0.5s ease-in 1s forwards;
+          /* Start the glow animation after 2 seconds and maintain glow style */
+          border-radius: inherit;
+        }
 
-                        if (entry.type === 'sign out') {
-                          typeBadge.classList.add('badge-phoenix-danger');
-                        } else if (entry.type === 'sign in') {
-                          typeBadge.classList.add('badge-phoenix-success');
-                        }
+        .card-body {
+          position: relative;
+          z-index: 2;
+        }
 
-                        typeBadge.textContent = entry.type;
+        @media only screen and (max-width: 600px) {
+          #attendance-card {
+            width: 80%;
+            height: auto;
+          }
+        }
 
-                        // sectionTypeDiv.appendChild(sectionPara);
-                        sectionTypeDiv.appendChild(typeBadge);
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
 
-                        entryDiv.appendChild(avatarNameLinkDiv);
-                        entryDiv.appendChild(sectionTypeDiv);
-                        entryWrapperDiv.appendChild(entryDiv);
-                        container.appendChild(entryWrapperDiv);
+          to {
+            opacity: 1;
+            display: block;
+          }
+        }
 
-                      });
-                    }
-                  })
-                  .catch(error => {
-                    console.error('Error fetching data:', error);
-                  });
-              }
+        .fade-in {
+          animation: fadeIn 2s ease forwards;
+        }
+      </style>
 
-              // Call the function initially and then every 5 seconds
-              fetchDataAndPopulateContainer();
-              setInterval(fetchDataAndPopulateContainer, 2500); // 5000 milliseconds = 5 seconds
-            </script>
-
-          </div>
-
-          <style>
-            :root {
-              --card-gradient-colors: #FFF, #F8FFAE, #b5ffae;
-              --glow-colors: #36ba3c;
-              --message-colors: ;
-            }
-
-            @keyframes glow {
-              0% {
-                opacity: 0;
-              }
-
-              100% {
-                opacity: 1;
-              }
-            }
-
-            #latest-attendance {
-              transform: ease;
-            }
-
-            #id-card {
-              perspective: 1000px;
-            }
-
-            #message {
-              background-color: var(--message-colors);
-            }
-
-            #attendance-card {
-              width: 300px;
-              height: 400px;
-              border-radius: 15px;
-              position: relative;
-              overflow: hidden;
-              animation: rotateCard 3.5s infinite alternate;
-              transform-origin: center;
-              opacity: 1;
-              margin: 0 auto;
-            }
-
-            .box-shadow {
-              box-shadow: 0 0 15px var(--glow-colors);
-            }
-
-            @keyframes rotateCard {
-              from {
-                transform: rotateY(-20deg);
-              }
-
-              to {
-                transform: rotateY(20deg);
-              }
-            }
-
-            .card-body {
-              padding: 20px;
-            }
-
-            .glow-on-hover {
-              width: 100%;
-              height: 100%;
-              border: none;
-              outline: none;
-              background: none;
-              cursor: pointer;
-              position: absolute;
-              top: 0;
-              left: 0;
-              z-index: 1;
-              border-radius: inherit;
-              overflow: hidden;
-            }
-
-            .glow-on-hover:before {
-              content: '';
-              background: linear-gradient(45deg, var(--card-gradient-colors));
-              position: absolute;
-              top: -50%;
-              left: -50%;
-              width: 200%;
-              height: 200%;
-              z-index: -1;
-              opacity: 0;
-              animation: glow 0.5s ease-in 1s forwards;
-              /* Start the glow animation after 2 seconds and maintain glow style */
-              border-radius: inherit;
-            }
-
-            .card-body {
-              position: relative;
-              z-index: 2;
-            }
-
-            @media only screen and (max-width: 600px) {
-              #attendance-card {
-                width: 80%;
-                height: auto;
-              }
-            }
-
-            @keyframes fadeIn {
-              from {
-                opacity: 0;
-              }
-
-              to {
-                opacity: 1;
-                display: block;
-              }
-            }
-
-            .fade-in {
-              animation: fadeIn 2s ease forwards;
-            }
-          </style>
-
-          <div class="d-none mt-8 mb-4" id="latest-attendance">
-            <div id="id-card" class="d-flex justify-content-center align-items-center mb-0" style="height: 100%;">
-              <div class="card border border-gray-200 glow-on-hover mb-2" id="attendance-card">
-                <lottie-player id="lottie-player" class="mx-auto mt-n3 position-absolute end-0 top-0" src="https://lottie.host/9286c4fc-dca4-4d7f-b918-85480656a0cf/bLVZCz5laC.json" speed="1" style="width: 110px; height: 110px;" direction="1" mode="normal"></lottie-player>
-                <div class="card-body text-center">
-                  <div class="mb-2 d-flex justify-content-between">
-                    <img id="logo" class="d-none" src="../../assets/img/icons/logo.png" height="40" alt="" />
-                    <p></p>
-                  </div>
-                  <div class="avatar avatar-4xl mb-4 mx-auto">
-                    <img class="rounded-circle border border-gray" id="image-placeholder" src="" alt="" />
-                  </div>
-
-                  <p class="mb-1 fs-8 fw-bold text-dark" id="fullname-placeholder"></p>
-                  <p class="mb-4 fs-8 fw-bold fst-italic text-dark" id="username-placeholder"></p>
-                  <p class="mb-1 fs-8 fw-bold text-dark" id="position-placeholder"></p>
-                  <p class="mb-5 fs-8 fw-bold text-dark" id="section-placeholder"></p>
-                  <p id="message" class="fs-8 fw-bold fst-italic text-center text-light py-1 rounded-5"></p>
-                </div>
+      <div class="d-none mt-8 mb-4" id="latest-attendance">
+        <div id="id-card" class="d-flex justify-content-center align-items-center mb-0" style="height: 100%;">
+          <div class="card border border-gray-200 glow-on-hover mb-2" id="attendance-card">
+            <lottie-player id="lottie-player" class="mx-auto mt-n3 position-absolute end-0 top-0" src="https://lottie.host/9286c4fc-dca4-4d7f-b918-85480656a0cf/bLVZCz5laC.json" speed="1" style="width: 110px; height: 110px;" direction="1" mode="normal"></lottie-player>
+            <div class="card-body text-center">
+              <div class="mb-2 d-flex justify-content-between">
+                <img id="logo" class="d-none" src="../../assets/img/icons/logo.png" height="40" alt="" />
+                <p></p>
               </div>
+              <div class="avatar avatar-4xl mb-4 mx-auto">
+                <img class="rounded-circle border border-gray" id="image-placeholder" src="" alt="" />
+              </div>
+
+              <p class="mb-1 fs-8 fw-bold text-dark" id="fullname-placeholder"></p>
+              <p class="mb-4 fs-8 fw-bold fst-italic text-dark" id="username-placeholder"></p>
+              <p class="mb-1 fs-8 fw-bold text-dark" id="position-placeholder"></p>
+              <p class="mb-5 fs-8 fw-bold text-dark" id="section-placeholder"></p>
+              <p id="message" class="fs-8 fw-bold fst-italic text-center text-light py-1 rounded-5"></p>
             </div>
           </div>
-
-          <script>
-            async function fetchLatestScannedData() {
-              fetch('/api/qrcode/get-latest') // Fetch attendance data for today within a specific time range
-                .then(response => response.json())
-                .then(data => {
-                  const message = document.getElementById('message');
-                  var card = document.getElementById('attendance-card');
-                  const latestAtt = document.getElementById('latest-attendance');
-                  var lottiePlayer = document.getElementById('lottie-player');
-                  var logo = document.getElementById('logo');
-                  const imageElement = document.getElementById('image-placeholder');
-
-                  if (data.message === "No attendance record found.") {
-                    console.log('There is no data');
-                    latestAtt.classList.add('d-none');
-                    card.classList.remove('glow');
-                    card.classList.remove('box-shadow');
-                    message.classList.add('d-none');
-                    logo.classList.add('d-none');
-                    lottiePlayer.stop();
-                  } else {
-                    latestAtt.classList.remove('d-none');
-                    const usernamePlaceholder = document.getElementById('username-placeholder');
-                    const fullnamePlaceholder = document.getElementById('fullname-placeholder');
-                    const positionPlaceholder = document.getElementById('position-placeholder');
-                    const sectionPlaceholder = document.getElementById('section-placeholder');
-
-                    usernamePlaceholder.textContent = data.user.username;
-                    fullnamePlaceholder.textContent = data.user.fullname;
-                    positionPlaceholder.textContent = data.user.position;
-                    sectionPlaceholder.textContent = data.user.section;
-
-                    if (data.user.profile === null || data.user.profile === '') {
-                      imageElement.src = '/assets/img/team/avatar.webp';
-                    } else {
-                      imageElement.src = data.user.profile;
-                    }
-
-                    let gradientColors = '';
-                    let glowColors = '';
-
-                    if (data.temp.type === 'sign out') {
-                      gradientColors = '#FFF, #F8FFAE, #FF5733';
-                      glowColors = '#FF5733';
-                    } else {
-                      gradientColors = '#FFF, #F8FFAE, #b5ffae';
-                      glowColors = '#36ba3c';
-                    }
-
-                    document.documentElement.style.setProperty('--card-gradient-colors', gradientColors);
-                    document.documentElement.style.setProperty('--glow-colors', glowColors);
-
-                    // Add glow class after 2 seconds
-                    setTimeout(function() {
-                      card.classList.add('glow');
-                      card.classList.add('box-shadow');
-                      logo.classList.remove('d-none');
-                      document.documentElement.style.setProperty('--message-colors', glowColors);
-                      message.textContent = data.message;
-                      message.classList.remove('d-none');
-                      lottiePlayer.play();
-                    }, 1500);
-                  }
-                })
-                .catch(error => {
-                  console.error('Error fetching latest scanned data:', error);
-                });
-            }
-
-            // Call the function to fetch latest scanned data after a delay
-            fetchLatestScannedData();
-
-            setInterval(fetchLatestScannedData, 4500);
-          </script>
-
         </div>
-
       </div>
 
+      <script>
+        async function fetchLatestScannedData() {
+          fetch('/api/qrcode/get-latest') // Fetch attendance data for today within a specific time range
+            .then(response => response.json())
+            .then(data => {
+              const message = document.getElementById('message');
+              var card = document.getElementById('attendance-card');
+              const latestAtt = document.getElementById('latest-attendance');
+              var lottiePlayer = document.getElementById('lottie-player');
+              var logo = document.getElementById('logo');
+              const imageElement = document.getElementById('image-placeholder');
+
+              if (data.message === "No attendance record found.") {
+                console.log('There is no data');
+                latestAtt.classList.add('d-none');
+                card.classList.remove('glow');
+                card.classList.remove('box-shadow');
+                message.classList.add('d-none');
+                logo.classList.add('d-none');
+                lottiePlayer.stop();
+              } else {
+                latestAtt.classList.remove('d-none');
+                const usernamePlaceholder = document.getElementById('username-placeholder');
+                const fullnamePlaceholder = document.getElementById('fullname-placeholder');
+                const positionPlaceholder = document.getElementById('position-placeholder');
+                const sectionPlaceholder = document.getElementById('section-placeholder');
+
+                usernamePlaceholder.textContent = data.user.username;
+                fullnamePlaceholder.textContent = data.user.fullname;
+                positionPlaceholder.textContent = data.user.position;
+                sectionPlaceholder.textContent = data.user.section;
+
+                if (data.user.profile === null || data.user.profile === '') {
+                  imageElement.src = '/assets/img/team/avatar.webp';
+                } else {
+                  imageElement.src = data.user.profile;
+                }
+
+                let gradientColors = '';
+                let glowColors = '';
+
+                if (data.temp.type === 'sign out') {
+                  gradientColors = '#FFF, #F8FFAE, #FF5733';
+                  glowColors = '#FF5733';
+                } else {
+                  gradientColors = '#FFF, #F8FFAE, #b5ffae';
+                  glowColors = '#36ba3c';
+                }
+
+                document.documentElement.style.setProperty('--card-gradient-colors', gradientColors);
+                document.documentElement.style.setProperty('--glow-colors', glowColors);
+
+                // Add glow class after 2 seconds
+                setTimeout(function() {
+                  card.classList.add('glow');
+                  card.classList.add('box-shadow');
+                  logo.classList.remove('d-none');
+                  document.documentElement.style.setProperty('--message-colors', glowColors);
+                  message.textContent = data.message;
+                  message.classList.remove('d-none');
+                  lottiePlayer.play();
+                }, 1500);
+              }
+            })
+            .catch(error => {
+              console.error('Error fetching latest scanned data:', error);
+            });
+        }
+
+        // Call the function to fetch latest scanned data after a delay
+        fetchLatestScannedData();
+
+        setInterval(fetchLatestScannedData, 4500);
+      </script>
+
     </div>
-
   </div>
 
-</div>
-
-<style>
-  .slider {
-    position: relative;
-    width: 100%;
-    overflow: hidden;
-  }
-
-  .slide-text {
-    display: inline-block;
-    white-space: nowrap;
-    font-size: 3rem;
-    animation: slide-right 15s linear infinite;
-  }
-
-  @keyframes slide-right {
-    0% {
-      transform: translateX(100vw);
-    }
-
-    100% {
-      transform: translateX(-100vw);
-    }
-  }
-</style>
-
-<div class="mb-3 d-none">
-  <div class="slider">
-    <div class="slide-text fw-bold fst-italic">Selamat Menyambut Hari Gawai daripada Kak Azah Projek</div>
-  </div>
 </div>
 
 <%- include('partials/public-footer.ejs') %>

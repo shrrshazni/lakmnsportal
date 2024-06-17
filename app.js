@@ -23,31 +23,42 @@ const { timeStamp, time } = require('console');
 const { type } = require('os');
 const requestIp = require('request-ip');
 const methodOverride = require('method-override');
+const os = require('os');
 
 // IP CHECK
+const getLocalIPAddress = () => {
+    const interfaces = os.networkInterfaces();
+    for (const iface of Object.values(interfaces)) {
+        for (const alias of iface) {
+            if (alias.family === 'IPv4' && !alias.internal) {
+                return alias.address;
+            }
+        }
+    }
+    return null;
+};
+
+
 // Middleware to restrict access based on IP address
 const restrictAccess = (req, res, next) => {
     const clientIp = requestIp.getClientIp(req);
+    console.log(`Client IP: ${clientIp}`); // Log the client IP for debugging
+
     const allowedIpRangeStart = '192.168.1.0';
     const allowedIpRangeEnd = '192.168.1.255';
 
-    const loopbackIPv4 = '127.0.0.1';
-    const loopbackIPv6 = '::1';
-
     // Normalize IPv4-mapped IPv6 addresses (e.g., ::ffff:192.168.1.1)
     const normalizedIp = normalizeIp(clientIp);
-    console.log(clientIp);
 
-    // Check if the client IP is a loopback address
-    if (normalizedIp === loopbackIPv4 || normalizedIp === loopbackIPv6) {
-        // Allow access for loopback addresses
-        next();
-    } else if (isInRange(normalizedIp, allowedIpRangeStart, allowedIpRangeEnd)) {
-        // Check if the client IP falls within the specified range
+    console.log(`Normalized IP: ${normalizedIp}`); // Log the normalized IP for debugging
+
+    // Check if the client IP falls within the specified range
+    if (isInRange(normalizedIp, allowedIpRangeStart, allowedIpRangeEnd)) {
+        // Allow access if the IP is within the range
         next();
     } else {
         // Deny access for other IP addresses
-        res.status(403).send('Access forbidden: you are not on the local network');
+        res.status(403).send('Access forbidden: your IP is not in the allowed range');
     }
 };
 
@@ -84,7 +95,7 @@ app.use(fileUpload());
 app.use(bodyParser.json());
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(methodOverride('_method')); 
+app.use(methodOverride('_method'));
 app.use(express.static('public'));
 
 // mongoose session option
@@ -541,6 +552,10 @@ app.get('/', isAuthenticated, async function (req, res) {
     })
         .populate('sender')
         .sort({ timestamp: -1 });
+
+    // check ip
+    const localIP = getLocalIPAddress();
+    console.log(`Local IP Address: ${localIP}`);
 
     const allUser = await User.find().sort({ timestamp: -1 });
     const allLeave = await Leave.find().sort({ timestamp: -1 });
@@ -5148,7 +5163,7 @@ app.get('/api/qrcode/generate', async (req, res) => {
         const qrCodeImage = await qr.toDataURL(uniqueIdentifier, {
             type: 'image/png',
             errorCorrectionLevel: 'H',
-            color: { dark: '#22438f', light: '#ffffff' }, // Set the color (dark is the main color, light is the background color)
+            color: { dark: '#3874ff', light: '#f5f7fa' }, // Set the color (dark is the main color, light is the background color)
             width: 400,
             margin: 0 // Set the width of the QR code
         });
