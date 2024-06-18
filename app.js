@@ -6355,6 +6355,10 @@ app.get('/super-admin/update', isAuthenticated, async function (req, res) {
     }
 });
 
+app.get('/temp', async function (req, res) {
+    res.render("temp");
+});
+
 //SCHEDULER
 
 // CHECK EACH LEAVE VALIDITY
