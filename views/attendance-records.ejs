@@ -1,10 +1,9 @@
 <%- include('partials/private-header.ejs') %>
 
 <div class="mb-6">
-
   <div class="mb-6">
-    <h2 class="mb-2">Attendance Overview</h2>
-    <h5 class="text-body-tertiary fw-semibold">Tracking Participation, Absences, Presence.</h5>
+    <h2>Attendance Records</h2>
+    <p class="text-body-tertiary lh-sm mb-0">High, everyone present, no absences</p>
   </div>
 
   <div class="mb-3">
@@ -164,7 +163,7 @@
 
           // Function to fetch attendance data with pagination and search query
           function fetchAttendanceData(page, searchQuery) {
-            fetch(`/api/data/all-attendance/today/human-resources?page=${page}&search=${searchQuery}`, {
+            fetch(`/api/data/all-attendance/today/department-section?page=${page}&search=${searchQuery}`, {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json'
@@ -331,7 +330,7 @@
       <div class="row align-items-end justify-content-between pb-4 g-3">
 
         <div class="col-12 col-md-3 order-1 order-lg-0">
-          <div class="form-icon-container">
+          <div class="form-icon-container text-center">
             <input class="form-control form-icon-input search-input search form-control-sm" type="text" id="searchInput-date" name="date" placeholder="Search" />
             <span class="fas fa-search text-900 fs-9 form-icon"></span>
           </div>
@@ -351,13 +350,13 @@
         <table class="table fs-9 mb-0 border-top border-translucent">
           <thead style="pointer-events: none;">
             <tr>
-              <th class="sort white-space-nowrap align-middle ps-0" scope="col" style="min-width:15%;">STAFF</th>
-              <th class="sort align-middle text-center ps-0" scope="col" style="min-width:15%;">DEPARTMENT</th>
-              <th class="sort align-middle text-center ps-0" scope="col" style="min-width:15%;">SECTION</th>
-              <th class="sort align-middle text-center ps-0" scope="col" style="min-width:5%;">STATUS</th>
-              <th class="sort align-middle text-center ps-0" scope="col" style="min-width:5%;">TYPE</th>
-              <th class="sort align-middle text-center ps-0" scope="col" style="min-width:5%;">CLOCK IN</th>
-              <th class="sort align-middle text-center ps-0" scope="col" style="min-width:5%;">CLOCK OUT</th>
+              <th class="sort white-space-nowrap align-middle ps-0" scope="col" style="width:20%;">STAFF</th>
+              <th class="sort align-middle text-center ps-0" scope="col" style="width:15%;">DEPARTMENT</th>
+              <th class="sort align-middle text-center ps-0" scope="col" style="width:15%;">SECTION</th>
+              <th class="sort align-middle text-center ps-0" scope="col" style="width:10%;">STATUS</th>
+              <th class="sort align-middle text-center ps-0" scope="col" style="width:10%;">TYPE</th>
+              <th class="sort align-middle text-center ps-0" scope="col" style="width:10%;">CLOCK IN</th>
+              <th class="sort align-middle text-center ps-0" scope="col" style="width:10%;">CLOCK OUT</th>
               <th class="sort align-middle text-end" scope="col" style="width: 5%"></th>
             </tr>
           </thead>
@@ -395,7 +394,7 @@
             renderEmptyTable();
             return;
           }
-          fetch(`/api/data/all-attendance/per-date/human-resources?page=${page}&search=${searchQuery}&date=${selectedDate}`, {
+          fetch(`/api/data/all-attendance/per-date/department-section?page=${page}&search=${searchQuery}&date=${selectedDate}`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json'
@@ -537,7 +536,7 @@
                        <td class="align-middle text-center"><span class="badge badge-phoenix badge-phoenix-info fs-10">${entry.type}</span></td>
                        <td class="align-middle text-center"><span class="badge badge-phoenix badge-phoenix-warning fs-10">${entry.signInTime ? new Date(item.signInTime).toLocaleTimeString('en-MY', { hour: 'numeric', minute: 'numeric', hour12: true, timeZone: 'Asia/Kuala_Lumpur' } ) : 'Nil'}</span></td>
                        <td class="align-middle text-center"><span class="badge badge-phoenix badge-phoenix-warning fs-10">${entry.signOutTime ? new Date(item.signOutTime).toLocaleTimeString('en-MY', { hour: 'numeric', minute: 'numeric', hour12: true, timeZone: 'Asia/Kuala_Lumpur' }) : 'Nil'}</span></td>
-                          <td class="align-middle text-end white-space-nowrap ps-0 action">
+                       <td class="align-middle text-end white-space-nowrap ps-0 action">
                         <div class="font-sans-serif btn-reveal-trigger position-static">
                           <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs--2" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
                             <span class="fas fa-ellipsis-h fs-9"></span>
@@ -545,8 +544,8 @@
                           <div class="dropdown-menu dropdown-menu-end py-2">
                             <a class="dropdown-item" href="/">Acknowledged</a>
                           </div>
-                        </div>
-                      </td>
+                          </div>
+                       </td>
                   </tr>`;
             // Insert the HTML row into the table body
             tbody.insertAdjacentHTML('beforeend', row);
@@ -577,7 +576,7 @@
 
         function renderEmptyTable() {
           const tbody = document.querySelector('#all-attendance-body-date');
-          tbody.innerHTML = '<tr><td colspan="8" class="text-center fs-9">No date selected</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="7" class="text-center fs-9">No date selected</td></tr>';
         }
 
         // Event listener for search input
@@ -638,11 +637,11 @@
         <table class="table fs-9 mb-0 border-top border-translucent">
           <thead style="pointer-events: none;">
             <tr>
-              <th class="sort white-space-nowrap align-middle ps-0" scope="col" style="width:30%;">STAFF</th>
+              <th class="sort white-space-nowrap align-middle ps-0" scope="col" style="width:20%;">STAFF</th>
               <th class="sort align-middle text-center ps-0" scope="col" style="width:15%;">DEPARTMENT</th>
               <th class="sort align-middle text-center ps-0" scope="col" style="width:15%;">SECTION</th>
-              <th class="sort align-middle text-center ps-0" scope="col" style="width:20%;">ATTENDANCE</th>
-              <th class="sort align-middle text-center ps-0" scope="col" style="width:20%;">STATUS</th>
+              <th class="sort align-middle text-center ps-0" scope="col" style="width:10%;">ATTENDANCE</th>
+              <th class="sort align-middle text-center ps-0" scope="col" style="width:10%;">STATUS</th>
             </tr>
           </thead>
 
@@ -681,7 +680,7 @@
             renderEmptyTable();
             return;
           }
-          fetch(`/api/data/all-attendance/per-month/human-resources?page=${page}&search=${searchQuery}&date=${selectedDate}`, {
+          fetch(`/api/data/all-attendance/per-month/department-section?page=${page}&search=${searchQuery}&date=${selectedDate}`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json'
@@ -835,13 +834,13 @@
                           <p class="fw-semibold text-body-emphasis fs-9 mb-0">${entry.user ? entry.user.section : 'Unknown'}</p>
                       </td>
                       <td class="align-middle text-center attendance px-5">
-                          <p class="fs-10">${totalAttendance} / ${daysInMonth-nonWorkingCount}</p>
+                          <p class="fs-10">${totalAttendance} / ${daysInMonth}</p>
                           <div class="progress progress-stack mt-n3" style="height:5px;">
                             <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar bg-primary" style="width:${totalPercentage}%" data-bs-toggle="tooltip" data-bs-placement="top" title="${totalPercentage}%"></div>
                           </div>
                       </td>
                       <td class="align-middle text-center status px-5">
-                          <p class="fs-10 opacity-0">${presentCount} / ${daysInMonth-nonWorkingCount}</p>
+                          <p class="fs-10 opacity-0">${presentCount} / ${daysInMonth}</p>
                           <div class="progress progress-stack mt-n3" style="height:5px;">
                             <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar bg-success" style="width:${presentPercentage}%" data-bs-toggle="tooltip" data-bs-placement="top" title="Present ${presentPercentage}% "></div>
                             <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar bg-danger" style="width:${absentPercentage}%" data-bs-toggle="tooltip" data-bs-placement="top" title="Absent ${absentPercentage}% "></div>

@@ -384,7 +384,7 @@ const AttendanceSchema = new mongoose.Schema({
     },
     type: {
         type: String,
-        enum: ['sign in', 'sign out', 'manual add', 'event', 'meeting', 'invalid'],
+        enum: ['sign in', 'sign out', 'manual add', 'event', 'meeting', 'invalid', 'weekend', 'public holiday', 'acknowledged'],
         default: 'invalid'
     },
     date: {
@@ -399,8 +399,11 @@ const AttendanceSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['Present', 'Absent', 'Late', 'Invalid', 'Leave'],
+        enum: ['Present', 'Absent', 'Late', 'Invalid', 'Leave', 'Non Working Day'],
         default: 'Present'
+    },
+    remarks: {
+        type: String
     },
     timestamp: { type: Date, default: null }
 });
@@ -3848,7 +3851,7 @@ app.get('/attendance/today/department/section', isAuthenticated, async function 
         .sort({ timestamp: -1 });
 
     if (user) {
-        res.render('attendance-today', {
+        res.render('attendance-records', {
             user: user,
             notifications: notifications,
             uuid: uuidv4()
@@ -4668,104 +4671,6 @@ app.post('/status-update', isAuthenticated, async (req, res) => {
     }
 });
 
-//GET ALL ATTENDANCE DATA PER MONTH ON SELECTED DATE
-app.post('/api/data/all-attendance/per-month', isAuthenticated, async function (req, res) {
-    const selectedDate = req.body.date;
-    const searchQuery = req.query.search || ''; // Get search query from request query params
-    const page = parseInt(req.query.page) || 1; // Get page number from request query params
-    const limit = 10; // Number of items per page
-    const skip = (page - 1) * limit; // Calculate the number of items to skip
-
-    // Extract month and year from the selected date
-    const [month, year] = selectedDate.split('/');
-
-    try {
-        // Create a set of all possible status types
-        const allStatusTypes = ['Present', 'Absent', 'Late', 'Invalid', 'Leave'];
-        const allUser = await User.find();
-
-        // Query attendance records based on the month and year
-        const attendanceData = await Attendance.aggregate([
-            // Match attendance records for the selected month and year
-            {
-                $match: {
-                    timestamp: {
-                        $gte: new Date(`${year}-${month}-01`),
-                        $lt: new Date(`${year}-${parseInt(month) + 1}-01`)
-                    }
-                }
-            },
-            // Group by user and status, count occurrences
-            {
-                $group: {
-                    _id: { user: '$user', status: '$status' },
-                    count: { $sum: 1 }
-                }
-            }
-        ]);
-
-        const userStatusCounts = {};
-
-        // Iterate over all users and initialize their status counts
-        allUser.forEach(user => {
-            userStatusCounts[user._id] = {};
-            allStatusTypes.forEach(statusType => {
-                userStatusCounts[user._id][statusType] = 0;
-            });
-        });
-
-        // Update status counts based on the attendance data
-        attendanceData.forEach(({ _id, count }) => {
-            const { user, status } = _id;
-            userStatusCounts[user][status] = count;
-        });
-
-        // Combine populated attendance data with user status counts
-        const combinedData = allUser.map(user => {
-            const statusCounts = userStatusCounts[user._id];
-            return {
-                user: {
-                    _id: user._id,
-                    username: user.username,
-                    fullname: user.fullname,
-                    section: user.section,
-                    department: user.department
-                },
-                statusCounts: statusCounts
-            };
-        });
-
-        // Filter combinedData based on the search query
-        const filteredData = combinedData.filter(item => {
-            const { fullname, section, department, username } = item.user;
-            const regex = new RegExp(searchQuery, 'i');
-            return (
-                regex.test(fullname) ||
-                regex.test(section) ||
-                regex.test(department) ||
-                regex.test(username)
-            );
-        });
-
-        // Paginate the filtered data
-        const paginatedData = filteredData.slice(skip, skip + limit);
-
-        const response = {
-            data1: paginatedData,
-            data2: filteredData
-        };
-
-        console.log(filteredData.length);
-
-        // Respond with the paginated and filtered attendance data
-        res.json(response);
-    } catch (error) {
-        console.error('Error fetching attendance data:', error);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-}
-);
-
 // ATTENDACE TODAY DATA FOR ALL
 app.get('/api/all-attendance/today/all', async function (req, res) {
     try {
@@ -4784,6 +4689,7 @@ app.get('/api/all-attendance/today/all', async function (req, res) {
             }
         })
             .sort({ timestamp: -1 })
+            .limit(3)
             .lean();
 
         // Get all users
@@ -4846,7 +4752,7 @@ app.get('/api/all-attendance/today/all', async function (req, res) {
 app.post('/api/data/all-attendance/today/human-resources', isAuthenticated, async function (req, res) {
     const searchQuery = req.query.search || ''; // Get search query from request query params
     const page = parseInt(req.query.page) || 1; // Get page number from request query params
-    const limit = 10; // Number of items per page
+    const limit = 5; // Number of items per page
     const skip = (page - 1) * limit;
 
     // Get today's date
@@ -4994,11 +4900,232 @@ app.post('/api/data/all-attendance/today/human-resources', isAuthenticated, asyn
 }
 );
 
-// ATTENDACE TODAY DATA FOR HOD
-app.post('/api/data/all-attendance/today/hod', isAuthenticated, async function (req, res) {
+// GET ALL ATTENDACNE PER DATE ON SELECTED DATE HR
+app.post('/api/data/all-attendance/per-date/human-resources', isAuthenticated, async function (req, res) {
+    const selectedDate = req.body.date;
     const searchQuery = req.query.search || ''; // Get search query from request query params
     const page = parseInt(req.query.page) || 1; // Get page number from request query params
     const limit = 10; // Number of items per page
+    const skip = (page - 1) * limit; // Calculate the number of items to skip
+
+    try {
+        // Convert selected date to UTC midnight to UTC midnight of next day
+        const startDate = new Date(selectedDate);
+        startDate.setUTCHours(0, 0, 0, 0);
+        const endDate = new Date(selectedDate);
+        endDate.setUTCHours(23, 59, 59, 999);
+
+        // Query attendance records for the selected date
+        const attendanceData = await Attendance.find({
+            timestamp: {
+                $gte: startDate,
+                $lte: endDate
+            }
+        });
+
+        // Get all users
+        const allUser = await User.find();
+
+        // Create a map for quick lookup of users
+        const userMap = {};
+        allUser.forEach(user => {
+            userMap[user._id] = {
+                _id: user._id,
+                username: user.username,
+                fullname: user.fullname,
+                section: user.section,
+                department: user.department
+            };
+        });
+
+        // Create combined data with attendance records
+        const combinedData = allUser.map(user => {
+            const attendanceRecord = attendanceData.find(record =>
+                record.user && record.user._id.equals(user._id)
+            );
+
+            return attendanceRecord
+                ? {
+                    user: userMap[user._id],
+                    status: attendanceRecord.status,
+                    type: attendanceRecord.type,
+                    signInTime: attendanceRecord.date.signInTime,
+                    signOutTime: attendanceRecord.date.signOutTime,
+                    timestamp: attendanceRecord.timestamp,
+                    count: 1 // Assuming each record represents one attendance
+                }
+                : {
+                    user: userMap[user._id],
+                    status: 'Absent',
+                    type: 'Nil',
+                    signInTime: null,
+                    signOutTime: null,
+                    timestamp: null,
+                    count: 0
+                };
+        });
+
+        // Sort combinedData based on timestamp, placing users without attendance records at the end
+        combinedData.sort((a, b) => {
+            if (!a.timestamp) return 1;
+            if (!b.timestamp) return -1;
+            return new Date(b.timestamp) - new Date(a.timestamp);
+        });
+
+        // Filter combinedData based on the search query
+        const filteredData = combinedData.filter(item => {
+            const { fullname, section, department, username } = item.user;
+            const { status, type, signInTime, signOutTime } = item;
+            const regex = new RegExp(searchQuery, 'i');
+            return (
+                regex.test(fullname) ||
+                regex.test(section) ||
+                regex.test(department) ||
+                regex.test(username) ||
+                regex.test(status) ||
+                regex.test(type) ||
+                (signInTime &&
+                    regex.test(
+                        new Date(signInTime).toLocaleTimeString('en-MY', {
+                            hour: 'numeric',
+                            minute: 'numeric',
+                            hour12: true,
+                            timeZone: 'Asia/Kuala_Lumpur'
+                        })
+                    )) ||
+                (signOutTime &&
+                    regex.test(
+                        new Date(signOutTime).toLocaleTimeString('en-MY', {
+                            hour: 'numeric',
+                            minute: 'numeric',
+                            hour12: true,
+                            timeZone: 'Asia/Kuala_Lumpur'
+                        })
+                    ))
+            );
+        });
+
+        // Paginate the filtered data
+        const paginatedData = filteredData.slice(skip, skip + limit);
+
+        const response = {
+            data1: paginatedData,
+            data2: filteredData
+        };
+
+        console.log(filteredData.length + ' & ' + selectedDate);
+
+        // Respond with the paginated and filtered attendance data
+        res.json(response);
+    } catch (error) {
+        console.error('Error fetching attendance data:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+//GET ALL ATTENDANCE DATA PER MONTH ON SELECTED DATE HR
+app.post('/api/data/all-attendance/per-month/human-resources', isAuthenticated, async function (req, res) {
+    const selectedDate = req.body.date;
+    const searchQuery = req.query.search || ''; // Get search query from request query params
+    const page = parseInt(req.query.page) || 1; // Get page number from request query params
+    const limit = 10; // Number of items per page
+    const skip = (page - 1) * limit; // Calculate the number of items to skip
+
+    // Extract month and year from the selected date
+    const [month, year] = selectedDate.split('/');
+
+    try {
+        // Create a set of all possible status types
+        const allStatusTypes = ['Present', 'Absent', 'Late', 'Invalid', 'Leave'];
+        const allUser = await User.find();
+
+        // Query attendance records based on the month and year
+        const attendanceData = await Attendance.aggregate([
+            // Match attendance records for the selected month and year
+            {
+                $match: {
+                    timestamp: {
+                        $gte: new Date(`${year}-${month}-01`),
+                        $lt: new Date(`${year}-${parseInt(month) + 1}-01`)
+                    }
+                }
+            },
+            // Group by user and status, count occurrences
+            {
+                $group: {
+                    _id: { user: '$user', status: '$status' },
+                    count: { $sum: 1 }
+                }
+            }
+        ]);
+
+        const userStatusCounts = {};
+
+        // Iterate over all users and initialize their status counts
+        allUser.forEach(user => {
+            userStatusCounts[user._id] = {};
+            allStatusTypes.forEach(statusType => {
+                userStatusCounts[user._id][statusType] = 0;
+            });
+        });
+
+        // Update status counts based on the attendance data
+        attendanceData.forEach(({ _id, count }) => {
+            const { user, status } = _id;
+            userStatusCounts[user][status] = count;
+        });
+
+        // Combine populated attendance data with user status counts
+        const combinedData = allUser.map(user => {
+            const statusCounts = userStatusCounts[user._id];
+            return {
+                user: {
+                    _id: user._id,
+                    username: user.username,
+                    fullname: user.fullname,
+                    section: user.section,
+                    department: user.department
+                },
+                statusCounts: statusCounts
+            };
+        });
+
+        // Filter combinedData based on the search query
+        const filteredData = combinedData.filter(item => {
+            const { fullname, section, department, username } = item.user;
+            const regex = new RegExp(searchQuery, 'i');
+            return (
+                regex.test(fullname) ||
+                regex.test(section) ||
+                regex.test(department) ||
+                regex.test(username)
+            );
+        });
+
+        // Paginate the filtered data
+        const paginatedData = filteredData.slice(skip, skip + limit);
+
+        const response = {
+            data1: paginatedData,
+            data2: filteredData
+        };
+
+        console.log(filteredData.length);
+
+        // Respond with the paginated and filtered attendance data
+        res.json(response);
+    } catch (error) {
+        console.error('Error fetching attendance data:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+}
+);
+
+// ATTENDACE TODAY DATA FOR DEPARTMENT AND SECTION
+app.post('/api/data/all-attendance/today/department-section', isAuthenticated, async function (req, res) {
+    const searchQuery = req.query.search || ''; // Get search query from request query params
+    const page = parseInt(req.query.page) || 1; // Get page number from request query params
+    const limit = 5; // Number of items per page
     const skip = (page - 1) * limit;
 
     const username = req.user.username;
@@ -5151,6 +5278,248 @@ app.post('/api/data/all-attendance/today/hod', isAuthenticated, async function (
     } catch (error) {
         console.error('Error:', error);
         res.status(500).json({ error: 'Internal Server Error' });
+    }
+}
+);
+
+app.post('/api/data/all-attendance/per-date/department-section', isAuthenticated, async function (req, res) {
+    const selectedDate = req.body.date;
+    const searchQuery = req.query.search || ''; // Get search query from request query params
+    const page = parseInt(req.query.page) || 1; // Get page number from request query params
+    const limit = 10; // Number of items per page
+    const skip = (page - 1) * limit; // Calculate the number of items to skip
+
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+
+    try {
+        // Convert selected date to UTC midnight to UTC midnight of next day
+        const startDate = new Date(selectedDate);
+        startDate.setUTCHours(0, 0, 0, 0);
+        const endDate = new Date(selectedDate);
+        endDate.setUTCHours(23, 59, 59, 999);
+
+        // Query attendance records for the selected date
+        const attendanceData = await Attendance.find({
+            timestamp: {
+                $gte: startDate,
+                $lte: endDate
+            }
+        });
+
+        // Get all users
+        let allUser;
+        if (user.isHeadOfDepartment) {
+            // Query all users from the database
+            allUser = await User.find({ department: user.department });
+        } else if (user.isHeadOfSection) {
+            // Query all users from the database
+            allUser = await User.find({ section: user.section });
+        }
+
+        // Create a map for quick lookup of users
+        const userMap = {};
+        allUser.forEach(user => {
+            userMap[user._id] = {
+                _id: user._id,
+                username: user.username,
+                fullname: user.fullname,
+                section: user.section,
+                department: user.department
+            };
+        });
+
+        // Create combined data with attendance records
+        const combinedData = allUser.map(user => {
+            const attendanceRecord = attendanceData.find(record =>
+                record.user && record.user._id.equals(user._id)
+            );
+
+            return attendanceRecord
+                ? {
+                    user: userMap[user._id],
+                    status: attendanceRecord.status,
+                    type: attendanceRecord.type,
+                    signInTime: attendanceRecord.date.signInTime,
+                    signOutTime: attendanceRecord.date.signOutTime,
+                    timestamp: attendanceRecord.timestamp,
+                    count: 1 // Assuming each record represents one attendance
+                }
+                : {
+                    user: userMap[user._id],
+                    status: 'Absent',
+                    type: 'Nil',
+                    signInTime: null,
+                    signOutTime: null,
+                    timestamp: null,
+                    count: 0
+                };
+        });
+
+        // Sort combinedData based on timestamp, placing users without attendance records at the end
+        combinedData.sort((a, b) => {
+            if (!a.timestamp) return 1;
+            if (!b.timestamp) return -1;
+            return new Date(b.timestamp) - new Date(a.timestamp);
+        });
+
+        // Filter combinedData based on the search query
+        const filteredData = combinedData.filter(item => {
+            const { fullname, section, department, username } = item.user;
+            const { status, type, signInTime, signOutTime } = item;
+            const regex = new RegExp(searchQuery, 'i');
+            return (
+                regex.test(fullname) ||
+                regex.test(section) ||
+                regex.test(department) ||
+                regex.test(username) ||
+                regex.test(status) ||
+                regex.test(type) ||
+                (signInTime &&
+                    regex.test(
+                        new Date(signInTime).toLocaleTimeString('en-MY', {
+                            hour: 'numeric',
+                            minute: 'numeric',
+                            hour12: true,
+                            timeZone: 'Asia/Kuala_Lumpur'
+                        })
+                    )) ||
+                (signOutTime &&
+                    regex.test(
+                        new Date(signOutTime).toLocaleTimeString('en-MY', {
+                            hour: 'numeric',
+                            minute: 'numeric',
+                            hour12: true,
+                            timeZone: 'Asia/Kuala_Lumpur'
+                        })
+                    ))
+            );
+        });
+
+        // Paginate the filtered data
+        const paginatedData = filteredData.slice(skip, skip + limit);
+
+        const response = {
+            data1: paginatedData,
+            data2: filteredData
+        };
+
+        console.log(filteredData.length);
+
+        // Respond with the paginated and filtered attendance data
+        res.json(response);
+    } catch (error) {
+        console.error('Error fetching attendance data:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+app.post('/api/data/all-attendance/per-month/department-section', isAuthenticated, async function (req, res) {
+    const selectedDate = req.body.date;
+    const searchQuery = req.query.search || ''; // Get search query from request query params
+    const page = parseInt(req.query.page) || 1; // Get page number from request query params
+    const limit = 10; // Number of items per page
+    const skip = (page - 1) * limit; // Calculate the number of items to skip
+
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+
+    // Extract month and year from the selected date
+    const [month, year] = selectedDate.split('/');
+
+    try {
+        // Create a set of all possible status types
+        const allStatusTypes = ['Present', 'Absent', 'Late', 'Invalid', 'Leave', 'Non Working Day'];
+
+        // Query attendance records based on the month and year
+        const attendanceData = await Attendance.aggregate([
+            // Match attendance records for the selected month and year
+            {
+                $match: {
+                    timestamp: {
+                        $gte: new Date(`${year}-${month}-01`),
+                        $lt: new Date(`${year}-${parseInt(month) + 1}-01`)
+                    }
+                }
+            },
+            // Group by user and status, count occurrences
+            {
+                $group: {
+                    _id: { user: '$user', status: '$status' },
+                    count: { $sum: 1 }
+                }
+            }
+        ]);
+
+        const userStatusCounts = {};
+
+        let allUser;
+        if (user.isHeadOfDepartment) {
+            // Query all users from the database in the same department
+            allUser = await User.find({ department: user.department });
+        } else if (user.isHeadOfSection) {
+            // Query all users from the database in the same section
+            allUser = await User.find({ section: user.section });
+        }
+
+        // Iterate over all users and initialize their status counts
+        allUser.forEach(user => {
+            userStatusCounts[user._id] = {};
+            allStatusTypes.forEach(statusType => {
+                userStatusCounts[user._id][statusType] = 0;
+            });
+        });
+
+        // Update status counts based on the attendance data
+        attendanceData.forEach(({ _id, count }) => {
+            const { user, status } = _id;
+            if (userStatusCounts[user]) {
+                userStatusCounts[user][status] = count;
+            }
+        });
+
+        // Combine populated attendance data with user status counts
+        const combinedData = allUser.map(user => {
+            const statusCounts = userStatusCounts[user._id];
+            return {
+                user: {
+                    _id: user._id,
+                    username: user.username,
+                    fullname: user.fullname,
+                    section: user.section,
+                    department: user.department
+                },
+                statusCounts: statusCounts
+            };
+        });
+
+        // Filter combinedData based on the search query
+        const filteredData = combinedData.filter(item => {
+            const { fullname, section, department, username } = item.user;
+            const regex = new RegExp(searchQuery, 'i');
+            return (
+                regex.test(fullname) ||
+                regex.test(section) ||
+                regex.test(department) ||
+                regex.test(username)
+            );
+        });
+
+        // Paginate the filtered data
+        const paginatedData = filteredData.slice(skip, skip + limit);
+
+        const response = {
+            data1: paginatedData,
+            data2: filteredData // This seems to be the full filtered data, consider if it's needed
+        };
+
+        console.log(filteredData.length);
+
+        // Respond with the paginated and filtered attendance data
+        res.json(response);
+    } catch (error) {
+        console.error('Error fetching attendance data:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
 }
 );
@@ -6130,6 +6499,7 @@ cron.schedule(
         console.log('Running cron job to update attendance at 1201AM');
         updateAbsentAttendance();
         updateAttendanceForApprovedLeaves();
+        updateTodayAttendance();
     },
     {
         scheduled: true,
@@ -6196,6 +6566,13 @@ getDateFormat1 = function () {
     return formattedDate;
 };
 
+getDateFormat3 = function (date) {
+    const year = date.getUTCFullYear();
+    const month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
+    const day = date.getUTCDate().toString().padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
 // GET CURRENT TIME IN STRING
 getCurrentTime = function () {
     const currentTimeInUTC8 = moment().utcOffset('+08:00');
@@ -6254,6 +6631,32 @@ isPublicHoliday = function (date, publicHolidays) {
     const formattedDate = formatDate(date);
 
     return publicHolidays.some(holiday => holiday === formattedDate);
+};
+
+isWeekend = function (date) {
+    const dayOfWeek = date.getUTCDay();
+    return dayOfWeek === 0 || dayOfWeek === 6; // 0 = Sunday, 6 = Saturday
+};
+
+setOrCheckTodayHolidayOrWeekend = function () {
+    const today = new Date();
+    // Convert today's date to Malaysia Time (UTC+8)
+    today.setUTCHours(today.getUTCHours() + 8);
+    // Ensure the date is set to midnight to exclude time from the calculation
+    today.setUTCHours(0, 0, 0, 0);
+
+    const defaultPublicHolidays = ['2024-06-01', '2024-06-02', '2024-06-03', '2024-06-04', '2024-06-16', '2024-07-07', '2024-07-08', '2024-07-22'
+        , '2024-08-31', '2024-09-16', '2024-12-25'
+    ];
+    const allPublicHolidays = defaultPublicHolidays;
+
+    const isHoliday = isPublicHoliday(today, allPublicHolidays);
+    const isWeekendDay = isWeekend(today);
+
+    return {
+        isHoliday,
+        isWeekend: isWeekendDay
+    };
 };
 
 formatDate = function (date) {
@@ -7304,6 +7707,44 @@ const updateAttendanceForApprovedLeaves = async () => {
         console.log('Attendance records updated for leaves approved today');
     } catch (error) {
         console.error('Error updating attendance records:', error);
+    }
+};
+
+const updateTodayAttendance = async () => {
+
+    // Today's date range
+    const today = new Date();
+    today.setUTCHours(today.getUTCHours() + 8);
+    today.setUTCHours(0, 0, 0, 0);
+
+    const tomorrow = new Date(today);
+    tomorrow.setUTCDate(today.getUTCDate() + 1);
+
+    const todayStatus = setOrCheckTodayHolidayOrWeekend();
+    let updateType, updateStatus;
+
+    if (todayStatus.isWeekend) {
+        updateType = 'weekend';
+        updateStatus = 'Non Working Day';
+    } else if (todayStatus.isHoliday) {
+        updateType = 'public holiday';
+        updateStatus = 'Non Working Day';
+    } else {
+        updateType = '';
+        updateStatus = '';
+    }
+
+    if (updateType === '' && updateStatus === '') {
+        console.log('Today is neither a weekend nor a public holiday.');
+        return; // Exit if today is neither a weekend nor a public holiday
+    } else {
+        // Update all attendance records for today
+        await Attendance.updateMany(
+            { timestamp: { $gte: today, $lt: tomorrow } },
+            { $set: { type: updateType, status: updateStatus } }
+        );
+
+        console.log(`Attendance records updated for ${updateType}: ${updateStatus}`);
     }
 };
 
