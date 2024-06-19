@@ -26,6 +26,24 @@
       bgHolder.style.backgroundImage = `url(${getRandomImage()})`;
     </script>
 
+    <style>
+      .form-control.is-valid,
+      .form-control.is-invalid {
+        background-image: none !important;
+        /* Remove the default icons */
+      }
+
+      .form-control.is-valid {
+        border-color: #25b003 !important;
+        /* Bootstrap 'valid' border color */
+      }
+
+      .form-control.is-invalid {
+        border-color: #ec1f00 !important;
+        /* Bootstrap 'invalid' border color */
+      }
+    </style>
+
   </div>
   <div class="col-lg-6">
     <div class="row flex-center h-100 g-0 px-4 px-sm-0">
@@ -63,7 +81,7 @@
                     Required/Incorrect, at least 1 digit with minimum 4 character
                   </div>
                 </div>
-                <span type="button" class="position-absolute end-0 top-0 mt-2 me-6" id="togglePassword">
+                <span type="button" class="position-absolute end-0 top-0 mt-2 me-3" id="togglePassword">
                   <i class="fa fa-eye-slash" aria-hidden="true" width="15" height="15"></i>
                 </span>
               </div>

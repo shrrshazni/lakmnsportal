@@ -472,13 +472,6 @@ let transporter = nodemailer.createTransport({
     }
 });
 
-
-
-// TEST FOR RESTRICT ACCESS
-// app.use('/restricted-link', restrictAccess, (req, res) => {
-//     res.send('This is a restricted link that can only be accessed from the local network.');
-// });
-
 // BASIC USER PART
 //HOME
 app.get('/', isAuthenticated, async function (req, res) {
@@ -4620,7 +4613,7 @@ app.get('/api/all-attendance/today/all', async function (req, res) {
             }
         })
             .sort({ timestamp: -1 })
-            .limit(3)
+            .limit(2)
             .lean();
 
         // Get all users
@@ -7756,7 +7749,7 @@ function restrictAccess(req, res, next) {
     if (allowedIPs.includes(clientIp)) {
         next();
     } else {
-        res.status(403).send('Access denied');
+        res.render('error');
     }
 }
 
