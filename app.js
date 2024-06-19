@@ -484,6 +484,9 @@ app.get('/', isAuthenticated, async function (req, res) {
         .populate('sender')
         .sort({ timestamp: -1 });
 
+    const clientIp = req.clientIp;
+    console.log(clientIp);
+
     const allUser = await User.find().sort({ timestamp: -1 });
     const allLeave = await Leave.find().sort({ timestamp: -1 });
     const allUserLeave = await UserLeave.find().sort({ timestamp: -1 });
