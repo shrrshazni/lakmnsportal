@@ -22,81 +22,20 @@ const qr = require('qrcode');
 const { timeStamp, time } = require('console');
 const { type } = require('os');
 const requestIp = require('request-ip');
-const methodOverride = require('method-override');
-const os = require('os');
-
-// IP CHECK
-const getLocalIPAddress = () => {
-    const interfaces = os.networkInterfaces();
-    for (const iface of Object.values(interfaces)) {
-        for (const alias of iface) {
-            if (alias.family === 'IPv4' && !alias.internal) {
-                return alias.address;
-            }
-        }
-    }
-    return null;
-};
-
-
-// Middleware to restrict access based on IP address
-const restrictAccess = (req, res, next) => {
-    const clientIp = requestIp.getClientIp(req);
-    console.log(`Client IP: ${clientIp}`); // Log the client IP for debugging
-
-    const allowedIpRangeStart = '192.168.1.0';
-    const allowedIpRangeEnd = '192.168.1.255';
-
-    // Normalize IPv4-mapped IPv6 addresses (e.g., ::ffff:192.168.1.1)
-    const normalizedIp = normalizeIp(clientIp);
-
-    console.log(`Normalized IP: ${normalizedIp}`); // Log the normalized IP for debugging
-
-    // Check if the client IP falls within the specified range
-    if (isInRange(normalizedIp, allowedIpRangeStart, allowedIpRangeEnd)) {
-        // Allow access if the IP is within the range
-        next();
-    } else {
-        // Deny access for other IP addresses
-        res.status(403).send('Access forbidden: your IP is not in the allowed range');
-    }
-};
-
-// Normalize IP address to handle IPv4-mapped IPv6 addresses
-const normalizeIp = (ip) => {
-    // If the IP is an IPv4-mapped IPv6 address, convert it to IPv4
-    if (ip.startsWith('::ffff:')) {
-        return ip.split(':').reverse()[0];
-    }
-    return ip;
-};
-
-// Function to check if an IP address is within a specific range
-const isInRange = (ip, startIp, endIp) => {
-    const start = ipToNumber(startIp);
-    const end = ipToNumber(endIp);
-    const client = ipToNumber(ip);
-    return client >= start && client <= end;
-};
-
-// Function to convert IP address to a number
-const ipToNumber = (ip) => {
-    return ip.split('.').reduce((acc, octet) => (acc << 8) + parseInt(octet, 10), 0);
-};
+const axios = require('axios');
 
 const mongoURI =
     'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/session';
 
 const app = express();
 
-app.set('trust proxy', true);
-app.use(requestIp.mw());
 app.use(fileUpload());
 app.use(bodyParser.json());
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(methodOverride('_method'));
 app.use(express.static('public'));
+app.use(requestIp.mw());
+app.set('trust proxy', true);
 
 // mongoose session option
 const store = new MongoDBSession({
@@ -540,9 +479,9 @@ let transporter = nodemailer.createTransport({
 // const verifySid = "VAfe5663f4ddd898cce9936534b3abf99a";
 
 // TEST FOR RESTRICT ACCESS
-app.use('/restricted-link', restrictAccess, (req, res) => {
-    res.send('This is a restricted link that can only be accessed from the local network.');
-});
+// app.use('/restricted-link', restrictAccess, (req, res) => {
+//     res.send('This is a restricted link that can only be accessed from the local network.');
+// });
 
 // BASIC USER PART
 //HOME
@@ -555,10 +494,6 @@ app.get('/', isAuthenticated, async function (req, res) {
     })
         .populate('sender')
         .sort({ timestamp: -1 });
-
-    // check ip
-    const localIP = getLocalIPAddress();
-    console.log(`Local IP Address: ${localIP}`);
 
     const allUser = await User.find().sort({ timestamp: -1 });
     const allLeave = await Leave.find().sort({ timestamp: -1 });
@@ -6355,7 +6290,25 @@ app.get('/super-admin/update', isAuthenticated, async function (req, res) {
     }
 });
 
+// GET IP GEOLOCATION
+async function getGeolocation(ip) {
+    try {
+        const response = await axios.get(`http://ip-api.com/json/${ip}`);
+        return `${response.data.city}, ${response.data.regionName}, ${response.data.country}`;
+    } catch (error) {
+        console.error('Error fetching geolocation data:', error);
+        return 'Unknown location';
+    }
+}
+
 app.get('/temp', async function (req, res) {
+    const clientIp1 = req.clientIp;
+    const clientIp2 = req.headers['x-real-ip'] || req.connection.remoteAddress;
+    // const location = await getGeolocation(ip);
+
+    console.log('Using request IP', clientIp1);
+    console.log('Using req.headers', clientIp2);
+
     res.render("temp");
 });
 
