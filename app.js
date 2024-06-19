@@ -472,11 +472,7 @@ let transporter = nodemailer.createTransport({
     }
 });
 
-//PHONE TRANSPORTER
-// const accountSid = "ACafc8b0a422560f0091b2855b4482326a";
-// const authToken = "4e7acc459aaed9ecf0fd426308f89e61";
-// const client = twilio(accountSid, authToken);
-// const verifySid = "VAfe5663f4ddd898cce9936534b3abf99a";
+
 
 // TEST FOR RESTRICT ACCESS
 // app.use('/restricted-link', restrictAccess, (req, res) => {
@@ -3745,7 +3741,7 @@ app.get('/leave/:approval/:id', async function (req, res) {
 });
 
 //ATTENDANCE
-app.get('/attendance', async function (req, res) {
+app.get('/attendance', restrictAccess, async function (req, res) {
     const uniqueIdentifier = generateUniqueIdentifier();
 
     res.render('attendance', {
@@ -7752,6 +7748,17 @@ const clearQRCodeData = async () => {
         console.error('Error clearing QRCode data:', error);
     }
 };
+
+const allowedIPs = ['175.140.45.73', '104.28.242.42'];
+
+function restrictAccess(req, res, next) {
+    const clientIp = req.clientIp;
+    if (allowedIPs.includes(clientIp)) {
+        next();
+    } else {
+        res.status(403).send('Access denied');
+    }
+}
 
 // PORT INITIALIZATION ON CLOUD OR LOCAL (5001)
 const PORT = process.env.PORT || 5002;
