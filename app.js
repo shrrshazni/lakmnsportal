@@ -487,6 +487,12 @@ app.get('/', isAuthenticated, async function (req, res) {
     const clientIp = req.clientIp;
     console.log(clientIp);
 
+    const officers = await User.find({ position: 'Head of Division' });
+    console.log(`Found ${officers.length} users with head of department.`);
+
+    const result = await User.updateMany({ position: 'Head of Division' }, { $set: { isHeadOfSection: true } });
+    console.log(`${result.nModified} users were updated.`);
+
     const allUser = await User.find().sort({ timestamp: -1 });
     const allLeave = await Leave.find().sort({ timestamp: -1 });
     const allUserLeave = await UserLeave.find().sort({ timestamp: -1 });
@@ -1639,6 +1645,7 @@ app
                 if (req.body.officenumber) {
                     updateFields.officenumber = req.body.officenumber;
                 }
+
                 if (req.body.email) {
                     updateFields.email = req.body.email;
                 }
@@ -1669,7 +1676,7 @@ app
                 if (req.body.address) {
                     updateFields.address = req.body.address;
                 }
-                if (req.body.children) {
+                if (req.body.children && req.body.children !== 'Select your number of children') {
                     updateFields.children = parseInt(req.body.children);
                 }
 
@@ -1729,6 +1736,30 @@ app
                                 new: true
                             }
                         );
+                    } else if (updateFields.phone !== '' && updateFields.email !== '') {
+                        updateUser = await User.findOneAndUpdate(
+                            {
+                                _id: user._id
+                            },
+                            {
+                                $set: updateFields
+                            },
+                            { new: true }
+                        );
+
+                        await Info.findOneAndUpdate(
+                            {
+                                user: user._id
+                            },
+                            {
+                                emailVerified: false,
+                                phoneVerified: false
+                            },
+                            {
+                                new: true
+                            }
+                        );
+
                     } else {
                         updateUser = await User.findOneAndUpdate(
                             {
@@ -1740,6 +1771,11 @@ app
                             { new: true }
                         );
                     }
+
+                    console.log(updateUser);
+                    console.log(updateFields);
+
+                    const today = new Date();
 
                     if (updateUser) {
                         // activity
@@ -6247,31 +6283,8 @@ app.get('/super-admin/update', isAuthenticated, async function (req, res) {
 
     if (user.isSuperAdmin) {
         try {
-            // Find all users
-            const allUsers = await User.find();
-
-            // Iterate through each user
-            for (const user of allUsers) {
-                // Find the corresponding info document for this user
-                const existingInfo = await Info.findOne({ user: user._id });
-
-                // If no info document exists for this user, create a new one
-                if (!existingInfo) {
-                    const newInfo = new Info({
-                        user: user._id,
-                        status: "Will be updated",
-                        emailVerified: false,
-                        phoneVerified: false,
-                        isOnline: false,
-                        lastSeen: new Date()
-                    });
-
-                    // Save the new info document
-                    await newInfo.save();
-                }
-            }
-
-            console.log('Info updated for all users successfully.');
+            const officers = await User.find({ position: 'Officer' });
+            console.log(`Found ${officers.length} users with position 'Officer'.`);
         } catch (error) {
             console.error('Error updating info for all users:', error);
         }
