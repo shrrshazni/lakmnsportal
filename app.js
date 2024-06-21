@@ -487,12 +487,6 @@ app.get('/', isAuthenticated, async function (req, res) {
     const clientIp = req.clientIp;
     console.log(clientIp);
 
-    const officers = await User.find({ position: 'Head of Division' });
-    console.log(`Found ${officers.length} users with head of department.`);
-
-    const result = await User.updateMany({ position: 'Head of Division' }, { $set: { isHeadOfSection: true } });
-    console.log(`${result.nModified} users were updated.`);
-
     const allUser = await User.find().sort({ timestamp: -1 });
     const allLeave = await Leave.find().sort({ timestamp: -1 });
     const allUserLeave = await UserLeave.find().sort({ timestamp: -1 });
