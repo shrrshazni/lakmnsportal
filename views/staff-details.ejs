@@ -34,7 +34,7 @@
 
   <div class="row g-0 g-md-4 g-xl-6">
 
-    <div class="col-md-5 col-lg-5 col-xl-3 d-print-none">
+    <div class="col-md-5 col-xxl-4 d-print-none">
       <div class="sticky-leads-sidebar">
         <div class="lead-details-offcanvas bg-body scrollbar phoenix-offcanvas phoenix-offcanvas-fixed" id="productFilterColumn">
           <div class="d-flex justify-content-between align-items-center mb-2 d-md-none">
@@ -57,7 +57,8 @@
                   <% if(otherUser.profile === '' ){ otherUser.profile = '/assets/img/team/avatar.webp' ; } %>
                   <div class="avatar avatar-5xl <%= showOnline %>"><img class="rounded-circle border border-primary" src="<%= otherUser.profile %>" alt="" /></div>
                 </div>
-                <div class="col-12 col-sm-auto flex-1 text-md-start text-center">
+
+                <div class="col-12 col-sm-auto flex-1 text-xxl-start text-center">
                   <h4 class="fw-bold mb-3 mt-3"><%= otherUser.fullname %></h4>
                   <p class="mb-3"><%= otherUser.position %></p>
                   <p class="fw-semibold text-primary fst-italic">"<%= info.status %>"</p>
@@ -65,6 +66,7 @@
               </div>
             </div>
           </div>
+
           <div class="card mb-3">
             <div class="card-body">
               <div class="d-flex align-items-center mb-4">
@@ -341,7 +343,7 @@
       </div>
     </div>
 
-    <div class="col-md-7 col-lg-7 col-xl-9">
+    <div class="col-md-7 col-xxl-8">
       <div class="lead-details-container">
         <nav class="navbar pb-4 px-0 sticky-top bg-body nav-underline-scrollspy" id="navbar-staffs-detail">
           <ul class="nav nav-underline fs-9">

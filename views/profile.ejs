@@ -320,7 +320,7 @@
     </div>
 
     <div class="tab-pane fade" id="tab-attendance" role="tabpanel" aria-labelledby="attendance-tab">
-      <div class="border-bottom border-translucent mt-3" id="attendance" data-list='{"valueNames":["type","date","clockin","clockout"],"page":5,"pagination":true}'>
+      <div class="border-bottom border-translucent mt-3" id="attendance" data-list='{"valueNames":["type","date","clockin","clockout", "remarks"],"page":5,"pagination":true}'>
         <div class="row align-items-end justify-content-between pb-4 g-3">
 
           <div class="col-12 col-md-auto">
@@ -340,14 +340,16 @@
               <tr>
                 <th class="sort align-middle ps-0 text-start text-uppercase" scope="col" data-sort="date" style="width:15%;min-width: 150px;">Date</th>
                 <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="type" style="width:15%;min-width: 100px;">Status</th>
-                <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="clockin" style="width:15%;min-width: 100px;">Clock In</th>
-                <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="clockout" style="width:15%;min-width: 100px;">Clock Out</th>
+                <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="clockin" style="width:10%;min-width: 100px;">Clock In</th>
+                <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="clockout" style="width:10%;min-width: 100px;">Clock Out</th>
+                <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="remarks" style="width:20%;min-width: 100px;">Remarks</th>
+                <th class="sort align-middle ps-0 text-end text-uppercase" scope="col" style="width:5%;min-width: 50px;"></th>
               </tr>
             </thead>
 
             <tbody class="list" id="attendance-table-content">
               <% if(attendance && attendance.length > 0){ %>
-              <% attendance.forEach(item => { %>
+              <% attendance.forEach((item, index) => { %>
 
               <% 
                 
@@ -375,11 +377,42 @@
                 }
               %>
               <tr class="position-static">
-                <td class="date align-middle fw-semibold text-start py-2 ps-0 fs-9"><%= item.timestamp.toLocaleDateString('en-UK', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></td>
+                <td class="date align-middle fw-blod text-start py-2 ps-0 fs-8"><%= item.timestamp.toLocaleDateString('en-MY', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></td>
                 <td class="type align-middle fw-semibold text-center py-2 ps-0 fs-9 fs-md-8 text-body-highlight"><span class="badge badge-phoenix fs-10 badge-phoenix-<%= badgeColour %>"><%= item.status %></span></td>
                 <td class="clockin align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-success"><%= signInTime %></span></td>
                 <td class="clockin align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-warning"><%= signOutTime %></span></td>
+                <td class="remarks align-middle fst-italic text-center text-body-highlight py-2 ps-0 fs-9"><%= item.remarks || 'No remarks added.' %></td>
+                <td class="align-middle text-end white-space-nowrap ps-0 action">
+                  <div class="font-sans-serif btn-reveal-trigger position-static">
+                    <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs--2" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
+                      <span class="fas fa-ellipsis-h fs-9"></span>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end py-2">
+                      <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#addRemark<%= index %>">Update Remarks</a>
+                    </div>
+                  </div>
+                </td>
               </tr>
+
+              <div class="modal fade" id="addRemark<%= index %>" tabindex="-1">
+                <div class="modal-dialog">
+                  <div class="modal-content">
+                    <form action="/update/attendance-remarks/<%= item._id %>" method="post">
+                      <div class="modal-body">
+                        <label class="form-label" for="udpateDescription">Remarks</label>
+                        <textarea class="form-control scrollbar-overlay" id="udpateRemarks" placeholder="Leave a attendance remark here" style="height: 100px" name="description"></textarea>
+                      </div>
+                      <div class="modal-footer border-top-0">
+                        <button class="btn btn-primary loading-button" type="submit">
+                          <div class="content-button">
+                            <span>Update</span>
+                          </div>
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
               <% }); %>
               <% }else{ %>
               <tr class="position-static">

@@ -1780,7 +1780,7 @@ app
                             type: 'Profile',
                             description:
                                 user.fullname +
-                                ' has update their profile at' + getDateFormat2(today)
+                                ' has update their profile at ' + getDateFormat2(today)
                         });
 
                         activityUser.save();
