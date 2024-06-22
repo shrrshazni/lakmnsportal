@@ -143,7 +143,6 @@
                 <th class="sort align-middle pe-6 text-uppercase text-start" scope="col" data-sort="description" style="width:35%;min-width: 250px; ">Description</th>
                 <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="date" style="width:15%;min-width: 100px;">Date</th>
                 <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="time" style="width:15%;min-width: 100px;">Time</th>
-                <th class="sort align-middle text-end" scope="col" style="width: 10%"></th>
               </tr>
             </thead>
 
@@ -156,16 +155,6 @@
                 <td class="description align-middle text-start fw-semibold py-2 text-start ps-2 fst-italic fs-9 text-body-highlight"><%= item.description%></td>
                 <td class="date align-middle text-center py-2 ps-0 fs-9"><%= item.date.toLocaleDateString('en-UK', { day: '2-digit', month: 'short', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></td>
                 <td class="time align-middle text-center py-2 ps-0 fs-9"><%= item.date.toLocaleTimeString('en-UK', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone : 'Asia/Kuala_Lumpur' }) %></td>
-                <td class="align-middle text-end white-space-nowrap ps-0 action">
-                  <div class="font-sans-serif btn-reveal-trigger position-static">
-                    <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs--2" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
-                      <span class="fas fa-ellipsis-h fs-9"></span>
-                    </button>
-                    <div class="dropdown-menu dropdown-menu-end py-2">
-                      <a class="dropdown-item" href="/">View</a>
-                    </div>
-                  </div>
-                </td>
               </tr>
               <% }); %>
               <% }else{ %>
@@ -207,9 +196,6 @@
 
         </div>
 
-        <% if (leave && leave.length>0) { %>
-        <!-- table item -->
-        <% leave.forEach(function(leaves) { %>
         <div class="table-responsive ms-n1 ps-1 scrollbar">
           <table class="table fs-9 mb-0 border-top border-translucent">
             <thead>
@@ -244,6 +230,9 @@
             %>
 
             <tbody class="list" id="project-summary-table-body">
+              <% if (leave && leave.length>0) { %>
+              <!-- table item -->
+              <% leave.forEach(function(leaves) { %>
 
               <% 
                    var statusColor = '';
@@ -299,6 +288,9 @@
                   </div>
                 </td>
               </tr>
+              <%  }); %> <% } else { %>
+              <p class="fs-8 text-center">No leave submitted</p>
+              <% } %>
             </tbody>
           </table>
         </div>
@@ -312,9 +304,6 @@
             <button class="page-link pe-0" data-list-pagination="next"><span class="fas fa-chevron-right"></span></button>
           </div>
         </div>
-        <%  }); %> <% } else { %>
-        <p class="fs-8 text-center">No leave submitted</p>
-        <% } %>
       </div>
 
     </div>
@@ -397,10 +386,10 @@
               <div class="modal fade" id="addRemark<%= index %>" tabindex="-1">
                 <div class="modal-dialog">
                   <div class="modal-content">
-                    <form action="/update/attendance-remarks/<%= item._id %>" method="post">
+                    <form action="/attendance/update/remarks/<%= item._id %>" method="post">
                       <div class="modal-body">
                         <label class="form-label" for="udpateDescription">Remarks</label>
-                        <textarea class="form-control scrollbar-overlay" id="udpateRemarks" placeholder="Leave a attendance remark here" style="height: 100px" name="description"></textarea>
+                        <textarea class="form-control scrollbar-overlay" placeholder="Leave a attendance remark here" style="height: 100px" name="remarks"></textarea>
                       </div>
                       <div class="modal-footer border-top-0">
                         <button class="btn btn-primary loading-button" type="submit">

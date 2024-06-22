@@ -3776,6 +3776,51 @@ app.get('/attendance', restrictAccess, async function (req, res) {
     });
 });
 
+// UPDATE REMARKS ATTENDANCE
+app.post('/attendance/update/remarks/:id', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+
+    if (user) {
+        const id = req.params.id;
+        console.log(id);
+        console.log(req.body.remarks)
+
+        const attendance = await Attendance.findOneAndUpdate(
+            { _id: id },
+            { $set: { remarks: req.body.remarks } },
+            { upsert: true }
+        )
+
+        if (attendance) {
+            console.log('Update remark success:', req.body.remarks);
+            res.redirect('/profile');
+        }
+    }
+});
+
+app.post('/attendance/acknowledged/:id', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+
+    if (user) {
+        const id = req.params.id;
+        console.log(id);
+        console.log(req.body.remarks)
+
+        const attendance = await Attendance.findOneAndUpdate(
+            { _id: id },
+            { $set: { status: 'Present', type: 'manual add' } },
+            { upsert: true }
+        )
+
+        if (attendance) {
+            console.log('Update attendance status success:', req.body.remarks);
+            res.redirect('/profile');
+        }
+    }
+});
+
 // SCAN QR PAGE
 app.get('/scan-qr', isAuthenticated, async function (req, res) {
     const username = req.user.username;
@@ -5250,19 +5295,27 @@ app.post('/api/data/all-attendance/per-date/department-section', isAuthenticated
     const user = await User.findOne({ username: username });
 
     try {
+        console.log(selectedDate);
         // Convert selected date to UTC midnight to UTC midnight of next day
-        const startDate = new Date(selectedDate);
-        startDate.setUTCHours(0, 0, 0, 0);
+        // Setting start date to the beginning of the previous day
+        const startDate = new Date('2024-06-22');
+        startDate.setUTCHours(0, 0, 0, 0); // 00:00:00 UTC
+
+        // Setting end date to the end of the previous day
         const endDate = new Date(selectedDate);
         endDate.setUTCHours(23, 59, 59, 999);
+
 
         // Query attendance records for the selected date
         const attendanceData = await Attendance.find({
             timestamp: {
                 $gte: startDate,
-                $lte: endDate
-            }
+                $lt: endDate
+            },
+            status: 'Non Working Day'
         });
+
+        console.log(attendanceData);
 
         // Get all users
         let allUser;
@@ -5320,7 +5373,6 @@ app.post('/api/data/all-attendance/per-date/department-section', isAuthenticated
             return new Date(b.timestamp) - new Date(a.timestamp);
         });
 
-        // Filter combinedData based on the search query
         const filteredData = combinedData.filter(item => {
             const { fullname, section, department, username } = item.user;
             const { status, type, signInTime, signOutTime } = item;
@@ -5332,36 +5384,21 @@ app.post('/api/data/all-attendance/per-date/department-section', isAuthenticated
                 regex.test(username) ||
                 regex.test(status) ||
                 regex.test(type) ||
-                (signInTime &&
-                    regex.test(
-                        new Date(signInTime).toLocaleTimeString('en-MY', {
-                            hour: 'numeric',
-                            minute: 'numeric',
-                            hour12: true,
-                            timeZone: 'Asia/Kuala_Lumpur'
-                        })
-                    )) ||
-                (signOutTime &&
-                    regex.test(
-                        new Date(signOutTime).toLocaleTimeString('en-MY', {
-                            hour: 'numeric',
-                            minute: 'numeric',
-                            hour12: true,
-                            timeZone: 'Asia/Kuala_Lumpur'
-                        })
-                    ))
+                (signInTime && regex.test(new Date(signInTime).toLocaleTimeString('en-MY', { hour: 'numeric', minute: 'numeric', hour12: true, timeZone: 'Asia/Kuala_Lumpur' }))) ||
+                (signOutTime && regex.test(new Date(signOutTime).toLocaleTimeString('en-MY', { hour: 'numeric', minute: 'numeric', hour12: true, timeZone: 'Asia/Kuala_Lumpur' })))
             );
         });
 
-        // Paginate the filtered data
         const paginatedData = filteredData.slice(skip, skip + limit);
+
+        if (!paginatedData || paginatedData.length === 0) {
+            return res.status(404).json({ message: 'No paginated attendance data found' });
+        }
 
         const response = {
             data1: paginatedData,
             data2: filteredData
         };
-
-        console.log(filteredData.length);
 
         // Respond with the paginated and filtered attendance data
         res.json(response);
@@ -6276,12 +6313,32 @@ app.get('/super-admin/update', isAuthenticated, async function (req, res) {
     const user = await User.findOne({ username: username });
 
     if (user.isSuperAdmin) {
-        try {
-            const officers = await User.find({ position: 'Officer' });
-            console.log(`Found ${officers.length} users with position 'Officer'.`);
-        } catch (error) {
-            console.error('Error updating info for all users:', error);
-        }
+
+        // Today's date range
+        const now = new Date();
+        const todayStart = new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate(),
+            0,
+            0,
+            0
+        );
+        const todayEnd = new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate(),
+            23,
+            59,
+            59
+        );
+
+        await Attendance.updateMany(
+            { timestamp: { $gte: todayStart, $lt: todayEnd } },
+            { $set: { remarks: 'No remarks added' } },
+            { upsert: true }
+        );
+
 
         console.log('All user has been updated');
 
@@ -6489,7 +6546,7 @@ cron.schedule(
     }
 );
 
-// TEMPORARY 
+//EMAIL
 app.get('/email', isAuthenticated, async function (req, res) {
     const username = req.user.username;
     const user = await User.findOne({ username: username });
@@ -7669,12 +7726,25 @@ const updateAttendanceForApprovedLeaves = async () => {
 const updateTodayAttendance = async () => {
 
     // Today's date range
-    const today = new Date();
-    today.setUTCHours(today.getUTCHours() + 8);
-    today.setUTCHours(0, 0, 0, 0);
+    const now = new Date();
+    const utcOffset = 8; // UTC+8
+    const todayStart = new Date(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        now.getUTCDate(),
+        0 + utcOffset,   // Adding UTC offset to hours
+        0,
+        0
+    );
 
-    const tomorrow = new Date(today);
-    tomorrow.setUTCDate(today.getUTCDate() + 1);
+    const todayEnd = new Date(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        now.getUTCDate(),
+        23 + utcOffset,  // Adding UTC offset to hours
+        59,
+        59
+    );
 
     const todayStatus = setOrCheckTodayHolidayOrWeekend();
     let updateType, updateStatus;
@@ -7694,9 +7764,10 @@ const updateTodayAttendance = async () => {
         console.log('Today is neither a weekend nor a public holiday.');
         return; // Exit if today is neither a weekend nor a public holiday
     } else {
+
         // Update all attendance records for today
         await Attendance.updateMany(
-            { timestamp: { $gte: today, $lt: tomorrow } },
+            { timestamp: { $gte: todayStart, $lt: todayEnd } },
             { $set: { type: updateType, status: updateStatus } }
         );
 
@@ -7721,7 +7792,8 @@ const updateAbsentAttendance = async () => {
                 signInTime: null,
                 signOutTime: null,
                 status: 'Absent',
-                timestamp: new Date()
+                timestamp: new Date(),
+                remarks: 'No remarks added'
             });
 
             await newAttendance.save();

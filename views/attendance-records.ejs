@@ -405,6 +405,7 @@
             })
             .then(response => response.json())
             .then(data => {
+              console.log("Received data:", data);
               // Update the table with the received attendance data
               renderTable(data.data1, selectedDate);
 
@@ -504,9 +505,6 @@
           prevPageButton.classList.remove('d-none');
           nextPageButton.classList.remove('d-none');
 
-          const [month, year] = date.split('/').map(Number); // Extract year and month from the selected date
-          const daysInMonth = new Date(year, month, 0).getDate();
-
           data.forEach(entry => {
             // Construct HTML row for each entry
             var badgeColour;
@@ -534,8 +532,8 @@
                       </td>
                        <td class="align-middle text-center"><span class="badge badge-phoenix badge-phoenix-${badgeColour} fs-10">${entry.status}</span></td>
                        <td class="align-middle text-center"><span class="badge badge-phoenix badge-phoenix-info fs-10">${entry.type}</span></td>
-                       <td class="align-middle text-center"><span class="badge badge-phoenix badge-phoenix-warning fs-10">${entry.signInTime ? new Date(item.signInTime).toLocaleTimeString('en-MY', { hour: 'numeric', minute: 'numeric', hour12: true, timeZone: 'Asia/Kuala_Lumpur' } ) : 'Nil'}</span></td>
-                       <td class="align-middle text-center"><span class="badge badge-phoenix badge-phoenix-warning fs-10">${entry.signOutTime ? new Date(item.signOutTime).toLocaleTimeString('en-MY', { hour: 'numeric', minute: 'numeric', hour12: true, timeZone: 'Asia/Kuala_Lumpur' }) : 'Nil'}</span></td>
+                       <td class="align-middle text-center"><span class="badge badge-phoenix badge-phoenix-warning fs-10">${entry.signInTime ? new Date(entry.signInTime).toLocaleTimeString('en-MY', { hour: 'numeric', minute: 'numeric', hour12: true, timeZone: 'Asia/Kuala_Lumpur' } ) : 'Nil'}</span></td>
+                       <td class="align-middle text-center"><span class="badge badge-phoenix badge-phoenix-warning fs-10">${entry.signOutTime ? new Date(entry.signOutTime).toLocaleTimeString('en-MY', { hour: 'numeric', minute: 'numeric', hour12: true, timeZone: 'Asia/Kuala_Lumpur' }) : 'Nil'}</span></td>
                        <td class="align-middle text-end white-space-nowrap ps-0 action">
                         <div class="font-sans-serif btn-reveal-trigger position-static">
                           <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs--2" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
