@@ -3799,25 +3799,51 @@ app.post('/attendance/update/remarks/:id', isAuthenticated, async function (req,
     }
 });
 
-app.post('/attendance/acknowledged/:id', isAuthenticated, async function (req, res) {
+app.get('/attendance/acknowledged/:id', isAuthenticated, async function (req, res) {
     const username = req.user.username;
-    const user = await User.findOne({ username: username });
 
-    if (user) {
+    try {
+        const user = await User.findOne({ username: username });
+
+        if (!user) {
+            console.error(`User not found for username: ${username}`);
+            return res.status(404).send('User not found');
+        }
+
         const id = req.params.id;
         console.log(id);
-        console.log(req.body.remarks)
 
-        const attendance = await Attendance.findOneAndUpdate(
-            { _id: id },
-            { $set: { status: 'Present', type: 'manual add' } },
-            { upsert: true }
-        )
+        const findAttendance = await Attendance.findOne({ _id: id });
 
-        if (attendance) {
-            console.log('Update attendance status success:', req.body.remarks);
-            res.redirect('/profile');
+        if (!findAttendance) {
+            console.error(`Attendance record not found for ID: ${id}`);
+            return res.status(404).send('Attendance record not found');
         }
+
+        console.log('Found Attendance:', findAttendance);
+
+        const updatedAttendance = await Attendance.findOneAndUpdate(
+            { _id: id },
+            {
+                $set: {
+                    status: 'Present',
+                    type: 'manual add',
+                    remarks: `${findAttendance.remarks} - Acknowledged by ${user.position}`
+                }
+            },
+            { new: true, upsert: true } // `new: true` to return the updated document
+        );
+
+        if (updatedAttendance) {
+            console.log('Update attendance status success:', updatedAttendance.remarks);
+            return res.redirect('/');
+        } else {
+            console.error('Failed to update attendance status');
+            return res.status(500).send('Failed to update attendance status');
+        }
+    } catch (error) {
+        console.error('Error during attendance update:', error);
+        return res.status(500).send('Internal Server Error');
     }
 });
 
@@ -4777,12 +4803,14 @@ app.post('/api/data/all-attendance/today/human-resources', isAuthenticated, asyn
             {
                 $group: {
                     _id: {
+                        attendanceId: '$_id',
                         user: '$user',
                         status: '$status',
                         type: '$type',
                         signInTime: '$date.signInTime',
                         signOutTime: '$date.signOutTime',
-                        timestamp: '$timestamp'
+                        timestamp: '$timestamp',
+                        remarks: '$remarks'
                     },
                     count: { $sum: 1 }
                 }
@@ -4793,7 +4821,7 @@ app.post('/api/data/all-attendance/today/human-resources', isAuthenticated, asyn
         const userIds = attendanceData.map(record => record._id.user);
 
         // Query all users from the database
-        const allUser = await User.find({});
+        const allUser = await User.find({ $ne: { username: req.user.username } });
 
         // Create a map to quickly access user details by user ID
         const userMap = {};
@@ -4814,21 +4842,25 @@ app.post('/api/data/all-attendance/today/human-resources', isAuthenticated, asyn
             );
             return attendanceRecord
                 ? {
+                    _id: attendanceRecord._id.attendanceId,
                     user: userMap[user._id],
                     status: attendanceRecord._id.status,
                     type: attendanceRecord._id.type,
                     signInTime: attendanceRecord._id.signInTime,
                     signOutTime: attendanceRecord._id.signOutTime,
                     timestamp: attendanceRecord._id.timestamp,
+                    remarks: attendanceRecord._id.remarks,
                     count: attendanceRecord.count
                 }
                 : {
+                    _id: null,
                     user: userMap[user._id],
                     status: 'Absent',
                     type: 'Nil',
                     signInTime: null,
                     signOutTime: null,
                     timestamp: null,
+                    remarks: 'Attendance data not yet existed/submitted',
                     count: 0
                 };
         });
@@ -4852,6 +4884,7 @@ app.post('/api/data/all-attendance/today/human-resources', isAuthenticated, asyn
                 regex.test(username) ||
                 regex.test(status) ||
                 regex.test(type) ||
+                regex.test(remarks) ||
                 (signInTime &&
                     regex.test(
                         new Date(signInTime).toLocaleTimeString('en-MY', {
@@ -4948,21 +4981,25 @@ app.post('/api/data/all-attendance/per-date/human-resources', isAuthenticated, a
 
             return attendanceRecord
                 ? {
+                    _id: attendanceRecord._id,
                     user: userMap[user._id],
                     status: attendanceRecord.status,
                     type: attendanceRecord.type,
                     signInTime: attendanceRecord.date.signInTime,
                     signOutTime: attendanceRecord.date.signOutTime,
                     timestamp: attendanceRecord.timestamp,
+                    remarks: attendanceRecord.remarks,
                     count: 1 // Assuming each record represents one attendance
                 }
                 : {
+                    _id: null,
                     user: userMap[user._id],
                     status: 'Absent',
                     type: 'Nil',
                     signInTime: null,
                     signOutTime: null,
                     timestamp: null,
+                    remarks: 'Attendance data not yet existed/submitted',
                     count: 0
                 };
         });
@@ -4977,7 +5014,7 @@ app.post('/api/data/all-attendance/per-date/human-resources', isAuthenticated, a
         // Filter combinedData based on the search query
         const filteredData = combinedData.filter(item => {
             const { fullname, section, department, username } = item.user;
-            const { status, type, signInTime, signOutTime } = item;
+            const { status, type, signInTime, signOutTime, remarks } = item;
             const regex = new RegExp(searchQuery, 'i');
             return (
                 regex.test(fullname) ||
@@ -4986,6 +5023,7 @@ app.post('/api/data/all-attendance/per-date/human-resources', isAuthenticated, a
                 regex.test(username) ||
                 regex.test(status) ||
                 regex.test(type) ||
+                regex.test(remarks) ||
                 (signInTime &&
                     regex.test(
                         new Date(signInTime).toLocaleTimeString('en-MY', {
@@ -5153,12 +5191,14 @@ app.post('/api/data/all-attendance/today/department-section', isAuthenticated, a
             {
                 $group: {
                     _id: {
+                        attendanceId: '$_id',
                         user: '$user',
                         status: '$status',
                         type: '$type',
                         signInTime: '$date.signInTime',
                         signOutTime: '$date.signOutTime',
-                        timestamp: '$timestamp'
+                        timestamp: '$timestamp',
+                        remarks: '$remarks'
                     },
                     count: { $sum: 1 }
                 }
@@ -5171,10 +5211,10 @@ app.post('/api/data/all-attendance/today/department-section', isAuthenticated, a
         var allUser;
         if (user.isHeadOfDepartment) {
             // Query all users from the database
-            allUser = await User.find({ department: user.department });
+            allUser = await User.find({ department: user.department, _id: { $ne: user._id } });
         } else if (user.isHeadOfSection) {
             // Query all users from the database
-            allUser = await User.find({ section: user.section });
+            allUser = await User.find({ section: user.section, _id: { $ne: user._id } });
         }
 
         // Create a map to quickly access user details by user ID
@@ -5196,21 +5236,25 @@ app.post('/api/data/all-attendance/today/department-section', isAuthenticated, a
             );
             return attendanceRecord
                 ? {
+                    _id: attendanceRecord._id.attendanceId,
                     user: userMap[user._id],
                     status: attendanceRecord._id.status,
                     type: attendanceRecord._id.type,
                     signInTime: attendanceRecord._id.signInTime,
                     signOutTime: attendanceRecord._id.signOutTime,
                     timestamp: attendanceRecord._id.timestamp,
+                    remarks: attendanceRecord._id.remarks,
                     count: attendanceRecord.count
                 }
                 : {
+                    _id: null,
                     user: userMap[user._id],
                     status: 'Absent',
                     type: 'Nil',
                     signInTime: null,
                     signOutTime: null,
                     timestamp: null,
+                    remarks: 'Attendance data not yet existed/submitted',
                     count: 0
                 };
         });
@@ -5225,7 +5269,7 @@ app.post('/api/data/all-attendance/today/department-section', isAuthenticated, a
         // Filter combinedData based on the search query
         const filteredData = combinedData.filter(item => {
             const { fullname, section, department, username } = item.user;
-            const { status, type, signInTime, signOutTime } = item;
+            const { status, type, signInTime, signOutTime, remarks } = item;
             const regex = new RegExp(searchQuery, 'i');
             return (
                 regex.test(fullname) ||
@@ -5234,6 +5278,7 @@ app.post('/api/data/all-attendance/today/department-section', isAuthenticated, a
                 regex.test(username) ||
                 regex.test(status) ||
                 regex.test(type) ||
+                regex.test(remarks) ||
                 (signInTime &&
                     regex.test(
                         new Date(signInTime).toLocaleTimeString('en-MY', {
@@ -5296,9 +5341,7 @@ app.post('/api/data/all-attendance/per-date/department-section', isAuthenticated
 
     try {
         console.log(selectedDate);
-        // Convert selected date to UTC midnight to UTC midnight of next day
-        // Setting start date to the beginning of the previous day
-        const startDate = new Date('2024-06-22');
+        const startDate = new Date(selectedDate);
         startDate.setUTCHours(0, 0, 0, 0); // 00:00:00 UTC
 
         // Setting end date to the end of the previous day
@@ -5311,20 +5354,17 @@ app.post('/api/data/all-attendance/per-date/department-section', isAuthenticated
             timestamp: {
                 $gte: startDate,
                 $lt: endDate
-            },
-            status: 'Non Working Day'
+            }
         });
-
-        console.log(attendanceData);
 
         // Get all users
         let allUser;
         if (user.isHeadOfDepartment) {
             // Query all users from the database
-            allUser = await User.find({ department: user.department });
+            allUser = await User.find({ department: user.department, _id: { $ne: user._id } });
         } else if (user.isHeadOfSection) {
             // Query all users from the database
-            allUser = await User.find({ section: user.section });
+            allUser = await User.find({ section: user.section, _id: { $ne: user._id } });
         }
 
         // Create a map for quick lookup of users
@@ -5347,21 +5387,25 @@ app.post('/api/data/all-attendance/per-date/department-section', isAuthenticated
 
             return attendanceRecord
                 ? {
+                    _id: attendanceRecord._id,
                     user: userMap[user._id],
                     status: attendanceRecord.status,
                     type: attendanceRecord.type,
                     signInTime: attendanceRecord.date.signInTime,
                     signOutTime: attendanceRecord.date.signOutTime,
                     timestamp: attendanceRecord.timestamp,
+                    remarks: attendanceRecord.remarks,
                     count: 1 // Assuming each record represents one attendance
                 }
                 : {
+                    _id: null,
                     user: userMap[user._id],
                     status: 'Absent',
                     type: 'Nil',
                     signInTime: null,
                     signOutTime: null,
                     timestamp: null,
+                    remarks: 'Attendance data not yet existed/submitted',
                     count: 0
                 };
         });
@@ -5375,7 +5419,7 @@ app.post('/api/data/all-attendance/per-date/department-section', isAuthenticated
 
         const filteredData = combinedData.filter(item => {
             const { fullname, section, department, username } = item.user;
-            const { status, type, signInTime, signOutTime } = item;
+            const { status, type, signInTime, signOutTime, remarks } = item;
             const regex = new RegExp(searchQuery, 'i');
             return (
                 regex.test(fullname) ||
@@ -5384,6 +5428,7 @@ app.post('/api/data/all-attendance/per-date/department-section', isAuthenticated
                 regex.test(username) ||
                 regex.test(status) ||
                 regex.test(type) ||
+                regex.test(remarks) ||
                 (signInTime && regex.test(new Date(signInTime).toLocaleTimeString('en-MY', { hour: 'numeric', minute: 'numeric', hour12: true, timeZone: 'Asia/Kuala_Lumpur' }))) ||
                 (signOutTime && regex.test(new Date(signOutTime).toLocaleTimeString('en-MY', { hour: 'numeric', minute: 'numeric', hour12: true, timeZone: 'Asia/Kuala_Lumpur' })))
             );
@@ -7727,12 +7772,11 @@ const updateTodayAttendance = async () => {
 
     // Today's date range
     const now = new Date();
-    const utcOffset = 8; // UTC+8
     const todayStart = new Date(
         now.getUTCFullYear(),
         now.getUTCMonth(),
         now.getUTCDate(),
-        0 + utcOffset,   // Adding UTC offset to hours
+        0,   // Adding UTC offset to hours
         0,
         0
     );
@@ -7741,7 +7785,7 @@ const updateTodayAttendance = async () => {
         now.getUTCFullYear(),
         now.getUTCMonth(),
         now.getUTCDate(),
-        23 + utcOffset,  // Adding UTC offset to hours
+        23,  // Adding UTC offset to hours
         59,
         59
     );
