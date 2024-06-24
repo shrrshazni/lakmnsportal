@@ -1,0 +1,169 @@
+<%- include('partials/private-header.ejs') %>
+
+<script>
+  // take the root of the colour from css for echarts
+  const style = getComputedStyle(document.body);
+  const theme = {
+    primary: style.getPropertyValue('--phoenix-primary'),
+    secondary: style.getPropertyValue('--phoenix-secondary'),
+    success: style.getPropertyValue('--phoenix-success'),
+    info: style.getPropertyValue('--phoenix-info'),
+    warning: style.getPropertyValue('--phoenix-warning'),
+    danger: style.getPropertyValue('--phoenix-danger'),
+    bg_primary_subtle: style.getPropertyValue('--phoenix-primary-bg-subtle'),
+    tertiary: style.getPropertyPriority('--phoenix-tertiary-color'),
+    light: style.getPropertyValue('--phoenix-light'),
+    dark: style.getPropertyValue('--phoenix-dark'),
+    secondary_subtle: style.getPropertyValue('--phoenix-secondary-border-subtle'),
+    cyan: style.getPropertyValue('--phoenix-cyan'),
+    gray_100: style.getPropertyValue('--phoenix-gray-100')
+
+  };
+
+  //   take css class color based on their property color/bg-colour for echarts
+  function getColor(className, property) {
+    var element = document.createElement('div');
+    element.className = className;
+    document.body.appendChild(element);
+
+    var computedStyle = window.getComputedStyle(element);
+    var color = computedStyle.getPropertyValue(property);
+
+    document.body.removeChild(element);
+
+    return color;
+  }
+</script>
+
+<div class="mb-6">
+
+  <div class="mb-6">
+    <div>
+      <h2 class="mb-2">Schedule</h2>
+      <h5 class="text-body-tertiary fw-semibold">Tracking Participation, Absences, Presence.</h5>
+    </div>
+  </div>
+
+  <div class="mb-6 d-flex justify-content-between">
+
+    <div>
+      <div class="form-icon-container">
+        <input class="form-control search-input search datetimepicker flatpickr-input form-icon-input" type="text" id="selectedDate-date" name="date" placeholder="Date" data-options='{"disableMobile":true,"allowInput":true, "locale" : { "firstDayOfWeek" : 1}, "mode": "single", disable": [true] }' />
+        <span class="fas fa-calendar text-900 fs-9 form-icon"></span>
+      </div>
+    </div>
+
+    <div class="align-items-center">
+      <a class="btn btn-phoenix-secondary" href="/auxiliary-police/schedule/add"><span class="fa-solid fa-plus me-2"></span>Add Schedule</a>
+    </div>
+
+  </div>
+
+  <div class="mb-3">
+
+    <div id="calendar-chart" style="width: 100%; height: 600px;"></div>
+
+    <script>
+      fetch('/calendar-data')
+        .then(response => response.json())
+        .then(data => {
+          // Calculate min and max values from the data
+          let values = data.map(item => item[1]);
+          let minValue = Math.min(...values);
+          let maxValue = Math.max(...values);
+
+          var chart = echarts.init(document.getElementById('calendar-chart'), null, {
+            devicePixelRatio: window.devicePixelRatio > 1 ? 2 : 1,
+            renderer: 'canvas',
+            width: 'auto',
+            height: 'auto'
+          });
+
+          var option = {
+            tooltip: {
+              trigger: 'item',
+              axisPointer: {
+                type: 'none'
+              },
+              padding: [7, 10],
+              backgroundColor: getColor('bg-body', 'background-color'), // light grey background color
+              borderColor: theme.secondary_subtle, // dark grey border color
+              textStyle: {
+                color: getColor('link-primary', 'color') // black text color
+              },
+              borderWidth: 1,
+              transitionDuration: 0,
+              extraCssText: 'z-index: 1000'
+            },
+            visualMap: {
+              min: minValue,
+              max: maxValue,
+              calculable: true,
+              show: false,
+              color: [
+                getColor('bg-warning', 'background-color'), // light green
+                getColor('bg-warning-light', 'background-color'), // light orange
+                getColor('bg-warning-lighter', 'background-color') // light blue
+              ]
+            },
+            calendar: {
+              orient: 'vertical',
+              range: '2024-03', // Only March 2024
+              width: '99%',
+              height: '85.5%',
+              left: '2',
+              right: 'auto',
+              top: 42,
+              yearLabel: {
+                show: false
+              },
+              monthLabel: {
+                show: false
+              },
+              dayLabel: {
+                firstDay: 0,
+                nameMap: ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'],
+                margin: 24,
+                color: getColor('link-primary', 'color'), // secondary-text-emphasis color
+                fontFamily: 'Nunito Sans',
+                fontWeight: 700
+              },
+              splitLine: {
+                show: false
+              },
+              itemStyle: {
+                color: getColor('bg-body', 'background-color'), // dark-text-emphasis color
+                borderColor: theme.secondary_subtle // border color
+              }
+            },
+            series: {
+              type: 'scatter',
+              coordinateSystem: 'calendar',
+              symbolSize(val) {
+                return val[1] / 35;
+              },
+              data: data,
+              itemStyle: {
+                color: getColor('bg-warning', 'background-color'), // warning color
+                opacity: 0.8
+              }
+            }
+          };
+          chart.setOption(option);
+
+
+          window.addEventListener('resize', function() {
+            chart.resize();
+          });
+        })
+        .catch(error => console.error('Error fetching data:', error));
+    </script>
+  </div>
+
+  <div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis pt-7 pb-3 border-y mb-6">
+
+  </div>
+
+</div>
+
+<%- include('partials/private-footer.ejs') %>

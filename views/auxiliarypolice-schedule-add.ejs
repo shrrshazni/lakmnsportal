@@ -1,0 +1,351 @@
+<%- include('partials/private-header.ejs') %>
+
+<script>
+  // take the root of the colour from css for echarts
+  const style = getComputedStyle(document.body);
+  const theme = {
+    primary: style.getPropertyValue('--phoenix-primary'),
+    secondary: style.getPropertyValue('--phoenix-secondary'),
+    success: style.getPropertyValue('--phoenix-success'),
+    info: style.getPropertyValue('--phoenix-info'),
+    warning: style.getPropertyValue('--phoenix-warning'),
+    danger: style.getPropertyValue('--phoenix-danger'),
+    bg_primary_subtle: style.getPropertyValue('--phoenix-primary-bg-subtle'),
+    tertiary: style.getPropertyPriority('--phoenix-tertiary-color'),
+    light: style.getPropertyValue('--phoenix-light'),
+    dark: style.getPropertyValue('--phoenix-dark'),
+    secondary_subtle: style.getPropertyValue('--phoenix-secondary-border-subtle'),
+    cyan: style.getPropertyValue('--phoenix-cyan'),
+    gray_100: style.getPropertyValue('--phoenix-gray-100')
+
+  };
+
+  //   take css class color based on their property color/bg-colour for echarts
+  function getColor(className, property) {
+    var element = document.createElement('div');
+    element.className = className;
+    document.body.appendChild(element);
+
+    var computedStyle = window.getComputedStyle(element);
+    var color = computedStyle.getPropertyValue(property);
+
+    document.body.removeChild(element);
+
+    return color;
+  }
+</script>
+
+<div class="mb-6">
+
+  <div class="mb-6 d-flex justify-content-between">
+    <div>
+      <h2 class="mb-2">Add Schedule</h2>
+    </div>
+    <div class="align-items-center">
+      <a href="/auxiliary-police/schedule/view" class="btn btn-phoenix-secondary"><span class="fa-solid fa-binoculars me-2"></span>View Schedule</a>
+    </div>
+  </div>
+
+  <div class="mb-3 row g-5">
+
+    <div class="col-12 col-xxl-3 order-xxl-1">
+      <div class="card">
+        <div class="card-body">
+          <h4 class="mb-3">Month Calendar</h4>
+          <div id="calendar-chart" style="width: 100%; height: 600px;"></div>
+        </div>
+      </div>
+
+      <script>
+        fetch('/calendar-data')
+          .then(response => response.json())
+          .then(data => {
+            // Calculate min and max values from the data
+            let values = data.map(item => item[1]);
+            let minValue = Math.min(...values);
+            let maxValue = Math.max(...values);
+
+            var chart = echarts.init(document.getElementById('calendar-chart'), null, {
+              devicePixelRatio: window.devicePixelRatio > 1 ? 2 : 1,
+              renderer: 'canvas',
+              width: 'auto',
+              height: 'auto'
+            });
+
+            var option = {
+              tooltip: {
+                trigger: 'item',
+                axisPointer: {
+                  type: 'none'
+                },
+                padding: [7, 10],
+                backgroundColor: getColor('bg-body', 'background-color'), // light grey background color
+                borderColor: theme.secondary_subtle, // dark grey border color
+                textStyle: {
+                  color: getColor('link-primary', 'color') // black text color
+                },
+                borderWidth: 1,
+                transitionDuration: 0,
+                extraCssText: 'z-index: 1000'
+              },
+              visualMap: {
+                min: minValue,
+                max: maxValue,
+                calculable: true,
+                show: false,
+                color: [
+                  getColor('bg-warning', 'background-color'), // light green
+                  getColor('bg-warning-light', 'background-color'), // light orange
+                  getColor('bg-warning-lighter', 'background-color') // light blue
+                ]
+              },
+              calendar: {
+                orient: 'vertical',
+                range: '2024-03', // Only March 2024
+                width: '100%',
+                height: '80%',
+                left: 'center',
+                top: 42,
+                yearLabel: {
+                  show: false
+                },
+                monthLabel: {
+                  show: false
+                },
+                dayLabel: {
+                  firstDay: 0,
+                  nameMap: ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'],
+                  margin: 24,
+                  color: getColor('link-primary', 'color'), // secondary-text-emphasis color
+                  fontFamily: 'Nunito Sans',
+                  fontWeight: 700
+                },
+                splitLine: {
+                  show: false
+                },
+                itemStyle: {
+                  color: getColor('bg-body', 'background-color'), // dark-text-emphasis color
+                  borderColor: theme.secondary_subtle // border color
+                }
+              },
+              series: {
+                type: 'scatter',
+                coordinateSystem: 'calendar',
+                symbolSize(val) {
+                  return val[1] / 35;
+                },
+                data: data,
+                itemStyle: {
+                  color: getColor('bg-warning', 'background-color'), // warning color
+                  opacity: 0.8
+                }
+              }
+            };
+            chart.setOption(option);
+
+
+            window.addEventListener('resize', function() {
+              chart.resize();
+            });
+          })
+          .catch(error => console.error('Error fetching data:', error));
+      </script>
+
+    </div>
+
+    <div class="col-12 col-xxl-9 order-xxl-0">
+      <form class="row g-3 mb-6" action="/auxiliary-police/schedule/add" method="post" id="scheduleForm">
+
+        <div class="col-12 col-md-6">
+          <div class="form-floating">
+            <select class="form-select" id="floatingSelectTask" name="location">
+              <option value="">Select a location</option>
+              <option value="Baitul Makmur I">Baitul Makmur I</option>
+              <option value="Baitul Makmur II">Baitul Makmur II</option>
+              <option value="Jamek Mosque">Jamek Mosque</option>
+              <option value="City Mosque">City Mosque</option>
+              <option value="Raudhatul Sakinah">Raudhatul Sakinah</option>
+            </select>
+            <label for="floatingSelectTask">Location</label>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6 mb-3">
+          <div class="form-floating">
+            <input type="text" class="form-control datetimepicker flatpickr-input" id="floatingInputStartDate" placeholder="" name="date" data-options='{"disableMobile":true,"allowInput":true, "locale" : { "firstDayOfWeek" : 1}}'>
+            <label for="date"><span class="fa-regular fa-calendar-xmark me-2"></span>Date</label>
+            <div class="invalid-feedback"></div>
+          </div>
+        </div>
+
+        <!-- First Instance -->
+        <div class="col-12 border rounded-3 py-3">
+
+          <div class="row g-3">
+
+            <h4>Shift A</h4>
+
+            <div class="col-12 col-md-8">
+              <div id="selectedNames1" class="d-flex flex-wrap border border-300 rounded-3 px-2" style="min-height: 3rem"></div>
+            </div>
+
+            <div class="col-12 col-md-4">
+              <div class="form-floating">
+                <input type="text" name="query" id="queryInput1" class="form-control" />
+                <label class="form-label" for="queryInput1">Search Staff</label>
+                <div class="invalid-feedback">Please select relief staff</div>
+              </div>
+            </div>
+
+            <div id="results1" class="col-12"></div>
+
+            <input type="hidden" id="selectedNamesInput1" name="selectedNames1" />
+          </div>
+        </div>
+
+        <!-- Second Instance -->
+        <div class="col-12 border rounded-3 py-3">
+          <div class="row g-3">
+
+            <h4>Shift B</h4>
+
+            <div class="col-12 col-md-8 mb-0">
+              <div id="selectedNames2" class="d-flex flex-wrap border border-300 rounded-3 px-2" style="min-height: 3rem"></div>
+            </div>
+
+            <div class="col-6 col-md-4">
+              <div class="form-floating">
+                <input type="text" name="query" id="queryInput2" class="form-control" />
+                <label class="form-label" for="queryInput2">Search Staff</label>
+                <div class="invalid-feedback">Please select relief staff</div>
+              </div>
+            </div>
+
+            <div id="results2" class="col-12"></div>
+
+            <input type="hidden" id="selectedNamesInput2" name="selectedNames2" />
+          </div>
+        </div>
+
+        <!-- Third Instance -->
+        <div class="col-12 border rounded-3 py-3">
+          <div class=" row g-3">
+
+            <h4>Shift C</h4>
+
+            <div class="col-12 col-md-8">
+              <div id="selectedNames3" class="d-flex flex-wrap border border-300 rounded-3 px-2" style="min-height: 3rem"></div>
+            </div>
+
+            <div class="col-6 col-md-4">
+              <div class="form-floating">
+                <input type="text" name="query" id="queryInput3" class="form-control"" />
+                <label class=" form-label" for="queryInput3">Search Staff</label>
+                <div class="invalid-feedback">Please select relief staff</div>
+              </div>
+            </div>
+
+            <div id="results3" class="col-12"></div>
+
+            <input type="hidden" id="selectedNamesInput3" name="selectedNames3" />
+          </div>
+        </div>
+
+        <div class="col-12 gy-6">
+          <div class="row g-3 justify-content-end">
+            <div class="col-auto">
+              <button class="btn btn-primary w-100 mb-3 loading-button" type="submit" name="submit">
+                <div class="content-button">Submit Schedule</div>
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </form>
+
+      <script>
+        $(document).ready(function() {
+          // Function to initialize a staff search instance
+          function initializeStaffSearch(queryInputId, selectedNamesDivId, resultsDivId, hiddenInputId) {
+            const queryInput = $(queryInputId);
+            const selectedNamesDiv = $(selectedNamesDivId);
+            const selectedNames = [];
+
+            $(queryInputId).on('input', function() {
+              const query = $(this).val();
+              if (query.trim() !== '') {
+                $.ajax({
+                  url: `/search/staff/assignee-relief?query=${query}`,
+                  method: 'GET',
+                  success: function(results) {
+                    displayResults(results, resultsDivId, selectedNames, selectedNamesDiv, hiddenInputId);
+                  },
+                  error: function(error) {
+                    console.error(error);
+                  }
+                });
+              } else {
+                // Clear results if the search query is empty
+                displayResults([], resultsDivId, selectedNames, selectedNamesDiv, hiddenInputId);
+              }
+            });
+
+            function displayResults(results, resultsDivId, selectedNames, selectedNamesDiv, hiddenInputId) {
+              const resultsDiv = $(resultsDivId);
+              resultsDiv.empty();
+
+              if (results.length === 0) {
+                resultsDiv.append('<p class="text-muted fs-9">No results found</p>');
+              } else {
+                results.forEach(result => {
+                  const resultDiv = $('<div class="result btn btn-outline-primary mr-2 mb-2"></div>').text(result.fullname);
+                  resultsDiv.append(resultDiv);
+
+                  // Add click event to handle adding and removing names
+                  resultDiv.click(function() {
+                    const clickedName = result.fullname;
+                    const index = selectedNames.indexOf(clickedName);
+
+                    if (index === -1) {
+                      selectedNames.push(clickedName);
+                      updateSelectedNamesDisplay(selectedNames, selectedNamesDiv, hiddenInputId);
+                    } else {
+                      selectedNames.splice(index, 1);
+                      updateSelectedNamesDisplay(selectedNames, selectedNamesDiv, hiddenInputId);
+                    }
+                  });
+                });
+              }
+            }
+
+            function updateSelectedNamesDisplay(selectedNames, selectedNamesDiv, hiddenInputId) {
+              selectedNamesDiv.empty();
+              selectedNames.forEach(name => {
+                const nameDiv = $('<div class="selectedName btn btn-outline-secondary mr-2 mb-1 mt-1"></div>').text(name);
+                selectedNamesDiv.append(nameDiv);
+
+                nameDiv.click(function() {
+                  const removedName = $(this).text();
+                  const index = selectedNames.indexOf(removedName);
+                  selectedNames.splice(index, 1);
+                  updateSelectedNamesDisplay(selectedNames, selectedNamesDiv, hiddenInputId);
+                });
+              });
+
+              $(hiddenInputId).val(selectedNames.join(','));
+            }
+          }
+
+          // Initialize all staff search instances
+          initializeStaffSearch('#queryInput1', '#selectedNames1', '#results1', '#selectedNamesInput1');
+          initializeStaffSearch('#queryInput2', '#selectedNames2', '#results2', '#selectedNamesInput2');
+          initializeStaffSearch('#queryInput3', '#selectedNames3', '#results3', '#selectedNamesInput3');
+        });
+      </script>
+    </div>
+
+  </div>
+
+</div>
+
+<%- include('partials/private-footer.ejs') %>

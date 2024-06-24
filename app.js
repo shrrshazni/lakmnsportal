@@ -85,8 +85,14 @@ const attendanceDatabase = mongoose.createConnection(
     'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/attendance'
 );
 
+// Tender Database
 const tenderDatabase = mongoose.createConnection(
     'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/tender'
+);
+
+// Auxiliary Police
+const auxPoliceDatabase = mongoose.createConnection(
+    'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/auxipolice'
 );
 
 // SCHEMA INITIALIZATION
@@ -413,6 +419,13 @@ const tenderCompanySchema = new mongoose.Schema({
     ]
 });
 
+// AUXILIARY POLICE
+const scheduleAuxSchema = new mongoose.Schema({
+    date: { type: Date, required: true },
+    location: { type: String },
+    shift: [],
+});
+
 
 //mongoose passport-local
 userSchema.plugin(passportLocalMongoose);
@@ -434,6 +447,7 @@ const TempAttendance = attendanceDatabase.model(
 const QRCode = attendanceDatabase.model('QRCode', qrCodeSchema);
 const Tender = tenderDatabase.model('Tender', tenderSchema);
 const TenderCompany = tenderDatabase.model('TenderCompany', tenderCompanySchema);
+const ScheduleAux = auxPoliceDatabase.model('ScheduleAux', scheduleAuxSchema);
 
 passport.use(User.createStrategy());
 
@@ -4451,6 +4465,71 @@ app.get('/procurement/tender/register', isAuthenticated, async function (req, re
         })
     }
 });
+
+//AUXILIARY POLICE
+
+// VIEW
+app.get('/auxiliary-police/schedule/view', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    })
+        .populate('sender')
+        .sort({ timestamp: -1 });
+
+    if (user) {
+        res.render('auxiliarypolice-schedule-view', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4(),
+        });
+    }
+});
+
+// ADD
+app.get('/auxiliary-police/schedule/add', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    })
+        .populate('sender')
+        .sort({ timestamp: -1 });
+
+    if (user) {
+        res.render('auxiliarypolice-schedule-add', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4(),
+        });
+    }
+});
+
+app.get('/calendar-data', async (req, res) => {
+    try {
+        const data = generateMarchData();
+        res.json(data);
+    } catch (err) {
+        res.status(500).send(err);
+    }
+});
+
+function generateMarchData() {
+    const data = [];
+    const startDate = new Date(2024, 2, 1); // March 1, 2024
+    const endDate = new Date(2024, 2, 31); // March 31, 2024
+
+    for (let date = startDate; date <= endDate; date.setDate(date.getDate() + 1)) {
+        const value = Math.floor(Math.random() * 1000); // Random value between 0 and 1000
+        const formattedDate = date.toISOString().split('T')[0];
+        data.push([formattedDate, value]);
+    }
+
+    return data;
+}
 
 //NOTIFICATIONS
 app.get('/notifications/history', isAuthenticated, async function (req, res) {
