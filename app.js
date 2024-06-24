@@ -6359,30 +6359,22 @@ app.get('/super-admin/update', isAuthenticated, async function (req, res) {
 
     if (user.isSuperAdmin) {
 
-        // Today's date range
-        const now = new Date();
-        const todayStart = new Date(
-            now.getFullYear(),
-            now.getMonth(),
-            now.getDate(),
-            0,
-            0,
-            0
-        );
-        const todayEnd = new Date(
-            now.getFullYear(),
-            now.getMonth(),
-            now.getDate(),
-            23,
-            59,
-            59
-        );
+        const otherUser = await User.findOne({ username: 'user' });
 
-        await Attendance.updateMany(
-            { timestamp: { $gte: todayStart, $lt: todayEnd } },
-            { $set: { remarks: 'No remarks added' } },
-            { upsert: true }
-        );
+        if (otherUser) {
+            const info = {
+                user: otherUser._id,
+                status: 'Lorem ipsum dolor sit amet',
+                emailVerified: false,
+                phoneVerified: false,
+                isOnline: false,
+                lastSeen: new Date()
+            };
+
+            console.log(info);
+        } else {
+            console.log(`User with username ${otherUser} not found`);
+        }
 
 
         console.log('All user has been updated');
