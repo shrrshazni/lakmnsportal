@@ -4150,12 +4150,16 @@ app
 
                     await newUserLeave.save();
 
-                    // Update the info.status for the new user
-                    await Info.findOneAndUpdate(
-                        { user: user._id },
-                        { $set: { status: 'New staff' } },
-                        { upsert: true }
-                    );
+                    const createInfo = new Info({
+                        user: user._id,
+                        status: 'New staff',
+                        emailVerified: false,
+                        phoneVerified: false,
+                        isOnline: false,
+                        lastSeen: new Date()
+                    });
+                    await createInfo.save();
+                    console.log('New info document created:', createInfo);
 
                     // activity
                     const activityUser = new Activity({
@@ -6359,50 +6363,33 @@ app.get('/super-admin/update', isAuthenticated, async function (req, res) {
 
     if (user.isSuperAdmin) {
 
-        const otherUser = await User.findOne({ username: 'user' });
+        // Find all users
+        const allUsers = await User.find();
 
-        if (otherUser) {
-            const info = {
-                user: otherUser._id,
-                status: 'Lorem ipsum dolor sit amet',
-                emailVerified: false,
-                phoneVerified: false,
-                isOnline: false,
-                lastSeen: new Date()
-            };
+        // Iterate over each user
+        for (let otherUser of allUsers) {
+            // Check if an Info document exists for the user
+            const info = await Info.findOne({ user: otherUser._id });
 
-            console.log(info);
-        } else {
-            console.log(`User with username ${otherUser} not found`);
+            if (!info) {
+                // If Info document does not exist, create a new one
+                const newInfo = new Info({
+                    user: otherUser._id,
+                    status: 'New Staff',
+                    emailVerified: false,
+                    phoneVerified: false,
+                    isOnline: false,
+                    lastSeen: new Date()
+                });
+                await newInfo.save();
+                console.log(`Created new Info document for user ${otherUser.username} with ID ${otherUser._id}`);
+            }
         }
-
 
         console.log('All user has been updated');
 
         res.redirect('/');
     }
-});
-
-// GET IP GEOLOCATION
-async function getGeolocation(ip) {
-    try {
-        const response = await axios.get(`http://ip-api.com/json/${ip}`);
-        return `${response.data.city}, ${response.data.regionName}, ${response.data.country}`;
-    } catch (error) {
-        console.error('Error fetching geolocation data:', error);
-        return 'Unknown location';
-    }
-}
-
-app.get('/temp', async function (req, res) {
-    const clientIp1 = req.clientIp;
-    const clientIp2 = req.headers['x-real-ip'] || req.connection.remoteAddress;
-    // const location = await getGeolocation(ip);
-
-    console.log('Using request IP', clientIp1);
-    console.log('Using req.headers', clientIp2);
-
-    res.render("temp");
 });
 
 //SCHEDULER
