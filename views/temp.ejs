@@ -1,0 +1,142 @@
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const selectedDateInput = document.getElementById('selectedDate-date');
+      const selectedLocationInput = document.getElementById('floatingSelectTask');
+
+      const chart = echarts.init(document.getElementById('calendar-chart'), null, {
+        devicePixelRatio: window.devicePixelRatio > 1 ? 2 : 1,
+        renderer: 'canvas',
+        width: 'auto',
+        height: 'auto'
+      });
+
+      const option = {
+        tooltip: {
+          trigger: 'item',
+          axisPointer: {
+            type: 'none'
+          },
+          padding: [7, 10],
+          backgroundColor: getColor('bg-body', 'background-color'),
+          borderColor: theme.secondary_subtle,
+          textStyle: {
+            color: getColor('link-primary', 'color')
+          },
+          borderWidth: 1,
+          transitionDuration: 0,
+          extraCssText: 'z-index: 1000'
+        },
+        visualMap: {
+          min: 0,
+          max: 1000,
+          calculable: true,
+          show: false,
+          color: [
+            getColor('bg-warning', 'background-color'),
+            getColor('bg-warning-light', 'background-color'),
+            getColor('bg-warning-lighter', 'background-color')
+          ]
+        },
+        calendar: {
+          orient: 'vertical',
+          range: dateInput.value.substring(0, 7), // Default month
+          width: '99%',
+          height: '85.5%',
+          left: '2',
+          right: 'auto',
+          top: 42,
+          yearLabel: {
+            show: false
+          },
+          monthLabel: {
+            show: false
+          },
+          dayLabel: {
+            firstDay: 0,
+            nameMap: ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'],
+            margin: 24,
+            color: getColor('link-primary', 'color'),
+            fontFamily: 'Nunito Sans',
+            fontWeight: 700
+          },
+          splitLine: {
+            show: false
+          },
+          itemStyle: {
+            color: getColor('bg-body', 'background-color'),
+            borderColor: theme.secondary_subtle
+          }
+        },
+        series: [{
+          type: 'scatter',
+          coordinateSystem: 'calendar',
+          data: [],
+          symbolSize: function(val) {
+            return Math.sqrt(val[1]) * 8; // Adjust size based on square root of value
+          },
+          itemStyle: {
+            color: getColor('bg-warning', 'background-color'),
+            opacity: 0.8
+          }
+        }]
+      };
+
+      chart.setOption(option);
+
+      const fetchData = () => {
+        const selectedDate = selectedDateInput.value;
+        const selectedLocation = selectedLocationInput.value;
+
+        if (selectedDate && selectedLocation) {
+          fetch(`/calendar-data?date=${selectedDate}&location=${selectedLocation}`)
+            .then(response => response.json())
+            .then(data => {
+              let values = data.map(item => item[1]);
+              let minValue = Math.min(...values);
+              let maxValue = Math.max(...values);
+
+              chart.setOption({
+                tooltip: {
+                  trigger: 'item',
+                  axisPointer: {
+                    type: 'none'
+                  },
+                  padding: [7, 10],
+                  backgroundColor: getColor('bg-body', 'background-color'),
+                  borderColor: theme.secondary_subtle,
+                  textStyle: {
+                    color: getColor('link-primary', 'color')
+                  },
+                  borderWidth: 1,
+                  transitionDuration: 0,
+                  extraCssText: 'z-index: 1000',
+                  formatter: function(params) {
+                    const data = params.data;
+                    let tooltipHtml = `<b>Date: ${data[0]}</b><br/>`;
+                    data[2].forEach(shift => {
+                      tooltipHtml += `<b>${shift.shiftName}:</b> ${shift.staff.join(', ')}<br/>`;
+                    });
+                    return tooltipHtml;
+                  }
+                },
+                visualMap: {
+                  min: minValue,
+                  max: maxValue
+                },
+                series: [{
+                  data: data.map(item => [item.date, item.shifts.reduce((sum, shift) => sum + shift.staff.length, 0), item.shifts]),
+                }]
+              });
+            })
+            .catch(error => console.error('Error fetching data:', error));
+        }
+      };
+
+      selectedDateInput.addEventListener('change', fetchData);
+      selectedLocationInput.addEventListener('change', fetchData);
+
+      window.addEventListener('resize', function() {
+        chart.resize();
+      });
+    });
+  </script>

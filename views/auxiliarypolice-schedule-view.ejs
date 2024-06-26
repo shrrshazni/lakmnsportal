@@ -37,40 +37,72 @@
 
 <div class="mb-6">
 
-  <div class="mb-6">
-    <div>
+  <div class="mb-6 d-xxl-flex justify-content-between">
+    <div class="mb-3">
       <h2 class="mb-2">Schedule</h2>
       <h5 class="text-body-tertiary fw-semibold">Tracking Participation, Absences, Presence.</h5>
-    </div>
-  </div>
-
-  <div class="mb-6 d-flex justify-content-between">
-
-    <div>
-      <div class="form-icon-container">
-        <input class="form-control search-input search datetimepicker flatpickr-input form-icon-input" type="text" id="selectedDate-date" name="date" placeholder="Date" data-options='{"disableMobile":true,"allowInput":true, "locale" : { "firstDayOfWeek" : 1}, "mode": "single", disable": [true] }' />
-        <span class="fas fa-calendar text-900 fs-9 form-icon"></span>
-      </div>
     </div>
 
     <div class="align-items-center">
       <a class="btn btn-phoenix-secondary" href="/auxiliary-police/schedule/add"><span class="fa-solid fa-plus me-2"></span>Add Schedule</a>
     </div>
+  </div>
+
+  <div class="mb-6 d-flex justify-content-between row">
+
+    <div class="col-12 col-md-3 mb-3">
+      <div class="form-icon-container">
+        <input class="form-control search-input search datetimepicker flatpickr-input form-icon-input" type="text" id="selectedDate-date" name="date" placeholder="Date" data-options='{"disableMobile":true,"allowInput":true, "locale" : { "firstDayOfWeek" : 1}, "mode": "single" }' />
+        <span class="fas fa-calendar text-900 fs-9 form-icon"></span>
+      </div>
+    </div>
+
+    <div class="col-12 col-md-3">
+      <div class="form-floating">
+        <select class="form-select" id="floatingSelectTask" name="location" required>
+          <option value="Baitul Makmur I">Baitul Makmur I</option>
+          <option value="Baitul Makmur II">Baitul Makmur II</option>
+          <option value="Jamek Mosque">Jamek Mosque</option>
+          <option value="City Mosque">City Mosque</option>
+          <option value="Raudhatul Sakinah">Raudhatul Sakinah</option>
+        </select>
+        <label for="floatingSelectTask">Location</label>
+      </div>
+    </div>
 
   </div>
 
-  <div class="mb-3">
+  <div class="mb-3 border rounded-3 p-3">
 
     <div id="calendar-chart" style="width: 100%; height: 600px;"></div>
 
     <script>
-      fetch('/calendar-data')
-        .then(response => response.json())
-        .then(data => {
+      document.addEventListener('DOMContentLoaded', function() {
+        const dateInput = document.getElementById('selectedDate-date');
+        const locationSelect = document.getElementById('floatingSelectTask');
+
+        function fetchData() {
+          const selectedDate = dateInput.value;
+          const selectedLocation = locationSelect.value;
+
+          if (selectedDate && selectedLocation) {
+            fetch(`/calendar-data?date=${selectedDate}&location=${selectedLocation}`)
+              .then(response => response.json())
+              .then(data => renderChart(data))
+              .catch(error => console.error('Error fetching data:', error));
+          } else {
+            renderChart([]);
+          }
+        }
+
+        dateInput.addEventListener('change', fetchData);
+        locationSelect.addEventListener('change', fetchData);
+
+        function renderChart(data) {
           // Calculate min and max values from the data
-          let values = data.map(item => item[1]);
-          let minValue = Math.min(...values);
-          let maxValue = Math.max(...values);
+          let values = data.map(item => item.shifts.reduce((sum, shift) => sum + shift.staff.length, 0));
+          let minValue = values.length ? Math.min(...values) : 0;
+          let maxValue = values.length ? Math.max(...values) : 0;
 
           var chart = echarts.init(document.getElementById('calendar-chart'), null, {
             devicePixelRatio: window.devicePixelRatio > 1 ? 2 : 1,
@@ -86,14 +118,49 @@
                 type: 'none'
               },
               padding: [7, 10],
-              backgroundColor: getColor('bg-body', 'background-color'), // light grey background color
-              borderColor: theme.secondary_subtle, // dark grey border color
+              backgroundColor: getColor('bg-body', 'background-color'),
+              borderColor: theme.secondary_subtle,
               textStyle: {
-                color: getColor('link-primary', 'color') // black text color
+                color: getColor('link-primary', 'color')
               },
               borderWidth: 1,
               transitionDuration: 0,
-              extraCssText: 'z-index: 1000'
+              extraCssText: 'z-index: 1000',
+              formatter: function(params) {
+                const data = params.data;
+                let tooltipHtml = `<b>Staff Count: ${data[1]}</b><br/>`;
+                data[2].forEach(shift => {
+                  tooltipHtml += `<b>${shift.shiftName}:</b><br/>`;
+                  shift.staff.forEach(name => {
+                    tooltipHtml += `<div style="padding: 3px; border-radius: 10px; border: 1px solid ${getColor('link-primary', 'color')}; margin-bottom:3px;">${name}</div>`;
+                  });
+                  tooltipHtml += `<br/>`; // Add extra line break between shifts
+                });
+                tooltipHtml += '</div>';
+                return tooltipHtml;
+              },
+              position: function(pos, params, dom, rect, size) {
+                // Get chart position and dimensions
+                const chartRect = chart.getDom().getBoundingClientRect();
+                const chartWidth = chartRect.width;
+
+                // Calculate tooltip position to stay within chart bounds
+                let posX = pos[0];
+                let posY = pos[1];
+
+                // Adjust X position
+                if (posX + size.contentSize[0] > chartWidth) {
+                  posX -= posX + size.contentSize[0] - chartWidth;
+                }
+                if (posX < 0) {
+                  posX = 0;
+                }
+
+                // Adjust Y position to be above the data point
+                posY -= size.contentSize[1] + 20;
+
+                return [posX, posY];
+              }
             },
             visualMap: {
               min: minValue,
@@ -101,14 +168,14 @@
               calculable: true,
               show: false,
               color: [
-                getColor('bg-warning', 'background-color'), // light green
-                getColor('bg-warning-light', 'background-color'), // light orange
-                getColor('bg-warning-lighter', 'background-color') // light blue
+                getColor('bg-warning', 'background-color'),
+                getColor('bg-warning-light', 'background-color'),
+                getColor('bg-warning-lighter', 'background-color')
               ]
             },
             calendar: {
               orient: 'vertical',
-              range: '2024-03', // Only March 2024
+              range: '2024-06', // Default range if no date is selected
               width: '99%',
               height: '85.5%',
               left: '2',
@@ -124,7 +191,7 @@
                 firstDay: 0,
                 nameMap: ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'],
                 margin: 24,
-                color: getColor('link-primary', 'color'), // secondary-text-emphasis color
+                color: getColor('link-primary', 'color'),
                 fontFamily: 'Nunito Sans',
                 fontWeight: 700
               },
@@ -132,35 +199,39 @@
                 show: false
               },
               itemStyle: {
-                color: getColor('bg-body', 'background-color'), // dark-text-emphasis color
-                borderColor: theme.secondary_subtle // border color
+                color: getColor('bg-body', 'background-color'),
+                borderColor: theme.secondary_subtle
               }
             },
-            series: {
+            series: [{
               type: 'scatter',
               coordinateSystem: 'calendar',
-              symbolSize(val) {
-                return val[1] / 35;
+              symbolSize: function(val) {
+                return Math.sqrt(val[1]) * 8; // Adjust size based on square root of value
               },
-              data: data,
+              data: data.map(item => [item.date, item.shifts.reduce((sum, shift) => sum + shift.staff.length, 0), item.shifts]),
               itemStyle: {
-                color: getColor('bg-warning', 'background-color'), // warning color
+                color: getColor('bg-warning', 'background-color'),
                 opacity: 0.8
               }
-            }
+            }]
           };
-          chart.setOption(option);
 
+          chart.setOption(option);
 
           window.addEventListener('resize', function() {
             chart.resize();
           });
-        })
-        .catch(error => console.error('Error fetching data:', error));
+        }
+
+        // Initial chart rendering with empty data
+        renderChart([]);
+      });
     </script>
+
   </div>
 
-  <div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis pt-7 pb-3 border-y mb-6">
+  <div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis pt-7 pb-3 border-y mb-6 d-none">
 
   </div>
 

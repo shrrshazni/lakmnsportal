@@ -1169,6 +1169,103 @@ app.get('/search/staff/assignee-relief', isAuthenticated, async function (req, r
 }
 );
 
+app.get('/search/staff/auxiliary-police', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const query = req.query.query;
+
+    try {
+        let results;
+        if (query && query.trim() !== '') {
+            if (user.isChiefExec) {
+                const deputyChiefExecQuery = {
+                    isDeputyChiefExec: true,
+                    fullname: { $regex: query, $options: 'i' }
+                };
+
+                const managementQuery = {
+                    isManagement: true,
+                    fullname: { $regex: query, $options: 'i' }
+                };
+
+                const personalAssistant = {
+                    isPersonalAssistant: true,
+                    fullname: { $regex: query, $options: 'i' }
+                };
+
+                results = await User.find({
+                    $or: [deputyChiefExecQuery, managementQuery, personalAssistant]
+                });
+            } else if (user.isDeputyChiefExec) {
+                const managementQuery = {
+                    isManagement: true,
+                    fullname: { $regex: query, $options: 'i' }
+                };
+
+                const personalAssistant = {
+                    isPersonalAssistant: true,
+                    fullname: { $regex: query, $options: 'i' }
+                };
+
+                const headOfDepartment = {
+                    isHeadOfDepartment: true,
+                    fullname: { $regex: query, $options: 'i' }
+                };
+
+                results = await User.find({
+                    $or: [headOfDepartment, managementQuery, personalAssistant]
+                });
+            } else if (user.isHeadOfDepartment) {
+                results = await User.find({
+                    department: user.department,
+                    fullname: { $regex: query, $options: 'i' }
+                });
+            } else if (user.isPersonalAssistant) {
+                const departmentQuery = {
+                    department: user.department,
+                    fullname: { $regex: query, $options: 'i' }
+                };
+
+                const personalAssistant = {
+                    isPersonalAssistant: true,
+                    fullname: { $regex: query, $options: 'i' }
+                };
+
+                results = await User.find({
+                    $or: [departmentQuery, personalAssistant]
+                });
+            } else {
+                results = await User.find({
+                    section: user.section,
+                    fullname: { $regex: query, $options: 'i' }
+                });
+            }
+        } else if (user.isAdmin) {
+            const departmentQuery = {
+                department: user.department,
+                fullname: { $regex: query, $options: 'i' }
+            };
+
+            const admin = {
+                isAdmin: true,
+                fullname: { $regex: query, $options: 'i' }
+            };
+
+            results = await User.find({
+                $or: [departmentQuery, admin]
+            });
+        } else {
+            results = [];
+        }
+
+        res.json(results);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Internal Server Error');
+    }
+}
+);
+
 //LANDINGPAGE
 app.get('/landing', async function (req, res) {
     res.render('landing-page');
@@ -4504,14 +4601,114 @@ app.get('/auxiliary-police/schedule/add', isAuthenticated, async function (req, 
             user: user,
             notifications: notifications,
             uuid: uuidv4(),
+            show: '',
+            alert: ''
         });
+    }
+}).post('/auxiliary-police/schedule/add', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    }).populate('sender');
+
+    if (user) {
+        const { location, date, selectedNames1, selectedNames2, selectedNames3 } = req.body;
+
+        // Log the entire request body for debugging
+        console.log('Request Body:', req.body);
+
+        // Ensure the selected names are split into arrays
+        const selectedNames1Array = selectedNames1 ? selectedNames1.split(',') : [];
+        const selectedNames2Array = selectedNames2 ? selectedNames2.split(',') : [];
+        const selectedNames3Array = selectedNames3 ? selectedNames3.split(',') : [];
+
+        // Construct the shifts array
+        const shifts = [
+            { shiftName: 'Shift A', staff: selectedNames1Array },
+            { shiftName: 'Shift B', staff: selectedNames2Array },
+            { shiftName: 'Shift C', staff: selectedNames3Array }
+        ];
+
+        const newSchedule = new ScheduleAux({
+            date: new Date(date),
+            location: location,
+            shift: shifts
+        });
+
+        const saveSchedule = await newSchedule.save();
+
+        if (saveSchedule) {
+            console.log('Successfully add auxiliary police schedule on ' + date);
+            res.render('auxiliarypolice-schedule-add', {
+                user: user,
+                notifications: notifications,
+                uuid: uuidv4(),
+                show: 'show',
+                alert: 'Successfully add auxiliary police schedule on ' + date
+            });
+        } else {
+            console.log('Failed to add auxiliary police schedule on ' + date);
+            res.render('auxiliarypolice-schedule-add', {
+                user: user,
+                notifications: notifications,
+                uuid: uuidv4(),
+                show: 'show',
+                alert: 'Failed to add auxiliary police schedule on ' + date
+            });
+        }
+
     }
 });
 
 app.get('/calendar-data', async (req, res) => {
     try {
-        const data = generateMarchData();
-        res.json(data);
+        const { date, location } = req.query;
+
+        const selectedDate = moment(date);
+        const startOfMonth = selectedDate.startOf('month').toDate();
+        const endOfMonth = selectedDate.endOf('month').toDate();
+        console.log(startOfMonth);
+
+        const schedules = await ScheduleAux.aggregate([
+            {
+                $match: {
+                    date: { $gte: startOfMonth, $lte: endOfMonth },
+                    location: location
+                }
+            },
+            {
+                $unwind: "$shift"
+            },
+            {
+                $group: {
+                    _id: { date: "$date" },
+                    shifts: { $push: "$shift" },
+                    totalCount: { $sum: { $size: "$shift.staff" } }
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    date: { $dateToString: { format: "%Y-%m-%d", date: "$_id.date" } },
+                    shifts: 1,
+                    totalCount: 1
+                }
+            }
+        ]);
+
+        // Format the data as required
+        const formattedData = schedules.map(schedule => ({
+            date: schedule.date,
+            shifts: schedule.shifts,
+            totalCount: schedule.totalCount
+        }));
+
+        console.log(formattedData);
+
+        // Send the formatted data as JSON response
+        res.json(formattedData);
     } catch (err) {
         res.status(500).send(err);
     }

@@ -48,7 +48,7 @@
 
   <div class="mb-3 row g-5">
 
-    <div class="col-12 col-xxl-3 order-xxl-1">
+    <div class="col-12 col-xxl-4 order-xxl-1 d-none">
       <div class="card">
         <div class="card-body">
           <h4 class="mb-3">Month Calendar</h4>
@@ -158,8 +158,7 @@
 
         <div class="col-12 col-md-6">
           <div class="form-floating">
-            <select class="form-select" id="floatingSelectTask" name="location">
-              <option value="">Select a location</option>
+            <select class="form-select" id="floatingSelectTask" name="location" required>
               <option value="Baitul Makmur I">Baitul Makmur I</option>
               <option value="Baitul Makmur II">Baitul Makmur II</option>
               <option value="Jamek Mosque">Jamek Mosque</option>
@@ -172,14 +171,14 @@
 
         <div class="col-12 col-md-6 mb-3">
           <div class="form-floating">
-            <input type="text" class="form-control datetimepicker flatpickr-input" id="floatingInputStartDate" placeholder="" name="date" data-options='{"disableMobile":true,"allowInput":true, "locale" : { "firstDayOfWeek" : 1}}'>
+            <input type="text" class="form-control datetimepicker flatpickr-input" id="floatingInputStartDate" placeholder="" name="date" data-options='{"disableMobile":true,"allowInput":true, "locale" : { "firstDayOfWeek" : 1}}' required>
             <label for="date"><span class="fa-regular fa-calendar-xmark me-2"></span>Date</label>
             <div class="invalid-feedback"></div>
           </div>
         </div>
 
         <!-- First Instance -->
-        <div class="col-12 border rounded-3 py-3">
+        <div class="col-12 border rounded-3 p-3">
 
           <div class="row g-3">
 
@@ -204,7 +203,7 @@
         </div>
 
         <!-- Second Instance -->
-        <div class="col-12 border rounded-3 py-3">
+        <div class="col-12 border rounded-3 p-3">
           <div class="row g-3">
 
             <h4>Shift B</h4>
@@ -213,11 +212,11 @@
               <div id="selectedNames2" class="d-flex flex-wrap border border-300 rounded-3 px-2" style="min-height: 3rem"></div>
             </div>
 
-            <div class="col-6 col-md-4">
+            <div class="col-12 col-md-4">
               <div class="form-floating">
                 <input type="text" name="query" id="queryInput2" class="form-control" />
                 <label class="form-label" for="queryInput2">Search Staff</label>
-                <div class="invalid-feedback">Please select relief staff</div>
+                <div class="invalid-feedback">Please select staff</div>
               </div>
             </div>
 
@@ -228,7 +227,7 @@
         </div>
 
         <!-- Third Instance -->
-        <div class="col-12 border rounded-3 py-3">
+        <div class="col-12 border rounded-3 p-3">
           <div class=" row g-3">
 
             <h4>Shift C</h4>
@@ -237,11 +236,11 @@
               <div id="selectedNames3" class="d-flex flex-wrap border border-300 rounded-3 px-2" style="min-height: 3rem"></div>
             </div>
 
-            <div class="col-6 col-md-4">
+            <div class="col-12 col-md-4">
               <div class="form-floating">
                 <input type="text" name="query" id="queryInput3" class="form-control"" />
                 <label class=" form-label" for="queryInput3">Search Staff</label>
-                <div class="invalid-feedback">Please select relief staff</div>
+                <div class="invalid-feedback">Please select staff</div>
               </div>
             </div>
 
@@ -265,13 +264,12 @@
 
       <script>
         $(document).ready(function() {
-          // Function to initialize a staff search instance
           function initializeStaffSearch(queryInputId, selectedNamesDivId, resultsDivId, hiddenInputId) {
             const queryInput = $(queryInputId);
             const selectedNamesDiv = $(selectedNamesDivId);
-            const selectedNames = [];
+            let selectedNames = [];
 
-            $(queryInputId).on('input', function() {
+            queryInput.on('input', function() {
               const query = $(this).val();
               if (query.trim() !== '') {
                 $.ajax({
@@ -285,7 +283,6 @@
                   }
                 });
               } else {
-                // Clear results if the search query is empty
                 displayResults([], resultsDivId, selectedNames, selectedNamesDiv, hiddenInputId);
               }
             });
@@ -301,18 +298,16 @@
                   const resultDiv = $('<div class="result btn btn-outline-primary mr-2 mb-2"></div>').text(result.fullname);
                   resultsDiv.append(resultDiv);
 
-                  // Add click event to handle adding and removing names
                   resultDiv.click(function() {
                     const clickedName = result.fullname;
                     const index = selectedNames.indexOf(clickedName);
 
                     if (index === -1) {
                       selectedNames.push(clickedName);
-                      updateSelectedNamesDisplay(selectedNames, selectedNamesDiv, hiddenInputId);
                     } else {
                       selectedNames.splice(index, 1);
-                      updateSelectedNamesDisplay(selectedNames, selectedNamesDiv, hiddenInputId);
                     }
+                    updateSelectedNamesDisplay(selectedNames, selectedNamesDiv, hiddenInputId);
                   });
                 });
               }
@@ -331,21 +326,43 @@
                   updateSelectedNamesDisplay(selectedNames, selectedNamesDiv, hiddenInputId);
                 });
               });
-
               $(hiddenInputId).val(selectedNames.join(','));
             }
           }
 
-          // Initialize all staff search instances
           initializeStaffSearch('#queryInput1', '#selectedNames1', '#results1', '#selectedNamesInput1');
           initializeStaffSearch('#queryInput2', '#selectedNames2', '#results2', '#selectedNamesInput2');
           initializeStaffSearch('#queryInput3', '#selectedNames3', '#results3', '#selectedNamesInput3');
+
+          // For debugging: Log the values before form submission
+          $('#scheduleForm').submit(function(event) {
+            console.log('Selected Names 1:', $('#selectedNamesInput1').val());
+            console.log('Selected Names 2:', $('#selectedNamesInput2').val());
+            console.log('Selected Names 3:', $('#selectedNamesInput3').val());
+          });
         });
       </script>
+
     </div>
 
   </div>
 
+</div>
+
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 5">
+  <div class="d-flex">
+    <div class="toast <%= show %> align-items-center text-white border-0" role="alert" data-bs-autohide="false" aria-live="assertive" aria-atomic="true">
+      <div class="d-flex justify-content-between">
+        <div class="toast-body px-0 py-3">
+          <code class="text-primary"><%= alert %></code>
+        </div>
+
+        <button class="btn ms-2 p-0" type="button" data-bs-dismiss="toast" aria-label="Close">
+          <span class="uil uil-times fs-7"></span>
+        </button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <%- include('partials/private-footer.ejs') %>
