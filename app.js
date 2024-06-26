@@ -4650,31 +4650,6 @@ app.get('/auxiliary-police/duty-handover/submit', isAuthenticated, async functio
         .populate('sender')
         .sort({ timestamp: -1 });
 
-    // const exampleDocuments = [
-    //     {
-    //         headShift: "John Doe",
-    //         date: new Date("2023-06-26"),
-    //         time: "0700",
-    //         location: "Baitul Makmur I",
-    //         remarks: "Routine handover with no major incidents.",
-    //         status: "completed",
-    //         shift: "Shift A",
-    //         staff: ["Alice Johnson", "Bob Brown"]
-    //     },
-    //     {
-    //         headShift: "Sarah Connor",
-    //         date: new Date("2023-06-26"),
-    //         time: "1500",
-    //         location: "Jamek Mosque",
-    //         remarks: "Minor incident reported, resolved quickly.",
-    //         status: "pending",
-    //         shift: "Shift B",
-    //         staff: ["Chris Evans", "Mark Ruffalo"]
-    //     }
-    // ];
-
-    // await DutyHandoverAux.insertMany(exampleDocuments);
-
     if (user) {
         res.render('auxiliarypolice-dutyhandover-submit', {
             user: user,
@@ -4692,6 +4667,8 @@ app.get('/auxiliary-police/duty-handover/submit', isAuthenticated, async functio
 // SEARCH DUTY HANDOVER
 app.get('/search-duty-handover', isAuthenticated, async function (req, res) {
     const { location, date, shift, time } = req.query;
+
+    console.log(req.query);
 
     let shiftTime;
 

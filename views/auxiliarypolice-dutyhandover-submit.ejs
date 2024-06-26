@@ -30,11 +30,11 @@ const currentDate = getTodayDate();
 
     <div class="col-12 col-xxl-9 row g-3">
 
-      <form class="mb-3 row g-3" action="/auxiliary-police/duty-handover/submit" method="post">
-
+      <form class="mb-3 row g-3" action="/auxiliary-police/duty-handover/submit" method="post" id="searchForm">
         <div class="col-12 col-md-6">
           <div class="form-floating">
             <select class="form-select" id="location" name="location" required>
+              <option value="">Select Location</option>
               <option value="Baitul Makmur I">Baitul Makmur I</option>
               <option value="Baitul Makmur II">Baitul Makmur II</option>
               <option value="Jamek Mosque">Jamek Mosque</option>
@@ -44,7 +44,6 @@ const currentDate = getTodayDate();
             <label for="location">Location</label>
           </div>
         </div>
-
         <div class="col-12 col-md-6 mb-3">
           <div class="form-floating">
             <input type="text" class="form-control datetimepicker flatpickr-input" id="floatingInputStartDate" placeholder="" name="date" data-options='{"disableMobile":true,"allowInput":true, "locale" : { "firstDayOfWeek" : 1}}' required>
@@ -52,10 +51,10 @@ const currentDate = getTodayDate();
             <div class="invalid-feedback"></div>
           </div>
         </div>
-
         <div class="col-12 col-md-6">
           <div class="form-floating">
             <select class="form-select" id="shift" name="shift" required>
+              <option value="">Select Shift</option>
               <option value="Shift A">Shift A</option>
               <option value="Shift B">Shift B</option>
               <option value="Shift C">Shift C</option>
@@ -63,10 +62,10 @@ const currentDate = getTodayDate();
             <label for="shift">Shift</label>
           </div>
         </div>
-
         <div class="col-12 col-md-6">
           <div class="form-floating">
             <select class="form-select" id="time" name="time" required>
+              <option value="">Select Time</option>
               <option value="0700">0700</option>
               <option value="1500">1500</option>
               <option value="2300">2300</option>
@@ -74,96 +73,58 @@ const currentDate = getTodayDate();
             <label for="time">Time</label>
           </div>
         </div>
-
         <div class="col-12 gy-4 mt-3 mb-3">
           <label class="form-label" for="giveNotes">Summary</label>
           <textarea class="form-control scrollbar" id="giveNotes" placeholder="Leave a summary here" style="height: 100px" name="notes"></textarea>
         </div>
-
-        <!-- <div class="col-12">
-          <div class="card">
-            <div class="card-body">
-
-              <div class="d-flex justify-content-between mb-3">
-
-                <div>
-                  <h3>Shift</h3>
-                </div>
-
-                <div class="d-flex align-items-center">
-                  <p class="badge badge-phoenix badge-phoenix-warning">Status</p>
-                </div>
-
-              </div>
-
-              <div>
-                <div></div>
-              </div>
-
-            </div>
-          </div>
-        </div> -->
-
         <div id="results" class="mt-4">
           <!-- Results will be displayed here -->
         </div>
-
       </form>
 
-      <form id="searchForm">
-        <div class="row">
-          <div class="col-12 col-md-6">
-            <div class="form-floating">
-              <select class="form-select" id="location" name="location" required>
-                <option value="Baitul Makmur I">Baitul Makmur I</option>
-                <option value="Baitul Makmur II">Baitul Makmur II</option>
-                <option value="Jamek Mosque">Jamek Mosque</option>
-                <option value="City Mosque">City Mosque</option>
-                <option value="Raudhatul Sakinah">Raudhatul Sakinah</option>
-              </select>
-              <label for="location">Location</label>
-            </div>
-          </div>
-          <div class="col-12 col-md-6 mb-3">
-            <div class="form-floating">
-              <input type="date" class="form-control" id="floatingInputStartDate" name="date" required>
-              <label for="floatingInputStartDate">Date</label>
-            </div>
-          </div>
-          <div class="col-12 col-md-6">
-            <div class="form-floating">
-              <select class="form-select" id="shift" name="shift" required>
-                <option value="Shift A">Shift A</option>
-                <option value="Shift B">Shift B</option>
-                <option value="Shift C">Shift C</option>
-              </select>
-              <label for="shift">Shift</label>
-            </div>
-          </div>
-          <div class="col-12 col-md-6">
-            <div class="form-floating">
-              <select class="form-select" id="time" name="time" required>
-                <option value="0700">0700</option>
-                <option value="1500">1500</option>
-                <option value="2300">2300</option>
-              </select>
-              <label for="time">Time</label>
-            </div>
-          </div>
-          <div class="col-12 gy-4 mt-3 mb-3">
-            <label class="form-label" for="giveNotes">Summary</label>
-            <textarea class="form-control scrollbar" id="giveNotes" placeholder="Leave a summary here" style="height: 100px" name="notes"></textarea>
-          </div>
-          <div class="col-12">
-            <button type="submit" class="btn btn-primary">Search</button>
-          </div>
-        </div>
-      </form>
+      <script>
+        document.querySelectorAll('#location, #floatingInputStartDate, #shift, #time').forEach(element => {
+          element.addEventListener('change', function() {
+            const location = document.getElementById('location').value;
+            const date = document.getElementById('floatingInputStartDate').value;
+            const shift = document.getElementById('shift').value;
+            const time = document.getElementById('time').value;
 
-      <div id="results" class="mt-4">
-        <!-- Results will be displayed here -->
-      </div>
+            if (location && date && shift && time) {
+              fetch(`/search-duty-handover?location=${location}&date=${date}&shift=${shift}&time=${time}`)
+                .then(response => response.json())
+                .then(data => {
+                  const resultsDiv = document.getElementById('results');
+                  resultsDiv.innerHTML = '';
 
+                  if (data && Object.keys(data).length > 0) {
+                    const card = document.createElement('div');
+                    card.className = 'card mb-3';
+                    card.innerHTML = `
+                                    <div class="card-body">
+                                        <h5 class="card-title">Report ID: ${data.reportId}</h5>
+                                        <p class="card-text">Handled: ${data.handled}</p>
+                                        <p class="card-text">Date: ${new Date(data.date).toLocaleDateString()}</p>
+                                        <p class="card-text">Shift: ${data.startShift} - ${data.endShift}</p>
+                                        <p class="card-text">Location: ${data.location}</p>
+                                        <p class="card-text">Notes: ${data.notes}</p>
+                                    </div>
+                                `;
+                    resultsDiv.appendChild(card);
+                  } else {
+                    resultsDiv.innerHTML = '<p>No results found</p>';
+                  }
+                })
+                .catch(error => {
+                  console.error('Error:', error);
+                  document.getElementById('results').innerHTML = '<p>Error retrieving results. Please try again later.</p>';
+                });
+            } else {
+              document.getElementById('results').innerHTML = '';
+            }
+          });
+        });
+      </script>
 
     </div>
 
