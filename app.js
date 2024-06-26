@@ -426,6 +426,77 @@ const scheduleAuxSchema = new mongoose.Schema({
     shift: [],
 });
 
+// PATROL REPORT 
+const checkpoint = {
+    latitude: Number,
+    longitude: Number,
+    checkpointName: String,
+    time: String,
+    logReport: String,
+    fullName: String,
+    username: String
+};
+
+const cycleAmount = {
+    cycleSeq: Number,
+    timeSlot: String,
+    checkpoint: [checkpoint]
+};
+
+const shiftMember = {
+    cycle: [cycleAmount]
+};
+
+// PATROL SCHEMA
+const patrolSchema = new mongoose.Schema({
+    reportId: String,
+    shift: String,
+    type: String,
+    date: String,
+    location: String,
+    status: String,
+    startShift: String,
+    endShift: String,
+    summary: String,
+    notes: String,
+    staff: [],
+    shiftMember: shiftMember,
+    patrolUnit: [checkpoint]
+});
+
+// DUTY HANDOVER
+
+const dutyHandoverSchema = new mongoose.Schema({
+    headShift: String,
+    date: Date,
+    time: String,
+    location: String,
+    remarks: String,
+    status: {
+        type: String,
+        enum: ['completed', 'pending'],
+        default: 'pending'
+    },
+    shift: String,
+    staff: [String]
+});
+
+// CASE SCHEMA
+const caseSchema = new mongoose.Schema({
+    reportId: String,
+    username: String,
+    madeBy: String,
+    type: String,
+    time: String,
+    date: String,
+    location: String,
+    summary: String,
+    actionTaken: String,
+    eventSummary: String,
+    staffOnDuty: String,
+    notes: String
+});
+
 
 //mongoose passport-local
 userSchema.plugin(passportLocalMongoose);
@@ -448,6 +519,9 @@ const QRCode = attendanceDatabase.model('QRCode', qrCodeSchema);
 const Tender = tenderDatabase.model('Tender', tenderSchema);
 const TenderCompany = tenderDatabase.model('TenderCompany', tenderCompanySchema);
 const ScheduleAux = auxPoliceDatabase.model('ScheduleAux', scheduleAuxSchema);
+const PatrolAux = auxPoliceDatabase.model('PatrolAux', patrolSchema);
+const CaseAux = auxPoliceDatabase.model('CaseAux', caseSchema);
+const DutyHandoverAux = auxPoliceDatabase.model('DutyHandoverAux', dutyHandoverSchema);
 
 passport.use(User.createStrategy());
 
@@ -4565,7 +4639,86 @@ app.get('/procurement/tender/register', isAuthenticated, async function (req, re
 
 //AUXILIARY POLICE
 
-// VIEW
+// DUTY HANDOVER
+app.get('/auxiliary-police/duty-handover/submit', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    })
+        .populate('sender')
+        .sort({ timestamp: -1 });
+
+    // const exampleDocuments = [
+    //     {
+    //         headShift: "John Doe",
+    //         date: new Date("2023-06-26"),
+    //         time: "0700",
+    //         location: "Baitul Makmur I",
+    //         remarks: "Routine handover with no major incidents.",
+    //         status: "completed",
+    //         shift: "Shift A",
+    //         staff: ["Alice Johnson", "Bob Brown"]
+    //     },
+    //     {
+    //         headShift: "Sarah Connor",
+    //         date: new Date("2023-06-26"),
+    //         time: "1500",
+    //         location: "Jamek Mosque",
+    //         remarks: "Minor incident reported, resolved quickly.",
+    //         status: "pending",
+    //         shift: "Shift B",
+    //         staff: ["Chris Evans", "Mark Ruffalo"]
+    //     }
+    // ];
+
+    // await DutyHandoverAux.insertMany(exampleDocuments);
+
+    if (user) {
+        res.render('auxiliarypolice-dutyhandover-submit', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4(),
+            show: '',
+            alert: '',
+        });
+    }
+
+}).post('/auxiliary-police/duty-handover/add', isAuthenticated, async function (req, res) {
+
+});
+
+// SEARCH DUTY HANDOVER
+app.get('/search-duty-handover', isAuthenticated, async function (req, res) {
+    const { location, date, shift, time } = req.query;
+
+    let shiftTime;
+
+    if (time === '0700') {
+        shiftTime = '2300'
+    }
+
+    if (time === '1500') {
+        shiftTime = '0700';
+    }
+
+    if (time === '2300') {
+        shiftTime = '1500';
+    }
+
+    const results = await DutyHandoverAux.findOne({
+        location: location,
+        date: new Date(date),
+        time: shiftTime
+    });
+
+    console.log(results);
+
+    res.json(results);
+});
+
+// SCHEDULE VIEW
 app.get('/auxiliary-police/schedule/view', isAuthenticated, async function (req, res) {
     const username = req.user.username;
     const user = await User.findOne({ username: username });
@@ -4585,7 +4738,7 @@ app.get('/auxiliary-police/schedule/view', isAuthenticated, async function (req,
     }
 });
 
-// ADD
+// SCHEDULE ADD
 app.get('/auxiliary-police/schedule/add', isAuthenticated, async function (req, res) {
     const username = req.user.username;
     const user = await User.findOne({ username: username });
@@ -4614,119 +4767,85 @@ app.get('/auxiliary-police/schedule/add', isAuthenticated, async function (req, 
     }).populate('sender');
 
     if (user) {
-        const { location, date, selectedNames1, selectedNames2, selectedNames3 } = req.body;
+        const { location, date, selectedNames1, selectedNames2, selectedNames3, time1, time2, time3 } = req.body;
 
-        // Log the entire request body for debugging
-        console.log('Request Body:', req.body);
-
-        // Ensure the selected names are split into arrays
-        const selectedNames1Array = selectedNames1 ? selectedNames1.split(',') : [];
-        const selectedNames2Array = selectedNames2 ? selectedNames2.split(',') : [];
-        const selectedNames3Array = selectedNames3 ? selectedNames3.split(',') : [];
-
-        // Construct the shifts array
-        const shifts = [
-            { shiftName: 'Shift A', staff: selectedNames1Array },
-            { shiftName: 'Shift B', staff: selectedNames2Array },
-            { shiftName: 'Shift C', staff: selectedNames3Array }
-        ];
-
-        const newSchedule = new ScheduleAux({
-            date: new Date(date),
-            location: location,
-            shift: shifts
-        });
-
-        const saveSchedule = await newSchedule.save();
-
-        if (saveSchedule) {
-            console.log('Successfully add auxiliary police schedule on ' + date);
+        if (!location || !date || !selectedNames1 || !selectedNames2 || !selectedNames3 || time1 === 'Select shift time' || time2 === 'Select shift time' || time3 === 'Select shift time') {
+            console.log('Failed to add auxiliary police schedule');
             res.render('auxiliarypolice-schedule-add', {
                 user: user,
                 notifications: notifications,
                 uuid: uuidv4(),
                 show: 'show',
-                alert: 'Successfully add auxiliary police schedule on ' + date
+                alert: 'All form must be filled, there is an empty input'
             });
         } else {
-            console.log('Failed to add auxiliary police schedule on ' + date);
-            res.render('auxiliarypolice-schedule-add', {
-                user: user,
-                notifications: notifications,
-                uuid: uuidv4(),
-                show: 'show',
-                alert: 'Failed to add auxiliary police schedule on ' + date
+            // Ensure the selected names are split into arrays
+            const selectedNames1Array = selectedNames1 ? selectedNames1.split(',') : [];
+            const selectedNames2Array = selectedNames2 ? selectedNames2.split(',') : [];
+            const selectedNames3Array = selectedNames3 ? selectedNames3.split(',') : [];
+
+            // Construct the shifts array
+            const shifts = [
+                { shiftName: 'Shift A', staff: selectedNames1Array, time: time1 },
+                { shiftName: 'Shift B', staff: selectedNames2Array, time: time2 },
+                { shiftName: 'Shift C', staff: selectedNames3Array, time: time3 }
+            ];
+
+            const findSchedule = await ScheduleAux.findOne({
+                location: location,
+                date: new Date(date)
             });
+
+            if (findSchedule) {
+                const updateSchedule = await ScheduleAux.findOneAndUpdate(
+                    { location: location, date: new Date(date) },
+                    { $set: { shifts: shifts } },
+                    { upsert: true }
+                );
+
+                if (updateSchedule) {
+                    console.log('Successfully updated auxiliary police schedule');
+                    res.render('auxiliarypolice-schedule-add', {
+                        user: user,
+                        notifications: notifications,
+                        uuid: uuidv4(),
+                        show: 'show',
+                        alert: 'Successfully updated auxiliary police schedule on'
+                    });
+                }
+            } else {
+                const newSchedule = new ScheduleAux({
+                    date: new Date(date),
+                    location: location,
+                    shift: shifts
+                });
+
+                const saveSchedule = await newSchedule.save();
+
+                if (saveSchedule) {
+                    console.log('Successfully add auxiliary police schedule on ' + date);
+                    res.render('auxiliarypolice-schedule-add', {
+                        user: user,
+                        notifications: notifications,
+                        uuid: uuidv4(),
+                        show: 'show',
+                        alert: 'Successfully add auxiliary police schedule on ' + date
+                    });
+                } else {
+                    console.log('Failed to add auxiliary police schedule on ' + date);
+                    res.render('auxiliarypolice-schedule-add', {
+                        user: user,
+                        notifications: notifications,
+                        uuid: uuidv4(),
+                        show: 'show',
+                        alert: 'Failed to add auxiliary police schedule on ' + date
+                    });
+                }
+            }
         }
 
     }
 });
-
-app.get('/calendar-data', async (req, res) => {
-    try {
-        const { date, location } = req.query;
-
-        const selectedDate = moment(date);
-        const startOfMonth = selectedDate.startOf('month').toDate();
-        const endOfMonth = selectedDate.endOf('month').toDate();
-        console.log(startOfMonth);
-
-        const schedules = await ScheduleAux.aggregate([
-            {
-                $match: {
-                    date: { $gte: startOfMonth, $lte: endOfMonth },
-                    location: location
-                }
-            },
-            {
-                $unwind: "$shift"
-            },
-            {
-                $group: {
-                    _id: { date: "$date" },
-                    shifts: { $push: "$shift" },
-                    totalCount: { $sum: { $size: "$shift.staff" } }
-                }
-            },
-            {
-                $project: {
-                    _id: 0,
-                    date: { $dateToString: { format: "%Y-%m-%d", date: "$_id.date" } },
-                    shifts: 1,
-                    totalCount: 1
-                }
-            }
-        ]);
-
-        // Format the data as required
-        const formattedData = schedules.map(schedule => ({
-            date: schedule.date,
-            shifts: schedule.shifts,
-            totalCount: schedule.totalCount
-        }));
-
-        console.log(formattedData);
-
-        // Send the formatted data as JSON response
-        res.json(formattedData);
-    } catch (err) {
-        res.status(500).send(err);
-    }
-});
-
-function generateMarchData() {
-    const data = [];
-    const startDate = new Date(2024, 2, 1); // March 1, 2024
-    const endDate = new Date(2024, 2, 31); // March 31, 2024
-
-    for (let date = startDate; date <= endDate; date.setDate(date.getDate() + 1)) {
-        const value = Math.floor(Math.random() * 1000); // Random value between 0 and 1000
-        const formattedDate = date.toISOString().split('T')[0];
-        data.push([formattedDate, value]);
-    }
-
-    return data;
-}
 
 //NOTIFICATIONS
 app.get('/notifications/history', isAuthenticated, async function (req, res) {
@@ -6631,6 +6750,58 @@ app.get('/api/staff/overview/department-section', isAuthenticated, async functio
     }
 }
 );
+
+app.get('/api/auxiliary-police/schedule/calendar-data', async (req, res) => {
+    try {
+        const { date, location } = req.query;
+
+        const selectedDate = moment(date);
+        const startOfMonth = selectedDate.startOf('month').toDate();
+        const endOfMonth = selectedDate.endOf('month').toDate();
+        console.log(startOfMonth);
+
+        const schedules = await ScheduleAux.aggregate([
+            {
+                $match: {
+                    date: { $gte: startOfMonth, $lte: endOfMonth },
+                    location: location
+                }
+            },
+            {
+                $unwind: "$shift"
+            },
+            {
+                $group: {
+                    _id: { date: "$date" },
+                    shifts: { $push: "$shift" },
+                    totalCount: { $sum: { $size: "$shift.staff" } }
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    date: { $dateToString: { format: "%Y-%m-%d", date: "$_id.date" } },
+                    shifts: 1,
+                    totalCount: 1
+                }
+            }
+        ]);
+
+        // Format the data as required
+        const formattedData = schedules.map(schedule => ({
+            date: schedule.date,
+            shifts: schedule.shifts,
+            totalCount: schedule.totalCount
+        }));
+
+        console.log(formattedData);
+
+        // Send the formatted data as JSON response
+        res.json(formattedData);
+    } catch (err) {
+        res.status(500).send(err);
+    }
+});
 
 //SUPER ADMIN
 app.get('/super-admin/update', isAuthenticated, async function (req, res) {

@@ -86,7 +86,7 @@
           const selectedLocation = locationSelect.value;
 
           if (selectedDate && selectedLocation) {
-            fetch(`/calendar-data?date=${selectedDate}&location=${selectedLocation}`)
+            fetch(`/api/auxiliary-police/schedule/calendar-data?date=${selectedDate}&location=${selectedLocation}`)
               .then(response => response.json())
               .then(data => renderChart(data))
               .catch(error => console.error('Error fetching data:', error));
@@ -130,7 +130,7 @@
                 const data = params.data;
                 let tooltipHtml = `<b>Staff Count: ${data[1]}</b><br/>`;
                 data[2].forEach(shift => {
-                  tooltipHtml += `<b>${shift.shiftName}:</b><br/>`;
+                  tooltipHtml += `<b>${shift.shiftName} (${shift.time}):</b><br/>`;
                   shift.staff.forEach(name => {
                     tooltipHtml += `<div style="padding: 3px; border-radius: 10px; border: 1px solid ${getColor('link-primary', 'color')}; margin-bottom:3px;">${name}</div>`;
                   });
