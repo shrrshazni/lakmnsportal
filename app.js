@@ -478,7 +478,8 @@ const dutyHandoverSchema = new mongoose.Schema({
         default: 'pending'
     },
     shift: String,
-    staff: [String]
+    staff: [String],
+    timestamp: { type: Date }
 });
 
 // CASE SCHEMA
@@ -4660,15 +4661,81 @@ app.get('/auxiliary-police/duty-handover/submit', isAuthenticated, async functio
         });
     }
 
-}).post('/auxiliary-police/duty-handover/add', isAuthenticated, async function (req, res) {
+}).post('/auxiliary-police/duty-handover/submit', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    })
+        .populate('sender')
+        .sort({ timestamp: -1 });
+    const { location, date, shift, time, notes, shiftStaff, dutyHandoverId } = req.body;
 
+    try {
+        let dutyHandover = await DutyHandoverAux.findOne({
+            location: location,
+            date: new Date(date),
+            time: time,
+            shift: shift
+        });
+
+        if (dutyHandover) {
+            // Update existing duty handover
+            dutyHandover.remarks = notes;
+            dutyHandover.staff = shiftStaff;
+            dutyHandover.status = 'completed';
+            dutyHandover.timestamp = new Date();
+
+            await dutyHandover.save();
+            console.log('Exisitng handover updated');
+            res.render('auxiliarypolice-dutyhandover-submit', {
+                user: user,
+                notifications: notifications,
+                uuid: uuidv4(),
+                show: 'show',
+                alert: 'Existing handover updated',
+            });
+        } else {
+            // update duty handover based on id
+            await DutyHandoverAux.findByIdAndUpdate(
+                dutyHandoverId,
+                { status: 'completed' },
+                { new: true } // To return the updated document
+            );
+
+            // Create a new duty handover
+            dutyHandover = new DutyHandoverAux({
+                headShift: user.fullname,
+                date: new Date(date),
+                location: location,
+                remarks: notes,
+                status: "pending",
+                shift: shift,
+                time: time,
+                staff: shiftStaff,
+                timestamp: new Date()
+            });
+
+            const create = await dutyHandover.save();
+            console.log('New duty handover created', create);
+            res.render('auxiliarypolice-dutyhandover-submit', {
+                user: user,
+                notifications: notifications,
+                uuid: uuidv4(),
+                show: 'show',
+                alert: 'New duty handover created',
+            });
+        }
+    } catch (error) {
+        console.error('Error updating duty handover:', error);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
 });
 
 // SEARCH DUTY HANDOVER
 app.get('/search-duty-handover', isAuthenticated, async function (req, res) {
     const { location, date, shift, time } = req.query;
-
-    console.log(req.query);
 
     let shiftTime;
 
@@ -4690,9 +4757,20 @@ app.get('/search-duty-handover', isAuthenticated, async function (req, res) {
         time: shiftTime
     });
 
-    console.log(results);
+    const resultsSchedule = await ScheduleAux.findOne({
+        location: location,
+        date: new Date(date),
+        'shift.shiftName': shift
+    });
 
-    res.json(results);
+    const response = {
+        dutyHandover: results,
+        shiftSchedule: resultsSchedule
+    }
+
+    console.log(response.shiftSchedule);
+
+    res.json(response);
 });
 
 // SCHEDULE VIEW

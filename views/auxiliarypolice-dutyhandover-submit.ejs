@@ -31,6 +31,9 @@ const currentDate = getTodayDate();
     <div class="col-12 col-xxl-9 row g-3">
 
       <form class="mb-3 row g-3" action="/auxiliary-police/duty-handover/submit" method="post" id="searchForm">
+
+        <div id="results" class="mt-4"></div>
+
         <div class="col-12 col-md-6">
           <div class="form-floating">
             <select class="form-select" id="location" name="location" required>
@@ -73,13 +76,31 @@ const currentDate = getTodayDate();
             <label for="time">Time</label>
           </div>
         </div>
+
+        <div id="shiftResult">
+        </div>
+
         <div class="col-12 gy-4 mt-3 mb-3">
           <label class="form-label" for="giveNotes">Summary</label>
           <textarea class="form-control scrollbar" id="giveNotes" placeholder="Leave a summary here" style="height: 100px" name="notes"></textarea>
         </div>
-        <div id="results" class="mt-4">
-          <!-- Results will be displayed here -->
+
+        <div id="hiddenInputs">
         </div>
+
+        <div id="hiddenDutyHandover">
+        </div>
+
+        <div class="col-12 gy-6 d-none" id="submitButton">
+          <div class="row g-3 justify-content-end">
+            <div class="col-auto">
+              <button class="btn btn-primary w-100 mb-3 loading-button" type="submit" name="submit">
+                <div class="content-button">Submit Handover</div>
+              </button>
+            </div>
+          </div>
+        </div>
+
       </form>
 
       <script>
@@ -95,32 +116,85 @@ const currentDate = getTodayDate();
                 .then(response => response.json())
                 .then(data => {
                   const resultsDiv = document.getElementById('results');
+                  const shiftResultDiv = document.getElementById('shiftResult');
+                  const hiddenInputsDiv = document.getElementById('hiddenInputs');
+                  const hiddenDutyHandoverDiv = document.getElementById('hiddenDutyHandover');
+                  const submitButtonDiv = document.getElementById('submitButton');
                   resultsDiv.innerHTML = '';
+                  shiftResultDiv.innerHTML = '<hr>';
+                  hiddenInputsDiv.innerHTML = '';
+                  hiddenDutyHandoverDiv.innerHTML = '';
 
-                  if (data && Object.keys(data).length > 0) {
+                  if (data.dutyHandover && Object.keys(data.dutyHandover).length > 0) {
                     const card = document.createElement('div');
                     card.className = 'card mb-3';
+
+
+                    const staffButtons = data.dutyHandover.staff.map(staffMember => `<button type="button" class="btn btn-outline-primary me-2 mb-2">${staffMember}</button>`).join('');
+
                     card.innerHTML = `
                                     <div class="card-body">
-                                        <h5 class="card-title">Report ID: ${data.reportId}</h5>
-                                        <p class="card-text">Handled: ${data.handled}</p>
-                                        <p class="card-text">Date: ${new Date(data.date).toLocaleDateString()}</p>
-                                        <p class="card-text">Shift: ${data.startShift} - ${data.endShift}</p>
-                                        <p class="card-text">Location: ${data.location}</p>
-                                        <p class="card-text">Notes: ${data.notes}</p>
+                                        <div class="d-flex justify-content-between"> 
+                                            <h3 class="card-title">${data.dutyHandover.shift}</h3>
+                                            <p><span class="badge badge-phoenix badge-phoenix-success fs-10 align-items-center">${data.dutyHandover.status}</span></p>
+                                        </div>
+                                        <p class="card-text">Head Shift: <span class="fw-semibold fst-italic">${data.dutyHandover.headShift}</span></p>
+                                        <p class="card-text">Date: <span class="fw-semibold fst-italic">${new Date(data.dutyHandover.date).toLocaleDateString()}</span></p>
+                                        <p class="card-text">Shift: <span class="fw-semibold fst-italic">${data.dutyHandover.time}</span></p>
+                                        <p class="card-text">Location: <span class="fw-semibold fst-italic">${data.dutyHandover.location}</span></p>
+                                        <p class="card-text">Remarks: <span class="fw-semibold fst-italic">${data.dutyHandover.remarks}</span></p>
+                                        <hr>
+                                        <div>${staffButtons}</div>
                                     </div>
                                 `;
                     resultsDiv.appendChild(card);
+
+                    // Create a hidden input for the duty handover ID
+                    const hiddenInputId = document.createElement('input');
+                    hiddenInputId.type = 'hidden';
+                    hiddenInputId.name = 'dutyHandoverId';
+                    hiddenInputId.value = data.dutyHandover._id;
+                    hiddenDutyHandoverDiv.appendChild(hiddenInputId);
+
+
+                    if (data.dutyHandover.status === 'pending') {
+                      submitButtonDiv.classList.remove('d-none');
+                    } else {
+                      submitButtonDiv.classList.add('d-none');
+                    }
+
                   } else {
-                    resultsDiv.innerHTML = '<p>No results found</p>';
+                    resultsDiv.innerHTML = '<p class= "text-center fs-9 fw-bold">No shift found/submitted before your current shift</p>';
+                    submitButtonDiv.classList.add('d-none');
                   }
+
+                  if (data.shiftSchedule && data.shiftSchedule.shift && data.shiftSchedule.shift.length > 0) {
+                    const shiftStaff = data.shiftSchedule.shift.find(s => s.shiftName === shift).staff || [];
+                    const shiftStaffButtons = shiftStaff.map(staffMember => `<button type="button" class="btn btn-primary me-2 mb-2">${staffMember}</button>`).join('');
+
+                    shiftResultDiv.innerHTML += `
+                                    <div>${shiftStaffButtons}</div>
+                            `;
+
+                    shiftStaff.forEach(staffMember => {
+                      const hiddenInput = document.createElement('input');
+                      hiddenInput.type = 'hidden';
+                      hiddenInput.name = 'shiftStaff[]';
+                      hiddenInput.value = staffMember;
+                      hiddenInputsDiv.appendChild(hiddenInput);
+                    });
+                  } else {
+                    shiftResultDiv.innerHTML += '<p>No shift schedule found</p>';
+                  }
+
                 })
                 .catch(error => {
                   console.error('Error:', error);
-                  document.getElementById('results').innerHTML = '<p>Error retrieving results. Please try again later.</p>';
+                  document.getElementById('results').innerHTML = '<p class= "text-center fs-9 fw-bold">No shift found/submitted before your current shift</p>';
                 });
             } else {
               document.getElementById('results').innerHTML = '';
+              submitButtonDiv.classList.add('d-none');
             }
           });
         });
