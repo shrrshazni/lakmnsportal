@@ -461,7 +461,8 @@ const patrolSchema = new mongoose.Schema({
     notes: String,
     staff: [],
     shiftMember: shiftMember,
-    patrolUnit: [checkpoint]
+    patrolUnit: [checkpoint],
+    timestamp: { type: Date }
 });
 
 // DUTY HANDOVER
@@ -4673,6 +4674,7 @@ app.get('/auxiliary-police/duty-handover/submit', isAuthenticated, async functio
     const { location, date, shift, time, notes, shiftStaff, dutyHandoverId } = req.body;
 
     try {
+
         let dutyHandover = await DutyHandoverAux.findOne({
             location: location,
             date: new Date(date),
@@ -4718,13 +4720,15 @@ app.get('/auxiliary-police/duty-handover/submit', isAuthenticated, async functio
             });
 
             const create = await dutyHandover.save();
-            console.log('New duty handover created', create);
+            const newReport = await createPatrolReport(dutyHandoverId, location, date, shift, time, shiftStaff);
+
+            console.log('New duty handover and patrol report created', create, newReport);
             res.render('auxiliarypolice-dutyhandover-submit', {
                 user: user,
                 notifications: notifications,
                 uuid: uuidv4(),
                 show: 'show',
-                alert: 'New duty handover created',
+                alert: 'New duty handover and patrol report created',
             });
         }
     } catch (error) {
@@ -4733,27 +4737,46 @@ app.get('/auxiliary-police/duty-handover/submit', isAuthenticated, async functio
     }
 });
 
+app.get('/auxiliary-police/duty-handover/view', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    })
+        .populate('sender')
+        .sort({ timestamp: -1 });
+
+    if (user) {
+        res.render('auxiliarypolice-dutyhandover-view', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4(),
+        });
+    }
+
+});
+
+
 // SEARCH DUTY HANDOVER
 app.get('/search-duty-handover', isAuthenticated, async function (req, res) {
     const { location, date, shift, time } = req.query;
 
     let shiftTime;
+    let adjustedDate = new Date(date);
 
     if (time === '0700') {
-        shiftTime = '2300'
-    }
-
-    if (time === '1500') {
+        shiftTime = '2300';
+        adjustedDate.setDate(adjustedDate.getDate() - 1); // Subtract one day
+    } else if (time === '1500') {
         shiftTime = '0700';
-    }
-
-    if (time === '2300') {
+    } else if (time === '2300') {
         shiftTime = '1500';
     }
 
     const results = await DutyHandoverAux.findOne({
         location: location,
-        date: new Date(date),
+        date: adjustedDate,
         time: shiftTime
     });
 
@@ -8349,6 +8372,141 @@ const clearQRCodeData = async () => {
     }
 };
 
+// location mappings
+const locationMappings = {
+    'Baitul Makmur I': [
+        { checkpointName: 'Parameter 1', time: '', logReport: '' },
+        { checkpointName: 'Parameter 2', time: '', logReport: '' },
+        { checkpointName: 'Parameter 3', time: '', logReport: '' },
+        { checkpointName: 'Parameter 4', time: '', logReport: '' },
+        { checkpointName: 'Basement 1', time: '', logReport: '' },
+        { checkpointName: 'Basement 2', time: '', logReport: '' },
+        { checkpointName: 'Basement 3', time: '', logReport: '' },
+        { checkpointName: 'Basement 4', time: '', logReport: '' },
+        { checkpointName: 'Club House', time: '', logReport: '' },
+        { checkpointName: 'Old Cafe', time: '', logReport: '' },
+        { checkpointName: 'Level 4', time: '', logReport: '' },
+        { checkpointName: 'Level 8', time: '', logReport: '' }
+    ],
+    'Baitul Makmur II': [
+        { checkpointName: 'Basement 1 (a)', time: '', logReport: '' },
+        { checkpointName: 'Basement 1 (b)', time: '', logReport: '' },
+        { checkpointName: 'Basement 1 (c)', time: '', logReport: '' },
+        { checkpointName: 'Basement 2 (a)', time: '', logReport: '' },
+        { checkpointName: 'Basement 2 (b)', time: '', logReport: '' },
+        { checkpointName: 'Basement 2 (c)', time: '', logReport: '' },
+        { checkpointName: 'Ground Floor 1', time: '', logReport: '' },
+        { checkpointName: 'Ground Floor 2', time: '', logReport: '' },
+        { checkpointName: 'Level 8', time: '', logReport: '' },
+        { checkpointName: 'Level 17', time: '', logReport: '' },
+        { checkpointName: 'Level 5 (a)', time: '', logReport: '' },
+        { checkpointName: 'Level 5 (b)', time: '', logReport: '' },
+        {
+            checkpointName: 'Genset Outside Building',
+            time: '',
+            logReport: ''
+        },
+        { checkpointName: 'Emergency Entrance', time: '', logReport: '' },
+        { checkpointName: 'Outside Cafe 1', time: '', logReport: '' },
+        { checkpointName: 'Outside Cafe 2', time: '', logReport: '' },
+        { checkpointName: 'Service Lift Level 6', time: '', logReport: '' },
+        { checkpointName: 'Service Lift Level 10', time: '', logReport: '' },
+        { checkpointName: 'Service Lift Level 11', time: '', logReport: '' }
+    ],
+    'Jamek Mosque': [
+        { checkpointName: 'Bilal Area', time: '', logReport: '' },
+        { checkpointName: 'Mosque Tower', time: '', logReport: '' },
+        { checkpointName: 'Cooling Tower', time: '', logReport: '' },
+        { checkpointName: 'Mimbar Area', time: '', logReport: '' },
+        { checkpointName: 'First Gate', time: '', logReport: '' }
+    ],
+    'City Mosque': [
+        { checkpointName: 'Main Entrance', time: '', logReport: '' },
+        { checkpointName: 'Gate 2', time: '', logReport: '' },
+        {
+            checkpointName: 'Backside Mosque (cemetery)',
+            time: '',
+            logReport: ''
+        },
+        { checkpointName: 'Muslimah Pray Area', time: '', logReport: '' }
+    ],
+    'Raudhatul Sakinah': [
+        { checkpointName: 'Cemetery Area 1', time: '', logReport: '' },
+        { checkpointName: 'Cemetery Area 2', time: '', logReport: '' },
+        { checkpointName: 'Cemetery Area 3', time: '', logReport: '' },
+        { checkpointName: 'Cemetery Area 4', time: '', logReport: '' },
+        { checkpointName: 'Office Area 1', time: '', logReport: '' },
+        { checkpointName: 'Office Area 2', time: '', logReport: '' },
+        { checkpointName: 'Office Area 3', time: '', logReport: '' }
+    ]
+};
+
+// Helper function to calculate cycle amounts
+function calculateCycleAmount(index) {
+    return index === 8 ? 8 : 4; // Example logic
+}
+
+// Function to create a new patrol report
+const createPatrolReport = async (dutyHandoverId, location, date, shift, startTime, selectedNames) => {
+    let endTime = '';
+    let cycleAmount = '';
+
+    if (startTime === '0700') {
+        endTime = '1500';
+    } else if (startTime === '1500') {
+        endTime = '2300';
+    } else if (startTime === '2300') {
+        endTime = '0700';
+        cycleAmount = 8;
+    }
+
+    const confirmLocation = locationMappings[location] || [];
+    confirmLocation.forEach(checkpoint => checkpoint.fullName = '');
+
+    const cycles = [];
+    const cycleAmounts = { '0700': 4, '1500': 4, '2300': 8 };
+    const timeSlotOffsets = { '0700': 0, '1500': 0, '2300': 0 };
+    const timeSlotIncrements = { '0700': 200, '1500': 200, '2300': 100 };
+
+    const timeSlotStartOffset = timeSlotOffsets[startTime];
+    const timeSlotIncrement = timeSlotIncrements[startTime];
+
+    for (let i = 0; i < cycleAmounts[startTime]; i++) {
+        const timeSlotStart = (parseInt(startTime, 10) + i * timeSlotIncrement + timeSlotStartOffset) % 2400;
+        const timeSlotEnd = (timeSlotStart + timeSlotIncrement) % 2400;
+        const currentCycleAmount = calculateCycleAmount(i + 1);
+
+        cycles.push({
+            cycleSeq: i + 1,
+            cycleAmount: currentCycleAmount,
+            timeSlot: `${timeSlotStart.toString().padStart(4, '0')}-${timeSlotEnd.toString().padStart(4, '0')}`,
+            checkpoint: confirmLocation
+        });
+    }
+
+    const newPatrolReport = new PatrolAux({
+        reportId: dutyHandoverId,
+        type: 'Shift Member Location',
+        shift: shift,
+        startShift: startTime,
+        endShift: endTime,
+        date: new Date(date),
+        location: location,
+        status: 'Open',
+        staff: selectedNames,
+        shiftMember: { cycle: cycles },
+        timestamp: new Date()
+    });
+
+    try {
+        await newPatrolReport.save();
+        return newPatrolReport;
+    } catch (error) {
+        throw new Error('Error creating patrol report: ' + error.message);
+    }
+};
+
+//  for restricted-link
 const allowedIPs = ['175.140.45.73', '104.28.242.42'];
 
 function restrictAccess(req, res, next) {
