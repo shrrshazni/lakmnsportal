@@ -4748,10 +4748,35 @@ app.get('/auxiliary-police/duty-handover/view', isAuthenticated, async function 
         .sort({ timestamp: -1 });
 
     if (user) {
+        const bmi = await DutyHandoverAux.find({
+            location: 'Baitul Makmur I',
+        }).sort({ date: -1 });
+
+        const bmii = await DutyHandoverAux.find({
+            location: 'Baitul Makmur II',
+        }).sort({ date: -1 });
+
+        const jm = await DutyHandoverAux.find({
+            location: 'Jamek Mosque',
+        }).sort({ date: -1 });
+
+        const cm = await DutyHandoverAux.find({
+            location: 'City Mosque',
+        }).sort({ date: -1 });
+
+        const rs = await DutyHandoverAux.find({
+            location: 'Raudhatul Sakinah',
+        }).sort({ date: -1 });
+
         res.render('auxiliarypolice-dutyhandover-view', {
             user: user,
             notifications: notifications,
             uuid: uuidv4(),
+            bmi: bmi,
+            bmii: bmii,
+            jm: jm,
+            cm: cm,
+            rs: rs
         });
     }
 

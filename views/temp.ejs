@@ -1,142 +1,377 @@
+<div class="mb-3">
+  <div id="locationButtons">
+    <button id="btn-baitul-makmur-i" class="btn btn-primary btn-location me-2" data-location="baitul-makmur-i">Baitul Makmur I</button>
+    <button id="btn-baitul-makmur-ii" class="btn btn-outline-secondary btn-location me-2" data-location="baitul-makmur-ii">Baitul Makmur II</button>
+    <button id="btn-jamek-mosque" class="btn btn-outline-secondary btn-location me-2" data-location="jamek-mosque">Jamek Mosque</button>
+    <button id="btn-city-mosque" class="btn btn-outline-secondary btn-location me-2" data-location="city-mosque">City Mosque</button>
+    <button id="btn-raudhatul-sakinah" class="btn btn-outline-secondary btn-location me-2" data-location="raudhatul-sakinah">Raudhatul Sakinah</button>
+  </div>
+
+  <hr>
+
+  <div id="detailsBaitulMakmurI" class="content-section">
+    <div class="mb-5" id="shiftButtonsBaitulMakmurI">
+      <button type="button" class="btn btn-primary btn-shift" data-location="baitul-makmur-i" data-shift="A">Shift A</button>
+      <button type="button" class="btn btn-outline-secondary btn-shift" data-location="baitul-makmur-i" data-shift="B">Shift B</button>
+      <button type="button" class="btn btn-outline-secondary btn-shift" data-location="baitul-makmur-i" data-shift="C">Shift C</button>
+    </div>
+    <h3>Baitul Makmur I</h3>
+    <div id="detailsBaitulMakmurIA" class="mt-3 shift-details">
+      <p>Details for Baitul Makmur I - Shift A...</p>
+    </div>
+    <div id="detailsBaitulMakmurIB" class="mt-3 d-none shift-details">
+      <p>Details for Baitul Makmur I - Shift B...</p>
+    </div>
+    <div id="detailsBaitulMakmurIC" class="mt-3 d-none shift-details">
+      <p>Details for Baitul Makmur I - Shift C...</p>
+    </div>
+  </div>
+
+  <div id="detailsBaitulMakmurII" class="content-section d-none">
+    <div class="mb-5" id="shiftButtonsBaitulMakmurII">
+      <button type="button" class="btn btn-primary btn-shift" data-location="baitul-makmur-ii" data-shift="A">Shift A</button>
+      <button type="button" class="btn btn-outline-secondary btn-shift" data-location="baitul-makmur-ii" data-shift="B">Shift B</button>
+      <button type="button" class="btn btn-outline-secondary btn-shift" data-location="baitul-makmur-ii" data-shift="C">Shift C</button>
+    </div>
+    <h3>Baitul Makmur II</h3>
+    <div id="detailsBaitulMakmurIIA" class="mt-3 shift-details">
+      <p>Details for Baitul Makmur II - Shift A...</p>
+    </div>
+    <div id="detailsBaitulMakmurIIB" class="mt-3 d-none shift-details">
+      <p>Details for Baitul Makmur II - Shift B...</p>
+    </div>
+    <div id="detailsBaitulMakmurIIC" class="mt-3 d-none shift-details">
+      <p>Details for Baitul Makmur II - Shift C...</p>
+    </div>
+  </div>
+
+  <div id="detailsJamekMosque" class="content-section d-none">
+    <div class="mb-5" id="shiftButtonsJamekMosque">
+      <button type="button" class="btn btn-primary btn-shift" data-location="jamek-mosque" data-shift="A">Shift A</button>
+      <button type="button" class="btn btn-outline-secondary btn-shift" data-location="jamek-mosque" data-shift="B">Shift B</button>
+      <button type="button" class="btn btn-outline-secondary btn-shift" data-location="jamek-mosque" data-shift="C">Shift C</button>
+    </div>
+    <h3>Jamek Mosque</h3>
+    <div id="detailsJamekMosqueA" class="mt-3 shift-details">
+      <p>Details for Jamek Mosque - Shift A...</p>
+    </div>
+    <div id="detailsJamekMosqueB" class="mt-3 d-none shift-details">
+      <p>Details for Jamek Mosque - Shift B...</p>
+    </div>
+    <div id="detailsJamekMosqueC" class="mt-3 d-none shift-details">
+      <p>Details for Jamek Mosque - Shift C...</p>
+    </div>
+  </div>
+
+  <div id="detailsCityMosque" class="content-section d-none">
+    <div class="mb-5" id="shiftButtonsCityMosque">
+      <button type="button" class="btn btn-primary btn-shift" data-location="city-mosque" data-shift="A">Shift A</button>
+      <button type="button" class="btn btn-outline-secondary btn-shift" data-location="city-mosque" data-shift="B">Shift B</button>
+      <button type="button" class="btn btn-outline-secondary btn-shift" data-location="city-mosque" data-shift="C">Shift C</button>
+    </div>
+    <h3>City Mosque</h3>
+    <div id="detailsCityMosqueA" class="mt-3 shift-details">
+      <p>Details for City Mosque - Shift A...</p>
+    </div>
+    <div id="detailsCityMosqueB" class="mt-3 d-none shift-details">
+      <p>Details for City Mosque - Shift B...</p>
+    </div>
+    <div id="detailsCityMosqueC" class="mt-3 d-none shift-details">
+      <p>Details for City Mosque - Shift C...</p>
+    </div>
+  </div>
+
+  <div id="detailsRaudhatulSakinah" class="content-section d-none">
+    <div class="mb-5" id="shiftButtonsRaudhatulSakinah">
+      <button type="button" class="btn btn-primary btn-shift" data-location="raudhatul-sakinah" data-shift="A">Shift A</button>
+      <button type="button" class="btn btn-outline-secondary btn-shift" data-location="raudhatul-sakinah" data-shift="B">Shift B</button>
+      <button type="button" class="btn btn-outline-secondary btn-shift" data-location="raudhatul-sakinah" data-shift="C">Shift C</button>
+    </div>
+    <h3>Raudhatul Sakinah</h3>
+    <div id="detailsRaudhatulSakinahA" class="mt-3 shift-details">
+      <p>Details for Raudhatul Sakinah - Shift A...</p>
+    </div>
+    <div id="detailsRaudhatulSakinahB" class="mt-3 d-none shift-details">
+      <p>Details for Raudhatul Sakinah - Shift B...</p>
+    </div>
+    <div id="detailsRaudhatulSakinahC" class="mt-3 d-none shift-details">
+      <p>Details for Raudhatul Sakinah - Shift C...</p>
+    </div>
+  </div>
+</div>
+
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      const selectedDateInput = document.getElementById('selectedDate-date');
-      const selectedLocationInput = document.getElementById('floatingSelectTask');
+  document.addEventListener('DOMContentLoaded', () => {
 
-      const chart = echarts.init(document.getElementById('calendar-chart'), null, {
-        devicePixelRatio: window.devicePixelRatio > 1 ? 2 : 1,
-        renderer: 'canvas',
-        width: 'auto',
-        height: 'auto'
+    // Function to show Baitul Makmur I location section and shifts
+    function showBaitulMakmurI() {
+      hideAllLocations();
+      const section = document.getElementById('detailsBaitulMakmurI');
+      if (section) {
+        section.classList.remove('d-none');
+      }
+      setActiveButton('btn-baitul-makmur-i');
+
+      // Event listeners for Baitul Makmur I shift buttons
+      const shiftButtons = document.querySelectorAll('#shiftButtonsBaitulMakmurI .btn-shift');
+      shiftButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          const shiftId = button.dataset.shift;
+          showShiftBaitulMakmurI(shiftId);
+        });
+      });
+    }
+
+    // Function to show Baitul Makmur I shift section
+    function showShiftBaitulMakmurI(shiftId) {
+      // Hide all shift details sections within Baitul Makmur I
+      const allShiftDetails = document.querySelectorAll('#detailsBaitulMakmurI .shift-details');
+      allShiftDetails.forEach(detail => {
+        detail.classList.add('d-none');
       });
 
-      const option = {
-        tooltip: {
-          trigger: 'item',
-          axisPointer: {
-            type: 'none'
-          },
-          padding: [7, 10],
-          backgroundColor: getColor('bg-body', 'background-color'),
-          borderColor: theme.secondary_subtle,
-          textStyle: {
-            color: getColor('link-primary', 'color')
-          },
-          borderWidth: 1,
-          transitionDuration: 0,
-          extraCssText: 'z-index: 1000'
-        },
-        visualMap: {
-          min: 0,
-          max: 1000,
-          calculable: true,
-          show: false,
-          color: [
-            getColor('bg-warning', 'background-color'),
-            getColor('bg-warning-light', 'background-color'),
-            getColor('bg-warning-lighter', 'background-color')
-          ]
-        },
-        calendar: {
-          orient: 'vertical',
-          range: dateInput.value.substring(0, 7), // Default month
-          width: '99%',
-          height: '85.5%',
-          left: '2',
-          right: 'auto',
-          top: 42,
-          yearLabel: {
-            show: false
-          },
-          monthLabel: {
-            show: false
-          },
-          dayLabel: {
-            firstDay: 0,
-            nameMap: ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'],
-            margin: 24,
-            color: getColor('link-primary', 'color'),
-            fontFamily: 'Nunito Sans',
-            fontWeight: 700
-          },
-          splitLine: {
-            show: false
-          },
-          itemStyle: {
-            color: getColor('bg-body', 'background-color'),
-            borderColor: theme.secondary_subtle
-          }
-        },
-        series: [{
-          type: 'scatter',
-          coordinateSystem: 'calendar',
-          data: [],
-          symbolSize: function(val) {
-            return Math.sqrt(val[1]) * 8; // Adjust size based on square root of value
-          },
-          itemStyle: {
-            color: getColor('bg-warning', 'background-color'),
-            opacity: 0.8
-          }
-        }]
-      };
+      // Show the selected shift details section for Baitul Makmur I
+      const selectedShiftDetail = document.getElementById(`detailsBaitulMakmurI${shiftId}`);
+      if (selectedShiftDetail) {
+        selectedShiftDetail.classList.remove('d-none');
+      }
 
-      chart.setOption(option);
+      // Set active style for clicked shift button
+      const allShiftButtons = document.querySelectorAll('#shiftButtonsBaitulMakmurI .btn-shift');
+      allShiftButtons.forEach(button => {
+        button.classList.remove('btn-primary');
+        button.classList.add('btn-outline-secondary');
+      });
 
-      const fetchData = () => {
-        const selectedDate = selectedDateInput.value;
-        const selectedLocation = selectedLocationInput.value;
+      const activeButton = document.querySelector(`#shiftButtonsBaitulMakmurI .btn-shift[data-shift="${shiftId}"]`);
+      if (activeButton) {
+        activeButton.classList.remove('btn-outline-secondary');
+        activeButton.classList.add('btn-primary');
+      }
+    }
 
-        if (selectedDate && selectedLocation) {
-          fetch(`/calendar-data?date=${selectedDate}&location=${selectedLocation}`)
-            .then(response => response.json())
-            .then(data => {
-              let values = data.map(item => item[1]);
-              let minValue = Math.min(...values);
-              let maxValue = Math.max(...values);
+    // Function to show Baitul Makmur II location section and shifts
+    function showBaitulMakmurII() {
+      hideAllLocations();
+      const section = document.getElementById('detailsBaitulMakmurII');
+      if (section) {
+        section.classList.remove('d-none');
+      }
+      setActiveButton('btn-baitul-makmur-ii');
 
-              chart.setOption({
-                tooltip: {
-                  trigger: 'item',
-                  axisPointer: {
-                    type: 'none'
-                  },
-                  padding: [7, 10],
-                  backgroundColor: getColor('bg-body', 'background-color'),
-                  borderColor: theme.secondary_subtle,
-                  textStyle: {
-                    color: getColor('link-primary', 'color')
-                  },
-                  borderWidth: 1,
-                  transitionDuration: 0,
-                  extraCssText: 'z-index: 1000',
-                  formatter: function(params) {
-                    const data = params.data;
-                    let tooltipHtml = `<b>Date: ${data[0]}</b><br/>`;
-                    data[2].forEach(shift => {
-                      tooltipHtml += `<b>${shift.shiftName}:</b> ${shift.staff.join(', ')}<br/>`;
-                    });
-                    return tooltipHtml;
-                  }
-                },
-                visualMap: {
-                  min: minValue,
-                  max: maxValue
-                },
-                series: [{
-                  data: data.map(item => [item.date, item.shifts.reduce((sum, shift) => sum + shift.staff.length, 0), item.shifts]),
-                }]
-              });
-            })
-            .catch(error => console.error('Error fetching data:', error));
+      // Event listeners for Baitul Makmur II shift buttons
+      const shiftButtons = document.querySelectorAll('#shiftButtonsBaitulMakmurII .btn-shift');
+      shiftButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          const shiftId = button.dataset.shift;
+          showShiftBaitulMakmurII(shiftId);
+        });
+      });
+    }
+
+    // Function to show Baitul Makmur II shift section
+    function showShiftBaitulMakmurII(shiftId) {
+      // Hide all shift details sections within Baitul Makmur II
+      const allShiftDetails = document.querySelectorAll('#detailsBaitulMakmurII .shift-details');
+      allShiftDetails.forEach(detail => {
+        detail.classList.add('d-none');
+      });
+
+      // Show the selected shift details section for Baitul Makmur II
+      const selectedShiftDetail = document.getElementById(`detailsBaitulMakmurII${shiftId}`);
+      if (selectedShiftDetail) {
+        selectedShiftDetail.classList.remove('d-none');
+      }
+
+      // Set active style for clicked shift button
+      const allShiftButtons = document.querySelectorAll('#shiftButtonsBaitulMakmurII .btn-shift');
+      allShiftButtons.forEach(button => {
+        button.classList.remove('btn-primary');
+        button.classList.add('btn-outline-secondary');
+      });
+
+      const activeButton = document.querySelector(`#shiftButtonsBaitulMakmurII .btn-shift[data-shift="${shiftId}"]`);
+      if (activeButton) {
+        activeButton.classList.remove('btn-outline-secondary');
+        activeButton.classList.add('btn-primary');
+      }
+    }
+
+    // Function to show Jamek Mosque location section and shifts
+    function showJamekMosque() {
+      hideAllLocations();
+      const section = document.getElementById('detailsJamekMosque');
+      if (section) {
+        section.classList.remove('d-none');
+      }
+      setActiveButton('btn-jamek-mosque');
+
+      // Event listeners for Jamek Mosque shift buttons
+      const shiftButtons = document.querySelectorAll('#shiftButtonsJamekMosque .btn-shift');
+      shiftButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          const shiftId = button.dataset.shift;
+          showShiftJamekMosque(shiftId);
+        });
+      });
+    }
+
+    // Function to show Jamek Mosque shift section
+    function showShiftJamekMosque(shiftId) {
+      // Hide all shift details sections within Jamek Mosque
+      const allShiftDetails = document.querySelectorAll('#detailsJamekMosque .shift-details');
+      allShiftDetails.forEach(detail => {
+        detail.classList.add('d-none');
+      });
+
+      // Show the selected shift details section for Jamek Mosque
+      const selectedShiftDetail = document.getElementById(`detailsJamekMosque${shiftId}`);
+      if (selectedShiftDetail) {
+        selectedShiftDetail.classList.remove('d-none');
+      }
+
+      // Set active style for clicked shift button
+      const allShiftButtons = document.querySelectorAll('#shiftButtonsJamekMosque .btn-shift');
+      allShiftButtons.forEach(button => {
+        button.classList.remove('btn-primary');
+        button.classList.add('btn-outline-secondary');
+      });
+
+      const activeButton = document.querySelector(`#shiftButtonsJamekMosque .btn-shift[data-shift="${shiftId}"]`);
+      if (activeButton) {
+        activeButton.classList.remove('btn-outline-secondary');
+        activeButton.classList.add('btn-primary');
+      }
+    }
+
+    // Function to show City Mosque location section and shifts
+    function showCityMosque() {
+      hideAllLocations();
+      const section = document.getElementById('detailsCityMosque');
+      if (section) {
+        section.classList.remove('d-none');
+      }
+      setActiveButton('btn-city-mosque');
+
+      // Event listeners for City Mosque shift buttons
+      const shiftButtons = document.querySelectorAll('#shiftButtonsCityMosque .btn-shift');
+      shiftButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          const shiftId = button.dataset.shift;
+          showShiftCityMosque(shiftId);
+        });
+      });
+    }
+
+    // Function to show City Mosque shift section
+    function showShiftCityMosque(shiftId) {
+      // Hide all shift details sections within City Mosque
+      const allShiftDetails = document.querySelectorAll('#detailsCityMosque .shift-details');
+      allShiftDetails.forEach(detail => {
+        detail.classList.add('d-none');
+      });
+
+      // Show the selected shift details section for City Mosque
+      const selectedShiftDetail = document.getElementById(`detailsCityMosque${shiftId}`);
+      if (selectedShiftDetail) {
+        selectedShiftDetail.classList.remove('d-none');
+      }
+
+      // Set active style for clicked shift button
+      const allShiftButtons = document.querySelectorAll('#shiftButtonsCityMosque .btn-shift');
+      allShiftButtons.forEach(button => {
+        button.classList.remove('btn-primary');
+        button.classList.add('btn-outline-secondary');
+      });
+
+      const activeButton = document.querySelector(`#shiftButtonsCityMosque .btn-shift[data-shift="${shiftId}"]`);
+      if (activeButton) {
+        activeButton.classList.remove('btn-outline-secondary');
+        activeButton.classList.add('btn-primary');
+      }
+    }
+
+    // Function to show Raudhatul Sakinah location section and shifts
+    function showRaudhatulSakinah() {
+      hideAllLocations();
+      const section = document.getElementById('detailsRaudhatulSakinah');
+      if (section) {
+        section.classList.remove('d-none');
+      }
+      setActiveButton('btn-raudhatul-sakinah');
+
+      // Event listeners for Raudhatul Sakinah shift buttons
+      const shiftButtons = document.querySelectorAll('#shiftButtonsRaudhatulSakinah .btn-shift');
+      shiftButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          const shiftId = button.dataset.shift;
+          showShiftRaudhatulSakinah(shiftId);
+        });
+      });
+    }
+
+    // Function to show Raudhatul Sakinah shift section
+    function showShiftRaudhatulSakinah(shiftId) {
+      // Hide all shift details sections within Raudhatul Sakinah
+      const allShiftDetails = document.querySelectorAll('#detailsRaudhatulSakinah .shift-details');
+      allShiftDetails.forEach(detail => {
+        detail.classList.add('d-none');
+      });
+
+      // Show the selected shift details section for Raudhatul Sakinah
+      const selectedShiftDetail = document.getElementById(`detailsRaudhatulSakinah${shiftId}`);
+      if (selectedShiftDetail) {
+        selectedShiftDetail.classList.remove('d-none');
+      }
+
+      // Set active style for clicked shift button
+      const allShiftButtons = document.querySelectorAll('#shiftButtonsRaudhatulSakinah .btn-shift');
+      allShiftButtons.forEach(button => {
+        button.classList.remove('btn-primary');
+        button.classList.add('btn-outline-secondary');
+      });
+
+      const activeButton = document.querySelector(`#shiftButtonsRaudhatulSakinah .btn-shift[data-shift="${shiftId}"]`);
+      if (activeButton) {
+        activeButton.classList.remove('btn-outline-secondary');
+        activeButton.classList.add('btn-primary');
+      }
+    }
+
+    // Function to hide all location sections
+    function hideAllLocations() {
+      const locations = ['detailsBaitulMakmurI', 'detailsBaitulMakmurII', 'detailsJamekMosque', 'detailsCityMosque', 'detailsRaudhatulSakinah'];
+      locations.forEach(loc => {
+        const section = document.getElementById(loc);
+        if (section) {
+          section.classList.add('d-none');
         }
-      };
-
-      selectedDateInput.addEventListener('change', fetchData);
-      selectedLocationInput.addEventListener('change', fetchData);
-
-      window.addEventListener('resize', function() {
-        chart.resize();
       });
-    });
-  </script>
+    }
+
+    // Function to set active style for location button
+    function setActiveButton(buttonId) {
+      const allLocationButtons = document.querySelectorAll('.btn-location');
+      allLocationButtons.forEach(button => {
+        button.classList.remove('btn-primary');
+        button.classList.add('btn-outline-secondary');
+      });
+
+      const activeButton = document.getElementById(buttonId);
+      if (activeButton) {
+        activeButton.classList.remove('btn-outline-secondary');
+        activeButton.classList.add('btn-primary');
+      }
+    }
+
+    // Event listeners for location buttons
+    document.getElementById('btn-baitul-makmur-i').addEventListener('click', showBaitulMakmurI);
+    document.getElementById('btn-baitul-makmur-ii').addEventListener('click', showBaitulMakmurII);
+    document.getElementById('btn-jamek-mosque').addEventListener('click', showJamekMosque);
+    document.getElementById('btn-city-mosque').addEventListener('click', showCityMosque);
+    document.getElementById('btn-raudhatul-sakinah').addEventListener('click', showRaudhatulSakinah);
+
+    // Initial display: Show Baitul Makmur I section and its shifts by default
+    showBaitulMakmurI();
+  });
+</script>
