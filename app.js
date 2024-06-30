@@ -5137,11 +5137,86 @@ app.get('/auxiliary-police/patrol/patrol-unit/view', isAuthenticated, async func
             user: user,
             notifications: notifications,
             uuid: uuidv4(),
+            patrolUnit: patrolUnit
         });
 
     }
 });
 
+app.get('/auxiliary-police/patrol/patrol-unit/details/:id', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    })
+        .populate('sender')
+        .sort({ timestamp: -1 });
+
+    const reportId = req.params.id;
+
+    if (user) {
+
+        const checkReport = await PatrolAux.findOne({
+            _id: reportId
+        });
+
+        // Check for amount of time for checkpoint being submit or not
+        let nonEmptyTimeCount = 0;
+        const totalPatrolUnits = checkReport.patrolUnit.length;
+
+        console.log(checkReport.patrolUnit.length);
+
+        // Check each patrol unit for non-empty time
+        checkReport.patrolUnit.forEach(patrolUnit => {
+            if (patrolUnit.time && patrolUnit.time.trim() !== '') {
+                nonEmptyTimeCount++;
+            }
+        });
+
+        const percentageNonEmptyTime =
+            (nonEmptyTimeCount / totalPatrolUnits) * 100;
+
+
+        res.render('auxiliarypolice-patrol-patrolunit-detail', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4(),
+            // patrol report
+            patrolReport: checkReport,
+            percentage: percentageNonEmptyTime.toString(),
+            reportId: reportId,
+        });
+    }
+});
+
+// MAP COORDINATES
+app.get('/map-coordinates/:reportId', async (req, res) => {
+    const reportId = req.params.reportId;
+
+    try {
+        // Use findOne to find a single report based on the reportId
+        const patrolReport = await PatrolAux.findOne({ _id: reportId });
+
+        if (!patrolReport) {
+            return res.status(404).json({ error: 'Report not found' });
+        }
+
+        // Extract checkpoint coordinates within the patrolReport and format them
+        const checkpointCoordinates = patrolReport.patrolUnit.map(checkpoint => [
+            checkpoint.longitude,
+            checkpoint.latitude
+        ]);
+
+        // Send the retrieved checkpoint coordinates as JSON
+        res.json(checkpointCoordinates);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+// Select fullname
 app.get(
     '/shift-member/fullname-submit/:location/:checkpointName',
     async function (req, res) {
@@ -7500,22 +7575,11 @@ cron.schedule(
 
 // PATROL UNIT
 
-// SCHEDULER SUBMIT EVERYDAY 8 AM
-const scheduler = async data => {
-    const submitData = await PatrolReport.create(data);
-
-    if (submitData) {
-        console.log('Patrol unit submitted');
-    } else {
-        console.log('Error');
-    }
-};
-
-// INSERT PATROL UNIT DATA WITH 4 CHECKPOINT
 cron.schedule(
     '0 8 * * *',
     () => {
-        const dateToday = dateLocal.getDate();
+        console.log('Running cron job to update patrol unit status');
+
         const checkpointData = [
             {
                 checkpointName: 'Mufti Residence',
@@ -7542,7 +7606,7 @@ cron.schedule(
         const patrolUnitData = {
             reportId: uuidv4(),
             type: 'Patrol Unit',
-            date: dateToday,
+            date: new Date(),
             status: 'Open',
             startShift: '08:00',
             endShift: '17:00',
@@ -7551,10 +7615,11 @@ cron.schedule(
         };
 
         scheduler(patrolUnitData);
+
     },
     {
         scheduled: true,
-        timezone: 'Asia/Kuala_Lumpur' // Set the timezone to Malaysia
+        timezone: 'Asia/Kuala_Lumpur' // Adjust timezone accordingly
     }
 );
 
@@ -7567,7 +7632,7 @@ cron.schedule(
             console.log(dateToday);
 
             // Update status of Patrol Reports with today's date to 'Closed'
-            const patrolUnit = await PatrolReport.findOneAndUpdate(
+            const patrolUnit = await PatrolAux.findOneAndUpdate(
                 { date: dateToday, status: 'Open' },
                 { $set: { status: 'Closed' } }
             );
@@ -7589,6 +7654,17 @@ cron.schedule(
     }
 );
 
+// SCHEDULER SUBMIT EVERYDAY 8 AM
+const scheduler = async data => {
+    const submitData = await PatrolAux.create(data);
+
+    if (submitData) {
+        console.log('Patrol unit submitted');
+    } else {
+        console.log('Error');
+    }
+};
+
 //EMAIL
 app.get('/email', isAuthenticated, async function (req, res) {
     const username = req.user.username;
@@ -7604,6 +7680,7 @@ app.get('/email', isAuthenticated, async function (req, res) {
         uuid: uuidv4(),
     });
 });
+
 
 // FUNCTIONS
 
