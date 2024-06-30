@@ -1,0 +1,38 @@
+<%- include("partials/public-header.ejs") %>
+
+<main class="main">
+  <div class="container">
+    <div class="row flex-center min-vh-100 py-5">
+      <div class="col-sm-10 col-md-8 col-lg-5 col-xl-5 col-xxl-3">
+        <a class="d-flex flex-center text-decoration-none mb-4" href="/">
+          <div class="d-flex align-items-center fw-bolder fs-5 d-inline-block">
+            <img src="../../../assets/img/icons/logo.png" alt="phoenix" width="75" />
+          </div>
+        </a>
+        <div class="text-center mb-6 ms-n2">
+          <h4 class="text-1000">Choose your full name</h4>
+
+          <% if (patrolReport) { %>
+          <p><strong>Location : <%= patrolReport.location %></strong></p>
+          <p>Date: <%= patrolReport.date %></p>
+          <p>Report: <%= patrolReport.reportId %></p>
+
+          <% if (patrolReport.staff && patrolReport.staff.length > 0) { %>
+          <% patrolReport.staff.forEach(function(staffMember) { %>
+          <a href="/shift-member/checkpoint-submit/<%= location %>/<%= checkpointName %>/<%= staffMember %>/<%= patrolReport._id %>" class="btn btn-outline-primary col-auto">
+            <%= staffMember %>
+          </a>
+          <% }); %>
+          <% } else { %>
+          <p>No staff information available.</p>
+          <% } %>
+
+          <% } else { %>
+          <p>No patrol report found for the current time and shift.</p>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+<%- include('partials/public-footer.ejs') %>

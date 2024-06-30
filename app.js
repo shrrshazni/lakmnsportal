@@ -452,13 +452,12 @@ const patrolSchema = new mongoose.Schema({
     reportId: String,
     shift: String,
     type: String,
-    date: String,
+    date: Date,
     location: String,
     status: String,
     startShift: String,
     endShift: String,
-    summary: String,
-    notes: String,
+    remarks: String,
     staff: [],
     shiftMember: shiftMember,
     patrolUnit: [checkpoint],
@@ -4782,7 +4781,6 @@ app.get('/auxiliary-police/duty-handover/view', isAuthenticated, async function 
 
 });
 
-
 // SEARCH DUTY HANDOVER
 app.get('/search-duty-handover', isAuthenticated, async function (req, res) {
     const { location, date, shift, time } = req.query;
@@ -4853,6 +4851,7 @@ app.get('/auxiliary-police/schedule/add', isAuthenticated, async function (req, 
         .sort({ timestamp: -1 });
 
     if (user) {
+
         res.render('auxiliarypolice-schedule-add', {
             user: user,
             notifications: notifications,
@@ -4948,6 +4947,385 @@ app.get('/auxiliary-police/schedule/add', isAuthenticated, async function (req, 
         }
 
     }
+});
+
+// PATROL
+
+// SHIFT MEMBER LOCATION
+app.get('/auxiliary-police/patrol/shift-member-location/view', async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    })
+        .populate('sender')
+        .sort({ timestamp: -1 });
+
+    if (user) {
+        const bmi = await PatrolAux.find({
+            location: 'Baitul Makmur I',
+            type: 'Shift Member Location'
+        }).sort({ date: -1 });
+
+        const bmii = await PatrolAux.find({
+            location: 'Baitul Makmur II',
+            type: 'Shift Member Location'
+        }).sort({ date: -1 });
+
+        const jm = await PatrolAux.find({
+            location: 'Jamek Mosque',
+            type: 'Shift Member Location'
+        }).sort({ date: -1 });
+
+        const cm = await PatrolAux.find({
+            location: 'City Mosque',
+            type: 'Shift Member Location'
+        }).sort({ date: -1 });
+
+        const rs = await PatrolAux.find({
+            location: 'Raudhatul Sakinah',
+            type: 'Shift Member Location'
+        }).sort({ date: -1 });
+
+        console.log(bmi);
+
+        res.render('auxiliarypolice-patrol-shiftmemberlocation-view', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4(),
+            bmi: bmi,
+            bmii: bmii,
+            jm: jm,
+            cm: cm,
+            rs: rs
+        });
+    }
+});
+
+app.get('/auxiliary-police/patrol/shift-member-location/details/:id', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    })
+        .populate('sender')
+        .sort({ timestamp: -1 });
+
+    if (user) {
+        const id = req.params.id;
+
+        const checkReport = await PatrolAux.findOne({ _id: id });
+
+        const shiftMemberCycles = checkReport.shiftMember.cycle;
+
+        const currentTime = new Date().toLocaleTimeString('en-MY', {
+            hour12: false,
+            timeZone: 'Asia/Kuala_Lumpur'
+        });
+        const currentTimeNumeric = parseInt(currentTime.replace(':', ''), 10);
+
+        for (const cycle of shiftMemberCycles) {
+            const startTimeNumeric = parseInt(cycle.timeSlot.split('-')[0], 10);
+            const endTimeNumeric = parseInt(cycle.timeSlot.split('-')[1], 10);
+
+            console.log(startTimeNumeric);
+            console.log(endTimeNumeric);
+
+            if (cycle.timeSlot === '2300-0000') {
+                if (
+                    currentTimeNumeric >= startTimeNumeric &&
+                    currentTimeNumeric >= endTimeNumeric
+                ) {
+                    var currentTimeSlot = cycle.timeSlot;
+                    break;
+                }
+            } else {
+                if (
+                    currentTimeNumeric >= startTimeNumeric &&
+                    currentTimeNumeric <= endTimeNumeric
+                ) {
+                    var currentTimeSlot = cycle.timeSlot;
+                    break;
+                }
+            }
+        }
+
+        if (currentTimeSlot === undefined) {
+            // Handle the case when no matching time slot is found
+            console.log('No matching time slot found.');
+        }
+
+        // Function to count times with values in a cycle
+        function countTimesWithValuesInCycle(cycle) {
+            let timesWithValuesCount = 0;
+
+            for (const checkpoint of cycle.checkpoint) {
+                // Check if the time property has a non-empty value
+                if (checkpoint.time && checkpoint.time.trim() !== '') {
+                    timesWithValuesCount++;
+                }
+            }
+
+            return timesWithValuesCount;
+        }
+
+        // Function to count total times in a cycle
+        function countTotalTimesInCycle(cycle) {
+            return cycle.checkpoint.length;
+        }
+
+        // Function to count total times with values in all cycles
+        function countTotalTimesWithValuesInShift(shiftMemberCycles) {
+            let totalTimesWithValuesInShift = 0;
+            let totalTimesInShift = 0;
+
+            for (const cycle of shiftMemberCycles) {
+                totalTimesWithValuesInShift += countTimesWithValuesInCycle(cycle);
+                totalTimesInShift += countTotalTimesInCycle(cycle);
+            }
+
+            return { totalTimesWithValuesInShift, totalTimesInShift };
+        }
+
+        // Count total times with values and total times in the shift
+        const { totalTimesWithValuesInShift, totalTimesInShift } =
+            countTotalTimesWithValuesInShift(shiftMemberCycles);
+
+        // Calculate percentage
+        const percentageTimesWithValuesInShift =
+            (totalTimesWithValuesInShift / totalTimesInShift) * 100;
+
+        console.log('Check Report', checkReport);
+        console.log('Shift Cycle', shiftMemberCycles);
+        console.log('Current time slot', currentTimeSlot);
+        console.log('Percentage', percentageTimesWithValuesInShift.toFixed(0));
+
+        res.render('auxiliarypolice-patrol-shiftmemberlocation-detail', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4(),
+            // data extracted
+            patrolReport: checkReport,
+            reportId: id,
+            cycle: shiftMemberCycles,
+            currentTimeSlot: currentTimeSlot,
+            progressReport: percentageTimesWithValuesInShift.toFixed(0),
+        });
+    }
+});
+
+// PATROL UNIT
+app.get('/auxiliary-police/patrol/patrol-unit/view', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    })
+        .populate('sender')
+        .sort({ timestamp: -1 });
+
+    if (user) {
+
+        const patrolUnit = await PatrolAux.find({
+            type: 'Patrol Unit'
+        }).sort({ date: -1 });
+
+        res.render('auxiliarypolice-patrol-patrolunit-view', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4(),
+        });
+
+    }
+});
+
+app.get(
+    '/shift-member/fullname-submit/:location/:checkpointName',
+    async function (req, res) {
+        // init the params from the link
+        const location = _.startCase(req.params.location.replace(/-/g, ' '));
+
+        // init the params from the link
+        const checkpointName = _.startCase(
+            req.params.checkpointName.replace(/-/g, ' ')
+        );
+
+        const today = moment().format('DD/MM/YY');
+        const yesterday = moment().subtract(1, 'days').format('DD/MM/YY');
+
+        console.log('Today:', today);
+        console.log('Yesterday:', yesterday);
+
+        const kualaLumpurTimeZoneOffset1 = 8; // Kuala Lumpur is UTC+8
+        const now1 = moment().utcOffset(kualaLumpurTimeZoneOffset1 * 60); // Convert hours to minutes
+
+        // Get the current time in the Asia/Kuala_Lumpur timezone
+        const currentTimeNumeric = now1.format('HHmm');
+
+        // Check if the current time is between 2300 and 0700
+        const isNightShift = currentTimeNumeric >= 2300 || currentTimeNumeric < 700;
+
+        if (isNightShift) {
+            const filteredReports1 = await PatrolReport.findOne({
+                location: location,
+                startShift: '2300',
+                $or: [{ date: today }, { date: yesterday }]
+            });
+
+            console.log(filteredReports1);
+
+            res.render('shift-member-submit', {
+                patrolReport: filteredReports1,
+                location: location,
+                checkpointName: checkpointName
+            });
+        } else {
+            const filteredReports2 = await PatrolReport.findOne({
+                location: location,
+                date: today,
+                startShift: { $lte: currentTimeNumeric },
+                endShift: { $gte: currentTimeNumeric }
+            });
+
+            console.log(filteredReports2);
+
+            res.render('shift-member-submit', {
+                patrolReport: filteredReports2,
+                location: location,
+                checkpointName: checkpointName
+            });
+        }
+    }
+);
+
+// SUBMIT DATA USING QR SCANNER
+app.get(
+    '/shift-member/checkpoint-submit/:location/:checkpointName/:shiftMember/:reportId',
+    async function (req, res) {
+        const checkUser = await User.findOne({ fullname: req.params.shiftMember });
+
+        const reportId = req.params.reportId;
+
+        // init the params from the link
+        const checkpointName = _.startCase(
+            req.params.checkpointName.replace(/-/g, ' ')
+        );
+        // init the params from the link
+        const location = _.startCase(req.params.location.replace(/-/g, ' '));
+
+        if (checkUser) {
+            // Find a patrol report where the staff array contains the user's full name
+            const patrolReport = await PatrolAux.findOne({
+                _id: reportId
+            });
+
+            if (patrolReport && patrolReport.status === 'Open') {
+                // Find the relevant cycle based on your logic and checkpointName
+                const cycleToUpdate = patrolReport.shiftMember.cycle.find(cycle =>
+                    cycle.checkpoint.some(
+                        checkpoint =>
+                            checkpoint.checkpointName === checkpointName &&
+                            isWithinTimeSlot(cycle.timeSlot)
+                    )
+                );
+
+                // Function to check if the current time is within the given time slot
+                function isWithinTimeSlot(timeSlot) {
+                    // Parse the start and end times from the time slot
+                    const [startTime, endTime] = timeSlot.split('-');
+
+                    // Get the current time in numeric format (e.g., HHmm)
+                    const currentTimeNumeric = new Date().toLocaleTimeString('en-MY', {
+                        hour12: false,
+                        timeZone: 'Asia/Kuala_Lumpur'
+                    });
+                    const currentTime = parseInt(currentTimeNumeric.replace(':', ''), 10);
+
+                    var startNumeric = '';
+                    var endNumeric = '';
+
+                    // Convert start and end times to numeric format
+                    startNumeric = parseInt(startTime.replace(':', ''), 10);
+                    endNumeric = parseInt(endTime.replace(':', ''), 10);
+
+                    if (endNumeric === 0) {
+                        endNumeric = 2400;
+                    }
+
+                    if (startNumeric <= endNumeric) {
+                        return currentTime >= startNumeric && currentTime <= endNumeric;
+                    } else {
+                        // Handle the case where the time slot spans midnight
+                        return currentTime >= startNumeric || currentTime <= endNumeric;
+                    }
+                }
+
+                if (cycleToUpdate) {
+                    // Find the checkpoint with the matching checkpointName
+                    const checkpointToUpdate = cycleToUpdate.checkpoint.find(
+                        checkpoint => checkpoint.checkpointName === checkpointName
+                    );
+
+                    if (checkpointToUpdate) {
+                        // Get the current time in numeric format (e.g., HHmm)
+                        const currentTimeNumeric1 = new Date().toLocaleTimeString('en-MY', {
+                            hour12: false,
+                            timeZone: 'Asia/Kuala_Lumpur'
+                        });
+                        const currentTime1 = parseInt(
+                            currentTimeNumeric1.replace(':', ''),
+                            10
+                        );
+
+                        const inputString = checkUser.fullname;
+
+                        // Update the time in the found checkpoint with the current time
+                        checkpointToUpdate.time = currentTime1 + 'HRS';
+                        checkpointToUpdate.logReport =
+                            checkpointName +
+                            ' have been patrol by ' +
+                            inputString +
+                            ' at ' +
+                            currentTime1 +
+                            'HRS';
+                        checkpointToUpdate.username = checkUser.username;
+                        checkpointToUpdate.fullName = inputString;
+
+                        // Save the changes to the database
+                        await patrolReport.save();
+
+                        console.log('Successful update using QR scanner!');
+
+                        res.render('submit-success');
+                    } else {
+                        console.log('Checkpoint not found in the cycle.');
+                        res.render('submit-failed');
+                    }
+                } else {
+                    console.log('Cycle not found.');
+                    res.render('submit-failed');
+                }
+            } else {
+                console.log(
+                    'No patrol report found for the user or the patrol report is already closed.'
+                );
+                res.render('submit-failed');
+            }
+        }
+    }
+);
+
+// SUBMIT SUCCESS
+
+app.get('/submit-success', async function (req, res) {
+    res.render('submit-success');
+});
+
+app.get('/submit-failed', async function (req, res) {
+    res.render('submit-failed');
 });
 
 //NOTIFICATIONS
@@ -7117,6 +7495,97 @@ cron.schedule(
     {
         scheduled: true,
         timezone: 'Asia/Kuala_Lumpur' // Adjust timezone accordingly
+    }
+);
+
+// PATROL UNIT
+
+// SCHEDULER SUBMIT EVERYDAY 8 AM
+const scheduler = async data => {
+    const submitData = await PatrolReport.create(data);
+
+    if (submitData) {
+        console.log('Patrol unit submitted');
+    } else {
+        console.log('Error');
+    }
+};
+
+// INSERT PATROL UNIT DATA WITH 4 CHECKPOINT
+cron.schedule(
+    '0 8 * * *',
+    () => {
+        const dateToday = dateLocal.getDate();
+        const checkpointData = [
+            {
+                checkpointName: 'Mufti Residence',
+                logReport: '',
+                time: ''
+            },
+            {
+                checkpointName: 'Encik Drahman Residence',
+                logReport: '',
+                time: ''
+            },
+            {
+                checkpointName: 'Ceo Residence',
+                logReport: '',
+                time: ''
+            },
+            {
+                checkpointName: 'Sicc',
+                logReport: '',
+                time: ''
+            }
+        ];
+
+        const patrolUnitData = {
+            reportId: uuidv4(),
+            type: 'Patrol Unit',
+            date: dateToday,
+            status: 'Open',
+            startShift: '08:00',
+            endShift: '17:00',
+            remarks: '',
+            patrolUnit: checkpointData
+        };
+
+        scheduler(patrolUnitData);
+    },
+    {
+        scheduled: true,
+        timezone: 'Asia/Kuala_Lumpur' // Set the timezone to Malaysia
+    }
+);
+
+cron.schedule(
+    '0 17 * * *',
+    async () => {
+        try {
+            const dateToday = dateLocal.getDate();
+
+            console.log(dateToday);
+
+            // Update status of Patrol Reports with today's date to 'Closed'
+            const patrolUnit = await PatrolReport.findOneAndUpdate(
+                { date: dateToday, status: 'Open' },
+                { $set: { status: 'Closed' } }
+            );
+
+            if (patrolUnit) {
+                console.log(
+                    `Patrol Reports for date ${dateToday} updated and closed at 5 PM`
+                );
+            } else {
+                console.log(`Failed to update`);
+            }
+        } catch (error) {
+            console.error('Error in scheduled task at 5 PM:', error);
+        }
+    },
+    {
+        scheduled: true,
+        timezone: 'Asia/Kuala_Lumpur'
     }
 );
 

@@ -1,0 +1,201 @@
+<%- include('partials/private-header.ejs') %>
+
+<div class="mb-6">
+
+  <div class="mb-5">
+    <nav class="mb-2" aria-label="breadcrumb">
+      <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item active fs-8"><%= patrolReport.location %></li>
+        <li class="breadcrumb-item active fs-8"><span class="badge badge-phoenix badge-phoenix-success ms-3 fs-9 mb-3"><%= patrolReport.status %></li>
+
+      </ol>
+    </nav>
+    <div class="d-flex justify-content-between row g-1">
+      <h2 class="col-12 col-xxl-auto">
+        Shift Member Location</span>
+      </h2>
+      <div class="col-12 col-xxl-auto">
+        <span class="fw-normal text-700 fw-bold fs-8 fs-lg-6 py-1 px-3 border border-primary rounded-pill"><%= patrolReport.date.toLocaleDateString('en-MY', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- body section -->
+  <div class="row gx-0 gx-sm-5 gy-8 mb-n5">
+    <div class="col-12 pe-xl-0">
+      <!-- first section -->
+      <div class="mb-4 mb-xl-7">
+        <div class="row gx-0 gx-sm-7">
+          <div class="col-12 col-xxl-4">
+            <div class="text-600 fw-semi-bold"><span class="fa-solid fa-flag me-2"></span>Shift : <strong class="text-1000"><%= patrolReport.shift %></strong></div>
+            <div class="text-600 fw-semi-bold"><span class="fa-solid fa-hourglass-start me-2"></span>Start Shift : <strong class="text-1000"><%= patrolReport.startShift %></strong></div>
+            <div class="text-600 fw-semi-bold"><span class="fa-solid fa-hourglass-end me-2"></span>End Shift : <strong class="text-1000"><%= patrolReport.endShift %></strong></div>
+          </div>
+          <div class="col-12 col-xxl-8">
+            <div class="text-600 fw-semi-bold"><span class="fa-solid fa-clipboard-user me-2"></span>Shift Members : </div>
+            <div id="giveShiftMemberDisplay" class="d-flex row g-1">
+              <% if (patrolReport && patrolReport.staff && patrolReport.staff.length > 0) { %>
+              <% patrolReport.staff.forEach(member => { %>
+              <a href="/social/profile/<%= member %>" class="btn btn-primary col-auto">
+                <%= member %>
+              </a>
+              <% }); %>
+              <% } else { %>
+              <div>No shift members for this handover</div>
+              <% } %>
+            </div>
+          </div>
+          <div class="col-12">
+            <div class="progress mb-3 mt-3" style="height:12.5px">
+              <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar rounded-3" role="progressbar" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100" style="width:<%= progressReport %>%;"><%= progressReport %>%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12">
+    <div class="col-12">
+      <div class="container">
+        <div class="row d-flex justify-content-center">
+          <% 
+                    var display = "";
+              
+                    // Function to get today's date in the format "DD/MM/YY"
+                    function getTodayDate() {
+                      const today = new Date();
+                      const day = String(today.getDate()).padStart(2, '0');
+                      const month = String(today.getMonth() + 1).padStart(2, '0'); // Month is zero-based
+                      const year = today.getFullYear().toString().substr(-2);
+                      return `${day}/${month}/${year}`;
+                    }
+
+                    function getYesterdayDate() {
+                      const yesterday = new Date(); // Create a new Date object representing the current date and time
+                      yesterday.setDate(yesterday.getDate() - 1); // Subtract one day from the current date
+                      const day = String(yesterday.getDate()).padStart(2, '0'); // Get the day of the month and pad with leading zeros if needed
+                      const month = String(yesterday.getMonth() + 1).padStart(2, '0'); // Get the month (zero-based) and add 1 to get the correct month, then pad with leading zeros if needed
+                      const year = yesterday.getFullYear().toString().substr(-2); // Get the year and take the last two digits
+                      return `${day}/${month}/${year}`; // Return the formatted date as a string
+                    }
+
+                    // Call the function to get yesterday's date and store it in the variable yesterdayDate
+                    const yesterdayDate = getYesterdayDate();
+              
+                    const todayDate = getTodayDate();
+
+                    var checkDate = "";
+              
+                    %>
+
+          <% cycle.forEach((cycle, index) => { %>
+          <% if(currentTimeSlot === cycle.timeSlot){
+                     if(patrolReport.startShift === '2300'){
+                        if(patrolReport.date === todayDate  || patrolReport.date === yesterdayDate ){
+                          display = "d-block";
+                        }else{
+                          display = "d-none"
+                        }
+                     }else {
+                        if(patrolReport.date === todayDate ){
+                          display = "d-block";
+                        }else{
+                          display = "d-none"
+                        }
+                     }       
+                  }else{
+                      display = "d-none";
+                  }
+              %>
+          <div class="col-12 border border-primary rounded-3 mb-3">
+            <div class="d-flex justify-content-between py-3 px-2">
+              <h2 class="card-title mb-3">
+                <div class="d-sm-block d-lg-flex">
+                  <div class="text1 me-2 fs-7 fs-lg-6 mb-2">Cycle <%= index+1 %></div>
+                  <div class="text2 d-flex mt-n2">&nbsp;<span class="fw-normal text-700 ms-0 fs-9 my-auto badge badge-phoenix badge-phoenix-warning align-items-center ms-n2"><%= cycle.timeSlot %></span></div>
+                </div>
+              </h2>
+              <div class="btn btn-link text-body text-end my-auto"><span id="countdown<%= index %>" class="fs-8 fs-lg-6"></span></div>
+            </div>
+            <div class="row justify-content-center px-3 mb-0">
+              <% cycle.checkpoint.forEach((checkpoint, checkpointIndex) => { %>
+              <% 
+                  var textColor = ""; var icon = "";
+
+                  if (checkpoint.time === ''){
+                  textColor = "text-danger";
+                  icon = "fa-solid fa-xmark";
+                  }else {
+                  textColor = "text-success";
+                  icon = "fa-solid fa-check"
+                  }
+                  %>
+              <div class="card mb-3 col-12 col-xxl-3 p-3" style="margin: 0.4rem;">
+                <div class="justify-content-between d-flex">
+                  <h5 class="card-title"><%= checkpoint.checkpointName %></h5>
+                  <div><span class="<%= icon %> <%= textColor %> fs-6"></span></div>
+                </div>
+                <div class="card-body">
+                  <p class="card-text">Time: <strong><%= checkpoint.time %></strong></p>
+                  <p class="card-text">Log Report: <strong style="font-style: italic;"><%= checkpoint.logReport %></strong></p>
+                  <p class="card-text badge badge-phoenix-primary text-primary ms-n2"><%= checkpoint.username %></p>
+                </div>
+              </div>
+              <% if ((checkpointIndex + 1) % 3 === 0) { %>
+            </div>
+            <div class="row justify-content-center px-3 mb-0">
+              <% } %>
+              <% }); %>
+            </div>
+          </div>
+
+          <script>
+            // Update countdown for this cycle
+            setInterval(() => {
+              updateCountdown('<%= cycle.timeSlot %>', 'countdown<%= index %>');
+            }, 1000);
+          </script>
+          <% }); %>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Function to update the countdown
+      function updateCountdown(targetTimeSlot, countdownElementId) {
+        // Extract the end time from the timeSlot (assuming the format is HHMM-HHMM)
+        const endTimeString = targetTimeSlot.split('-')[1];
+
+        // Parse the end time in the Kuala Lumpur time zone
+        const endTime = new Date();
+        endTime.setHours(parseInt(endTimeString.substring(0, 2), 10));
+        endTime.setMinutes(parseInt(endTimeString.substring(2), 10));
+        endTime.setSeconds(0);
+
+        // Calculate the difference in milliseconds between current time and end time
+        const difference = endTime - new Date();
+
+        // Check if the end time has already passed
+        if (difference <= 0) {
+          const countdownElement = document.getElementById(countdownElementId);
+          countdownElement.innerHTML = `End Time at ${endTime.toLocaleTimeString('en-MY', { timeZone: 'Asia/Kuala_Lumpur' })}`;
+          return;
+        }
+
+        // Calculate hours, minutes, and seconds
+        const hours = Math.floor(difference / (1000 * 60 * 60));
+        const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+        // Display the countdown in the specified element
+        const countdownElement = document.getElementById(countdownElementId);
+        countdownElement.innerHTML = `${hours}h ${minutes}m ${seconds}s`;
+      }
+    </script>
+
+  </div>
+
+</div>
+
+<%- include('partials/private-footer.ejs') %>

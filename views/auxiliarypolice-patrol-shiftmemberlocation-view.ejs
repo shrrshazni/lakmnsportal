@@ -4,12 +4,12 @@
 
   <div class="mb-3 d-xxl-flex justify-content-between">
     <div class="mb-3">
-      <h2 class="mb-2">Duty Handover</h2>
+      <h2 class="mb-2">Shift Member Location</h2>
       <h5 class="text-body-tertiary fw-semibold">Tracking Participation, Absences, Presence.</h5>
     </div>
 
-    <div class="align-items-middle">
-      <a class="btn btn-phoenix-secondary" href="/auxiliary-police/duty-handover/submit"><span class="fa-solid fa-pen-to-square me-2"></span>Submit Duty Handover</a>
+    <div class="align-items-middle d-none">
+      <a class="btn btn-phoenix-secondary" href="#"><span class="fa-solid fa-pen-to-square me-2"></span>Patrol</a>
     </div>
   </div>
 
@@ -32,7 +32,7 @@
       </div>
       <h3>Baitul Makmur I</h3>
       <div id="detailsBaitulMakmurIA" class="mt-3 shift-details">
-        <div class="border-bottom border-translucent mt-3" data-list='{"valueNames":["date", "status","headshift","time", "remarks"],"page":10,"pagination":true}'>
+        <div class="border-bottom border-translucent mt-3" data-list='{"valueNames":["date", "status","staff","startshift","endshift", "remarks"],"page":10,"pagination":true}'>
           <div class="row align-items-end justify-content-between pb-4 g-3">
 
             <div class="col-12 col-md-auto">
@@ -51,8 +51,9 @@
               <thead>
                 <tr>
                   <th class="sort align-middle ps-0 text-start text-uppercase" scope="col" data-sort="date" style="width:15%;min-width: 150px;">Date</th>
-                  <th class="sort align-middle ps-0 text-start text-uppercase" scope="col" data-sort="headshift" style="width:15%;min-width: 100px;">Head Shift</th>
-                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="time" style="width:10%;min-width: 100px;">Time</th>
+                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="staff" style="width:15%;min-width: 100px;">Staff</th>
+                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="startshift" style="width:10%;min-width: 100px;">Start Shift</th>
+                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="endshift" style="width:10%;min-width: 100px;">End Shift</th>
                   <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="status" style="width:15%;min-width: 150px;">Status</th>
                   <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="remarks" style="width:20%;min-width: 100px;">Remarks</th>
                   <th class="sort align-middle ps-0 text-end text-uppercase" scope="col" style="width:5%;min-width: 50px;"></th>
@@ -67,10 +68,13 @@
                 
                  filteredbmi.forEach((item, index) => { %>
 
+                <% console.log%>
+
                 <tr class="position-static">
-                  <td class="date align-middle fw-bold text-start text-primary py-2 ps-0 fs-8"><a href="#" data-bs-toggle="modal" data-bs-target="#showDetailA-bmi<%= index %>"><%= item.date.toLocaleDateString('en-MY', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></a></td>
-                  <td class="headshift align-middle text-start fw-bold text-body-highlights py-2 ps-0 fs-8"><%= item.headShift %></td>
-                  <td class="time align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><%= item.time %></td>
+                  <td class="date align-middle fw-bold text-start text-primary py-2 ps-0 fs-8"><a href="/auxiliary-police/patrol/shift-member-location/details/<%= item._id %>"><%= item.date.toLocaleDateString('en-MY', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></a></td>
+                  <td class="staff align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><span class="badge badge-phoenix badge-phoenix-primary fs-10"><%= item.staff.length %></span></td>
+                  <td class="startshift align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><span class="badge badge-phoenix badge-phoenix-warning fs-10"><%= item.startShift %></span></td>
+                  <td class="endshift align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><span class="badge badge-phoenix badge-phoenix-warning fs-10"><%= item.endShift %></span></td>
                   <td class="status align-middle fw-semibold text-center py-2 ps-0 fs-9 fs-md-8 text-body-highlights"><span class="badge badge-phoenix fs-10 badge-phoenix-success"><%= item.status %></span></td>
                   <td class="remarks align-middle fst-italic text-center text-body-highlight py-2 ps-0 fs-9"><%= item.remarks || 'No remarks added.' %></td>
                   <td class="align-middle text-end white-space-nowrap ps-0 action">
@@ -79,43 +83,21 @@
                         <span class="fas fa-ellipsis-h fs-9"></span>
                       </button>
                       <div class="dropdown-menu dropdown-menu-end py-2">
-                        <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#showDetailA-bmi<%= index %>">View Detail</a>
+                        <a class="dropdown-item" href="/auxiliary-police/patrol/shift-member-location/details/<%= item._id %>">View Detail</a>
                       </div>
                     </div>
                   </td>
                 </tr>
-
-                <div class="modal fade" id="showDetailA-bmi<%= index %>" tabindex="-1">
-                  <div class="modal-dialog modal-lg">
-                    <div class="modal-content">
-                      <div class="modal-body">
-                        <div class="d-flex justify-content-between">
-                          <h3 class="card-title"><%= item.shift %></h3>
-                          <p><span class="badge badge-phoenix badge-phoenix-success fs-10 align-items-center"><%= item.status %></span></p>
-                        </div>
-                        <p class="card-text">Head Shift: <span class="fw-semibold fst-italic"><%= item.headShift %></span></p>
-                        <p class="card-text">Date: <span class="fw-semibold fst-italic"><%= new Date(item.date).toLocaleDateString()  %></span></p>
-                        <p class="card-text">Time: <span class="fw-semibold fst-italic"><%= item.time %></span></p>
-                        <p class="card-text">Location: <span class="fw-semibold fst-italic"><%= item.location %></span></p>
-                        <p class="card-text">Remarks: <span class="fw-semibold fst-italic"><%= item.remarks %></span></p>
-                        <hr>
-                        <% item.staff.forEach(function(staffMember) { %>
-                        <button class="btn btn-primary"><%= staffMember %></button>
-                        <% }); %>
-                      </div>
-                    </div>
-                  </div>
-                </div>
                 <% }); %>
 
                 <% }else{ %>
                 <tr>
-                  <td colspan="6" class="text-center fs-9 fw-bold">No duty handover submitted</td>
+                  <td colspan="6" class="text-center fs-9 fw-bold">No patrol report submitted</td>
                 </tr>
                 <% } 
                 }else{ %>
                 <tr>
-                  <td colspan="6" class="text-center fs-9 fw-bold">No duty handover submitted</td>
+                  <td colspan="6" class="text-center fs-9 fw-bold">No patrol report submitted</td>
                 </tr>
                 <% } %>
               </tbody>
@@ -135,7 +117,7 @@
         </div>
       </div>
       <div id="detailsBaitulMakmurIB" class="mt-3 d-none shift-details">
-        <div class="border-bottom border-translucent mt-3" data-list='{"valueNames":["date", "status","headshift","time", "remarks"],"page":10,"pagination":true}'>
+        <div class="border-bottom border-translucent mt-3" data-list='{"valueNames":["date", "status","staff","startshift","endshift", "remarks"],"page":10,"pagination":true}'>
           <div class="row align-items-end justify-content-between pb-4 g-3">
 
             <div class="col-12 col-md-auto">
@@ -154,8 +136,9 @@
               <thead>
                 <tr>
                   <th class="sort align-middle ps-0 text-start text-uppercase" scope="col" data-sort="date" style="width:15%;min-width: 150px;">Date</th>
-                  <th class="sort align-middle ps-0 text-start text-uppercase" scope="col" data-sort="headshift" style="width:15%;min-width: 100px;">Head Shift</th>
-                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="time" style="width:10%;min-width: 100px;">Time</th>
+                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="staff" style="width:15%;min-width: 100px;">Staff</th>
+                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="startshift" style="width:10%;min-width: 100px;">Start Shift</th>
+                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="endshift" style="width:10%;min-width: 100px;">End Shift</th>
                   <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="status" style="width:15%;min-width: 150px;">Status</th>
                   <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="remarks" style="width:20%;min-width: 100px;">Remarks</th>
                   <th class="sort align-middle ps-0 text-end text-uppercase" scope="col" style="width:5%;min-width: 50px;"></th>
@@ -170,10 +153,13 @@
                 
                  filteredbmi.forEach((item, index) => { %>
 
+                <% console.log%>
+
                 <tr class="position-static">
-                  <td class="date align-middle fw-bold text-start text-primary py-2 ps-0 fs-8"><a href="#" data-bs-toggle="modal" data-bs-target="#showDetailB-bmi<%= index %>"><%= item.date.toLocaleDateString('en-MY', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></a></td>
-                  <td class="headshift align-middle text-start fw-bold text-body-highlights py-2 ps-0 fs-8"><%= item.headShift %></td>
-                  <td class="time align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><%= item.time %></td>
+                  <td class="date align-middle fw-bold text-start text-primary py-2 ps-0 fs-8"><a href="/auxiliary-police/patrol/shift-member-location/details/<%= item._id %>"><%= item.date.toLocaleDateString('en-MY', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></a></td>
+                  <td class="staff align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><span class="badge badge-phoenix badge-phoenix-primary fs-10"><%= item.staff.length %></span></td>
+                  <td class="startshift align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><span class="badge badge-phoenix badge-phoenix-warning fs-10"><%= item.startShift %></span></td>
+                  <td class="endshift align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><span class="badge badge-phoenix badge-phoenix-warning fs-10"><%= item.endShift %></span></td>
                   <td class="status align-middle fw-semibold text-center py-2 ps-0 fs-9 fs-md-8 text-body-highlights"><span class="badge badge-phoenix fs-10 badge-phoenix-success"><%= item.status %></span></td>
                   <td class="remarks align-middle fst-italic text-center text-body-highlight py-2 ps-0 fs-9"><%= item.remarks || 'No remarks added.' %></td>
                   <td class="align-middle text-end white-space-nowrap ps-0 action">
@@ -182,43 +168,21 @@
                         <span class="fas fa-ellipsis-h fs-9"></span>
                       </button>
                       <div class="dropdown-menu dropdown-menu-end py-2">
-                        <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#showDetailB-bmi<%= index %>">View Detail</a>
+                        <a class="dropdown-item" href="/auxiliary-police/patrol/shift-member-location/details/<%= item._id %>">View Detail</a>
                       </div>
                     </div>
                   </td>
                 </tr>
-
-                <div class="modal fade" id="showDetailB-bmi<%= index %>" tabindex="-1">
-                  <div class="modal-dialog modal-lg">
-                    <div class="modal-content">
-                      <div class="modal-body">
-                        <div class="d-flex justify-content-between">
-                          <h3 class="card-title"><%= item.shift %></h3>
-                          <p><span class="badge badge-phoenix badge-phoenix-success fs-10 align-items-center"><%= item.status %></span></p>
-                        </div>
-                        <p class="card-text">Head Shift: <span class="fw-semibold fst-italic"><%= item.headShift %></span></p>
-                        <p class="card-text">Date: <span class="fw-semibold fst-italic"><%= new Date(item.date).toLocaleDateString()  %></span></p>
-                        <p class="card-text">Time: <span class="fw-semibold fst-italic"><%= item.time %></span></p>
-                        <p class="card-text">Location: <span class="fw-semibold fst-italic"><%= item.location %></span></p>
-                        <p class="card-text">Remarks: <span class="fw-semibold fst-italic"><%= item.remarks %></span></p>
-                        <hr>
-                        <% item.staff.forEach(function(staffMember) { %>
-                        <button class="btn btn-primary"><%= staffMember %></button>
-                        <% }); %>
-                      </div>
-                    </div>
-                  </div>
-                </div>
                 <% }); %>
 
                 <% }else{ %>
                 <tr>
-                  <td colspan="6" class="text-center fs-9 fw-bold">No duty handover submitted</td>
+                  <td colspan="6" class="text-center fs-9 fw-bold">No patrol report submitted</td>
                 </tr>
                 <% } 
                 }else{ %>
                 <tr>
-                  <td colspan="6" class="text-center fs-9 fw-bold">No duty handover submitted</td>
+                  <td colspan="6" class="text-center fs-9 fw-bold">No patrol report submitted</td>
                 </tr>
                 <% } %>
               </tbody>
@@ -238,7 +202,7 @@
         </div>
       </div>
       <div id="detailsBaitulMakmurIC" class="mt-3 d-none shift-details">
-        <div class="border-bottom border-translucent mt-3" data-list='{"valueNames":["date", "status","headshift","time", "remarks"],"page":10,"pagination":true}'>
+        <div class="border-bottom border-translucent mt-3" data-list='{"valueNames":["date", "status","staff","startshift","endshift", "remarks"],"page":10,"pagination":true}'>
           <div class="row align-items-end justify-content-between pb-4 g-3">
 
             <div class="col-12 col-md-auto">
@@ -257,8 +221,9 @@
               <thead>
                 <tr>
                   <th class="sort align-middle ps-0 text-start text-uppercase" scope="col" data-sort="date" style="width:15%;min-width: 150px;">Date</th>
-                  <th class="sort align-middle ps-0 text-start text-uppercase" scope="col" data-sort="headshift" style="width:15%;min-width: 100px;">Head Shift</th>
-                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="time" style="width:10%;min-width: 100px;">Time</th>
+                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="staff" style="width:15%;min-width: 100px;">Staff</th>
+                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="startshift" style="width:10%;min-width: 100px;">Start Shift</th>
+                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="endshift" style="width:10%;min-width: 100px;">End Shift</th>
                   <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="status" style="width:15%;min-width: 150px;">Status</th>
                   <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="remarks" style="width:20%;min-width: 100px;">Remarks</th>
                   <th class="sort align-middle ps-0 text-end text-uppercase" scope="col" style="width:5%;min-width: 50px;"></th>
@@ -273,10 +238,13 @@
                 
                  filteredbmi.forEach((item, index) => { %>
 
+                <% console.log%>
+
                 <tr class="position-static">
-                  <td class="date align-middle fw-bold text-start text-primary py-2 ps-0 fs-8"><a href="#" data-bs-toggle="modal" data-bs-target="#showDetailC-bmi<%= index %>"><%= item.date.toLocaleDateString('en-MY', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></a></td>
-                  <td class="headshift align-middle text-start fw-bold text-body-highlights py-2 ps-0 fs-8"><%= item.headShift %></td>
-                  <td class="time align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><%= item.time %></td>
+                  <td class="date align-middle fw-bold text-start text-primary py-2 ps-0 fs-8"><a href="/auxiliary-police/patrol/shift-member-location/details/<%= item._id %>"><%= item.date.toLocaleDateString('en-MY', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></a></td>
+                  <td class="staff align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><span class="badge badge-phoenix badge-phoenix-primary fs-10"><%= item.staff.length %></span></td>
+                  <td class="startshift align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><span class="badge badge-phoenix badge-phoenix-warning fs-10"><%= item.startShift %></span></td>
+                  <td class="endshift align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><span class="badge badge-phoenix badge-phoenix-warning fs-10"><%= item.endShift %></span></td>
                   <td class="status align-middle fw-semibold text-center py-2 ps-0 fs-9 fs-md-8 text-body-highlights"><span class="badge badge-phoenix fs-10 badge-phoenix-success"><%= item.status %></span></td>
                   <td class="remarks align-middle fst-italic text-center text-body-highlight py-2 ps-0 fs-9"><%= item.remarks || 'No remarks added.' %></td>
                   <td class="align-middle text-end white-space-nowrap ps-0 action">
@@ -285,43 +253,21 @@
                         <span class="fas fa-ellipsis-h fs-9"></span>
                       </button>
                       <div class="dropdown-menu dropdown-menu-end py-2">
-                        <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#showDetailC-bmi<%= index %>">View Detail</a>
+                        <a class="dropdown-item" href="/auxiliary-police/patrol/shift-member-location/details/<%= item._id %>">View Detail</a>
                       </div>
                     </div>
                   </td>
                 </tr>
-
-                <div class="modal fade" id="showDetailC-bmi<%= index %>" tabindex="-1">
-                  <div class="modal-dialog modal-lg">
-                    <div class="modal-content">
-                      <div class="modal-body">
-                        <div class="d-flex justify-content-between">
-                          <h3 class="card-title"><%= item.shift %></h3>
-                          <p><span class="badge badge-phoenix badge-phoenix-success fs-10 align-items-center"><%= item.status %></span></p>
-                        </div>
-                        <p class="card-text">Head Shift: <span class="fw-semibold fst-italic"><%= item.headShift %></span></p>
-                        <p class="card-text">Date: <span class="fw-semibold fst-italic"><%= new Date(item.date).toLocaleDateString()  %></span></p>
-                        <p class="card-text">Time: <span class="fw-semibold fst-italic"><%= item.time %></span></p>
-                        <p class="card-text">Location: <span class="fw-semibold fst-italic"><%= item.location %></span></p>
-                        <p class="card-text">Remarks: <span class="fw-semibold fst-italic"><%= item.remarks %></span></p>
-                        <hr>
-                        <% item.staff.forEach(function(staffMember) { %>
-                        <button class="btn btn-primary"><%= staffMember %></button>
-                        <% }); %>
-                      </div>
-                    </div>
-                  </div>
-                </div>
                 <% }); %>
 
                 <% }else{ %>
                 <tr>
-                  <td colspan="6" class="text-center fs-9 fw-bold">No duty handover submitted</td>
+                  <td colspan="6" class="text-center fs-9 fw-bold">No patrol report submitted</td>
                 </tr>
                 <% } 
                 }else{ %>
                 <tr>
-                  <td colspan="6" class="text-center fs-9 fw-bold">No duty handover submitted</td>
+                  <td colspan="6" class="text-center fs-9 fw-bold">No patrol report submitted</td>
                 </tr>
                 <% } %>
               </tbody>
@@ -350,7 +296,7 @@
       </div>
       <h3>Baitul Makmur II</h3>
       <div id="detailsBaitulMakmurIIA" class="mt-3 shift-details">
-        <div class="border-bottom border-translucent mt-3" data-list='{"valueNames":["date", "status","headshift","time", "remarks"],"page":10,"pagination":true}'>
+        <div class="border-bottom border-translucent mt-3" data-list='{"valueNames":["date", "status","staff","startshift","endshift", "remarks"],"page":10,"pagination":true}'>
           <div class="row align-items-end justify-content-between pb-4 g-3">
 
             <div class="col-12 col-md-auto">
@@ -369,26 +315,30 @@
               <thead>
                 <tr>
                   <th class="sort align-middle ps-0 text-start text-uppercase" scope="col" data-sort="date" style="width:15%;min-width: 150px;">Date</th>
-                  <th class="sort align-middle ps-0 text-start text-uppercase" scope="col" data-sort="headshift" style="width:15%;min-width: 100px;">Head Shift</th>
-                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="time" style="width:10%;min-width: 100px;">Time</th>
+                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="staff" style="width:15%;min-width: 100px;">Staff</th>
+                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="startshift" style="width:10%;min-width: 100px;">Start Shift</th>
+                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="endshift" style="width:10%;min-width: 100px;">End Shift</th>
                   <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="status" style="width:15%;min-width: 150px;">Status</th>
                   <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="remarks" style="width:20%;min-width: 100px;">Remarks</th>
                   <th class="sort align-middle ps-0 text-end text-uppercase" scope="col" style="width:5%;min-width: 50px;"></th>
                 </tr>
               </thead>
 
-              <tbody class="list">
+              <tbody class="liist">
                 <% if(bmii && bmii.length > 0){ 
                 
-                const filteredJm = bmii.filter(item => item.shift === 'Shift A');
+                const filteredbmii = bmii.filter(item => item.shift === 'Shift A');
                 if (filteredbmii.length > 0) { 
                 
                  filteredbmii.forEach((item, index) => { %>
 
+                <% console.log%>
+
                 <tr class="position-static">
-                  <td class="date align-middle fw-bold text-start text-primary py-2 ps-0 fs-8"><a href="#" data-bs-toggle="modal" data-bs-target="#showDetailA-bmii<%= index %>"><%= item.date.toLocaleDateString('en-MY', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></a></td>
-                  <td class="headshift align-middle text-start fw-bold text-body-highlights py-2 ps-0 fs-8"><%= item.headShift %></td>
-                  <td class="time align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><%= item.time %></td>
+                  <td class="date align-middle fw-bold text-start text-primary py-2 ps-0 fs-8"><a href="/auxiliary-police/patrol/shift-member-location/details/<%= item._id %>"><%= item.date.toLocaleDateString('en-MY', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></a></td>
+                  <td class="staff align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><span class="badge badge-phoenix badge-phoenix-primary fs-10"><%= item.staff.length %></span></td>
+                  <td class="startshift align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><span class="badge badge-phoenix badge-phoenix-warning fs-10"><%= item.startShift %></span></td>
+                  <td class="endshift align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><span class="badge badge-phoenix badge-phoenix-warning fs-10"><%= item.endShift %></span></td>
                   <td class="status align-middle fw-semibold text-center py-2 ps-0 fs-9 fs-md-8 text-body-highlights"><span class="badge badge-phoenix fs-10 badge-phoenix-success"><%= item.status %></span></td>
                   <td class="remarks align-middle fst-italic text-center text-body-highlight py-2 ps-0 fs-9"><%= item.remarks || 'No remarks added.' %></td>
                   <td class="align-middle text-end white-space-nowrap ps-0 action">
@@ -397,43 +347,21 @@
                         <span class="fas fa-ellipsis-h fs-9"></span>
                       </button>
                       <div class="dropdown-menu dropdown-menu-end py-2">
-                        <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#showDetailA-bmii<%= index %>">View Detail</a>
+                        <a class="dropdown-item" href="/auxiliary-police/patrol/shift-member-location/details/<%= item._id %>">View Detail</a>
                       </div>
                     </div>
                   </td>
                 </tr>
-
-                <div class="modal fade" id="showDetailA-bmii<%= index %>" tabindex="-1">
-                  <div class="modal-dialog modal-lg">
-                    <div class="modal-content">
-                      <div class="modal-body">
-                        <div class="d-flex justify-content-between">
-                          <h3 class="card-title"><%= item.shift %></h3>
-                          <p><span class="badge badge-phoenix badge-phoenix-success fs-10 align-items-center"><%= item.status %></span></p>
-                        </div>
-                        <p class="card-text">Head Shift: <span class="fw-semibold fst-italic"><%= item.headShift %></span></p>
-                        <p class="card-text">Date: <span class="fw-semibold fst-italic"><%= new Date(item.date).toLocaleDateString()  %></span></p>
-                        <p class="card-text">Time: <span class="fw-semibold fst-italic"><%= item.time %></span></p>
-                        <p class="card-text">Location: <span class="fw-semibold fst-italic"><%= item.location %></span></p>
-                        <p class="card-text">Remarks: <span class="fw-semibold fst-italic"><%= item.remarks %></span></p>
-                        <hr>
-                        <% item.staff.forEach(function(staffMember) { %>
-                        <button class="btn btn-primary"><%= staffMember %></button>
-                        <% }); %>
-                      </div>
-                    </div>
-                  </div>
-                </div>
                 <% }); %>
 
                 <% }else{ %>
                 <tr>
-                  <td colspan="6" class="text-center fs-9 fw-bold">No duty handover submitted</td>
+                  <td colspan="6" class="text-center fs-9 fw-bold">No patrol report submitted</td>
                 </tr>
                 <% } 
                 }else{ %>
                 <tr>
-                  <td colspan="6" class="text-center fs-9 fw-bold">No duty handover submitted</td>
+                  <td colspan="6" class="text-center fs-9 fw-bold">No patrol report submitted</td>
                 </tr>
                 <% } %>
               </tbody>
@@ -453,7 +381,7 @@
         </div>
       </div>
       <div id="detailsBaitulMakmurIIB" class="mt-3 d-none shift-details">
-        <div class="border-bottom border-translucent mt-3" data-list='{"valueNames":["date", "status","headshift","time", "remarks"],"page":10,"pagination":true}'>
+        <div class="border-bottom border-translucent mt-3" data-list='{"valueNames":["date", "status","staff","startshift","endshift", "remarks"],"page":10,"pagination":true}'>
           <div class="row align-items-end justify-content-between pb-4 g-3">
 
             <div class="col-12 col-md-auto">
@@ -472,8 +400,9 @@
               <thead>
                 <tr>
                   <th class="sort align-middle ps-0 text-start text-uppercase" scope="col" data-sort="date" style="width:15%;min-width: 150px;">Date</th>
-                  <th class="sort align-middle ps-0 text-start text-uppercase" scope="col" data-sort="headshift" style="width:15%;min-width: 100px;">Head Shift</th>
-                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="time" style="width:10%;min-width: 100px;">Time</th>
+                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="staff" style="width:15%;min-width: 100px;">Staff</th>
+                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="startshift" style="width:10%;min-width: 100px;">Start Shift</th>
+                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="endshift" style="width:10%;min-width: 100px;">End Shift</th>
                   <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="status" style="width:15%;min-width: 150px;">Status</th>
                   <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="remarks" style="width:20%;min-width: 100px;">Remarks</th>
                   <th class="sort align-middle ps-0 text-end text-uppercase" scope="col" style="width:5%;min-width: 50px;"></th>
@@ -486,12 +415,15 @@
                 const filteredbmii = bmii.filter(item => item.shift === 'Shift B');
                 if (filteredbmii.length > 0) { 
                 
-                 filteredbmii.forEach((item, index) => { %>
+                 filteredbmi.forEach((item, index) => { %>
+
+                <% console.log%>
 
                 <tr class="position-static">
-                  <td class="date align-middle fw-bold text-start text-primary py-2 ps-0 fs-8"><a href="#" data-bs-toggle="modal" data-bs-target="#showDetailB-bmii<%= index %>"><%= item.date.toLocaleDateString('en-MY', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></a></td>
-                  <td class="headshift align-middle text-start fw-bold text-body-highlights py-2 ps-0 fs-8"><%= item.headShift %></td>
-                  <td class="time align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><%= item.time %></td>
+                  <td class="date align-middle fw-bold text-start text-primary py-2 ps-0 fs-8"><a href="/auxiliary-police/patrol/shift-member-location/details/<%= item._id %>"><%= item.date.toLocaleDateString('en-MY', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></a></td>
+                  <td class="staff align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><span class="badge badge-phoenix badge-phoenix-primary fs-10"><%= item.staff.length %></span></td>
+                  <td class="startshift align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><span class="badge badge-phoenix badge-phoenix-warning fs-10"><%= item.startShift %></span></td>
+                  <td class="endshift align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><span class="badge badge-phoenix badge-phoenix-warning fs-10"><%= item.endShift %></span></td>
                   <td class="status align-middle fw-semibold text-center py-2 ps-0 fs-9 fs-md-8 text-body-highlights"><span class="badge badge-phoenix fs-10 badge-phoenix-success"><%= item.status %></span></td>
                   <td class="remarks align-middle fst-italic text-center text-body-highlight py-2 ps-0 fs-9"><%= item.remarks || 'No remarks added.' %></td>
                   <td class="align-middle text-end white-space-nowrap ps-0 action">
@@ -500,43 +432,21 @@
                         <span class="fas fa-ellipsis-h fs-9"></span>
                       </button>
                       <div class="dropdown-menu dropdown-menu-end py-2">
-                        <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#showDetailB-bmii<%= index %>">View Detail</a>
+                        <a class="dropdown-item" href="/auxiliary-police/patrol/shift-member-location/details/<%= item._id %>">View Detail</a>
                       </div>
                     </div>
                   </td>
                 </tr>
-
-                <div class="modal fade" id="showDetailB-bmii<%= index %>" tabindex="-1">
-                  <div class="modal-dialog modal-lg">
-                    <div class="modal-content">
-                      <div class="modal-body">
-                        <div class="d-flex justify-content-between">
-                          <h3 class="card-title"><%= item.shift %></h3>
-                          <p><span class="badge badge-phoenix badge-phoenix-success fs-10 align-items-center"><%= item.status %></span></p>
-                        </div>
-                        <p class="card-text">Head Shift: <span class="fw-semibold fst-italic"><%= item.headShift %></span></p>
-                        <p class="card-text">Date: <span class="fw-semibold fst-italic"><%= new Date(item.date).toLocaleDateString()  %></span></p>
-                        <p class="card-text">Time: <span class="fw-semibold fst-italic"><%= item.time %></span></p>
-                        <p class="card-text">Location: <span class="fw-semibold fst-italic"><%= item.location %></span></p>
-                        <p class="card-text">Remarks: <span class="fw-semibold fst-italic"><%= item.remarks %></span></p>
-                        <hr>
-                        <% item.staff.forEach(function(staffMember) { %>
-                        <button class="btn btn-primary"><%= staffMember %></button>
-                        <% }); %>
-                      </div>
-                    </div>
-                  </div>
-                </div>
                 <% }); %>
 
                 <% }else{ %>
                 <tr>
-                  <td colspan="6" class="text-center fs-9 fw-bold">No duty handover submitted</td>
+                  <td colspan="6" class="text-center fs-9 fw-bold">No patrol report submitted</td>
                 </tr>
                 <% } 
                 }else{ %>
                 <tr>
-                  <td colspan="6" class="text-center fs-9 fw-bold">No duty handover submitted</td>
+                  <td colspan="6" class="text-center fs-9 fw-bold">No patrol report submitted</td>
                 </tr>
                 <% } %>
               </tbody>
@@ -556,7 +466,7 @@
         </div>
       </div>
       <div id="detailsBaitulMakmurIIC" class="mt-3 d-none shift-details">
-        <div class="border-bottom border-translucent mt-3" data-list='{"valueNames":["date", "status","headshift","time", "remarks"],"page":10,"pagination":true}'>
+        <div class="border-bottom border-translucent mt-3" data-list='{"valueNames":["date", "status","staff","startshift","endshift", "remarks"],"page":10,"pagination":true}'>
           <div class="row align-items-end justify-content-between pb-4 g-3">
 
             <div class="col-12 col-md-auto">
@@ -575,8 +485,9 @@
               <thead>
                 <tr>
                   <th class="sort align-middle ps-0 text-start text-uppercase" scope="col" data-sort="date" style="width:15%;min-width: 150px;">Date</th>
-                  <th class="sort align-middle ps-0 text-start text-uppercase" scope="col" data-sort="headshift" style="width:15%;min-width: 100px;">Head Shift</th>
-                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="time" style="width:10%;min-width: 100px;">Time</th>
+                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="staff" style="width:15%;min-width: 100px;">Staff</th>
+                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="startshift" style="width:10%;min-width: 100px;">Start Shift</th>
+                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="endshift" style="width:10%;min-width: 100px;">End Shift</th>
                   <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="status" style="width:15%;min-width: 150px;">Status</th>
                   <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="remarks" style="width:20%;min-width: 100px;">Remarks</th>
                   <th class="sort align-middle ps-0 text-end text-uppercase" scope="col" style="width:5%;min-width: 50px;"></th>
@@ -591,10 +502,13 @@
                 
                  filteredbmii.forEach((item, index) => { %>
 
+                <% console.log%>
+
                 <tr class="position-static">
-                  <td class="date align-middle fw-bold text-start text-primary py-2 ps-0 fs-8"><a href="#" data-bs-toggle="modal" data-bs-target="#showDetailC-bmii<%= index %>"><%= item.date.toLocaleDateString('en-MY', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></a></td>
-                  <td class="headshift align-middle text-start fw-bold text-body-highlights py-2 ps-0 fs-8"><%= item.headShift %></td>
-                  <td class="time align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><%= item.time %></td>
+                  <td class="date align-middle fw-bold text-start text-primary py-2 ps-0 fs-8"><a href="/auxiliary-police/patrol/shift-member-location/details/<%= item._id %>"><%= item.date.toLocaleDateString('en-MY', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></a></td>
+                  <td class="staff align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><span class="badge badge-phoenix badge-phoenix-primary fs-10"><%= item.staff.length %></span></td>
+                  <td class="startshift align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><span class="badge badge-phoenix badge-phoenix-warning fs-10"><%= item.startShift %></span></td>
+                  <td class="endshift align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><span class="badge badge-phoenix badge-phoenix-warning fs-10"><%= item.endShift %></span></td>
                   <td class="status align-middle fw-semibold text-center py-2 ps-0 fs-9 fs-md-8 text-body-highlights"><span class="badge badge-phoenix fs-10 badge-phoenix-success"><%= item.status %></span></td>
                   <td class="remarks align-middle fst-italic text-center text-body-highlight py-2 ps-0 fs-9"><%= item.remarks || 'No remarks added.' %></td>
                   <td class="align-middle text-end white-space-nowrap ps-0 action">
@@ -603,43 +517,21 @@
                         <span class="fas fa-ellipsis-h fs-9"></span>
                       </button>
                       <div class="dropdown-menu dropdown-menu-end py-2">
-                        <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#showDetailC-bmi<%= index %>">View Detail</a>
+                        <a class="dropdown-item" href="/auxiliary-police/patrol/shift-member-location/details/<%= item._id %>">View Detail</a>
                       </div>
                     </div>
                   </td>
                 </tr>
-
-                <div class="modal fade" id="showDetailC-bmii<%= index %>" tabindex="-1">
-                  <div class="modal-dialog modal-lg">
-                    <div class="modal-content">
-                      <div class="modal-body">
-                        <div class="d-flex justify-content-between">
-                          <h3 class="card-title"><%= item.shift %></h3>
-                          <p><span class="badge badge-phoenix badge-phoenix-success fs-10 align-items-center"><%= item.status %></span></p>
-                        </div>
-                        <p class="card-text">Head Shift: <span class="fw-semibold fst-italic"><%= item.headShift %></span></p>
-                        <p class="card-text">Date: <span class="fw-semibold fst-italic"><%= new Date(item.date).toLocaleDateString()  %></span></p>
-                        <p class="card-text">Time: <span class="fw-semibold fst-italic"><%= item.time %></span></p>
-                        <p class="card-text">Location: <span class="fw-semibold fst-italic"><%= item.location %></span></p>
-                        <p class="card-text">Remarks: <span class="fw-semibold fst-italic"><%= item.remarks %></span></p>
-                        <hr>
-                        <% item.staff.forEach(function(staffMember) { %>
-                        <button class="btn btn-primary"><%= staffMember %></button>
-                        <% }); %>
-                      </div>
-                    </div>
-                  </div>
-                </div>
                 <% }); %>
 
                 <% }else{ %>
                 <tr>
-                  <td colspan="6" class="text-center fs-9 fw-bold">No duty handover submitted</td>
+                  <td colspan="6" class="text-center fs-9 fw-bold">No patrol report submitted</td>
                 </tr>
                 <% } 
                 }else{ %>
                 <tr>
-                  <td colspan="6" class="text-center fs-9 fw-bold">No duty handover submitted</td>
+                  <td colspan="6" class="text-center fs-9 fw-bold">No patrol report submitted</td>
                 </tr>
                 <% } %>
               </tbody>
@@ -668,7 +560,7 @@
       </div>
       <h3>Jamek Mosque</h3>
       <div id="detailsJamekMosqueA" class="mt-3 shift-details">
-        <div class="border-bottom border-translucent mt-3" data-list='{"valueNames":["date", "status","headshift","time", "remarks"],"page":10,"pagination":true}'>
+        <div class="border-bottom border-translucent mt-3" data-list='{"valueNames":["date", "status","staff","startshift","endshift", "remarks"],"page":10,"pagination":true}'>
           <div class="row align-items-end justify-content-between pb-4 g-3">
 
             <div class="col-12 col-md-auto">
@@ -687,8 +579,9 @@
               <thead>
                 <tr>
                   <th class="sort align-middle ps-0 text-start text-uppercase" scope="col" data-sort="date" style="width:15%;min-width: 150px;">Date</th>
-                  <th class="sort align-middle ps-0 text-start text-uppercase" scope="col" data-sort="headshift" style="width:15%;min-width: 100px;">Head Shift</th>
-                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="time" style="width:10%;min-width: 100px;">Time</th>
+                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="staff" style="width:15%;min-width: 100px;">Staff</th>
+                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="startshift" style="width:10%;min-width: 100px;">Start Shift</th>
+                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="endshift" style="width:10%;min-width: 100px;">End Shift</th>
                   <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="status" style="width:15%;min-width: 150px;">Status</th>
                   <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="remarks" style="width:20%;min-width: 100px;">Remarks</th>
                   <th class="sort align-middle ps-0 text-end text-uppercase" scope="col" style="width:5%;min-width: 50px;"></th>
@@ -698,15 +591,18 @@
               <tbody class="list">
                 <% if(jm && jm.length > 0){ 
                 
-                const filteredJm = jm.filter(item => item.shift === 'Shift A');
-                if (filteredJm.length > 0) { 
+                const filteredjm = jm.filter(item => item.shift === 'Shift A');
+                if (filteredjm.length > 0) { 
                 
-                 filteredJm.forEach((item, index) => { %>
+                 filteredjm.forEach((item, index) => { %>
+
+                <% console.log%>
 
                 <tr class="position-static">
-                  <td class="date align-middle fw-bold text-start text-primary py-2 ps-0 fs-8"><a href="#" data-bs-toggle="modal" data-bs-target="#showDetailA-jm<%= index %>"><%= item.date.toLocaleDateString('en-MY', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></a></td>
-                  <td class="headshift align-middle text-start fw-bold text-body-highlights py-2 ps-0 fs-8"><%= item.headShift %></td>
-                  <td class="time align-middle text-start fw-semibold fst-italic py-2 ps-0 fs-9"><%= item.time %></td>
+                  <td class="date align-middle fw-bold text-start text-primary py-2 ps-0 fs-8"><a href="/auxiliary-police/patrol/shift-member-location/details/<%= item._id %>"><%= item.date.toLocaleDateString('en-MY', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></a></td>
+                  <td class="staff align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><span class="badge badge-phoenix badge-phoenix-primary fs-10"><%= item.staff.length %></span></td>
+                  <td class="startshift align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><span class="badge badge-phoenix badge-phoenix-warning fs-10"><%= item.startShift %></span></td>
+                  <td class="endshift align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><span class="badge badge-phoenix badge-phoenix-warning fs-10"><%= item.endShift %></span></td>
                   <td class="status align-middle fw-semibold text-center py-2 ps-0 fs-9 fs-md-8 text-body-highlights"><span class="badge badge-phoenix fs-10 badge-phoenix-success"><%= item.status %></span></td>
                   <td class="remarks align-middle fst-italic text-center text-body-highlight py-2 ps-0 fs-9"><%= item.remarks || 'No remarks added.' %></td>
                   <td class="align-middle text-end white-space-nowrap ps-0 action">
@@ -715,43 +611,21 @@
                         <span class="fas fa-ellipsis-h fs-9"></span>
                       </button>
                       <div class="dropdown-menu dropdown-menu-end py-2">
-                        <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#showDetailA-jm<%= index %>">View Detail</a>
+                        <a class="dropdown-item" href="/auxiliary-police/patrol/shift-member-location/details/<%= item._id %>">View Detail</a>
                       </div>
                     </div>
                   </td>
                 </tr>
-
-                <div class="modal fade" id="showDetailA-jm<%= index %>" tabindex="-1">
-                  <div class="modal-dialog modal-lg">
-                    <div class="modal-content">
-                      <div class="modal-body">
-                        <div class="d-flex justify-content-between">
-                          <h3 class="card-title"><%= item.shift %></h3>
-                          <p><span class="badge badge-phoenix badge-phoenix-success fs-10 align-items-center"><%= item.status %></span></p>
-                        </div>
-                        <p class="card-text">Head Shift: <span class="fw-semibold fst-italic"><%= item.headShift %></span></p>
-                        <p class="card-text">Date: <span class="fw-semibold fst-italic"><%= new Date(item.date).toLocaleDateString()  %></span></p>
-                        <p class="card-text">Time: <span class="fw-semibold fst-italic"><%= item.time %></span></p>
-                        <p class="card-text">Location: <span class="fw-semibold fst-italic"><%= item.location %></span></p>
-                        <p class="card-text">Remarks: <span class="fw-semibold fst-italic"><%= item.remarks %></span></p>
-                        <hr>
-                        <% item.staff.forEach(function(staffMember) { %>
-                        <button class="btn btn-primary"><%= staffMember %></button>
-                        <% }); %>
-                      </div>
-                    </div>
-                  </div>
-                </div>
                 <% }); %>
 
                 <% }else{ %>
                 <tr>
-                  <td colspan="6" class="text-center fs-9 fw-bold">No duty handover submitted</td>
+                  <td colspan="6" class="text-center fs-9 fw-bold">No patrol report submitted</td>
                 </tr>
                 <% } 
                 }else{ %>
                 <tr>
-                  <td colspan="6" class="text-center fs-9 fw-bold">No duty handover submitted</td>
+                  <td colspan="6" class="text-center fs-9 fw-bold">No patrol report submitted</td>
                 </tr>
                 <% } %>
               </tbody>
@@ -771,7 +645,7 @@
         </div>
       </div>
       <div id="detailsJamekMosqueB" class="mt-3 d-none shift-details">
-        <div class="border-bottom border-translucent mt-3" data-list='{"valueNames":["date", "status","headshift","time", "remarks"],"page":10,"pagination":true}'>
+        <div class="border-bottom border-translucent mt-3" data-list='{"valueNames":["date", "status","staff","startshift","endshift", "remarks"],"page":10,"pagination":true}'>
           <div class="row align-items-end justify-content-between pb-4 g-3">
 
             <div class="col-12 col-md-auto">
@@ -790,8 +664,9 @@
               <thead>
                 <tr>
                   <th class="sort align-middle ps-0 text-start text-uppercase" scope="col" data-sort="date" style="width:15%;min-width: 150px;">Date</th>
-                  <th class="sort align-middle ps-0 text-start text-uppercase" scope="col" data-sort="headshift" style="width:15%;min-width: 100px;">Head Shift</th>
-                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="time" style="width:10%;min-width: 100px;">Time</th>
+                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="staff" style="width:15%;min-width: 100px;">Staff</th>
+                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="startshift" style="width:10%;min-width: 100px;">Start Shift</th>
+                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="endshift" style="width:10%;min-width: 100px;">End Shift</th>
                   <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="status" style="width:15%;min-width: 150px;">Status</th>
                   <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="remarks" style="width:20%;min-width: 100px;">Remarks</th>
                   <th class="sort align-middle ps-0 text-end text-uppercase" scope="col" style="width:5%;min-width: 50px;"></th>
@@ -801,15 +676,18 @@
               <tbody class="list">
                 <% if(jm && jm.length > 0){ 
                 
-                const filteredJm = jm.filter(item => item.shift === 'Shift B');
-                if (filteredJm.length > 0) { 
+                const filteredjm = jm.filter(item => item.shift === 'Shift B');
+                if (filteredjm.length > 0) { 
                 
-                 filteredJm.forEach((item, index) => { %>
+                 filteredjm.forEach((item, index) => { %>
+
+                <% console.log%>
 
                 <tr class="position-static">
-                  <td class="date align-middle fw-bold text-start text-primary py-2 ps-0 fs-8"><a href="#" data-bs-toggle="modal" data-bs-target="#showDetailB-jm<%= index %>"><%= item.date.toLocaleDateString('en-MY', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></a></td>
-                  <td class="headshift align-middle text-start fw-bold text-body-highlights py-2 ps-0 fs-8"><%= item.headShift %></td>
-                  <td class="time align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><%= item.time %></td>
+                  <td class="date align-middle fw-bold text-start text-primary py-2 ps-0 fs-8"><a href="/auxiliary-police/patrol/shift-member-location/details/<%= item._id %>"><%= item.date.toLocaleDateString('en-MY', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></a></td>
+                  <td class="staff align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><span class="badge badge-phoenix badge-phoenix-primary fs-10"><%= item.staff.length %></span></td>
+                  <td class="startshift align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><span class="badge badge-phoenix badge-phoenix-warning fs-10"><%= item.startShift %></span></td>
+                  <td class="endshift align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><span class="badge badge-phoenix badge-phoenix-warning fs-10"><%= item.endShift %></span></td>
                   <td class="status align-middle fw-semibold text-center py-2 ps-0 fs-9 fs-md-8 text-body-highlights"><span class="badge badge-phoenix fs-10 badge-phoenix-success"><%= item.status %></span></td>
                   <td class="remarks align-middle fst-italic text-center text-body-highlight py-2 ps-0 fs-9"><%= item.remarks || 'No remarks added.' %></td>
                   <td class="align-middle text-end white-space-nowrap ps-0 action">
@@ -818,43 +696,21 @@
                         <span class="fas fa-ellipsis-h fs-9"></span>
                       </button>
                       <div class="dropdown-menu dropdown-menu-end py-2">
-                        <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#showDetailB-jm<%= index %>">View Detail</a>
+                        <a class="dropdown-item" href="/auxiliary-police/patrol/shift-member-location/details/<%= item._id %>">View Detail</a>
                       </div>
                     </div>
                   </td>
                 </tr>
-
-                <div class="modal fade" id="showDetailB-jm<%= index %>" tabindex="-1">
-                  <div class="modal-dialog modal-lg">
-                    <div class="modal-content">
-                      <div class="modal-body">
-                        <div class="d-flex justify-content-between">
-                          <h3 class="card-title"><%= item.shift %></h3>
-                          <p><span class="badge badge-phoenix badge-phoenix-success fs-10 align-items-center"><%= item.status %></span></p>
-                        </div>
-                        <p class="card-text">Head Shift: <span class="fw-semibold fst-italic"><%= item.headShift %></span></p>
-                        <p class="card-text">Date: <span class="fw-semibold fst-italic"><%= new Date(item.date).toLocaleDateString()  %></span></p>
-                        <p class="card-text">Time: <span class="fw-semibold fst-italic"><%= item.time %></span></p>
-                        <p class="card-text">Location: <span class="fw-semibold fst-italic"><%= item.location %></span></p>
-                        <p class="card-text">Remarks: <span class="fw-semibold fst-italic"><%= item.remarks %></span></p>
-                        <hr>
-                        <% item.staff.forEach(function(staffMember) { %>
-                        <button class="btn btn-primary"><%= staffMember %></button>
-                        <% }); %>
-                      </div>
-                    </div>
-                  </div>
-                </div>
                 <% }); %>
 
                 <% }else{ %>
                 <tr>
-                  <td colspan="6" class="text-center fs-9 fw-bold">No duty handover submitted</td>
+                  <td colspan="6" class="text-center fs-9 fw-bold">No patrol report submitted</td>
                 </tr>
                 <% } 
                 }else{ %>
                 <tr>
-                  <td colspan="6" class="text-center fs-9 fw-bold">No duty handover submitted</td>
+                  <td colspan="6" class="text-center fs-9 fw-bold">No patrol report submitted</td>
                 </tr>
                 <% } %>
               </tbody>
@@ -874,7 +730,7 @@
         </div>
       </div>
       <div id="detailsJamekMosqueC" class="mt-3 d-none shift-details">
-        <div class="border-bottom border-translucent mt-3" data-list='{"valueNames":["date", "status","headshift","time", "remarks"],"page":10,"pagination":true}'>
+        <div class="border-bottom border-translucent mt-3" data-list='{"valueNames":["date", "status","staff","startshift","endshift", "remarks"],"page":10,"pagination":true}'>
           <div class="row align-items-end justify-content-between pb-4 g-3">
 
             <div class="col-12 col-md-auto">
@@ -893,8 +749,9 @@
               <thead>
                 <tr>
                   <th class="sort align-middle ps-0 text-start text-uppercase" scope="col" data-sort="date" style="width:15%;min-width: 150px;">Date</th>
-                  <th class="sort align-middle ps-0 text-start text-uppercase" scope="col" data-sort="headshift" style="width:15%;min-width: 100px;">Head Shift</th>
-                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="time" style="width:10%;min-width: 100px;">Time</th>
+                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="staff" style="width:15%;min-width: 100px;">Staff</th>
+                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="startshift" style="width:10%;min-width: 100px;">Start Shift</th>
+                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="endshift" style="width:10%;min-width: 100px;">End Shift</th>
                   <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="status" style="width:15%;min-width: 150px;">Status</th>
                   <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="remarks" style="width:20%;min-width: 100px;">Remarks</th>
                   <th class="sort align-middle ps-0 text-end text-uppercase" scope="col" style="width:5%;min-width: 50px;"></th>
@@ -904,15 +761,18 @@
               <tbody class="list">
                 <% if(jm && jm.length > 0){ 
                 
-                const filteredJm = jm.filter(item => item.shift === 'Shift C');
-                if (filteredJm.length > 0) { 
+                const filteredjm = jm.filter(item => item.shift === 'Shift C');
+                if (filteredjm.length > 0) { 
                 
-                 filteredJm.forEach((item, index) => { %>
+                 filteredjm.forEach((item, index) => { %>
+
+                <% console.log%>
 
                 <tr class="position-static">
-                  <td class="date align-middle fw-bold text-start text-primary py-2 ps-0 fs-8"><a href="#" data-bs-toggle="modal" data-bs-target="#showDetailC-jm<%= index %>"><%= item.date.toLocaleDateString('en-MY', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></a></td>
-                  <td class="headshift align-middle text-start fw-bold text-body-highlights py-2 ps-0 fs-8"><%= item.headShift %></td>
-                  <td class="time align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><%= item.time %></td>
+                  <td class="date align-middle fw-bold text-start text-primary py-2 ps-0 fs-8"><a href="/auxiliary-police/patrol/shift-member-location/details/<%= item._id %>"><%= item.date.toLocaleDateString('en-MY', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></a></td>
+                  <td class="staff align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><span class="badge badge-phoenix badge-phoenix-primary fs-10"><%= item.staff.length %></span></td>
+                  <td class="startshift align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><span class="badge badge-phoenix badge-phoenix-warning fs-10"><%= item.startShift %></span></td>
+                  <td class="endshift align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><span class="badge badge-phoenix badge-phoenix-warning fs-10"><%= item.endShift %></span></td>
                   <td class="status align-middle fw-semibold text-center py-2 ps-0 fs-9 fs-md-8 text-body-highlights"><span class="badge badge-phoenix fs-10 badge-phoenix-success"><%= item.status %></span></td>
                   <td class="remarks align-middle fst-italic text-center text-body-highlight py-2 ps-0 fs-9"><%= item.remarks || 'No remarks added.' %></td>
                   <td class="align-middle text-end white-space-nowrap ps-0 action">
@@ -921,43 +781,21 @@
                         <span class="fas fa-ellipsis-h fs-9"></span>
                       </button>
                       <div class="dropdown-menu dropdown-menu-end py-2">
-                        <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#showDetailC-jm<%= index %>">View Detail</a>
+                        <a class="dropdown-item" href="/auxiliary-police/patrol/shift-member-location/details/<%= item._id %>">View Detail</a>
                       </div>
                     </div>
                   </td>
                 </tr>
-
-                <div class="modal fade" id="showDetailC-jm<%= index %>" tabindex="-1">
-                  <div class="modal-dialog modal-lg">
-                    <div class="modal-content">
-                      <div class="modal-body">
-                        <div class="d-flex justify-content-between">
-                          <h3 class="card-title"><%= item.shift %></h3>
-                          <p><span class="badge badge-phoenix badge-phoenix-success fs-10 align-items-center"><%= item.status %></span></p>
-                        </div>
-                        <p class="card-text">Head Shift: <span class="fw-semibold fst-italic"><%= item.headShift %></span></p>
-                        <p class="card-text">Date: <span class="fw-semibold fst-italic"><%= new Date(item.date).toLocaleDateString()  %></span></p>
-                        <p class="card-text">Time: <span class="fw-semibold fst-italic"><%= item.time %></span></p>
-                        <p class="card-text">Location: <span class="fw-semibold fst-italic"><%= item.location %></span></p>
-                        <p class="card-text">Remarks: <span class="fw-semibold fst-italic"><%= item.remarks %></span></p>
-                        <hr>
-                        <% item.staff.forEach(function(staffMember) { %>
-                        <button class="btn btn-primary"><%= staffMember %></button>
-                        <% }); %>
-                      </div>
-                    </div>
-                  </div>
-                </div>
                 <% }); %>
 
                 <% }else{ %>
                 <tr>
-                  <td colspan="6" class="text-center fs-9 fw-bold">No duty handover submitted</td>
+                  <td colspan="6" class="text-center fs-9 fw-bold">No patrol report submitted</td>
                 </tr>
                 <% } 
                 }else{ %>
                 <tr>
-                  <td colspan="6" class="text-center fs-9 fw-bold">No duty handover submitted</td>
+                  <td colspan="6" class="text-center fs-9 fw-bold">No patrol report submitted</td>
                 </tr>
                 <% } %>
               </tbody>
@@ -986,7 +824,7 @@
       </div>
       <h3>City Mosque</h3>
       <div id="detailsCityMosqueA" class="mt-3 shift-details">
-        <div class="border-bottom border-translucent mt-3" data-list='{"valueNames":["date", "status","headshift","time", "remarks"],"page":10,"pagination":true}'>
+        <div class="border-bottom border-translucent mt-3" data-list='{"valueNames":["date", "status","staff","startshift","endshift", "remarks"],"page":10,"pagination":true}'>
           <div class="row align-items-end justify-content-between pb-4 g-3">
 
             <div class="col-12 col-md-auto">
@@ -1005,8 +843,9 @@
               <thead>
                 <tr>
                   <th class="sort align-middle ps-0 text-start text-uppercase" scope="col" data-sort="date" style="width:15%;min-width: 150px;">Date</th>
-                  <th class="sort align-middle ps-0 text-start text-uppercase" scope="col" data-sort="headshift" style="width:15%;min-width: 100px;">Head Shift</th>
-                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="time" style="width:10%;min-width: 100px;">Time</th>
+                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="staff" style="width:15%;min-width: 100px;">Staff</th>
+                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="startshift" style="width:10%;min-width: 100px;">Start Shift</th>
+                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="endshift" style="width:10%;min-width: 100px;">End Shift</th>
                   <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="status" style="width:15%;min-width: 150px;">Status</th>
                   <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="remarks" style="width:20%;min-width: 100px;">Remarks</th>
                   <th class="sort align-middle ps-0 text-end text-uppercase" scope="col" style="width:5%;min-width: 50px;"></th>
@@ -1021,10 +860,13 @@
                 
                  filteredcm.forEach((item, index) => { %>
 
+                <% console.log%>
+
                 <tr class="position-static">
-                  <td class="date align-middle fw-bold text-start text-primary py-2 ps-0 fs-8"><a href="#" data-bs-toggle="modal" data-bs-target="#showDetailA-cm<%= index %>"><%= item.date.toLocaleDateString('en-MY', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></a></td>
-                  <td class="headshift align-middle text-start fw-bold text-body-highlights py-2 ps-0 fs-8"><%= item.headShift %></td>
-                  <td class="time align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><%= item.time %></td>
+                  <td class="date align-middle fw-bold text-start text-primary py-2 ps-0 fs-8"><a href="/auxiliary-police/patrol/shift-member-location/details/<%= item._id %>"><%= item.date.toLocaleDateString('en-MY', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></a></td>
+                  <td class="staff align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><span class="badge badge-phoenix badge-phoenix-primary fs-10"><%= item.staff.length %></span></td>
+                  <td class="startshift align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><span class="badge badge-phoenix badge-phoenix-warning fs-10"><%= item.startShift %></span></td>
+                  <td class="endshift align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><span class="badge badge-phoenix badge-phoenix-warning fs-10"><%= item.endShift %></span></td>
                   <td class="status align-middle fw-semibold text-center py-2 ps-0 fs-9 fs-md-8 text-body-highlights"><span class="badge badge-phoenix fs-10 badge-phoenix-success"><%= item.status %></span></td>
                   <td class="remarks align-middle fst-italic text-center text-body-highlight py-2 ps-0 fs-9"><%= item.remarks || 'No remarks added.' %></td>
                   <td class="align-middle text-end white-space-nowrap ps-0 action">
@@ -1033,42 +875,21 @@
                         <span class="fas fa-ellipsis-h fs-9"></span>
                       </button>
                       <div class="dropdown-menu dropdown-menu-end py-2">
-                        <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#showDetailA-cm<%= index %>">View Detail</a>
+                        <a class="dropdown-item" href="/auxiliary-police/patrol/shift-member-location/details/<%= item._id %>">View Detail</a>
                       </div>
                     </div>
                   </td>
                 </tr>
-
-                <div class="modal fade" id="showDetailA-cm<%= index %>" tabindex="-1">
-                  <div class="modal-dialog modal-lg">
-                    <div class="modal-content">
-                      <div class="modal-body">
-                        <div class="d-flex justify-content-between">
-                          <h3 class="card-title"><%= item.shift %></h3>
-                          <p><span class="badge badge-phoenix badge-phoenix-success fs-10 align-items-center"><%= item.status %></span></p>
-                        </div>
-                        <p class="card-text">Head Shift: <span class="fw-semibold fst-italic"><%= item.headShift %></span></p>
-                        <p class="card-text">Date: <span class="fw-semibold fst-italic"><%= new Date(item.date).toLocaleDateString()  %></span></p>
-                        <p class="card-text">Time: <span class="fw-semibold fst-italic"><%= item.time %></span></p>
-                        <p class="card-text">Location: <span class="fw-semibold fst-italic"><%= item.location %></span></p>
-                        <p class="card-text">Remarks: <span class="fw-semibold fst-italic"><%= item.remarks %></span></p>
-                        <hr>
-                        <% item.staff.forEach(function(staffMember) { %>
-                        <button class="btn btn-primary"><%= staffMember %></button>
-                        <% }); %>
-                      </div>
-                    </div>
-                  </div>
-                </div>
                 <% }); %>
+
                 <% }else{ %>
                 <tr>
-                  <td colspan="6" class="text-center fs-9 fw-bold">No duty handover submitted</td>
+                  <td colspan="6" class="text-center fs-9 fw-bold">No patrol report submitted</td>
                 </tr>
                 <% } 
                 }else{ %>
                 <tr>
-                  <td colspan="6" class="text-center fs-9 fw-bold">No duty handover submitted</td>
+                  <td colspan="6" class="text-center fs-9 fw-bold">No patrol report submitted</td>
                 </tr>
                 <% } %>
               </tbody>
@@ -1088,7 +909,7 @@
         </div>
       </div>
       <div id="detailsCityMosqueB" class="mt-3 d-none shift-details">
-        <div class="border-bottom border-translucent mt-3" data-list='{"valueNames":["date", "status","headshift","time", "remarks"],"page":10,"pagination":true}'>
+        <div class="border-bottom border-translucent mt-3" data-list='{"valueNames":["date", "status","staff","startshift","endshift", "remarks"],"page":10,"pagination":true}'>
           <div class="row align-items-end justify-content-between pb-4 g-3">
 
             <div class="col-12 col-md-auto">
@@ -1107,15 +928,16 @@
               <thead>
                 <tr>
                   <th class="sort align-middle ps-0 text-start text-uppercase" scope="col" data-sort="date" style="width:15%;min-width: 150px;">Date</th>
-                  <th class="sort align-middle ps-0 text-start text-uppercase" scope="col" data-sort="headshift" style="width:15%;min-width: 100px;">Head Shift</th>
-                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="time" style="width:10%;min-width: 100px;">Time</th>
+                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="staff" style="width:15%;min-width: 100px;">Staff</th>
+                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="startshift" style="width:10%;min-width: 100px;">Start Shift</th>
+                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="endshift" style="width:10%;min-width: 100px;">End Shift</th>
                   <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="status" style="width:15%;min-width: 150px;">Status</th>
                   <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="remarks" style="width:20%;min-width: 100px;">Remarks</th>
                   <th class="sort align-middle ps-0 text-end text-uppercase" scope="col" style="width:5%;min-width: 50px;"></th>
                 </tr>
               </thead>
 
-              <tbody class="liscm
+              <tbody class="list">
                 <% if(cm && cm.length > 0){ 
                 
                 const filteredcm = cm.filter(item => item.shift === 'Shift B');
@@ -1123,55 +945,36 @@
                 
                  filteredcm.forEach((item, index) => { %>
 
-                <tr class=" position-static">
-                <td class="date align-middle fw-bold text-start text-primary py-2 ps-0 fs-8"><a href="#" data-bs-toggle="modal" data-bs-target="#showDetailB-cm<%= index %>"><%= item.date.toLocaleDateString('en-MY', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></a></td>
-                <td class="headshift align-middle text-start fw-bold text-body-highlights py-2 ps-0 fs-8"><%= item.headShift %></td>
-                <td class="time align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><%= item.time %></td>
-                <td class="status align-middle fw-semibold text-center py-2 ps-0 fs-9 fs-md-8 text-body-highlights"><span class="badge badge-phoenix fs-10 badge-phoenix-success"><%= item.status %></span></td>
-                <td class="remarks align-middle fst-italic text-center text-body-highlight py-2 ps-0 fs-9"><%= item.remarks || 'No remarks added.' %></td>
-                <td class="align-middle text-end white-space-nowrap ps-0 action">
-                  <div class="font-sans-serif btn-reveal-trigger position-static">
-                    <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs--2" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
-                      <span class="fas fa-ellipsis-h fs-9"></span>
-                    </button>
-                    <div class="dropdown-menu dropdown-menu-end py-2">
-                      <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#showDetailB-cm<%= index %>">View Detail</a>
-                    </div>
-                  </div>
-                </td>
-                </tr>
+                <% console.log%>
 
-                <div class="modal fade" id="showDetailB-cm<%= index %>" tabindex="-1">
-                  <div class="modal-dialog modal-lg">
-                    <div class="modal-content">
-                      <div class="modal-body">
-                        <div class="d-flex justify-content-between">
-                          <h3 class="card-title"><%= item.shift %></h3>
-                          <p><span class="badge badge-phoenix badge-phoenix-success fs-10 align-items-center"><%= item.status %></span></p>
-                        </div>
-                        <p class="card-text">Head Shift: <span class="fw-semibold fst-italic"><%= item.headShift %></span></p>
-                        <p class="card-text">Date: <span class="fw-semibold fst-italic"><%= new Date(item.date).toLocaleDateString()  %></span></p>
-                        <p class="card-text">Time: <span class="fw-semibold fst-italic"><%= item.time %></span></p>
-                        <p class="card-text">Location: <span class="fw-semibold fst-italic"><%= item.location %></span></p>
-                        <p class="card-text">Remarks: <span class="fw-semibold fst-italic"><%= item.remarks %></span></p>
-                        <hr>
-                        <% item.staff.forEach(function(staffMember) { %>
-                        <button class="btn btn-primary"><%= staffMember %></button>
-                        <% }); %>
+                <tr class="position-static">
+                  <td class="date align-middle fw-bold text-start text-primary py-2 ps-0 fs-8"><a href="/auxiliary-police/patrol/shift-member-location/details/<%= item._id %>"><%= item.date.toLocaleDateString('en-MY', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></a></td>
+                  <td class="staff align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><span class="badge badge-phoenix badge-phoenix-primary fs-10"><%= item.staff.length %></span></td>
+                  <td class="startshift align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><span class="badge badge-phoenix badge-phoenix-warning fs-10"><%= item.startShift %></span></td>
+                  <td class="endshift align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><span class="badge badge-phoenix badge-phoenix-warning fs-10"><%= item.endShift %></span></td>
+                  <td class="status align-middle fw-semibold text-center py-2 ps-0 fs-9 fs-md-8 text-body-highlights"><span class="badge badge-phoenix fs-10 badge-phoenix-success"><%= item.status %></span></td>
+                  <td class="remarks align-middle fst-italic text-center text-body-highlight py-2 ps-0 fs-9"><%= item.remarks || 'No remarks added.' %></td>
+                  <td class="align-middle text-end white-space-nowrap ps-0 action">
+                    <div class="font-sans-serif btn-reveal-trigger position-static">
+                      <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs--2" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
+                        <span class="fas fa-ellipsis-h fs-9"></span>
+                      </button>
+                      <div class="dropdown-menu dropdown-menu-end py-2">
+                        <a class="dropdown-item" href="/auxiliary-police/patrol/shift-member-location/details/<%= item._id %>">View Detail</a>
                       </div>
                     </div>
-                  </div>
-                </div>
+                  </td>
+                </tr>
                 <% }); %>
 
                 <% }else{ %>
                 <tr>
-                  <td colspan="6" class="text-center fs-9 fw-bold">No duty handover submitted</td>
+                  <td colspan="6" class="text-center fs-9 fw-bold">No patrol report submitted</td>
                 </tr>
                 <% } 
                 }else{ %>
                 <tr>
-                  <td colspan="6" class="text-center fs-9 fw-bold">No duty handover submitted</td>
+                  <td colspan="6" class="text-center fs-9 fw-bold">No patrol report submitted</td>
                 </tr>
                 <% } %>
               </tbody>
@@ -1191,7 +994,7 @@
         </div>
       </div>
       <div id="detailsCityMosqueC" class="mt-3 d-none shift-details">
-        <div class="border-bottom border-translucent mt-3" data-list='{"valueNames":["date", "status","headshift","time", "remarks"],"page":10,"pagination":true}'>
+        <div class="border-bottom border-translucent mt-3" data-list='{"valueNames":["date", "status","staff","startshift","endshift", "remarks"],"page":10,"pagination":true}'>
           <div class="row align-items-end justify-content-between pb-4 g-3">
 
             <div class="col-12 col-md-auto">
@@ -1210,8 +1013,9 @@
               <thead>
                 <tr>
                   <th class="sort align-middle ps-0 text-start text-uppercase" scope="col" data-sort="date" style="width:15%;min-width: 150px;">Date</th>
-                  <th class="sort align-middle ps-0 text-start text-uppercase" scope="col" data-sort="headshift" style="width:15%;min-width: 100px;">Head Shift</th>
-                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="time" style="width:10%;min-width: 100px;">Time</th>
+                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="staff" style="width:15%;min-width: 100px;">Staff</th>
+                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="startshift" style="width:10%;min-width: 100px;">Start Shift</th>
+                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="endshift" style="width:10%;min-width: 100px;">End Shift</th>
                   <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="status" style="width:15%;min-width: 150px;">Status</th>
                   <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="remarks" style="width:20%;min-width: 100px;">Remarks</th>
                   <th class="sort align-middle ps-0 text-end text-uppercase" scope="col" style="width:5%;min-width: 50px;"></th>
@@ -1226,10 +1030,13 @@
                 
                  filteredcm.forEach((item, index) => { %>
 
+                <% console.log%>
+
                 <tr class="position-static">
-                  <td class="date align-middle fw-bold text-start text-primary py-2 ps-0 fs-8"><a href="#" data-bs-toggle="modal" data-bs-target="#showDetailC-cm<%= index %>"><%= item.date.toLocaleDateString('en-MY', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></a></td>
-                  <td class="headshift align-middle text-start fw-bold text-body-highlights py-2 ps-0 fs-8"><%= item.headShift %></td>
-                  <td class="time align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><%= item.time %></td>
+                  <td class="date align-middle fw-bold text-start text-primary py-2 ps-0 fs-8"><a href="/auxiliary-police/patrol/shift-member-location/details/<%= item._id %>"><%= item.date.toLocaleDateString('en-MY', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></a></td>
+                  <td class="staff align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><span class="badge badge-phoenix badge-phoenix-primary fs-10"><%= item.staff.length %></span></td>
+                  <td class="startshift align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><span class="badge badge-phoenix badge-phoenix-warning fs-10"><%= item.startShift %></span></td>
+                  <td class="endshift align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><span class="badge badge-phoenix badge-phoenix-warning fs-10"><%= item.endShift %></span></td>
                   <td class="status align-middle fw-semibold text-center py-2 ps-0 fs-9 fs-md-8 text-body-highlights"><span class="badge badge-phoenix fs-10 badge-phoenix-success"><%= item.status %></span></td>
                   <td class="remarks align-middle fst-italic text-center text-body-highlight py-2 ps-0 fs-9"><%= item.remarks || 'No remarks added.' %></td>
                   <td class="align-middle text-end white-space-nowrap ps-0 action">
@@ -1238,43 +1045,21 @@
                         <span class="fas fa-ellipsis-h fs-9"></span>
                       </button>
                       <div class="dropdown-menu dropdown-menu-end py-2">
-                        <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#showDetailC-cm<%= index %>">View Detail</a>
+                        <a class="dropdown-item" href="/auxiliary-police/patrol/shift-member-location/details/<%= item._id %>">View Detail</a>
                       </div>
                     </div>
                   </td>
                 </tr>
-
-                <div class="modal fade" id="showDetailC-cm<%= index %>" tabindex="-1">
-                  <div class="modal-dialog modal-lg">
-                    <div class="modal-content">
-                      <div class="modal-body">
-                        <div class="d-flex justify-content-between">
-                          <h3 class="card-title"><%= item.shift %></h3>
-                          <p><span class="badge badge-phoenix badge-phoenix-success fs-10 align-items-center"><%= item.status %></span></p>
-                        </div>
-                        <p class="card-text">Head Shift: <span class="fw-semibold fst-italic"><%= item.headShift %></span></p>
-                        <p class="card-text">Date: <span class="fw-semibold fst-italic"><%= new Date(item.date).toLocaleDateString()  %></span></p>
-                        <p class="card-text">Time: <span class="fw-semibold fst-italic"><%= item.time %></span></p>
-                        <p class="card-text">Location: <span class="fw-semibold fst-italic"><%= item.location %></span></p>
-                        <p class="card-text">Remarks: <span class="fw-semibold fst-italic"><%= item.remarks %></span></p>
-                        <hr>
-                        <% item.staff.forEach(function(staffMember) { %>
-                        <button class="btn btn-primary"><%= staffMember %></button>
-                        <% }); %>
-                      </div>
-                    </div>
-                  </div>
-                </div>
                 <% }); %>
 
                 <% }else{ %>
                 <tr>
-                  <td colspan="6" class="text-center fs-9 fw-bold">No duty handover submitted</td>
+                  <td colspan="6" class="text-center fs-9 fw-bold">No patrol report submitted</td>
                 </tr>
                 <% } 
                 }else{ %>
                 <tr>
-                  <td colspan="6" class="text-center fs-9 fw-bold">No duty handover submitted</td>
+                  <td colspan="6" class="text-center fs-9 fw-bold">No patrol report submitted</td>
                 </tr>
                 <% } %>
               </tbody>
@@ -1303,7 +1088,7 @@
       </div>
       <h3>Raudhatul Sakinah</h3>
       <div id="detailsRaudhatulSakinahA" class="mt-3 shift-details">
-        <div class="border-bottom border-translucent mt-3" data-list='{"valueNames":["date", "status","headshift","time", "remarks"],"page":10,"pagination":true}'>
+        <div class="border-bottom border-translucent mt-3" data-list='{"valueNames":["date", "status","staff","startshift","endshift", "remarks"],"page":10,"pagination":true}'>
           <div class="row align-items-end justify-content-between pb-4 g-3">
 
             <div class="col-12 col-md-auto">
@@ -1322,12 +1107,13 @@
               <thead>
                 <tr>
                   <th class="sort align-middle ps-0 text-start text-uppercase" scope="col" data-sort="date" style="width:15%;min-width: 150px;">Date</th>
-                  <th class="sort align-middle ps-0 text-start text-uppercase" scope="col" data-sort="headshift" style="width:15%;min-width: 100px;">Head Shift</th>
-                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="time" style="width:10%;min-width: 100px;">Time</th>
+                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="staff" style="width:15%;min-width: 100px;">Staff</th>
+                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="startshift" style="width:10%;min-width: 100px;">Start Shift</th>
+                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="endshift" style="width:10%;min-width: 100px;">End Shift</th>
                   <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="status" style="width:15%;min-width: 150px;">Status</th>
                   <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="remarks" style="width:20%;min-width: 100px;">Remarks</th>
                   <th class="sort align-middle ps-0 text-end text-uppercase" scope="col" style="width:5%;min-width: 50px;"></th>
-                </tr>
+                </rs
               </thead>
 
               <tbody class="list">
@@ -1338,10 +1124,13 @@
                 
                  filteredrs.forEach((item, index) => { %>
 
+                <% console.log%>
+
                 <tr class="position-static">
-                  <td class="date align-middle fw-bold text-start text-primary py-2 ps-0 fs-8"><a href="#" data-bs-toggle="modal" data-bs-target="#showDetailA-rs<%= index %>"><%= item.date.toLocaleDateString('en-MY', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></a></td>
-                  <td class="headshift align-middle text-start fw-bold text-body-highlights py-2 ps-0 fs-8"><%= item.headShift %></td>
-                  <td class="time align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><%= item.time %></td>
+                  <td class="date align-middle fw-bold text-start text-primary py-2 ps-0 fs-8"><a href="/auxiliary-police/patrol/shift-member-location/details/<%= item._id %>"><%= item.date.toLocaleDateString('en-MY', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></a></td>
+                  <td class="staff align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><span class="badge badge-phoenix badge-phoenix-primary fs-10"><%= item.staff.length %></span></td>
+                  <td class="startshift align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><span class="badge badge-phoenix badge-phoenix-warning fs-10"><%= item.startShift %></span></td>
+                  <td class="endshift align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><span class="badge badge-phoenix badge-phoenix-warning fs-10"><%= item.endShift %></span></td>
                   <td class="status align-middle fw-semibold text-center py-2 ps-0 fs-9 fs-md-8 text-body-highlights"><span class="badge badge-phoenix fs-10 badge-phoenix-success"><%= item.status %></span></td>
                   <td class="remarks align-middle fst-italic text-center text-body-highlight py-2 ps-0 fs-9"><%= item.remarks || 'No remarks added.' %></td>
                   <td class="align-middle text-end white-space-nowrap ps-0 action">
@@ -1350,43 +1139,21 @@
                         <span class="fas fa-ellipsis-h fs-9"></span>
                       </button>
                       <div class="dropdown-menu dropdown-menu-end py-2">
-                        <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#showDetailA-rs<%= index %>">View Detail</a>
+                        <a class="dropdown-item" href="/auxiliary-police/patrol/shift-member-location/details/<%= item._id %>">View Detail</a>
                       </div>
                     </div>
                   </td>
                 </tr>
-
-                <div class="modal fade" id="showDetailA-rs<%= index %>" tabindex="-1">
-                  <div class="modal-dialog modal-lg">
-                    <div class="modal-content">
-                      <div class="modal-body">
-                        <div class="d-flex justify-content-between">
-                          <h3 class="card-title"><%= item.shift %></h3>
-                          <p><span class="badge badge-phoenix badge-phoenix-success fs-10 align-items-center"><%= item.status %></span></p>
-                        </div>
-                        <p class="card-text">Head Shift: <span class="fw-semibold fst-italic"><%= item.headShift %></span></p>
-                        <p class="card-text">Date: <span class="fw-semibold fst-italic"><%= new Date(item.date).toLocaleDateString()  %></span></p>
-                        <p class="card-text">Time: <span class="fw-semibold fst-italic"><%= item.time %></span></p>
-                        <p class="card-text">Location: <span class="fw-semibold fst-italic"><%= item.location %></span></p>
-                        <p class="card-text">Remarks: <span class="fw-semibold fst-italic"><%= item.remarks %></span></p>
-                        <hr>
-                        <% item.staff.forEach(function(staffMember) { %>
-                        <button class="btn btn-primary"><%= staffMember %></button>
-                        <% }); %>
-                      </div>
-                    </div>
-                  </div>
-                </div>
                 <% }); %>
 
                 <% }else{ %>
                 <tr>
-                  <td colspan="6" class="text-center fs-9 fw-bold">No duty handover submitted</td>
+                  <td colspan="6" class="text-center fs-9 fw-bold">No patrol report submitted</td>
                 </tr>
                 <% } 
                 }else{ %>
                 <tr>
-                  <td colspan="6" class="text-center fs-9 fw-bold">No duty handover submitted</td>
+                  <td colspan="6" class="text-center fs-9 fw-bold">No patrol report submitted</td>
                 </tr>
                 <% } %>
               </tbody>
@@ -1406,7 +1173,7 @@
         </div>
       </div>
       <div id="detailsRaudhatulSakinahB" class="mt-3 d-none shift-details">
-        <div class="border-bottom border-translucent mt-3" data-list='{"valueNames":["date", "status","headshift","time", "remarks"],"page":10,"pagination":true}'>
+        <div class="border-bottom border-translucent mt-3" data-list='{"valueNames":["date", "status","staff","startshift","endshift", "remarks"],"page":10,"pagination":true}'>
           <div class="row align-items-end justify-content-between pb-4 g-3">
 
             <div class="col-12 col-md-auto">
@@ -1425,8 +1192,9 @@
               <thead>
                 <tr>
                   <th class="sort align-middle ps-0 text-start text-uppercase" scope="col" data-sort="date" style="width:15%;min-width: 150px;">Date</th>
-                  <th class="sort align-middle ps-0 text-start text-uppercase" scope="col" data-sort="headshift" style="width:15%;min-width: 100px;">Head Shift</th>
-                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="time" style="width:10%;min-width: 100px;">Time</th>
+                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="staff" style="width:15%;min-width: 100px;">Staff</th>
+                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="startshift" style="width:10%;min-width: 100px;">Start Shift</th>
+                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="endshift" style="width:10%;min-width: 100px;">End Shift</th>
                   <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="status" style="width:15%;min-width: 150px;">Status</th>
                   <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="remarks" style="width:20%;min-width: 100px;">Remarks</th>
                   <th class="sort align-middle ps-0 text-end text-uppercase" scope="col" style="width:5%;min-width: 50px;"></th>
@@ -1441,10 +1209,13 @@
                 
                  filteredrs.forEach((item, index) => { %>
 
+                <% console.log%>
+
                 <tr class="position-static">
-                  <td class="date align-middle fw-bold text-start text-primary py-2 ps-0 fs-8"><a href="#" data-bs-toggle="modal" data-bs-target="#showDetailB-rs<%= index %>"><%= item.date.toLocaleDateString('en-MY', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></a></td>
-                  <td class="headshift align-middle text-start fw-bold text-body-highlights py-2 ps-0 fs-8"><%= item.headShift %></td>
-                  <td class="time align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><%= item.time %></td>
+                  <td class="date align-middle fw-bold text-start text-primary py-2 ps-0 fs-8"><a href="/auxiliary-police/patrol/shift-member-location/details/<%= item._id %>"><%= item.date.toLocaleDateString('en-MY', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></a></td>
+                  <td class="staff align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><span class="badge badge-phoenix badge-phoenix-primary fs-10"><%= item.staff.length %></span></td>
+                  <td class="startshift align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><span class="badge badge-phoenix badge-phoenix-warning fs-10"><%= item.startShift %></span></td>
+                  <td class="endshift align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><span class="badge badge-phoenix badge-phoenix-warning fs-10"><%= item.endShift %></span></td>
                   <td class="status align-middle fw-semibold text-center py-2 ps-0 fs-9 fs-md-8 text-body-highlights"><span class="badge badge-phoenix fs-10 badge-phoenix-success"><%= item.status %></span></td>
                   <td class="remarks align-middle fst-italic text-center text-body-highlight py-2 ps-0 fs-9"><%= item.remarks || 'No remarks added.' %></td>
                   <td class="align-middle text-end white-space-nowrap ps-0 action">
@@ -1453,43 +1224,21 @@
                         <span class="fas fa-ellipsis-h fs-9"></span>
                       </button>
                       <div class="dropdown-menu dropdown-menu-end py-2">
-                        <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#showDetailB-rs<%= index %>">View Detail</a>
+                        <a class="dropdown-item" href="/auxiliary-police/patrol/shift-member-location/details/<%= item._id %>">View Detail</a>
                       </div>
                     </div>
                   </td>
                 </tr>
-
-                <div class="modal fade" id="showDetailB-rs<%= index %>" tabindex="-1">
-                  <div class="modal-dialog modal-lg">
-                    <div class="modal-content">
-                      <div class="modal-body">
-                        <div class="d-flex justify-content-between">
-                          <h3 class="card-title"><%= item.shift %></h3>
-                          <p><span class="badge badge-phoenix badge-phoenix-success fs-10 align-items-center"><%= item.status %></span></p>
-                        </div>
-                        <p class="card-text">Head Shift: <span class="fw-semibold fst-italic"><%= item.headShift %></span></p>
-                        <p class="card-text">Date: <span class="fw-semibold fst-italic"><%= new Date(item.date).toLocaleDateString()  %></span></p>
-                        <p class="card-text">Time: <span class="fw-semibold fst-italic"><%= item.time %></span></p>
-                        <p class="card-text">Location: <span class="fw-semibold fst-italic"><%= item.location %></span></p>
-                        <p class="card-text">Remarks: <span class="fw-semibold fst-italic"><%= item.remarks %></span></p>
-                        <hr>
-                        <% item.staff.forEach(function(staffMember) { %>
-                        <button class="btn btn-primary"><%= staffMember %></button>
-                        <% }); %>
-                      </div>
-                    </div>
-                  </div>
-                </div>
                 <% }); %>
 
                 <% }else{ %>
                 <tr>
-                  <td colspan="6" class="text-center fs-9 fw-bold">No duty handover submitted</td>
+                  <td colspan="6" class="text-center fs-9 fw-bold">No patrol report submitted</td>
                 </tr>
                 <% } 
                 }else{ %>
                 <tr>
-                  <td colspan="6" class="text-center fs-9 fw-bold">No duty handover submitted</td>
+                  <td colspan="6" class="text-center fs-9 fw-bold">No patrol report submitted</td>
                 </tr>
                 <% } %>
               </tbody>
@@ -1509,7 +1258,7 @@
         </div>
       </div>
       <div id="detailsRaudhatulSakinahC" class="mt-3 d-none shift-details">
-        <div class="border-bottom border-translucent mt-3" data-list='{"valueNames":["date", "status","headshift","time", "remarks"],"page":10,"pagination":true}'>
+        <div class="border-bottom border-translucent mt-3" data-list='{"valueNames":["date", "status","staff","startshift","endshift", "remarks"],"page":10,"pagination":true}'>
           <div class="row align-items-end justify-content-between pb-4 g-3">
 
             <div class="col-12 col-md-auto">
@@ -1528,8 +1277,9 @@
               <thead>
                 <tr>
                   <th class="sort align-middle ps-0 text-start text-uppercase" scope="col" data-sort="date" style="width:15%;min-width: 150px;">Date</th>
-                  <th class="sort align-middle ps-0 text-start text-uppercase" scope="col" data-sort="headshift" style="width:15%;min-width: 100px;">Head Shift</th>
-                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="time" style="width:10%;min-width: 100px;">Time</th>
+                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="staff" style="width:15%;min-width: 100px;">Staff</th>
+                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="startshift" style="width:10%;min-width: 100px;">Start Shift</th>
+                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="endshift" style="width:10%;min-width: 100px;">End Shift</th>
                   <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="status" style="width:15%;min-width: 150px;">Status</th>
                   <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="remarks" style="width:20%;min-width: 100px;">Remarks</th>
                   <th class="sort align-middle ps-0 text-end text-uppercase" scope="col" style="width:5%;min-width: 50px;"></th>
@@ -1544,10 +1294,13 @@
                 
                  filteredrs.forEach((item, index) => { %>
 
+                <% console.log%>
+
                 <tr class="position-static">
-                  <td class="date align-middle fw-bold text-start text-primary py-2 ps-0 fs-8"><a href="#" data-bs-toggle="modal" data-bs-target="#showDetailC-rs<%= index %>"><%= item.date.toLocaleDateString('en-MY', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></a></td>
-                  <td class="headshift align-middle text-start fw-bold text-body-highlights py-2 ps-0 fs-8"><%= item.headShift %></td>
-                  <td class="time align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><%= item.time %></td>
+                  <td class="date align-middle fw-bold text-start text-primary py-2 ps-0 fs-8"><a href="/auxiliary-police/patrol/shift-member-location/details/<%= item._id %>"><%= item.date.toLocaleDateString('en-MY', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></a></td>
+                  <td class="staff align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><span class="badge badge-phoenix badge-phoenix-primary fs-10"><%= item.staff.length %></span></td>
+                  <td class="startshift align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><span class="badge badge-phoenix badge-phoenix-warning fs-10"><%= item.startShift %></span></td>
+                  <td class="endshift align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><span class="badge badge-phoenix badge-phoenix-warning fs-10"><%= item.endShift %></span></td>
                   <td class="status align-middle fw-semibold text-center py-2 ps-0 fs-9 fs-md-8 text-body-highlights"><span class="badge badge-phoenix fs-10 badge-phoenix-success"><%= item.status %></span></td>
                   <td class="remarks align-middle fst-italic text-center text-body-highlight py-2 ps-0 fs-9"><%= item.remarks || 'No remarks added.' %></td>
                   <td class="align-middle text-end white-space-nowrap ps-0 action">
@@ -1556,43 +1309,21 @@
                         <span class="fas fa-ellipsis-h fs-9"></span>
                       </button>
                       <div class="dropdown-menu dropdown-menu-end py-2">
-                        <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#showDetailC-rs<%= index %>">View Detail</a>
+                        <a class="dropdown-item" href="/auxiliary-police/patrol/shift-member-location/details/<%= item._id %>">View Detail</a>
                       </div>
                     </div>
                   </td>
                 </tr>
-
-                <div class="modal fade" id="showDetailC-rs<%= index %>" tabindex="-1">
-                  <div class="modal-dialog modal-lg">
-                    <div class="modal-content">
-                      <div class="modal-body">
-                        <div class="d-flex justify-content-between">
-                          <h3 class="card-title"><%= item.shift %></h3>
-                          <p><span class="badge badge-phoenix badge-phoenix-success fs-10 align-items-center"><%= item.status %></span></p>
-                        </div>
-                        <p class="card-text">Head Shift: <span class="fw-semibold fst-italic"><%= item.headShift %></span></p>
-                        <p class="card-text">Date: <span class="fw-semibold fst-italic"><%= new Date(item.date).toLocaleDateString()  %></span></p>
-                        <p class="card-text">Time: <span class="fw-semibold fst-italic"><%= item.time %></span></p>
-                        <p class="card-text">Location: <span class="fw-semibold fst-italic"><%= item.location %></span></p>
-                        <p class="card-text">Remarks: <span class="fw-semibold fst-italic"><%= item.remarks %></span></p>
-                        <hr>
-                        <% item.staff.forEach(function(staffMember) { %>
-                        <button class="btn btn-primary"><%= staffMember %></button>
-                        <% }); %>
-                      </div>
-                    </div>
-                  </div>
-                </div>
                 <% }); %>
 
                 <% }else{ %>
                 <tr>
-                  <td colspan="6" class="text-center fs-9 fw-bold">No duty handover submitted</td>
+                  <td colspan="6" class="text-center fs-9 fw-bold">No patrol report submitted</td>
                 </tr>
                 <% } 
                 }else{ %>
                 <tr>
-                  <td colspan="6" class="text-center fs-9 fw-bold">No duty handover submitted</td>
+                  <td colspan="6" class="text-center fs-9 fw-bold">No patrol report submitted</td>
                 </tr>
                 <% } %>
               </tbody>
@@ -1889,6 +1620,7 @@
       showBaitulMakmurI();
     });
   </script>
+  
 
 </div>
 

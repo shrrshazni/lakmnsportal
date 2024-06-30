@@ -165,7 +165,7 @@ const currentDate = getTodayDate();
 
                   } else {
                     resultsDiv.innerHTML = '<p class= "text-center fs-9 fw-bold">No shift found/submitted before your current shift</p>';
-                    submitButtonDiv.classList.add('d-none');
+                    submitButtonDiv.classList.remove('d-none');
                   }
 
                   if (data.shiftSchedule && data.shiftSchedule.shift && data.shiftSchedule.shift.length > 0) {
