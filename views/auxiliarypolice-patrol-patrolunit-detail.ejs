@@ -2,7 +2,7 @@
 
 <div class="mb-6">
 
-  <div class="mb-5">
+  <div class="mb-3">
     <nav class="mb-2" aria-label="breadcrumb">
       <ol class="breadcrumb mb-0">
         <li class="breadcrumb-item active fs-8"><span class="badge badge-phoenix badge-phoenix-success fs-9 mb-3"><%= patrolReport.status %></li>
@@ -110,8 +110,48 @@
 
     </div>
 
+    <hr>
+
+    <div class="">
+      <div class="d-flex align-items-center mb-4">
+        <h3 class="text-1100 me-3">Summary</h3>
+        <button class="btn btn-link p-0" data-bs-toggle="modal" data-bs-target="#modalNotes">
+          <span class="fa-solid fa-pen"></span>
+        </button>
+      </div>
+      <p class="text-500">
+        <%= patrolReport.remarks %>
+      </p>
+    </div>
+
   </div>
 
+</div>
 
+<div class="modal fade" id="modalNotes" tabindex="-1" aria-labelledby="verticallyCenteredModalLabel" aria-hidden="true" style="display: none">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="verticallyCenteredModalLabel">Remarks</h5>
+        <button class="btn p-1" type="button" data-bs-dismiss="modal" aria-label="Close">
+          <span class="fas fa-times fs--1"></span>
+        </button>
+      </div>
+
+      <div class="modal-body row">
+        <form action="/remarks/update" method="post" id="notesUpdateForm">
+          <div class="col-12 gy-4">
+            <textarea class="form-control scrollbar-overlay mb-3" id="notesInput" placeholder="Leave a note here" style="height: 75px" name="notes"></textarea>
+          </div>
+
+          <input type="text" style="display: none" value="<%= patrolUnit._id %>" name="confirmRid" />
+
+          <button class="btn btn-primary myButton" type="submit" id="updateNotes">
+            <div class="btn-content">Update</div>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
 </div>
 <%- include('partials/private-footer.ejs') %>

@@ -5190,6 +5190,91 @@ app.get('/auxiliary-police/patrol/patrol-unit/details/:id', isAuthenticated, asy
     }
 });
 
+app.post('/remarks/update/:id', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+
+    if (user) {
+        const id = req.params.id;
+
+        const patrol = await PatrolAux.findOneAndUpdate(
+            { _id: id },
+            { $set: { remarks: req.body.remarks } },
+            { new: true }
+        );
+
+        if (patrol) {
+            console.log('Successfully update remarks on this patrol report');
+            res.redirect('/auxiliary-police/patrol/patrol-unit/' + patrol._id);
+        } else {
+            console.log('Failed to update remarks on this patrol report');
+            res.redirect('/auxiliary-police/patrol/patrol-unit/' + patrol._id);
+        }
+    }
+});
+
+// SUBMIT CHECKPOINT DATA WITH QR SCAN
+app.get(
+    '/patrol-unit/checkpoint-submit/:checkpointName/:longitude/:latitude',
+    async function (req, res) {
+        const dateToday = dateLocal.getDate();
+        const kualaLumpurTimeZoneOffset1 = 8; // Kuala Lumpur is UTC+8
+        const now1 = moment().utcOffset(kualaLumpurTimeZoneOffset1 * 60); // Convert hours to minutes
+
+        // Get the current time in the Asia/Kuala_Lumpur timezone
+        const time = now1.format('HHmm') + 'HRS';
+
+        console.log(dateToday);
+
+        const checkpointName = _.startCase(
+            req.params.checkpointName.replace(/-/g, ' ')
+        );
+        const currentLongitude = req.params.longitude;
+        const currentLatitude = req.params.latitude;
+
+        const logReport = 'Have patrol this area at ' + time;
+
+        const updatedCheckpointData = {
+            time: time, // Replace with the new time
+            longitude: currentLongitude, // Replace with the new longitude
+            latitude: currentLatitude, // Replace with the new latitude
+            logReport: logReport
+        };
+
+        // Find the patrol report by ID and update the specific checkpoint in the patrolUnit array
+        const checkPatrolUnit = await PatrolAux.findOneAndUpdate(
+            {
+                type: 'Patrol Unit',
+                date: new Date(),
+                'patrolUnit.checkpointName': checkpointName
+            },
+            {
+                $set: {
+                    'patrolUnit.$.time': updatedCheckpointData.time,
+                    'patrolUnit.$.longitude': updatedCheckpointData.longitude,
+                    'patrolUnit.$.latitude': updatedCheckpointData.latitude,
+                    'patrolUnit.$.logReport': updatedCheckpointData.logReport
+                }
+            },
+            { new: true, useFindAndModify: false }
+        );
+
+        if (checkPatrolUnit.status === 'Open' && checkPatrolUnit) {
+
+            console.log(checkPatrolUnit._id);
+
+            console.log(
+                'Successfully update on patrol unit for at ' +
+                checkpointName
+            );
+            res.render('submit-success');
+        } else {
+            console.log('Unsuccessful update the qr data due to closed status!');
+            res.render('submit-failed');
+        }
+    }
+);
+
 // MAP COORDINATES
 app.get('/map-coordinates/:reportId', async (req, res) => {
     const reportId = req.params.reportId;
