@@ -6767,6 +6767,7 @@ app.post('/api/qrcode/process-data', isAuthenticated, async function (req, res) 
     var log = '';
 
     if (checkUser) {
+        const now = new Date();
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
@@ -6786,96 +6787,93 @@ app.post('/api/qrcode/process-data', isAuthenticated, async function (req, res) 
             });
 
             if (existingAttendance) {
-                if (
-                    existingAttendance.date.signInTime !== null &&
-                    existingAttendance.date.signOutTime === null
-                ) {
-                    await Attendance.findOneAndUpdate(
-                        {
-                            user: checkUser._id,
-                            timestamp: {
-                                $gte: today, // Greater than or equal to the beginning of today
-                                $lte: new Date() // Less than or equal to the current time
-                            }
-                        },
-                        {
-                            'date.signOutTime': new Date(),
-                            type: 'sign out',
-                            status: 'Present',
-                            timestamp: new Date()
-                        },
-                        {
-                            upsert: true,
-                            new: true
+                if (existingAttendance.signInTime !== null && existingAttendance.signOutTime === null) {
+                    // Check for non-office hour users (e.g., night shift)
+                    if (checkUser.isNonOfficeHour) {
+                        const startShift = new Date(existingAttendance.signInTime);
+                        const endShift = new Date(startShift);
+                        endShift.setDate(startShift.getDate() + 1);
+                        endShift.setHours(7, 0, 0, 0); // 07:00 of the next day
+
+                        if (now > endShift) {
+                            // If current time is past the end shift time, it means it's a sign-out for the previous day's shift
+                            await Attendance.findOneAndUpdate(
+                                {
+                                    user: checkUser._id,
+                                    signInTime: {
+                                        $gte: startShift,
+                                        $lt: endShift
+                                    }
+                                },
+                                {
+                                    $set: {
+                                        signOutTime: now,
+                                        type: 'sign out',
+                                        status: 'Present',
+                                        timestamp: now
+                                    }
+                                },
+                                {
+                                    upsert: true,
+                                    new: true
+                                }
+                            );
+
+                            console.log('You have successfully signed out for today, thank you');
+
+                            const tempAttendance = new TempAttendance({
+                                user: checkUser._id,
+                                timestamp: now,
+                                type: 'sign out'
+                            });
+
+                            await tempAttendance.save();
+
+                            // activity
+                            const activityUser = new Activity({
+                                user: checkUser._id,
+                                date: now,
+                                title: 'Sign out for today',
+                                type: 'Attendance',
+                                description: checkUser.fullname + ' has signed out for ' + getDateFormat2(today)
+                            });
+
+                            await activityUser.save();
+
+                            console.log('New activity submitted', activityUser);
+
+                            log = 'You have successfully signed out for today, thank you!';
                         }
-                    );
-
-                    console.log('You have successfully signed out for today, thank you');
-
-                    const tempAttendance = new TempAttendance({
-                        user: checkUser._id,
-                        timestamp: new Date(),
-                        type: 'sign out'
-                    });
-
-                    await tempAttendance.save();
-
-                    // activity
-                    const activityUser = new Activity({
-                        user: checkUser._id,
-                        date: new Date(),
-                        title: 'Sign out for today',
-                        type: 'Attendance',
-                        description:
-                            checkUser.fullname +
-                            ' has sign out for ' + getDateFormat2(today)
-                    });
-
-                    activityUser.save();
-
-                    console.log('New activity submitted', activityUser);
-
-                    log = 'You have successfully signed out for today, thank you!';
-                } else if (
-                    existingAttendance.date.signInTime === null &&
-                    existingAttendance.date.signOutTime === null
-                ) {
-                    const currentTime = new Date();
-                    const pstTime = currentTime.toLocaleString('en-MY', {
-                        timeZone: 'Asia/Kuala_Lumpur',
-                        hour12: false
-                    });
-                    const pstHourString = pstTime.split(',')[1].trim().split(':')[0];
-                    const pstHour = parseInt(pstHourString);
-
-                    console.log(pstHour);
-
-                    if (pstHour >= 8) {
-                        console.log('Clock in late confirmed');
-
+                    } else {
+                        // Regular shift sign-out
                         await Attendance.findOneAndUpdate(
                             {
                                 user: checkUser._id,
                                 timestamp: {
-                                    $gte: today, // Greater than or equal to the start of today
-                                    $lte: new Date() // Less than the current time
+                                    $gte: today,
+                                    $lte: now
                                 }
                             },
                             {
                                 $set: {
-                                    status: 'Late',
-                                    type: 'sign in',
-                                    'date.signInTime': new Date(),
-                                    timestamp: new Date()
+                                    signOutTime: now,
+                                    type: 'sign out',
+                                    status: 'Present',
+                                    timestamp: now
                                 }
                             },
-                            { upsert: true, new: true }
+                            {
+                                upsert: true,
+                                new: true
+                            }
                         );
+
+                        console.log('You have successfully signed out for today, thank you');
 
                         const tempAttendance = new TempAttendance({
                             user: checkUser._id,
-                            timestamp: new Date(),
-                            type: 'sign in'
+                            timestamp: now,
+                            type: 'sign out'
                         });
 
                         await tempAttendance.save();
@@ -6883,21 +6881,23 @@ app.post('/api/qrcode/process-data', isAuthenticated, async function (req, res) 
                         // activity
                         const activityUser = new Activity({
                             user: checkUser._id,
-                            date: new Date(),
-                            title: 'Sign in late for today',
+                            date: now,
+                            title: 'Sign out for today',
                             type: 'Attendance',
-                            description:
-                                checkUser.fullname +
-                                ' has sign in late for ' + getDateFormat2(today)
+                            description: checkUser.fullname + ' has signed out for ' + getDateFormat2(today)
                         });
 
-                        activityUser.save();
+                        await activityUser.save();
 
                         console.log('New activity submitted', activityUser);
 
-                        log =
-                            'You have successfully signed in as late for today, thank you!';
-                    } else {
+                        log = 'You have successfully signed out for today, thank you!';
+                    }
+                } else if (
+                    existingAttendance.date.signInTime === null &&
+                    existingAttendance.date.signOutTime === null
+                ) {
+                    if (checkUser.isNonOfficeHour === true) {
                         await Attendance.findOneAndUpdate(
                             {
                                 user: checkUser._id,
@@ -6941,7 +6941,112 @@ app.post('/api/qrcode/process-data', isAuthenticated, async function (req, res) 
                         console.log('New activity submitted', activityUser);
 
                         log = 'You have successfully signed in for today, thank you!';
+                    } else {
+                        const currentTime = new Date();
+                        const pstTime = currentTime.toLocaleString('en-MY', {
+                            timeZone: 'Asia/Kuala_Lumpur',
+                            hour12: false
+                        });
+                        const pstHourString = pstTime.split(',')[1].trim().split(':')[0];
+                        const pstHour = parseInt(pstHourString);
+
+                        console.log(pstHour);
+
+                        if (pstHour >= 8) {
+                            console.log('Clock in late confirmed');
+
+                            await Attendance.findOneAndUpdate(
+                                {
+                                    user: checkUser._id,
+                                    timestamp: {
+                                        $gte: today, // Greater than or equal to the start of today
+                                        $lte: new Date() // Less than the current time
+                                    }
+                                },
+                                {
+                                    $set: {
+                                        status: 'Late',
+                                        type: 'sign in',
+                                        'date.signInTime': new Date(),
+                                        timestamp: new Date()
+                                    }
+                                },
+                                { upsert: true, new: true }
+                            );
+
+                            const tempAttendance = new TempAttendance({
+                                user: checkUser._id,
+                                timestamp: new Date(),
+                                type: 'sign in'
+                            });
+
+                            await tempAttendance.save();
+
+                            // activity
+                            const activityUser = new Activity({
+                                user: checkUser._id,
+                                date: new Date(),
+                                title: 'Sign in late for today',
+                                type: 'Attendance',
+                                description:
+                                    checkUser.fullname +
+                                    ' has sign in late for ' + getDateFormat2(today)
+                            });
+
+                            activityUser.save();
+
+                            console.log('New activity submitted', activityUser);
+
+                            log =
+                                'You have successfully signed in as late for today, thank you!';
+                        } else {
+
+                            await Attendance.findOneAndUpdate(
+                                {
+                                    user: checkUser._id,
+                                    timestamp: {
+                                        $gte: today, // Greater than or equal to the start of today
+                                        $lte: new Date() // Less than the current time
+                                    }
+                                },
+                                {
+                                    $set: {
+                                        status: 'Present',
+                                        type: 'sign in',
+                                        'date.signInTime': new Date(),
+                                        timestamp: new Date()
+                                    }
+                                },
+                                { upsert: true, new: true }
+                            );
+
+                            const tempAttendance = new TempAttendance({
+                                user: checkUser._id,
+                                timestamp: new Date(),
+                                type: 'sign in'
+                            });
+
+                            await tempAttendance.save();
+
+                            // activity
+                            const activityUser = new Activity({
+                                user: checkUser._id,
+                                date: new Date(),
+                                title: 'Sign in for today',
+                                type: 'Attendance',
+                                description:
+                                    checkUser.fullname +
+                                    ' has sign in for ' + getDateFormat2(today)
+                            });
+
+                            activityUser.save();
+
+                            console.log('New activity submitted', activityUser);
+
+                            log = 'You have successfully signed in for today, thank you!';
+                        }
                     }
+
                 } else {
                     console.log('You already sign out for today.');
                     log = 'You already sign out for today, thank you!';
@@ -7570,20 +7675,15 @@ app.get('/super-admin/update', isAuthenticated, async function (req, res) {
 
     if (user.isSuperAdmin) {
 
-        const newCase = new CaseAux({
-            fullname: "John Doe",
-            time: "14:30",
-            date: new Date("2024-07-01"),
-            location: "Main Office",
-            summary: "Reported a network issue",
-            actionTaken: "Restarted the router",
-            eventSummary: "The network went down at 14:00. The issue was resolved by restarting the router at 14:25. Network services were restored at 14:30.",
-            staffOnDuty: ["Jane Smith", "Michael Brown"],
-            remarks: "No further issues reported"
-        });
+        await User.updateMany(
+            {
+                section: 'Security Division',
+                position: { $nin: ['Officer', 'Head of Division'] } // Exclude these positions
+            },
+            { $set: { isNonOfficeHour: true } }
+        );
 
-        // Save the document to the database
-        await newCase.save();
+        console.log('Done update');
 
         res.redirect('/');
     }
@@ -7874,7 +7974,6 @@ app.get('/email', isAuthenticated, async function (req, res) {
         uuid: uuidv4(),
     });
 });
-
 
 // FUNCTIONS
 
