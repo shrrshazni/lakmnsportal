@@ -1,0 +1,190 @@
+<%- include('partials/private-header.ejs') %>
+
+<div class="mb-6">
+
+  <div class="mb-3 d-xxl-flex justify-content-between">
+    <div class="mb-3">
+      <h2 class="mb-2">Case Report</h2>
+      <h5 class="text-body-tertiary fw-semibold">Tracking Participation, Absences, Presence.</h5>
+    </div>
+
+    <div class="align-items-middle">
+      <a class="btn btn-phoenix-secondary" href="/auxiliary-police/case/view"><span class="fa-solid fa-users-viewfinder me-2"></span>View Report</a>
+    </div>
+  </div>
+
+  <div class="mb-3 row g-3">
+
+    <form class="col-12 col-xxl-9 row g-3" action="/auxiliary-police/case/add" method="post" id="caseForm">
+      <!-- form title report -->
+
+      <div class="col-md-6">
+        <label class="form-label" for="datepicker1">Date</label>
+        <input class="form-control datetimepicker flatpickr-input" id="datepicker1" type="text" placeholder="day/month/year" data-options='{"dateFormat":"d/m/y","disableMobile":true,"allowInput":true}' required="required" name="date" />
+      </div>
+
+      <div class="col-md-6">
+        <label class="form-label" for="timepicker2">Time</label>
+
+        <input class="form-control datetimepicker flatpickr-input" id="timepicker2" type="text" placeholder="hour : minute" data-options='{"enableTime":true,"noCalendar":true,"dateFormat":"H:i","disableMobile":true,"allowInput":true}' required="required" name="time" />
+      </div>
+
+      <div class="col-md-12">
+        <label class="form-label" for="validationCustom05">Location</label>
+
+        <select class="form-select" id="validationCustom05" required="" name="location">
+          <option value="Baitul Makmur I">Baitul Makmur I</option>
+          <option value="Baitul Makmur II">Baitul Makmur II</option>
+          <option value="Jamek Mosque">Jamek Mosque</option>
+          <option value="City Mosque">City Mosque</option>
+          <option value="Raudhatul Sakinah">
+            Raudhatul Sakinah
+          </option>
+        </select>
+      </div>
+
+      <div class="col-12 col-md-8">
+        <div id="selectedNames1" class="d-flex flex-wrap border border-300 rounded-3 px-2" style="min-height: 3rem"></div>
+      </div>
+
+      <div class="col-12 col-md-4">
+        <div class="form-floating">
+          <input type="text" name="query" id="queryInput1" class="form-control" />
+          <label class="form-label" for="queryInput1">Search Staff</label>
+          <div class="invalid-feedback">Please select relief staff</div>
+        </div>
+      </div>
+
+      <hr>
+
+      <div id="results1" class="col-12"></div>
+
+      <input type="hidden" id="selectedNamesInput1" name="selectedNames1" />
+
+      <div class="col-12">
+        <label class="form-label" for="floatingProjectDescription1">Event Summary</label>
+        <textarea class="form-control scrollbar" id="floatingProjectDescription1" placeholder="Leave a summary report here" style="height: 64px" required="required" name="eventSummary"></textarea>
+      </div>
+
+      <div class="col-12">
+        <label class="form-label" for="floatingProjectDescription1">Action Taken</label>
+        <textarea class="form-control scrollbar" id="floatingProjectDescription1" placeholder="Leave a action taken here" style="height: 64px" required="required" name="actionTaken"></textarea>
+      </div>
+
+      <div class="col-12">
+        <label class="form-label" for="floatingProjectDescription12">Remarks</label>
+        <textarea class="form-control scrollbar" id="floatingProjectDescription12" placeholder="Leave a remarks here" style="height: 64px" required="required" name="remarks"></textarea>
+      </div>
+
+      <!-- Submit button -->
+      <div class="col-12">
+        <button class="btn btn-primary myButton" type="submit" id="submitReport">
+          <div class="btn-content">Submit Form</div>
+        </button>
+        <a role="button" class="btn btn-phoenix-primary bg-transparent border border-0 mx-2" id="addFiles" data-bs-toggle="modal" data-bs-target="#verticallyCentered">Add files +</a>
+      </div>
+    </form>
+
+    <script>
+      $(document).ready(function() {
+        function initializeStaffSearch(queryInputId, selectedNamesDivId, resultsDivId, hiddenInputId) {
+          const queryInput = $(queryInputId);
+          const selectedNamesDiv = $(selectedNamesDivId);
+          let selectedNames = [];
+
+          queryInput.on('input', function() {
+            const query = $(this).val();
+            if (query.trim() !== '') {
+              $.ajax({
+                url: `/search/staff/assignee-relief?query=${query}`,
+                method: 'GET',
+                success: function(results) {
+                  displayResults(results, resultsDivId, selectedNames, selectedNamesDiv, hiddenInputId);
+                },
+                error: function(error) {
+                  console.error(error);
+                }
+              });
+            } else {
+              displayResults([], resultsDivId, selectedNames, selectedNamesDiv, hiddenInputId);
+            }
+          });
+
+          function displayResults(results, resultsDivId, selectedNames, selectedNamesDiv, hiddenInputId) {
+            const resultsDiv = $(resultsDivId);
+            resultsDiv.empty();
+
+            if (results.length === 0) {
+              resultsDiv.append('<p class="text-muted fs-9">No results found</p>');
+            } else {
+              results.forEach(result => {
+                const resultDiv = $('<div class="result btn btn-outline-primary mr-2 mb-2"></div>').text(result.fullname);
+                resultsDiv.append(resultDiv);
+
+                resultDiv.click(function() {
+                  const clickedName = result.fullname;
+                  const index = selectedNames.indexOf(clickedName);
+
+                  if (index === -1) {
+                    selectedNames.push(clickedName);
+                  } else {
+                    selectedNames.splice(index, 1);
+                  }
+                  updateSelectedNamesDisplay(selectedNames, selectedNamesDiv, hiddenInputId);
+                });
+              });
+            }
+          }
+
+          function updateSelectedNamesDisplay(selectedNames, selectedNamesDiv, hiddenInputId) {
+            selectedNamesDiv.empty();
+            selectedNames.forEach(name => {
+              const nameDiv = $('<div class="selectedName btn btn-outline-secondary mr-2 mb-1 mt-1"></div>').text(name);
+              selectedNamesDiv.append(nameDiv);
+
+              nameDiv.click(function() {
+                const removedName = $(this).text();
+                const index = selectedNames.indexOf(removedName);
+                selectedNames.splice(index, 1);
+                updateSelectedNamesDisplay(selectedNames, selectedNamesDiv, hiddenInputId);
+              });
+            });
+            $(hiddenInputId).val(selectedNames.join(','));
+          }
+        }
+
+        initializeStaffSearch('#queryInput1', '#selectedNames1', '#results1', '#selectedNamesInput1');
+        initializeStaffSearch('#queryInput2', '#selectedNames2', '#results2', '#selectedNamesInput2');
+        initializeStaffSearch('#queryInput3', '#selectedNames3', '#results3', '#selectedNamesInput3');
+
+        // For debugging: Log the values before form submission
+        $('#caseForm').submit(function(event) {
+          console.log('Selected Names 1:', $('#selectedNamesInput1').val());
+          console.log('Selected Names 2:', $('#selectedNamesInput2').val());
+          console.log('Selected Names 3:', $('#selectedNamesInput3').val());
+        });
+      });
+    </script>
+
+  </div>
+
+</div>
+
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 5">
+  <div class="d-flex">
+    <div class="toast <%= show %> align-items-center text-white border-0" role="alert" data-bs-autohide="false" aria-live="assertive" aria-atomic="true">
+      <div class="d-flex justify-content-between">
+        <div class="toast-body px-0 py-3">
+          <code class="text-primary"><%= alert %></code>
+        </div>
+
+        <button class="btn ms-2 p-0" type="button" data-bs-dismiss="toast" aria-label="Close">
+          <span class="uil uil-times fs-7"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<%- include('partials/private-footer.ejs') %>

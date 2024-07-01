@@ -484,18 +484,15 @@ const dutyHandoverSchema = new mongoose.Schema({
 
 // CASE SCHEMA
 const caseSchema = new mongoose.Schema({
-    reportId: String,
-    username: String,
-    madeBy: String,
-    type: String,
+    fullname: String,
     time: String,
-    date: String,
+    date: Date,
     location: String,
     summary: String,
     actionTaken: String,
     eventSummary: String,
-    staffOnDuty: String,
-    notes: String
+    staffOnDuty: [],
+    remarks: String
 });
 
 
@@ -4949,6 +4946,128 @@ app.get('/auxiliary-police/schedule/add', isAuthenticated, async function (req, 
     }
 });
 
+// CASE
+
+// VIEW
+app.get('/auxiliary-police/case/view', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    })
+        .populate('sender')
+        .sort({ timestamp: -1 });
+
+    if (user) {
+        const caseReport = await CaseAux.find().sort({ date: -1 });
+
+        res.render('auxiliarypolice-case-view', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4(),
+            caseReport: caseReport
+        });
+    }
+});
+
+// DETAIL
+app.get('/auxiliary-police/case/details/:id', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    })
+        .populate('sender')
+        .sort({ timestamp: -1 });
+
+    if (user) {
+        const id = req.params.id;
+        const caseReport = await CaseAux.findOne({ _id: id });
+
+        res.render('auxiliarypolice-case-detail', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4(),
+            caseReport: caseReport
+        });
+    }
+});
+
+// ADD
+app.get('/auxiliary-police/case/add', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    })
+        .populate('sender')
+        .sort({ timestamp: -1 });
+
+    if (user) {
+        res.render('auxiliarypolice-case-add', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4(),
+            show: '',
+            alert: ''
+        });
+    }
+}).post('/auxiliary-police/case/add', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    })
+        .populate('sender')
+        .sort({ timestamp: -1 });
+
+    if (user) {
+        const { date, time, location, eventSummary, actionTaken, selectedNames1, remarks } = req.body;
+
+        // Create a new Case document
+        const newCase = new CaseAux({
+            fullname: user.fullname, // You can update this to fetch the actual user fullname if needed
+            time: time,
+            date: new Date(date),
+            location: location,
+            summary: eventSummary + '\n' + actionTaken,
+            actionTaken: actionTaken,
+            staffOnDuty: selectedNames1.split(','), // Convert comma-separated string to array
+            remarks: remarks
+        });
+
+        // Save the document to the database
+        const addReport = await newCase.save();
+
+        if (addReport) {
+
+            console.log('Successfully add case report');
+
+            res.render('auxiliarypolice-case-add', {
+                user: user,
+                notifications: notifications,
+                uuid: uuidv4(),
+                show: 'show',
+                alert: 'Successfully add case report'
+            });
+        } else {
+            console.log('Failed add case report, please check all your input');
+
+            res.render('auxiliarypolice-case-add', {
+                user: user,
+                notifications: notifications,
+                uuid: uuidv4(),
+                show: 'show',
+                alert: 'Failed add case report, please check all your input'
+            });
+        }
+    }
+});
+
 // PATROL
 
 // SHIFT MEMBER LOCATION
@@ -7451,30 +7570,20 @@ app.get('/super-admin/update', isAuthenticated, async function (req, res) {
 
     if (user.isSuperAdmin) {
 
-        // Find all users
-        const allUsers = await User.find();
+        const newCase = new CaseAux({
+            fullname: "John Doe",
+            time: "14:30",
+            date: new Date("2024-07-01"),
+            location: "Main Office",
+            summary: "Reported a network issue",
+            actionTaken: "Restarted the router",
+            eventSummary: "The network went down at 14:00. The issue was resolved by restarting the router at 14:25. Network services were restored at 14:30.",
+            staffOnDuty: ["Jane Smith", "Michael Brown"],
+            remarks: "No further issues reported"
+        });
 
-        // Iterate over each user
-        for (let otherUser of allUsers) {
-            // Check if an Info document exists for the user
-            const info = await Info.findOne({ user: otherUser._id });
-
-            if (!info) {
-                // If Info document does not exist, create a new one
-                const newInfo = new Info({
-                    user: otherUser._id,
-                    status: 'New Staff',
-                    emailVerified: false,
-                    phoneVerified: false,
-                    isOnline: false,
-                    lastSeen: new Date()
-                });
-                await newInfo.save();
-                console.log(`Created new Info document for user ${otherUser.username} with ID ${otherUser._id}`);
-            }
-        }
-
-        console.log('All user has been updated');
+        // Save the document to the database
+        await newCase.save();
 
         res.redirect('/');
     }

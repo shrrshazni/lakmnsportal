@@ -1,0 +1,96 @@
+<%- include('partials/private-header.ejs') %>
+
+<div class="mb-6">
+
+  <div class="mb-3 d-xxl-flex justify-content-between">
+    <div class="mb-3">
+      <h2 class="mb-2">Case Report</h2>
+      <h5 class="text-body-tertiary fw-semibold">Tracking Participation, Absences, Presence.</h5>
+    </div>
+
+    <div class="align-items-middle">
+      <a class="btn btn-phoenix-secondary" href="/auxiliary-police/case/add"><span class="fa-solid fa-pen-to-square me-2"></span>Add Report</a>
+    </div>
+  </div>
+
+  <div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis pt-7 pb-3 border-y mb-6">
+    <div class="border-bottom border-translucent mt-3" data-list='{"valueNames":["date", "fullname","time","location","remarks"],"page":10,"pagination":true}'>
+      <div class="row align-items-end justify-content-between pb-4 g-3">
+
+        <div class="col-12 col-md-auto">
+          <div class="search-box">
+            <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
+              <input class="form-control search-input search form-control-sm" type="search" placeholder="Search" aria-label="Search" />
+              <span class="fas fa-search search-box-icon"></span>
+            </form>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="table-responsive ms-n1 ps-1 scrollbar">
+        <table class="table fs-9 mb-0 border-top border-translucent">
+          <thead>
+            <tr>
+              <th class="sort align-middle ps-0 text-start text-uppercase" scope="col" data-sort="date" style="width:15%;min-width: 150px;">Date</th>
+              <th class="sort align-middle ps-0 text-start text-uppercase" scope="col" data-sort="fullname" style="width:10%;min-width: 100px;">Fullname</th>
+              <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="time" style="width:10%;min-width: 100px;">Time</th>
+              <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="location" style="width:15%;min-width: 150px;">Location</th>
+              <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="remarks" style="width:20%;min-width: 100px;">Remarks</th>
+              <th class="sort align-middle ps-0 text-end text-uppercase" scope="col" style="width:5%;min-width: 50px;"></th>
+            </tr>
+          </thead>
+
+          <tbody class="list">
+            <% 
+              if (caseReport.length > 0) { 
+              
+               caseReport.forEach((item, index) => { %>
+
+            <% console.log%>
+
+            <tr class="position-static">
+              <td class="date align-middle fw-bold text-start text-primary py-2 ps-0 fs-8"><a href="/auxiliary-police/case/details/<%= item._id %>"><%= item.date.toLocaleDateString('en-MY', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></a></td>
+              <td class="startshift align-middle text-start fw-semibold fst-italic py-2 ps-0 fs-9"><%= item.fullname %></td>
+              <td class="endshift align-middle text-center fw-semibold fst-italic py-2 ps-0 fs-9"><span class="badge badge-phoenix badge-phoenix-warning fs-10"><%= item.time %></span></td>
+              <td class="status align-middle fw-semibold text-center py-2 ps-0 fs-9 fs-md-8 text-body-highlights"><%= item.location %></td>
+              <td class="remarks align-middle fst-italic text-center text-body-highlight py-2 ps-0 fs-9"><%= item.remarks || 'No remarks added.' %></td>
+              <td class="align-middle text-end white-space-nowrap ps-0 action">
+                <div class="font-sans-serif btn-reveal-trigger position-static">
+                  <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs--2" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
+                    <span class="fas fa-ellipsis-h fs-9"></span>
+                  </button>
+                  <div class="dropdown-menu dropdown-menu-end py-2">
+                    <a class="dropdown-item" href="/auxiliary-police/case/details/<%= item._id %>">View Detail</a>
+                  </div>
+                </div>
+              </td>
+            </tr>
+            <% }); %>
+
+            <% }else{ %>
+            <tr>
+              <td colspan="6" class="text-center fs-9 fw-bold">No patrol report submitted</td>
+            </tr>
+            <% } %>
+             
+          </tbody>
+
+        </table>
+      </div>
+      <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
+        <div class="col-auto d-flex">
+          <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p><a class="fw-semibold" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semibold d-none" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
+        </div>
+        <div class="col-auto d-flex">
+          <button class="page-link" data-list-pagination="prev"><span class="fas fa-chevron-left"></span></button>
+          <ul class="mb-0 pagination"></ul>
+          <button class="page-link pe-0" data-list-pagination="next"><span class="fas fa-chevron-right"></span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<%- include('partials/private-footer.ejs') %>

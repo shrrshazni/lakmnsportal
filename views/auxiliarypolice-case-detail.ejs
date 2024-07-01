@@ -1,0 +1,113 @@
+<%- include('partials/private-header.ejs') %>
+
+<div class="mb-6">
+
+  <div class="mb-3">
+    <nav class="mb-2" aria-label="breadcrumb">
+      <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item active fs-8"><%= caseReport.location %></li>
+      </ol>
+    </nav>
+    <div class="d-flex justify-content-between row g-1">
+      <h2 class="col-12 col-xxl-auto">
+        Case Report</span>
+      </h2>
+      <div class="col-12 col-xxl-auto">
+        <span class="fw-normal text-700 fw-bold fs-8 fs-lg-6 py-1 px-3 border border-primary rounded-pill"><%= caseReport.date.toLocaleDateString('en-MY', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="mb-3">
+
+    <div class="mb-">
+      <div class="row gx-0 gx-sm-7">
+        <div class="col-12 col-sm-auto">
+          <table class="lh-sm mb-4 mb-sm-0 mb-xl-4">
+            <tbody>
+              <tr>
+                <td class="py-1" colspan="2">
+                  <div class="d-flex">
+                    <span class="fa-solid fa-earth-americas me-2 text-700 fs--1"></span>
+                    <h5 class="text-900"><%= caseReport._id %></h5>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td class="align-top py-1">
+                  <div class="d-flex">
+                    <span class="fa-solid fa-user me-2 text-700 fs--1"></span>
+                    <h5 class="text-900 mb-0 text-nowrap">Full Name :</h5>
+                  </div>
+                </td>
+                <td class="py-1">
+                  <a class="fw-semi-bold d-block ms-n2" href="#!"><%= caseReport.fullname %></a>
+                </td>
+              </tr>
+
+              <tr>
+                <td class="align-top py-1">
+                  <div class="d-flex">
+                    <span class="fa-solid fa-user me-2 text-700 fs--1"></span>
+                    <h5 class="text-900 mb-0 text-nowrap">Time :</h5>
+                  </div>
+                </td>
+                <td class="py-1">
+                  <a class="fw-semi-bold d-block ms-n2"><%= caseReport.time %></a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="col-12 col-sm-auto">
+          <table class="lh-sm">
+            <tbody>
+              <tr>
+                <td class="align-top py-1 text-900 text-nowrap fw-bold d-block">
+                  Staff on duty :
+                  <div class="d-flex">
+                    <% if (caseReport && caseReport.staffOnDuty && caseReport.staffOnDuty.length > 0) { %>
+                    <% caseReport.staffOnDuty.forEach(member => { %>
+                    <a href="#" class="btn btn-primary me-2">
+                      <%= member %>
+                    </a>
+                    <% }); %>
+                    <% } else { %>
+                    <div>No shift members for this handover</div>
+                    <% } %>
+                  </div>
+                </td>
+                <td class="text-600 fw-semi-bold ps-3">
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <hr>
+    <h3 class="text-1100 mb-4 mt-4">Event Summary</h3>
+    <p class="text-800 mb-10"><%= caseReport.eventSummary %></p>
+
+    <hr>
+    <h3 class="text-1100 mb-4 mt-4">Action Taken</h3>
+    <p class="text-800 mb-10"><%= caseReport.actionTaken %></p>
+
+    <hr>
+    <div class="mt-4">
+      <div class="d-flex align-items-center mb-4">
+        <h3 class="text-1100 me-3">Remarks</h3>
+        <button class="btn btn-link p-0" data-bs-toggle="modal" data-bs-target="#modalNotes">
+          <span class="fa-solid fa-pen"></span>
+        </button>
+      </div>
+      <p class="text-800"><%= caseReport.remarks || '' %></p>
+    </div>
+
+  </div>
+
+</div>
+
+<%- include('partials/private-footer.ejs') %>
