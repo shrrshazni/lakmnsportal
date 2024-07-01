@@ -518,8 +518,17 @@
 
             </li>
 
+            <% 
+            var showAuxiPolice = '';
+            if(user.section === 'Security Division' || user.isChiefExec || user.isDeputyChiefExec){
+                showAuxiPolice = '';
+            }else{
+                showAuxiPolice = 'd-none';
+            }
+            %>
+
             <!-- Auxiallary Police -->
-            <li class="nav-item">
+            <li class="nav-item <%= showAuxiPolice %>">
 
               <!-- label-->
               <p class="navbar-vertical-label">Auxiliary police
