@@ -3950,7 +3950,7 @@ app.get('/leave/:approval/:id', async function (req, res) {
 });
 
 //ATTENDANCE
-app.get('/attendance', restrictAccess, async function (req, res) {
+app.get('/attendance', async function (req, res) {
     const uniqueIdentifier = generateUniqueIdentifier();
 
     res.render('attendance', {
@@ -5432,11 +5432,8 @@ app.get(
             req.params.checkpointName.replace(/-/g, ' ')
         );
 
-        const today = moment().format('DD/MM/YY');
-        const yesterday = moment().subtract(1, 'days').format('DD/MM/YY');
-
-        console.log('Today:', today);
-        console.log('Yesterday:', yesterday);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
 
         const kualaLumpurTimeZoneOffset1 = 8; // Kuala Lumpur is UTC+8
         const now1 = moment().utcOffset(kualaLumpurTimeZoneOffset1 * 60); // Convert hours to minutes
@@ -5448,7 +5445,7 @@ app.get(
         const isNightShift = currentTimeNumeric >= 2300 || currentTimeNumeric < 700;
 
         if (isNightShift) {
-            const filteredReports1 = await PatrolReport.findOne({
+            const filteredReports1 = await PatrolAux.findOne({
                 location: location,
                 startShift: '2300',
                 $or: [{ date: today }, { date: yesterday }]
@@ -5462,10 +5459,10 @@ app.get(
                 checkpointName: checkpointName
             });
         } else {
-            const filteredReports2 = await PatrolReport.findOne({
+            const filteredReports2 = await PatrolAux.findOne({
                 location: location,
-                date: today,
-                startShift: { $lte: currentTimeNumeric },
+                date: { $gte: currentTimeNumeric },
+                startShift: { $gte: currentTimeNumeric },
                 endShift: { $gte: currentTimeNumeric }
             });
 
@@ -5501,7 +5498,7 @@ app.get(
                 _id: reportId
             });
 
-            if (patrolReport && patrolReport.status === 'Open') {
+            if (patrolReport && patrolReport.status === 'Pending') {
                 // Find the relevant cycle based on your logic and checkpointName
                 const cycleToUpdate = patrolReport.shiftMember.cycle.find(cycle =>
                     cycle.checkpoint.some(
@@ -7620,10 +7617,12 @@ app.get('/api/auxiliary-police/schedule/calendar-data', async (req, res) => {
     try {
         const { date, location } = req.query;
 
+        console.log(date, 'This is the date for find the schedule');
+
         const selectedDate = moment(date);
         const startOfMonth = selectedDate.startOf('month').toDate();
         const endOfMonth = selectedDate.endOf('month').toDate();
-        console.log(startOfMonth);
+        console.log(endOfMonth);
 
         const schedules = await ScheduleAux.aggregate([
             {
@@ -7660,7 +7659,6 @@ app.get('/api/auxiliary-police/schedule/calendar-data', async (req, res) => {
         }));
 
         console.log(formattedData);
-
         // Send the formatted data as JSON response
         res.json(formattedData);
     } catch (err) {
@@ -7687,6 +7685,11 @@ app.get('/super-admin/update', isAuthenticated, async function (req, res) {
 
         res.redirect('/');
     }
+});
+
+//TEMPORARY PAGE
+app.get('/temp', async function (req, res) {
+    res.render('temp');
 });
 
 //SCHEDULER

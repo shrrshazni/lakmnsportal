@@ -98,18 +98,22 @@ if(user.isOfficer === true && user.section === 'Security Division'){
           if (selectedDate && selectedLocation) {
             fetch(`/api/auxiliary-police/schedule/calendar-data?date=${selectedDate}&location=${selectedLocation}`)
               .then(response => response.json())
-              .then(data => renderChart(data))
+              .then(data => renderChart(data, selectedDate))
               .catch(error => console.error('Error fetching data:', error));
           } else {
-            renderChart([]);
+            renderChart([], selectedDate);
           }
         }
 
         dateInput.addEventListener('change', fetchData);
         locationSelect.addEventListener('change', fetchData);
 
-        function renderChart(data) {
-          // Calculate min and max values from the data
+        function renderChart(data, selectedDate) {
+          // Extract year and month from the selected date
+          const selectedYearMonth = selectedDate.slice(0, 7);
+
+          console.log(selectedYearMonth);
+
           let values = data.map(item => item.shifts.reduce((sum, shift) => sum + shift.staff.length, 0));
           let minValue = values.length ? Math.min(...values) : 0;
           let maxValue = values.length ? Math.max(...values) : 0;
@@ -144,21 +148,18 @@ if(user.isOfficer === true && user.section === 'Security Division'){
                   shift.staff.forEach(name => {
                     tooltipHtml += `<div style="padding: 3px; border-radius: 10px; border: 1px solid ${getColor('link-primary', 'color')}; margin-bottom:3px;">${name}</div>`;
                   });
-                  tooltipHtml += `<br/>`; // Add extra line break between shifts
+                  tooltipHtml += `<br/>`;
                 });
                 tooltipHtml += '</div>';
                 return tooltipHtml;
               },
               position: function(pos, params, dom, rect, size) {
-                // Get chart position and dimensions
                 const chartRect = chart.getDom().getBoundingClientRect();
                 const chartWidth = chartRect.width;
 
-                // Calculate tooltip position to stay within chart bounds
                 let posX = pos[0];
                 let posY = pos[1];
 
-                // Adjust X position
                 if (posX + size.contentSize[0] > chartWidth) {
                   posX -= posX + size.contentSize[0] - chartWidth;
                 }
@@ -166,7 +167,6 @@ if(user.isOfficer === true && user.section === 'Security Division'){
                   posX = 0;
                 }
 
-                // Adjust Y position to be above the data point
                 posY -= size.contentSize[1] + 20;
 
                 return [posX, posY];
@@ -185,7 +185,7 @@ if(user.isOfficer === true && user.section === 'Security Division'){
             },
             calendar: {
               orient: 'vertical',
-              range: '2024-06', // Default range if no date is selected
+              range: selectedYearMonth, // Use the selected year and month
               width: '99%',
               height: '85.5%',
               left: '2',
@@ -217,7 +217,7 @@ if(user.isOfficer === true && user.section === 'Security Division'){
               type: 'scatter',
               coordinateSystem: 'calendar',
               symbolSize: function(val) {
-                return Math.sqrt(val[1]) * 8; // Adjust size based on square root of value
+                return Math.sqrt(val[1]) * 8;
               },
               data: data.map(item => [item.date, item.shifts.reduce((sum, shift) => sum + shift.staff.length, 0), item.shifts]),
               itemStyle: {
@@ -234,8 +234,7 @@ if(user.isOfficer === true && user.section === 'Security Division'){
           });
         }
 
-        // Initial chart rendering with empty data
-        renderChart([]);
+        renderChart([], new Date().toISOString().slice(0, 7));
       });
     </script>
 

@@ -1,195 +1,55 @@
-<div class="col-12">
-  <div class="ms-3" id="staffChart" style="height: 450px; width: 100%;"></div>
-</div>
+<%- include("partials/public-header.ejs") %>
 
-<script>
-  // Initialize ECharts instance
-  const myChart = echarts.init(document.getElementById('staffChart'));
-  // Fetch data from the server using Fetch API
-  fetch('/chart/<%= patrolReport._id %>')
-    .then(response => response.json())
-    .then(data => {
-      // Extract data from the response
-      const staffNames = data.staffNames;
-      const staffPresenceCountsPerCycle = data.staffPresenceCountsPerCycle;
-      const totalCycles = data.totalCycles;
+<style>
+  /* Hide Google Translate toolbar */
+  .VIpgJd-ZVi9od-ORHb-OEVmcd {
+    display: none !important;
+  }
 
-      // Create an array to store series data for each staff member
-      const seriesData = [];
+  body {
+    top: 0 !important;
+  }
+</style>
 
-      // Populate series data for each staff member
-      for (let i = 0; i < staffNames.length; i++) {
-        const staffName = staffNames[i];
-        const seriesItem = {
-          name: staffName,
-          type: 'line',
-          data: [],
-          smooth: true,
-          label: {
-            show: true,
-            formatter: params => `${params.value.toFixed(0)}`,
-            color: '#3874ff', // Display percentage value on the chart
-          },
-        };
+<div id="google_translate_element"></div>
 
-        // Populate data for each cycle
-        for (let j = 0; j < totalCycles; j++) {
-          seriesItem.data.push(staffPresenceCountsPerCycle[j][i]);
-        }
+<script type="text/javascript">
+  function googleTranslateElementInit() {
+    new google.translate.TranslateElement({
+      pageLanguage: 'en',
+      layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+    }, 'google_translate_element');
+  }
 
-        seriesData.push(seriesItem);
-      }
+  // Function to hide Google Translate toolbar
+  function hideGoogleTranslateToolbar() {
+    const toolbar = document.querySelector(".VIpgJd-ZVi9od-ORHb-OEVmcd");
+    if (toolbar) {
+      toolbar.style.display = "none";
+    }
+    document.body.style.top = "0 !important";
+  }
 
-      // Configure ECharts options
-      const options = {
-        legend: {
-          data: staffNames,
-        },
-        xAxis: {
-          type: 'category',
-          data: Array.from({
-            length: totalCycles
-          }, (_, index) => `Cycle ${index + 1}`),
-        },
-        yAxis: {
-          type: 'value',
-          splitLine: {
-            show: false, // Hide the horizontal grid lines on the Y-axis
-          },
-        },
-        series: seriesData,
-      };
+  // Observer to hide toolbar on DOM changes
+  const observer = new MutationObserver(hideGoogleTranslateToolbar);
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true
+  });
 
-      // Set ECharts options and render the chart
-      myChart.setOption(options);
-    })
-    .catch(error => console.error('Error fetching data from the server:', error));
+  // Hide toolbar on initial load
+  window.addEventListener('load', hideGoogleTranslateToolbar);
+
+  // Reapply styles and hide toolbar after language selection
+  document.addEventListener('click', () => {
+    setTimeout(() => {
+      hideGoogleTranslateToolbar();
+    }, 100); // Adjust the delay as needed
+  });
 </script>
 
-<!-- Create a container for the chart -->
-<div id="echartsContainer1" style="width: 100%; height: 500px;"></div>
+<script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 
-<script>
-  // Fetch data from the server using the Fetch API
-  fetch('/api/patrolData/<%= patrolReport._id %>')
-    .then(response => response.json())
-    .then(data => {
-      // Process data and create ECharts doughnut chart
+<p>"In the quiet town of Willow Creek, life moved at a slower pace. The townsfolk cherished their routines, from morning coffee at Maggie's Diner to evening strolls by the river. Amidst the tranquility, the town's charm lay in its simplicity and the warmth of its close-knit community."</p>
 
-      // Extract checkpoint names and percentage data
-      const checkpointNames = Object.keys(data.checkpointPercentageData);
-      const percentageData = checkpointNames.map(name => data.checkpointPercentageData[name].percentage);
-
-      // Create ECharts doughnut chart
-      const echartsContainer1 = document.getElementById('echartsContainer1');
-      const myChart3 = echarts.init(echartsContainer1);
-
-      const options = {
-        title: {
-          subtext: `Total Percentage of All Checkpoint: ${data.percentage.toFixed(2)}%`,
-          left: 'center',
-          top: 15,
-          subtextStyle: {
-            color: '#3874ff', // Change font color to #3874ff
-          },
-        },
-        legend: {
-          orient: 'vertical',
-          right: 10,
-          top: 20,
-          bottom: 20,
-          data: checkpointNames,
-          textStyle: {
-            color: '#3874ff', // Change font color to #3874ff
-          },
-          show: false
-        },
-        series: [{
-          name: 'Percentage',
-          type: 'pie',
-          radius: ['50%', '70%'],
-          avoidLabelOverlap: false,
-          label: {
-            show: true,
-            position: 'outside',
-            formatter: '{b}: {d}%',
-            color: '#3874ff' // Display the name and percentage value outside the doughnut
-          },
-          emphasis: {
-            label: {
-              show: true,
-              fontSize: '20',
-              fontWeight: 'bold',
-            },
-          },
-          labelLine: {
-            show: true,
-            length: 10,
-            length2: 10,
-          },
-          itemStyle: {
-            borderRadius: 8, // Set the border radius for a rounded appearance
-            borderColor: '#fff',
-            borderWidth: 2,
-          },
-          data: checkpointNames.map((name, index) => ({
-            name,
-            value: percentageData[index],
-          })),
-        }],
-      };
-
-      myChart3.setOption(options);
-    })
-    .catch(error => console.error('Error fetching data:', error));
-</script>
-
-<div class="col-12 mb-3">
-  <div class="ms-3" id="chart" style="height: 450px; width: 100%;"></div>
-</div>
-
-<script>
-  // Fetch ECharts data from the server
-  fetch('/shift-member/echarts-data/<%= patrolReport._id %>') // Replace 'your_report_id' with the actual report ID
-    .then(response => response.json())
-    .then(data => {
-      if (data.success) {
-        const echartsData = data.data;
-
-        const chart = echarts.init(document.getElementById('chart'));
-
-        // ECharts option configuration
-        const option = {
-          xAxis: {
-            type: 'category',
-            data: echartsData.cycle.map(cycle => cycle.timeSlot),
-          },
-          yAxis: {
-            type: 'value',
-            axisLabel: {
-              formatter: '{value}%', // Display percentage symbol on the Y-axis
-            },
-            splitLine: {
-              show: false, // Hide the horizontal grid lines on the Y-axis
-            },
-          },
-          series: [{
-            data: echartsData.cycle.map(cycle => cycle.percentageWithTime),
-            type: 'line',
-            smooth: true,
-            label: {
-              show: true,
-              formatter: params => `${params.value.toFixed(0)}%`,
-              color: '#3874ff', // Display percentage value on the chart
-            },
-          }],
-        };
-
-        // Set option and render chart
-        chart.setOption(option);
-      } else {
-        console.error('Error fetching ECharts data:', data.error);
-      }
-    })
-    .catch(error => console.error('Error fetching data:', error));
-</script>
+<%- include('partials/public-footer.ejs') %>

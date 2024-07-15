@@ -34,17 +34,18 @@
 
   <div class="row g-0 g-md-4 g-xl-6">
 
-    <div class="col-md-5 col-xxl-4 d-print-none">
+    <div class="col-md-4 col-xxl-3 d-print-none">
       <div class="sticky-leads-sidebar">
         <div class="lead-details-offcanvas bg-body scrollbar phoenix-offcanvas phoenix-offcanvas-fixed" id="productFilterColumn">
           <div class="d-flex justify-content-between align-items-center mb-2 d-md-none">
-            <h3 class="mb-0"><i class="fa-solid fa-feather-pointed me-2" aria-hidden="true"></i>Details</h3>
+            <h3 class="mb-0"><i class="fa-solid fa-feather-pointed me-2 fs-8" aria-hidden="true"></i>Details</h3>
             <button class="btn p-0" data-phoenix-dismiss="offcanvas"><span class="uil uil-times fs-7"></span></button>
           </div>
+
           <div class="card mb-3">
             <div class="card-body">
-              <div class="row align-items-center g-3 text-center text-xxl-start">
-                <% 
+
+              <% 
                 var showOnline = '';
                 
                 if(info.isOnline === true){
@@ -53,25 +54,19 @@
                     showOnline = '';
                 }
                 %>
-                <div class="col-12 col-xxl-auto">
-                  <% if(otherUser.profile === '' ){ otherUser.profile = '/assets/img/team/avatar.webp' ; } %>
-                  <div class="avatar avatar-5xl <%= showOnline %>"><img class="rounded-circle border border-primary" src="<%= otherUser.profile %>" alt="" /></div>
-                </div>
 
-                <div class="col-12 col-sm-auto flex-1 text-xxl-start text-center">
-                  <h4 class="fw-bold mb-3 mt-3"><%= otherUser.fullname %></h4>
-                  <p class="mb-3"><%= otherUser.position %></p>
-                  <p class="fw-semibold text-primary fst-italic">"<%= info.status %>"</p>
-                </div>
+              <div class="mb-4 text-center">
+                <% if(otherUser.profile === '' ){ otherUser.profile = '/assets/img/team/avatar.webp' ; } %>
+                <div class="avatar avatar-5xl <%= showOnline %>"><img class="rounded-circle border border-primary" src="<%= otherUser.profile %>" alt="" /></div>
               </div>
-            </div>
-          </div>
 
-          <div class="card mb-3">
-            <div class="card-body">
-              <div class="d-flex align-items-center mb-4">
-                <h4>About staff</h4>
+              <div class="mb-2">
+                <div class="d-flex align-items-center mb-1"><span class="me-2 uil uil-user"> </span>
+                  <h5 class="text-body-highlight mb-0">Position</h5>
+                </div>
+                <p class="text-primary"><%= otherUser.position %></a>
               </div>
+
               <div class="mb-2">
                 <div class="d-flex align-items-center mb-1"><span class="me-2 uil uil-user"> </span>
                   <h5 class="text-body-highlight mb-0">Work ID</h5>
@@ -138,7 +133,7 @@
 
                   <div class="card" style="height: 350px;">
                     <div class="card-body">
-                      <h5 class="text-body-emphasis text-nowrap">Leave Balances</h5>
+                      <h5 class="text-body-emphasis text-nowrap">Leave Entitlements</h5>
                       <div class="mx-auto mt-n10" id="leave-type-chart-carousel" style="height:400px; width: 250px;"></div>
 
                       <script>
@@ -343,21 +338,21 @@
       </div>
     </div>
 
-    <div class="col-md-7 col-xxl-8">
+    <div class="col-md-7 col-xxl-9">
       <div class="lead-details-container">
         <nav class="navbar pb-4 px-0 sticky-top bg-body nav-underline-scrollspy" id="navbar-staffs-detail">
           <ul class="nav nav-underline fs-9">
             <li class="nav-item"><a class="nav-link me-2" href="#scrollspyTask">Tasks</a></li>
             <li class="nav-item"><a class="nav-link me-2" href="#scrollspyActivities">Activities</a></li>
-            <li class="nav-item"><a class="nav-link me-2" href="#scrollspyLeaves">Leaves</a></li>
+            <li class="nav-item"><a class="nav-link me-2" href="#scrollspyLeaves">Leave</a></li>
             <li class="nav-item"><a class="nav-link me-2" href="#scrollspyAttendances">Attendances</a></li>
             <li class="nav-item"><a class="nav-link" href="#scrollspyAttachments">Attachments </a></li>
           </ul>
         </nav>
         <div class="scrollspy-example rounded-2" data-bs-spy="scroll" data-bs-offset="0" data-bs-target="#navbar-staffs-detail" data-bs-root-margin="0px 0px -40%" data-bs-smooth-scroll="true" tabindex="0">
 
-          <div class="mb-8" style="min-height: 25vh;">
-            <h2 class="mb-4" id="scrollspyTask">Tasks</h2>
+          <div class="mb-8 border rounded-3 p-4" style="min-height: 40vh;">
+            <h3 class="mb-4" id="scrollspyTask">Tasks</h3>
             <div class="row align-items-center g-0 justify-content-start mb-3">
 
               <div class="col-12 col-md-auto">
@@ -453,7 +448,7 @@
 
               <% }); %>
               <% } else { %>
-              <p class="white-space-nowrap fs-9">There is no task assigned yet</p>
+              <p class="fw-bold fs-9">There is no task assigned yet</p>
               <% } %>
             </div>
 
@@ -485,8 +480,8 @@
 
           </div>
 
-          <div class="mb-8" style="min-height: 25vh;">
-            <h2 class="mb-4" id="scrollspyActivities">Activities</h2>
+          <div class="mb-8 border rounded-3 p-4" style="min-height: 40vh;">
+            <h3 class="mb-4" id="scrollspyActivities">Activities</h3>
             <div class="border-bottom border-translucent mt-3" id="activities" data-list='{"valueNames":["title","type","description","date","time"],"page":5,"pagination":true}'>
               <div class="row align-items-end justify-content-between pb-4 g-3">
 
@@ -505,11 +500,10 @@
                   <thead>
                     <tr>
                       <th class="sort white-space-nowrap align-middle pe-3 ps-0 text-uppercase" scope="col" data-sort="title" style="width:25%;min-width: 125px;">Title</th>
-                      <th class="sort align-middle ps-0 text-start text-uppercase" scope="col" data-sort="type" style="width:15%;min-width: 100px;">Type</th>
                       <th class="sort align-middle pe-6 text-uppercase text-start" scope="col" data-sort="description" style="width:35%;min-width: 250px; ">Description</th>
+                      <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="type" style="width:15%;min-width: 100px;">Type</th>
                       <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="date" style="width:15%;min-width: 100px;">Date</th>
                       <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="time" style="width:15%;min-width: 100px;">Time</th>
-                      <th class="sort align-middle text-end" scope="col" style="width: 10%"></th>
                     </tr>
                   </thead>
 
@@ -517,28 +511,16 @@
                     <% if(activities && activities.length > 0){ %>
                     <% activities.forEach(item => { %>
                     <tr class="position-static">
-                      <td class="title align-middle white-space-nowrap py-4 ps-0 fw-bold text-primary fs-9 fs-md-8"><%= item.title %></td>
-                      <td class="type align-middle fw-semibold text-start py-2 ps-0 fs-9 text-body-highlight"><%= item.type %></td>
+                      <td class="title align-middle white-space-nowrap py-4 ps-0 fw-bold text-body-highlight fs-9"><%= item.title %></td>
                       <td class="description align-middle text-start fw-semibold py-2 text-start ps-2 fst-italic fs-9 text-body-highlight"><%= item.description%></td>
+                      <td class="type align-middle fw-semibold text-center py-2 ps-0 fs-9"><%= item.type %></td>
                       <td class="date align-middle text-center py-2 ps-0 fs-9"><%= item.date.toLocaleDateString('en-UK', { day: '2-digit', month: 'short', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></td>
                       <td class="time align-middle text-center py-2 ps-0 fs-9"><%= item.date.toLocaleTimeString('en-UK', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone : 'Asia/Kuala_Lumpur' }) %></td>
-                      <td class="align-middle text-end white-space-nowrap ps-0 action">
-                        <div class="font-sans-serif btn-reveal-trigger position-static">
-                          <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs--2" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
-                            <span class="fas fa-ellipsis-h fs-9"></span>
-                          </button>
-                          <div class="dropdown-menu dropdown-menu-end py-2">
-                            <a class="dropdown-item" href="/">View</a>
-                          </div>
-                        </div>
-                      </td>
                     </tr>
                     <% }); %>
                     <% }else{ %>
-                    <tr class="position-static">
-                      <td class="align-middle white-space-nowrap border-bottom-0">
-                        <p>No activity detected from <span class="fw-bold text-primary"><%= otherUser.fullname %></span></p>
-                      </td>
+                    <tr>
+                      <td colspan="5" class="text-center fw-bold fs-9">No activity detected from <span class="fw-bold text-primary"><%= otherUser.fullname %></span></td>
                     </tr>
                     <% } %>
                   </tbody>
@@ -557,8 +539,8 @@
             </div>
           </div>
 
-          <div class="mb-8" style="min-height: 25vh;">
-            <h2 class="mb-4" id="scrollspyLeaves">Leaves</h2>
+          <div class="mb-8 border rounded-3 p-4" style="min-height: 40vh;">
+            <h3 class="mb-4" id="scrollspyLeaves">Leave</h3>
             <div class="border-bottom border-translucent mt-3" id="leaves" data-list='{"valueNames":["type","reliefstaff","startdate","returndate","status"],"page":5,"pagination":true}'>
               <div class="row align-items-end justify-content-between pb-4 g-3">
 
@@ -583,10 +565,10 @@
                         RELIEF STAFF
                       </th>
                       <th class="sort align-middle text-center ps-3" scope="col" data-sort="startdate" style="width:15%;">
-                        START DATE
+                        START
                       </th>
                       <th class="sort align-middle text-center ps-3" scope="col" data-sort="returndate" style="width:15%;">
-                        RETURN DATE
+                        END
                       </th>
                       <th class="sort align-middle text-center" scope="col" data-sort="status" style="width:10%;">
                         STATUS
@@ -625,7 +607,7 @@
 
                     <tr class="position-static">
                       <td class="align-middle time white-space-nowrap ps-0 type py-4">
-                        <a class="fw-bold fs-9 fs-md-8" href="/leave/details/<%= leaves._id %>"><%= leaves.type %></a>
+                        <a class="fw-bold fs-9" href="/leave/details/<%= leaves._id %>"><%= leaves.type %></a>
                       </td>
                       <td class="align-middle text-body white-space-nowrap reliefstaff ps-3">
                         <%
@@ -665,10 +647,8 @@
                       </td>
                     </tr>
                     <%  }); %> <% } else { %>
-                    <tr class="position-static">
-                      <td class="align-middle time white-space-nowrap ps-0 border-bottom-0">
-                        <p>No leave detected from <span class="fw-bold text-primary"><%= otherUser.fullname %></span></p>
-                      </td>
+                    <tr>
+                      <td colspan="5" class="text-center fw-bold fs-9">No leave detected from <span class="fw-bold text-primary"><%= otherUser.fullname %></span></td>
                     </tr>
                     <% } %>
                   </tbody>
@@ -687,8 +667,8 @@
             </div>
           </div>
 
-          <div class="mb-8" style="min-height: 25vh;">
-            <h2 class="mb-4" id="scrollspyAttendances">Attendances</h2>
+          <div class="mb-8 border rounded-3 p-4" style="min-height: 40vh;">
+            <h3 class="mb-4" id="scrollspyAttendances">Attendances</h3>
             <div class="border-bottom border-translucent mt-3" id="attendance" data-list='{"valueNames":["type","date","clockin","clockout"],"page":5,"pagination":true}'>
               <div class="row align-items-end justify-content-between pb-4 g-3">
 
@@ -707,7 +687,7 @@
                 <table class="table fs-9 mb-0 border-top border-translucent">
                   <thead>
                     <tr>
-                      <th class="sort align-middle ps-0 text-start text-uppercase" scope="col" data-sort="date" style="width:25%;min-width: 250px;">Date</th>
+                      <th class="sort align-middle ps-0 text-start text-uppercase" scope="col" data-sort="date" style="width:15%;min-width: 150px;">Date</th>
                       <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="type" style="width:15%;min-width: 100px;">Status</th>
                       <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="clockin" style="width:15%;min-width: 100px;">Clock In</th>
                       <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="clockout" style="width:15%;min-width: 100px;">Clock Out</th>
@@ -736,17 +716,15 @@
                       %>
 
                     <tr class="position-static">
-                      <td class="date align-middle text-start py-2 ps-0 fs-8 fw-bold"><%= item.timestamp.toLocaleDateString('en-UK', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></td>
+                      <td class="date align-middle text-start py-4  ps-0 fs-9 fst-italic fw-bold"><%= item.timestamp.toLocaleDateString('en-UK', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></td>
                       <td class="type align-middle fw-semibold text-center py-2 ps-0 text-body-highlight"><span class="fs-10 badge badge-phoenix badge-phoenix-info"><%= item.status %></span></td>
                       <td class="clockin align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-success"><%= signInTime %></span></td>
                       <td class="clockin align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-warning"><%= signOutTime %></span></td>
                     </tr>
                     <% }); %>
                     <% }else{ %>
-                    <tr class="position-static">
-                      <td class="align-middle white-space-nowrap border-bottom-0">
-                        <p>No attendance from <span class="fw-bold text-primary"><%= otherUser.fullname %></span></p>
-                      </td>
+                    <tr>
+                      <td colspan="5" class="text-center fw-bold fs-9">No attendance detected from <span class="fw-bold text-primary"><%= otherUser.fullname %></span></td>
                     </tr>
                     <% } %>
                   </tbody>
@@ -766,7 +744,7 @@
           </div>
 
           <div>
-            <h2 class="mb-4" id="scrollspyAttachments">Attachments</h2>
+            <h3 class="mb-4" id="scrollspyAttachments">Attachments</h3>
 
             <div class="overflow-x-hidden vh-50 scrollbar w-100">
               <%
@@ -845,7 +823,7 @@
               <% } %>
               <% }); %>
               <% }else { %>
-              <p class="white-space-nowrap fs-9">There is no file uploaded yet</p>
+              <p class="white-space-nowrap fw-bold fs-9">No file uploaded yet</p>
               <% } %>
 
 

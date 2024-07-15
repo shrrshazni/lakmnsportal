@@ -275,7 +275,7 @@
                 <% }); %>
                 <% } else { %>
                 <div class="px-2 px-sm-3 py-3">
-                  <p>No notifications available.</p>
+                  <p class="fs-9 fw-bold">No notifications available</p>
                 </div>
                 <% } %>
               </div>
@@ -374,7 +374,7 @@
               <div class="avatar avatar-xl <%= showOnline %>">
                 <div class="avatar-name rounded-circle"><span><%= department && department.fullname ? department.fullname[0].toUpperCase() : '' %></span></div>
               </div>
-              <a class="mb-0 ms-3 fw-bold fs-8" href="/staff/details/<%= department._id %>"><%= department.fullname %></a>
+              <a class="mb-0 ms-3 py-4 fw-bold fs-8" href="/staff/details/<%= department._id %>"><%= department.fullname %></a>
             </td>
             <td class="align-middle white-space-nowrap position ps-3">
               <p class="mb-0 fs-9 text-body-highlight fw-semibold"><%= department.position %></p>
@@ -468,10 +468,8 @@
           <% }); %>
           <% }else { %>
 
-          <tr class="position-static">
-            <td class="align-middle time white-space-nowrap ps-0 border-bottom-0 text-center fs-9">
-              <p>There is no team member found</p>
-            </td>
+          <tr>
+            <td colspan="7" class="text-center fw-bold fs-9">No team member yet</td>
           </tr>
 
           <% } %>
@@ -494,12 +492,12 @@
 <div class="mt-3 mx-lg-n4 mb-6">
   <div class="row g-3">
     <div class="col-12 col-xl-6 col-xxl-7 mb-3">
-      <div class="card task-list h-100">
+      <div class="card task-list vh-50">
         <div class="card-header border-bottom-0 pb-0">
           <div class="row justify-content-between align-items-center mb-4">
-            <div class="col-auto">
+            <div class="col-auto mb-3 mb-lg-0">
               <h3 class="text-body-emphasis">Tasks</h3>
-              <p class="mb-0 text-body-tertiary">Monitor team task progress regularly</p>
+              <p class="mb-0 lh-sm text-body-tertiary">Monitor team task progress regularly</p>
             </div>
             <div class="col-auto w-100 w-md-auto">
               <div class="row align-items-center g-0 justify-content-between">
@@ -674,7 +672,7 @@
                           </div>
                           <% }); %>
                           <% }else { %>
-                          <p>There is no subtask.</p>
+                          <p class="fs-9 fw-bold">No subtask yet</p>
                           <% } %>
                           <a class="fw-bold fs-9" href="#!" data-bs-target="#subtask<%= index %>" data-bs-toggle="modal"><span class="fas fa-plus me-1"></span>Add subtask</a>
                         </div>
@@ -735,7 +733,7 @@
                           <% } %>
                           <% }); %>
                           <% }else { %>
-                          <p>There is no file uploaded.</p>
+                          <p class="fs-9 fw-bold">No file uploaded</p>
                           <% } %>
                         </div><a class="fw-bold fs-9" href="#!" data-bs-target="#file<%= index %>" data-bs-toggle="modal"><span class="fas fa-plus me-1"></span>Add file(s)</a>
                       </div>
@@ -915,7 +913,7 @@
 
           <% }); %>
           <% } else { %>
-          <p>There is not task assigned to you.</p>
+          <p class="fw-bold fs-9">No task assigned yet</p>
           <% } %>
         </div>
 
@@ -1210,28 +1208,33 @@
     </div>
 
     <div class="col-12 col-xl-6 col-xxl-5 mb-3">
-      <div class="card overflow-y-auto scrollbar" style="height: 50vh;">
+      <div class="card overflow-y-hidden vh-50">
         <div class="card-body">
           <div class="card-title mb-1">
             <h3 class="text-body-emphasis">Activity</h3>
           </div>
-          <p class="text-body-tertiary mb-4">Recent activity accross your department</p>
+          <p class="text-body-tertiary lh-sm mb-4">Recent activity accross your department/section from last week</p>
 
           <% 
 
           var userActivities = '';
-          if(user.isChiefExec || user.isDeputyChiefExec){
-            userActivities = activities.filter(activity => activity.user.isManagement === user.isManagement);
-          } else if (user.isHeadOfDepartment){
-            userActivities = activities.filter(activity => activity.user.department === user.department);
-          } else if (user.isPersonalAssistant){
-            userActivities = activities.filter(activity => activity.isAdmin === user.isAdmin && activity.user.section === user.section);
-          } else {
-            userActivities = activities.filter(activity => activity.user.section === user.section);
+
+          if(activities && activities.length>0){
+               if(user.isChiefExec || user.isDeputyChiefExec){
+               userActivities = activities.filter(activity => activity.user.isManagement === user.isManagement);
+             } else if (user.isHeadOfDepartment){
+               userActivities = activities.filter(activity => activity.user.department === user.department);
+             } else if (user.isPersonalAssistant){
+               userActivities = activities.filter(activity => activity.isAdmin === user.isAdmin && activity.user.section === user.section);
+             } else {
+               userActivities = activities.filter(activity => activity.user.section === user.section);
+             }
+          }else{
+            userActivities = '';
           }
 
           %>
-          <div class="timeline-vertical timeline-with-details">
+          <div class="timeline-vertical timeline-with-details overflow-x-hidden scrollbar" style="height: 40vh;">
             <% if(userActivities&& userActivities.length >0){%>
             <% const lastActivitiesIndex = userActivities.length - 1; %>
             <% userActivities.forEach(function(activity, index) { %>
@@ -1267,7 +1270,7 @@
             </div>
             <%  }) %>
             <% }else { %>
-            <p>There is no activity yet.</p>
+            <p class="fw-bold fs-9">No activity yet</p>
             <% } %>
           </div>
         </div>
@@ -1549,7 +1552,7 @@
 
             <div class="col-auto">
               <h3>Leave Approvals</h3>
-              <p class="text-body-tertiary lh-sm mb-0">Permission granted, absence authorized, leave request accepted.</p>
+              <p class="text-body-tertiary lh-sm mb-0">Permission granted, absence authorized, leave request accepted</p>
             </div>
 
             <div class="col-12 col-md-auto">
@@ -1569,8 +1572,8 @@
                   <th class="sort white-space-nowrap align-middle ps-0" scope="col" data-sort="type" style="width:10%;">TYPE</th>
                   <th class="sort align-middle ps-3" scope="col" data-sort="staff" style="width:15%;">STAFF</th>
                   <th class="sort align-middle ps-3" scope="col" data-sort="latestapproval" style="width:20%;">LATEST APPROVAL</th>
-                  <th class="sort align-middle text-center" scope="col" data-sort="startdate" style="width:10%;">START DATE</th>
-                  <th class="sort align-middle text-center" scope="col" data-sort="returndate" style="width:10%;">RETURN DATE</th>
+                  <th class="sort align-middle text-center" scope="col" data-sort="startdate" style="width:10%;">START</th>
+                  <th class="sort align-middle text-center" scope="col" data-sort="returndate" style="width:10%;">RETURN</th>
                   <th class="sort align-middle text-center" scope="col" data-sort="status" style="width:10%;">STATUS</th>
                   <th class="sort align-middle text-end" scope="col" style="width:5%;"></th>
                 </tr>
@@ -1649,9 +1652,7 @@
                 </tr>
                 <%  }); %> <% } else { %>
                 <tr>
-                  <td>
-                    <p class="align-middle fs-9 white-space-nowrap">No approvals leave here.</p>
-                  </td>
+                  <td colspan="7" class="text-center fw-bold fs-9">No leave approval yet</td>
                 </tr>
                 <% } %>
               </tbody>
@@ -1686,22 +1687,22 @@
   }
   %>
 
-  <div class="col-12 col-xxl-6">
-    <div class="card pt-3" style="min-height: 35vh;">
-      <div class="card-body">
+  <div class="col-12 col-xxl-7">
+    <div class="card pt-3" style="height: 35vh;">
+      <div class="card-body h-100">
         <div id="today-on-leave" class="leave-section" data-list='{"valueNames":["staff","type","startdate","returndate"],"page":4,"pagination":true}'>
 
-          <div class="row align-items-end justify-content-between pb-4 g-3">
+          <div class="row d-flex justify-content-between pb-4 g-3">
 
-            <div class="col-12">
-              <h3>Staff on leave today</h3>
-              <p class="text-body-tertiary lh-sm mb-0">Employees absent today, leave granted.</p>
+            <div class="col-12 col-xxl-auto">
+              <h3>On leave today</h3>
+              <p class="text-body-tertiary lh-sm mb-0">Staff absent today, leave granted</p>
             </div>
 
-            <div class="col-12 col-md-auto">
+            <div class="col-12 col-xxl-auto mt-xxl-4">
               <div class="search-box px-lg-0 pe-4">
                 <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
-                  <input class="form-control search-input search form-control-sm" type="search" placeholder="Search leave approval" aria-label="Search" />
+                  <input class="form-control search-input search form-control-sm" type="search" placeholder="Search on leave" aria-label="Search" />
                   <span class="fas fa-search search-box-icon"></span>
                 </form>
               </div>
@@ -1715,8 +1716,8 @@
                 <tr>
                   <th class="sort white-space-nowrap align-middle text-start" scope="col" data-sort="staff" style="width:auto;">STAFF</th>
                   <th class="sort align-middle text-start" scope="col" data-sort="type" style="width:auto;">TYPE</th>
-                  <th class="sort align-middle text-center" scope="col" data-sort="startdate" style="width:auto;">START DATE</th>
-                  <th class="sort align-middle text-center" scope="col" data-sort="returndate" style="width:auto;">RETURN DATE</th>
+                  <th class="sort align-middle text-center" scope="col" data-sort="startdate" style="width:auto;">START</th>
+                  <th class="sort align-middle text-center" scope="col" data-sort="returndate" style="width:auto;">END</th>
                 </tr>
               </thead>
               <tbody class="list" id="project-summary-table-body">
@@ -1727,7 +1728,7 @@
 
                   <td class="align-middle text-body white-space-nowrap ps-0 staff">
                     <% const staffToday = allUser.find(staff => staff._id.toString() === onLeave.user.toString()); %>
-                    <a class="mb-0 fw-bold fs-8 ps-2" href="/staff/details/<%= onLeave.user %>"><%= staffToday.fullname %></a>
+                    <a class="mb-0 fw-bold fs-8 ps-2 py-4" href="/staff/details/<%= onLeave.user %>"><%= staffToday.fullname %></a>
                   </td>
 
 
@@ -1745,10 +1746,8 @@
                 </tr>
                 <% }); %>
                 <% }else { %>
-                <tr class="position-static">
-                  <td class="align-middle white-space-nowrap">
-                    <p class="mb-0 ms-3 fs-9 text-body border-bottom-0">No staff on leave today</p>
-                  </td>
+                <tr>
+                  <td colspan="4" class="text-center fw-bold fs-9">No staff on leave today</td>
                 </tr>
                 <% } %>
               </tbody>
@@ -1769,17 +1768,17 @@
 
         <div id="week-on-leave" class="leave-section" data-list='{"valueNames":["staff","type","startdate","returndate"],"page":4,"pagination":true}'>
 
-          <div class="row align-items-end justify-content-between pb-4 g-3">
+          <div class="row d-flex justify-content-between pb-4 g-3">
 
-            <div class="col-12">
-              <h3>Staff on leave this week</h3>
-              <p class="text-body-tertiary lh-sm mb-0">Employees absent today, leave granted.</p>
+            <div class="col-12 col-xxl-auto">
+              <h3>On leave this week</h3>
+              <p class="text-body-tertiary lh-sm mb-0">Staff absent this week, leave granted</p>
             </div>
 
-            <div class="col-12 col-md-auto">
+            <div class="col-12 col-xxl-auto mt-xxl-4">
               <div class="search-box px-lg-0 pe-4">
                 <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
-                  <input class="form-control search-input search form-control-sm" type="search" placeholder="Search leave approval" aria-label="Search" />
+                  <input class="form-control search-input search form-control-sm" type="search" placeholder="Search on leave" aria-label="Search" />
                   <span class="fas fa-search search-box-icon"></span>
                 </form>
               </div>
@@ -1793,8 +1792,8 @@
                 <tr>
                   <th class="sort white-space-nowrap align-middle text-start" scope="col" data-sort="staff" style="width:auto;">STAFF</th>
                   <th class="sort align-middle text-start" scope="col" data-sort="type" style="width:auto;">TYPE</th>
-                  <th class="sort align-middle text-center" scope="col" data-sort="startdate" style="width:auto;">START DATE</th>
-                  <th class="sort align-middle text-center" scope="col" data-sort="returndate" style="width:auto;">RETURN DATE</th>
+                  <th class="sort align-middle text-center" scope="col" data-sort="startdate" style="width:auto;">START</th>
+                  <th class="sort align-middle text-center" scope="col" data-sort="returndate" style="width:auto;">END</th>
                 </tr>
               </thead>
               <tbody class="list" id="project-summary-table-body">
@@ -1805,7 +1804,7 @@
 
                   <td class="align-middle text-body white-space-nowrap ps-0 staff">
                     <% const staffWeek = allUser.find(staff => staff._id.toString() === onLeave.user.toString()); %>
-                    <a class="mb-0 fw-bold fs-8 ps-2" href="/staff/details/<%= onLeave.user %>"><%= staffWeek.fullname %></a>
+                    <a class="mb-0 fw-bold fs-8 ps-2 py-4" href="/staff/details/<%= onLeave.user %>"><%= staffWeek.fullname %></a>
                   </td>
 
 
@@ -1823,10 +1822,8 @@
                 </tr>
                 <% }); %>
                 <% }else { %>
-                <tr class="position-static">
-                  <td class="align-middle text-body white-space-nowrap">
-                    <p class="mb-0 ms-3 fs-9">No staff on leave today</p>
-                  </td>
+                <tr>
+                  <td colspan="4" class="text-center fw-bold fs-9">No staff on leave this week</td>
                 </tr>
                 <% } %>
               </tbody>
@@ -1847,17 +1844,17 @@
 
         <div id="month-on-leave" class="leave-section" data-list='{"valueNames":["staff","type","startdate","returndate"],"page":4,"pagination":true}'>
 
-          <div class="row align-items-end justify-content-between pb-4 g-3">
+          <div class="row d-flex justify-content-between pb-4 g-3">
 
-            <div class="col-12">
-              <h3>Staff on leave this month</h3>
-              <p class="text-body-tertiary lh-sm mb-0">Employees absent today, leave granted.</p>
+            <div class="col-12 col-xxl-auto">
+              <h3>On leave month</h3>
+              <p class="text-body-tertiary lh-sm mb-0">Staff absent this month, leave granted</p>
             </div>
 
-            <div class="col-12 col-md-auto">
+            <div class="col-12 col-xxl-auto mt-xxl-4">
               <div class="search-box px-lg-0 pe-4">
                 <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
-                  <input class="form-control search-input search form-control-sm" type="search" placeholder="Search leave approval" aria-label="Search" />
+                  <input class="form-control search-input search form-control-sm" type="search" placeholder="Search on leave" aria-label="Search" />
                   <span class="fas fa-search search-box-icon"></span>
                 </form>
               </div>
@@ -1871,8 +1868,8 @@
                 <tr>
                   <th class="sort white-space-nowrap align-middle text-start" scope="col" data-sort="staff" style="width:auto;">STAFF</th>
                   <th class="sort align-middle text-start" scope="col" data-sort="type" style="width:auto;">TYPE</th>
-                  <th class="sort align-middle text-center" scope="col" data-sort="startdate" style="width:auto;">START DATE</th>
-                  <th class="sort align-middle text-center" scope="col" data-sort="returndate" style="width:auto;">RETURN DATE</th>
+                  <th class="sort align-middle text-center" scope="col" data-sort="startdate" style="width:auto;">START</th>
+                  <th class="sort align-middle text-center" scope="col" data-sort="returndate" style="width:auto;">END</th>
                 </tr>
               </thead>
               <tbody class="list" id="project-summary-table-body">
@@ -1883,7 +1880,7 @@
 
                   <td class="align-middle text-body white-space-nowrap ps-0 staff">
                     <% const staffMonth = allUser.find(staff => staff._id.toString() === onLeave.user.toString());%>
-                    <a class="mb-0 fw-bold fs-8 ps-2" href="/staff/details/<%= onLeave.user %>"><%= staffMonth.fullname %></a>
+                    <a class="mb-0 fw-bold fs-8 ps-2 py-4" href="/staff/details/<%= onLeave.user %>"><%= staffMonth.fullname %></a>
                   </td>
 
 
@@ -1901,10 +1898,8 @@
                 </tr>
                 <% }); %>
                 <% }else { %>
-                <tr class="position-static">
-                  <td class="align-middle text-body white-space-nowrap">
-                    <p class="mb-0 ms-3 fs-9">No staff on leave today</p>
-                  </td>
+                <tr>
+                  <td colspan="4" class="text-center fw-bold fs-9">No staff on leave this month</td>
                 </tr>
                 <% } %>
               </tbody>
@@ -1926,18 +1921,19 @@
     </div>
   </div>
 
-  <div class="col-12 col-xxl-6">
-    <div class="card pt-3" style="min-height: 35vh;">
-      <div class="card-body">
+  <div class="col-12 col-xxl-5">
+    <div class="card pt-3" style="height: 35vh;">
+      <div class="card-body h-100">
+
         <div class="d-flex mb-6">
-          <div class="btn btn-phoenix-primary py-2 px-2 active" onclick="toggleSection('today-on-leave', this)">Today</div>
-          <div class="btn btn-phoenix-primary py-2 px-2" onclick="toggleSection('week-on-leave', this)">Week</div>
-          <div class="btn btn-phoenix-primary py-2 px-2" onclick="toggleSection('month-on-leave', this)">Month</div>
+          <div class="btn btn-phoenix-primary py-2 px-2 me-1 active" onclick="toggleSection('today-on-leave', this)">Today</div>
+          <div class="btn btn-phoenix-primary py-2 px-2 me-1" onclick="toggleSection('week-on-leave', this)">Week</div>
+          <div class="btn btn-phoenix-primary py-2 px-2 me-1" onclick="toggleSection('month-on-leave', this)">Month</div>
         </div>
 
 
         <div class="d-flex justify-content-center px-4 py-6">
-          <div id="current-leave-bar-charts" style="height: 200px;width: 500px;"></div>
+          <div class="px-3" id="current-leave-bar-charts" style="height: 200px;width: 350px;"></div>
         </div>
 
         <script>
