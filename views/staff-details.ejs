@@ -691,6 +691,7 @@
                       <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="type" style="width:15%;min-width: 100px;">Status</th>
                       <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="clockin" style="width:15%;min-width: 100px;">Clock In</th>
                       <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="clockout" style="width:15%;min-width: 100px;">Clock Out</th>
+                      <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="remarks" style="width:20%;min-width: 100px;">Remarks</th>
                     </tr>
                   </thead>
 
@@ -713,13 +714,23 @@
                         } else{
                             signInTime = item.date.signInTime.toLocaleTimeString('en-MY', {hour: 'numeric',minute: 'numeric', hour12: true, timeZone : 'Asia/Kuala_Lumpur' }) ;
                         }
+
+                        var badgeColour;
+                        if (item.status === 'Late' || item.status === 'Absent') {
+                          badgeColour = 'danger';
+                        } else if (item.status === 'Leave' || item.status === 'Non Working Day' ) {
+                          badgeColour = 'info';
+                        } else {
+                          badgeColour = 'success';
+                        }
                       %>
 
                     <tr class="position-static">
-                      <td class="date align-middle text-start py-4  ps-0 fs-9 fst-italic fw-bold"><%= item.timestamp.toLocaleDateString('en-UK', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></td>
-                      <td class="type align-middle fw-semibold text-center py-2 ps-0 text-body-highlight"><span class="fs-10 badge badge-phoenix badge-phoenix-info"><%= item.status %></span></td>
+                      <td class="date align-middle text-start py-4 text-body-highlight ps-0 fs-9 fst-italic fw-bold"><%= item.timestamp.toLocaleDateString('en-UK', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></td>
+                      <td class="type align-middle fw-semibold text-center py-2 ps-0 text-body-highlight"><span class="fs-10 badge badge-phoenix badge-phoenix-<%= badgeColour %>"><%= item.status %></span></td>
                       <td class="clockin align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-success"><%= signInTime %></span></td>
                       <td class="clockin align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-warning"><%= signOutTime %></span></td>
+                      <td class="remarks align-middle fst-italic text-center py-2 ps-0 fs-9"><%= item.remarks || 'No remarks added.' %></td>
                     </tr>
                     <% }); %>
                     <% }else{ %>

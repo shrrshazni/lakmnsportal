@@ -294,7 +294,7 @@
                                    <span class="fas fa-ellipsis-h fs-9"></span>
                                  </button>
                                  <div class="dropdown-menu dropdown-menu-end py-2">
-                                   <a class="dropdown-item" href="/attendance/acknowledged/${entry._id.toString()}">Acknowledged</a>
+                                   <a class="dropdown-item" href="/attendance/acknowledged/${item._id.toString()}">Acknowledged</a>
                                  </div>
                                  </div>
                               </td>
@@ -815,30 +815,47 @@
           const [month, year] = date.split('/').map(Number); // Extract year and month from the selected date
           const daysInMonth = new Date(year, month, 0).getDate();
 
+          // Function to calculate the number of weekends in a month
+          function countWeekends(year, month) {
+            let weekends = 0;
+            for (let day = 1; day <= daysInMonth; day++) {
+              const date = new Date(year, month - 1, day); // JavaScript months are 0-based
+              const dayOfWeek = date.getDay();
+              if (dayOfWeek === 0 || dayOfWeek === 6) { // 0 = Sunday, 6 = Saturday
+                weekends++;
+              }
+            }
+            return weekends;
+          }
+
+          const weekendsInMonth = countWeekends(year, month);
+
           data.forEach(entry => {
             // Construct HTML row for each entry
 
+            const totalDays = daysInMonth - weekendsInMonth - entry.publicHolidayCount;
+            console.log(entry.statusCounts['Non Working Day']);
+
             const presentCount = entry.statusCounts['Present'] || 0;
-            const presentPercentage = ((presentCount / daysInMonth) * 100).toFixed(0);
+            const presentPercentage = ((presentCount / totalDays) * 100).toFixed(0);
 
             const absentCount = entry.statusCounts['Absent'] || 0;
-            const absentPercentage = ((absentCount / daysInMonth) * 100).toFixed(0);
+            const absentPercentage = ((absentCount / totalDays) * 100).toFixed(0);
 
             const lateCount = entry.statusCounts['Late'] || 0;
-            const latePercentage = ((lateCount / daysInMonth) * 100).toFixed(0);
+            const latePercentage = ((lateCount / totalDays) * 100).toFixed(0);
 
             const invalidCount = entry.statusCounts['Invalid'] || 0;
-            const invalidPercentage = ((invalidCount / daysInMonth) * 100).toFixed(0);
+            const invalidPercentage = ((invalidCount / totalDays) * 100).toFixed(0);
 
             const leaveCount = entry.statusCounts['Leave'] || 0;
-            const leavePercentage = ((leaveCount / daysInMonth) * 100).toFixed(0);
+            const leavePercentage = ((leaveCount / totalDays) * 100).toFixed(0);
 
             const totalAttendance = presentCount + lateCount + leaveCount;
-            const totalPercentage = ((totalAttendance / daysInMonth) * 100).toFixed(0);
+            const totalPercentage = ((totalAttendance / totalDays) * 100).toFixed(0);
 
-            const nonWorkingCount = entry.statusCounts['Non Working Day'] || 0;
-            const nonWorkingPercentage = ((presentCount / daysInMonth) * 100).toFixed(0);
-
+            const nonWorkingCount = totalDays;
+            const nonWorkingPercentage = ((totalDays / daysInMonth) * 100).toFixed(0);
 
             const row = `
                   <tr class="position-static border-top">
@@ -855,19 +872,20 @@
                           <p class="fw-semibold text-body-emphasis fs-9 mb-0">${entry.user ? entry.user.section : 'Unknown'}</p>
                       </td>
                       <td class="align-middle text-center attendance px-5">
-                          <p class="fs-10">${totalAttendance} / ${daysInMonth-nonWorkingCount}</p>
+                          <p class="fs-10">${totalAttendance} / ${totalDays}</p>
                           <div class="progress progress-stack mt-n3" style="height:5px;">
                             <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar bg-primary" style="width:${totalPercentage}%" data-bs-toggle="tooltip" data-bs-placement="top" title="${totalPercentage}%"></div>
                           </div>
                       </td>
                       <td class="align-middle text-center status px-5">
-                          <p class="fs-10 opacity-0">${presentCount} / ${daysInMonth-nonWorkingCount}</p>
+                          <p class="fs-10 opacity-0">${presentCount} / ${totalDays}</p>
                           <div class="progress progress-stack mt-n3" style="height:5px;">
                             <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar bg-success" style="width:${presentPercentage}%" data-bs-toggle="tooltip" data-bs-placement="top" title="Present ${presentPercentage}% "></div>
                             <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar bg-danger" style="width:${absentPercentage}%" data-bs-toggle="tooltip" data-bs-placement="top" title="Absent ${absentPercentage}% "></div>
                             <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar bg-warning" style="width:${latePercentage}%" data-bs-toggle="tooltip" data-bs-placement="top" title="Late ${latePercentage}% "></div>
                             <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar bg-info" style="width:${invalidPercentage}%" data-bs-toggle="tooltip" data-bs-placement="top" title="Invalid ${invalidPercentage}% "></div>
                             <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar bg-success-lighter" style="width:${leavePercentage}%" data-bs-toggle="tooltip" data-bs-placement="top" title="Leave ${leavePercentage}% "></div>
+                            <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar bg-info-lighter" style="width:${nonWorkingPercentage}%" data-bs-toggle="tooltip" data-bs-placement="top" title="Non Working Days ${nonWorkingPercentage}% "></div>
                           </div>
                       </td>
                   </tr>`;

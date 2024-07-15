@@ -1808,222 +1808,228 @@ app
         const info = await Info.findOne({ user: user._id });
 
         if (user) {
+            const updateFields = {};
+            // Add fields from req.body to the updateFields object if they are present
+            if (req.body.officenumber) {
+                updateFields.officenumber = req.body.officenumber;
+            }
+
+            if (req.body.email) {
+                updateFields.email = req.body.email;
+            }
+            if (req.body.phone) {
+                updateFields.phone = req.body.phone;
+            }
+            if (req.body.dateEmployed) {
+                updateFields.dateEmployed = new Date(req.body.dateEmployed);
+            }
+            if (req.body.birthdate) {
+                updateFields.birthdate = new Date(req.body.birthdate);
+            }
+            if (req.body.nric) {
+                updateFields.nric = req.body.nric;
+            }
             if (
-                (req.body.oldPassword === '' &&
-                    req.body.newPassword === '' &&
-                    req.body.newPassword2 === '') ||
-                (req.body.oldPassword === undefined &&
-                    req.body.newPassword === undefined &&
-                    req.body.newPassword2 === undefined)
+                req.body.marital &&
+                req.body.marital !== 'Select your marital status'
             ) {
-                const updateFields = {};
+                updateFields.marital = req.body.marital;
+            }
+            if (
+                req.body.education &&
+                req.body.education !== 'Select your highest education'
+            ) {
+                updateFields.education = req.body.education;
+            }
+            if (req.body.address) {
+                updateFields.address = req.body.address;
+            }
+            if (req.body.children && req.body.children !== 'Select your number of children') {
+                updateFields.children = parseInt(req.body.children);
+            }
 
-                // Add fields from req.body to the updateFields object if they are present
-                if (req.body.officenumber) {
-                    updateFields.officenumber = req.body.officenumber;
-                }
-
-                if (req.body.email) {
-                    updateFields.email = req.body.email;
-                }
-                if (req.body.phone) {
-                    updateFields.phone = req.body.phone;
-                }
-                if (req.body.dateEmployed) {
-                    updateFields.dateEmployed = new Date(req.body.dateEmployed);
-                }
-                if (req.body.birthdate) {
-                    updateFields.birthdate = new Date(req.body.birthdate);
-                }
-                if (req.body.nric) {
-                    updateFields.nric = req.body.nric;
-                }
-                if (
-                    req.body.marital &&
-                    req.body.marital !== 'Select your marital status'
-                ) {
-                    updateFields.marital = req.body.marital;
-                }
-                if (
-                    req.body.education &&
-                    req.body.education !== 'Select your highest education'
-                ) {
-                    updateFields.education = req.body.education;
-                }
-                if (req.body.address) {
-                    updateFields.address = req.body.address;
-                }
-                if (req.body.children && req.body.children !== 'Select your number of children') {
-                    updateFields.children = parseInt(req.body.children);
-                }
-
-                if (Object.keys(updateFields).length === 0) {
-                    res.render('settings', {
-                        user: user,
-                        uuid: uuidv4(),
-                        notifications: notifications,
-                        info: info,
-                        show: 'show',
-                        alert: 'Update unsuccessful, there no any input to be updated'
-                    });
-                } else {
-                    let updateUser = '';
-
-                    if (updateFields.phone !== '') {
-                        updateUser = await User.findOneAndUpdate(
-                            {
-                                _id: user._id
-                            },
-                            {
-                                $set: updateFields
-                            },
-                            { new: true }
-                        );
-
-                        await Info.findOneAndUpdate(
-                            {
-                                user: user._id
-                            },
-                            {
-                                phoneVerified: false
-                            },
-                            {
-                                new: true
-                            }
-                        );
-                    } else if (updateFields.email !== '') {
-                        updateUser = await User.findOneAndUpdate(
-                            {
-                                _id: user._id
-                            },
-                            {
-                                $set: updateFields
-                            },
-                            { new: true }
-                        );
-
-                        await Info.findOneAndUpdate(
-                            {
-                                user: user._id
-                            },
-                            {
-                                emailVerified: false
-                            },
-                            {
-                                new: true
-                            }
-                        );
-                    } else if (updateFields.phone !== '' && updateFields.email !== '') {
-                        updateUser = await User.findOneAndUpdate(
-                            {
-                                _id: user._id
-                            },
-                            {
-                                $set: updateFields
-                            },
-                            { new: true }
-                        );
-
-                        await Info.findOneAndUpdate(
-                            {
-                                user: user._id
-                            },
-                            {
-                                emailVerified: false,
-                                phoneVerified: false
-                            },
-                            {
-                                new: true
-                            }
-                        );
-
-                    } else {
-                        updateUser = await User.findOneAndUpdate(
-                            {
-                                _id: user._id
-                            },
-                            {
-                                $set: updateFields
-                            },
-                            { new: true }
-                        );
-                    }
-
-                    console.log(updateUser);
-                    console.log(updateFields);
-
-                    const today = new Date();
-
-                    if (updateUser) {
-                        // activity
-                        const activityUser = new Activity({
-                            user: user._id,
-                            date: new Date(),
-                            title: 'Update profile',
-                            type: 'Profile',
-                            description:
-                                user.fullname +
-                                ' has update their profile at ' + getDateFormat2(today)
-                        });
-
-                        activityUser.save();
-
-                        console.log('New activity submitted', activityUser);
-
-                        console.log('Update successful');
-                        res.render('settings', {
-                            user: user,
-                            uuid: uuidv4(),
-                            notifications: notifications,
-                            info: info,
-                            show: 'show',
-                            alert:
-                                'Update sucessful on basic or personal information, please do check your profile to see the changes'
-                        });
-                    }
-                }
+            if (Object.keys(updateFields).length === 0) {
+                res.render('settings', {
+                    user: user,
+                    uuid: uuidv4(),
+                    notifications: notifications,
+                    info: info,
+                    show: 'show',
+                    alert: 'Update unsuccessful, there no any input to be updated'
+                });
             } else {
-                const isPasswordValid = await user.authenticate(req.body.oldPassword);
-                const newPasswordMatch = req.body.newPassword === req.body.newPassword2;
+                let updateUser = '';
 
-                if (isPasswordValid.user === false) {
-                    res.render('settings', {
-                        user: user,
-                        uuid: uuidv4(),
-                        notifications: notifications,
-                        info: info,
-                        show: 'show',
-                        alert:
-                            'Update unsuccessful, maybe you entered a wrong current password'
-                    });
-                } else if (newPasswordMatch === false) {
-                    res.render('settings', {
-                        user: user,
-                        uuid: uuidv4(),
-                        notifications: notifications,
-                        info: info,
-                        show: 'show',
-                        alert:
-                            'Update unsuccessful, new password and confirm pasword are not match'
-                    });
+                if (updateFields.phone !== '') {
+                    updateUser = await User.findOneAndUpdate(
+                        {
+                            _id: user._id
+                        },
+                        {
+                            $set: updateFields
+                        },
+                        { new: true }
+                    );
+
+                    await Info.findOneAndUpdate(
+                        {
+                            user: user._id
+                        },
+                        {
+                            phoneVerified: false
+                        },
+                        {
+                            new: true
+                        }
+                    );
+                } else if (updateFields.email !== '') {
+                    updateUser = await User.findOneAndUpdate(
+                        {
+                            _id: user._id
+                        },
+                        {
+                            $set: updateFields
+                        },
+                        { new: true }
+                    );
+
+                    await Info.findOneAndUpdate(
+                        {
+                            user: user._id
+                        },
+                        {
+                            emailVerified: false
+                        },
+                        {
+                            new: true
+                        }
+                    );
+                } else if (updateFields.phone !== '' && updateFields.email !== '') {
+                    updateUser = await User.findOneAndUpdate(
+                        {
+                            _id: user._id
+                        },
+                        {
+                            $set: updateFields
+                        },
+                        { new: true }
+                    );
+
+                    await Info.findOneAndUpdate(
+                        {
+                            user: user._id
+                        },
+                        {
+                            emailVerified: false,
+                            phoneVerified: false
+                        },
+                        {
+                            new: true
+                        }
+                    );
+
                 } else {
-                    await user.setPassword(req.body.newPassword);
-                    const updatePassword = await user.save();
+                    updateUser = await User.findOneAndUpdate(
+                        {
+                            _id: user._id
+                        },
+                        {
+                            $set: updateFields
+                        },
+                        { new: true }
+                    );
+                }
 
-                    if (updatePassword) {
-                        res.render('settings', {
-                            user: user,
-                            uuid: uuidv4(),
-                            notifications: notifications,
-                            info: info,
-                            show: 'show',
-                            alert: 'Update successful on new password, you can use it onwards'
-                        });
-                    }
+                console.log(updateUser);
+                console.log(updateFields);
+
+                const today = new Date();
+
+                if (updateUser) {
+                    // activity
+                    const activityUser = new Activity({
+                        user: user._id,
+                        date: new Date(),
+                        title: 'Update profile',
+                        type: 'Profile',
+                        description:
+                            user.fullname +
+                            ' has update their profile at ' + getDateFormat2(today)
+                    });
+
+                    activityUser.save();
+
+                    console.log('New activity submitted', activityUser);
+
+                    console.log('Update successful');
+                    res.render('settings', {
+                        user: user,
+                        uuid: uuidv4(),
+                        notifications: notifications,
+                        info: info,
+                        show: 'show',
+                        alert:
+                            'Update sucessful on basic or personal information, please do check your profile to see the changes'
+                    });
                 }
             }
         }
     });
+
+app.post('/settings/change-password', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    })
+        .populate('sender')
+        .sort({ timestamp: -1 });
+    const info = await Info.findOne({ user: user._id });
+
+    if (user) {
+
+        const isPasswordValid = await user.authenticate(req.body.oldPassword);
+        const newPasswordMatch = req.body.newPassword === req.body.newPassword2;
+
+        if (isPasswordValid.user === false) {
+            res.render('settings', {
+                user: user,
+                uuid: uuidv4(),
+                notifications: notifications,
+                info: info,
+                show: 'show',
+                alert:
+                    'Update unsuccessful, maybe you entered a wrong current password'
+            });
+        } else if (newPasswordMatch === false) {
+            res.render('settings', {
+                user: user,
+                uuid: uuidv4(),
+                notifications: notifications,
+                info: info,
+                show: 'show',
+                alert:
+                    'Update unsuccessful, new password and confirm pasword are not match'
+            });
+        } else {
+            await user.setPassword(req.body.newPassword);
+            const updatePassword = await user.save();
+
+            if (updatePassword) {
+                res.render('settings', {
+                    user: user,
+                    uuid: uuidv4(),
+                    notifications: notifications,
+                    info: info,
+                    show: 'show',
+                    alert: 'Update successful on new password, you can use it onwards'
+                });
+            }
+        }
+
+    }
+});
 
 app.post('/settings/upload/profile-image', isAuthenticated, async function (req, res) {
     const username = req.user.username;
@@ -2071,7 +2077,7 @@ app.post('/settings/upload/profile-image', isAuthenticated, async function (req,
                 type: 'Profile',
                 description:
                     user.fullname +
-                    ' has update their profile at' + getDateFormat2(today)
+                    ' has update their profile at ' + getDateFormat2(today)
             });
 
             activityUser.save();
@@ -5977,7 +5983,7 @@ app.post('/api/data/all-attendance/today/human-resources', isAuthenticated, asyn
         const userIds = attendanceData.map(record => record._id.user);
 
         // Query all users from the database
-        const allUser = await User.find({ $ne: { username: req.user.username } });
+        const allUser = await User.find();
 
         // Create a map to quickly access user details by user ID
         const userMap = {};
@@ -6232,7 +6238,7 @@ app.post('/api/data/all-attendance/per-month/human-resources', isAuthenticated, 
 
     try {
         // Create a set of all possible status types
-        const allStatusTypes = ['Present', 'Absent', 'Late', 'Invalid', 'Leave'];
+        const allStatusTypes = ['Present', 'Absent', 'Late', 'Invalid', 'Leave', 'Non Working Day'];
         const allUser = await User.find();
 
         // Query attendance records based on the month and year
@@ -6249,31 +6255,39 @@ app.post('/api/data/all-attendance/per-month/human-resources', isAuthenticated, 
             // Group by user and status, count occurrences
             {
                 $group: {
-                    _id: { user: '$user', status: '$status' },
+                    _id: { user: '$user', status: '$status', type: '$type' },
                     count: { $sum: 1 }
                 }
             }
         ]);
 
         const userStatusCounts = {};
+        const publicHolidayCounts = {};
 
-        // Iterate over all users and initialize their status counts
+        // Initialize status counts and public holiday counts for each user
         allUser.forEach(user => {
             userStatusCounts[user._id] = {};
             allStatusTypes.forEach(statusType => {
                 userStatusCounts[user._id][statusType] = 0;
             });
+            publicHolidayCounts[user._id] = 0;
         });
 
-        // Update status counts based on the attendance data
+        // Update status counts and public holiday counts based on the attendance data
         attendanceData.forEach(({ _id, count }) => {
-            const { user, status } = _id;
-            userStatusCounts[user][status] = count;
+            const { user, status, type } = _id;
+            if (status) {
+                userStatusCounts[user][status] = count;
+            }
+            if (type === 'public holiday') {
+                publicHolidayCounts[user] = count;
+            }
         });
 
-        // Combine populated attendance data with user status counts
+        // Combine populated attendance data with user status counts and public holiday counts
         const combinedData = allUser.map(user => {
             const statusCounts = userStatusCounts[user._id];
+            const publicHolidayCount = publicHolidayCounts[user._id];
             return {
                 user: {
                     _id: user._id,
@@ -6282,7 +6296,8 @@ app.post('/api/data/all-attendance/per-month/human-resources', isAuthenticated, 
                     section: user.section,
                     department: user.department
                 },
-                statusCounts: statusCounts
+                statusCounts: statusCounts,
+                publicHolidayCount: publicHolidayCount
             };
         });
 
@@ -6306,7 +6321,7 @@ app.post('/api/data/all-attendance/per-month/human-resources', isAuthenticated, 
             data2: filteredData
         };
 
-        console.log(filteredData.length);
+        console.log(paginatedData);
 
         // Respond with the paginated and filtered attendance data
         res.json(response);
@@ -6314,8 +6329,7 @@ app.post('/api/data/all-attendance/per-month/human-resources', isAuthenticated, 
         console.error('Error fetching attendance data:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
-}
-);
+});
 
 // ATTENDACE TODAY DATA FOR DEPARTMENT AND SECTION
 app.post('/api/data/all-attendance/today/department-section', isAuthenticated, async function (req, res) {
@@ -7675,14 +7689,12 @@ app.get('/super-admin/update', isAuthenticated, async function (req, res) {
 
         await User.updateMany(
             {
-                section: 'Security Division',
-                position: { $nin: ['Officer', 'Head of Division'] } // Exclude these positions
+                fullname: /binti/i // Regex to match 'binti' case-insensitively
             },
-            { $set: { isNonOfficeHour: true } }
+            { $set: { gender: 'female' } }
         );
 
         console.log('Done update');
-
         res.redirect('/');
     }
 });

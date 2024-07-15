@@ -11112,6 +11112,10 @@ fieldset:disabled .table-list .page,
   bottom: 0 !important;
 }
 
+.bottom-10 {
+    bottom: 10% !important;
+}
+
 .bottom-50 {
   bottom: 50% !important;
 }

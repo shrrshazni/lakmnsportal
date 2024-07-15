@@ -297,110 +297,104 @@
             </div>
           </div>
         </div>
-        <div class="row gx-3 mb-6 gy-6 gy-sm-3">
-
-          <div class="col-12 col-sm-6">
-            <h4 class="mb-4">Change Password</h4>
-            <div class="form-icon-container mb-3">
-              <div class="form-floating">
-                <div class="container px-0">
-                  <div>
-                    <input class="form-control form-icon-input" id="password1" type="password" name="oldPassword" placeholder="Old Password" style="height: 3rem;" />
-                  </div>
-                  <span type="button" class="position-absolute end-0 top-0 me-3" id="togglePassword" style="margin-top: 0.75rem;">
-                    <i class="fa fa-eye-slash pt-1" aria-hidden="true" width="15" height="15"></i>
-                  </span>
-                </div><span class="fa-solid fa-lock text-body fs-9 form-icon pt-1"></span>
-              </div>
-
-              <script>
-                document.getElementById("togglePassword").addEventListener("click", function() {
-                  var passwordInput = document.getElementById("password1");
-                  if (passwordInput.type === "password") {
-                    passwordInput.type = "text";
-                    this.innerHTML = '<i class="fa fa-eye" aria-hidden="true"  width="15" height="15"></i>';
-                  } else {
-                    passwordInput.type = "password";
-                    this.innerHTML = '<i class="fa fa-eye-slash" aria-hidden="true"  width="16.5" height="16.5"></i>';
-                  }
-                });
-              </script>
-
-            </div>
-            <div class="form-icon-container mb-3">
-              <div class="form-floating">
-                <div class="container px-0">
-                  <div>
-                    <input class="form-control form-icon-input" id="password2" type="password" name="newPassword" placeholder="New password" style="height: 3rem;" /><span class="fa-solid fa-key text-body fs-9 form-icon pt-1"></span>
-                  </div>
-                  <span type="button" class="position-absolute end-0 top-0 me-3" id="togglePassword2" style="margin-top: 0.75rem;">
-                    <i class="fa fa-eye-slash pt-1" aria-hidden="true" width="15" height="15"></i>
-                  </span>
-                </div>
-              </div>
-
-              <script>
-                document.getElementById("togglePassword2").addEventListener("click", function() {
-                  var passwordInput = document.getElementById("password2");
-                  if (passwordInput.type === "password") {
-                    passwordInput.type = "text";
-                    this.innerHTML = '<i class="fa fa-eye" aria-hidden="true"  width="15" height="15"></i>';
-                  } else {
-                    passwordInput.type = "password";
-                    this.innerHTML = '<i class="fa fa-eye-slash" aria-hidden="true"  width="16.5" height="16.5"></i>';
-                  }
-                });
-              </script>
-
-            </div>
-            <div class="form-icon-container mb-3">
-              <div class="form-floating">
-                <div class="container px-0">
-                  <div>
-                    <input class="form-control form-icon-input" id="password3" type="password" name="newPassword2" placeholder="Confirm password" style="height: 3rem;" />
-                  </div>
-                  <span type="button" class="position-absolute end-0 top-0 me-3" id="togglePassword3" style="margin-top: 0.75rem;">
-                    <i class="fa fa-eye-slash" aria-hidden="true" width="15" height="15"></i>
-                  </span>
-                </div><span class="fa-solid fa-key text-body fs-9 form-icon pt-1"></span>
-              </div>
-
-              <script>
-                document.getElementById("togglePassword3").addEventListener("click", function() {
-                  var passwordInput = document.getElementById("password3");
-                  if (passwordInput.type === "password") {
-                    passwordInput.type = "text";
-                    this.innerHTML = '<i class="fa fa-eye" aria-hidden="true"  width="15" height="15"></i>';
-                  } else {
-                    passwordInput.type = "password";
-                    this.innerHTML = '<i class="fa fa-eye-slash" aria-hidden="true"  width="16.5" height="16.5"></i>';
-                  }
-                });
-              </script>
-
-            </div>
-          </div>
-        </div>
         <div class="text-end mb-6">
           <div>
-            <a class="btn btn-phoenix-secondary me-2" role="button" href="/">Cancel Changes</a>
+            <a class="btn btn-phoenix-secondary me-2" role="button" href="/settings">Cancel Changes</a>
             <button class="btn btn-phoenix-primary" type="submit">Save Information</button>
           </div>
         </div>
       </form>
 
-      <div class="row gy-5">
-        <div class="col-12 col-md-6 d-none">
-          <h4 class="text-body-emphasis">Transfer Ownership</h4>
-          <p class="text-body-tertiary">Transfer this account to another person or to a company repository.</p>
-          <button class="btn btn-phoenix-warning">Transfer</button>
+      <form method="post" action="/settings/change-password" class="row gx-3 mb-6 gy-6 gy-sm-3 border-bottom">
+
+        <div class="col-12 col-sm-6">
+          <h4 class="mb-4">Change Password</h4>
+          <div class="form-icon-container mb-3">
+            <div class="form-floating">
+              <div class="container px-0">
+                <div>
+                  <input class="form-control form-icon-input" id="password1" type="password" name="oldPassword" placeholder="Old Password" style="height: 3rem;" />
+                </div>
+                <span type="button" class="position-absolute end-0 top-0 me-3" id="togglePassword" style="margin-top: 0.75rem;">
+                  <i class="fa fa-eye-slash pt-1" aria-hidden="true" width="15" height="15"></i>
+                </span>
+              </div><span class="fa-solid fa-lock text-body fs-9 form-icon pt-1"></span>
+            </div>
+
+            <script>
+              document.getElementById("togglePassword").addEventListener("click", function() {
+                var passwordInput = document.getElementById("password1");
+                if (passwordInput.type === "password") {
+                  passwordInput.type = "text";
+                  this.innerHTML = '<i class="fa fa-eye" aria-hidden="true"  width="15" height="15"></i>';
+                } else {
+                  passwordInput.type = "password";
+                  this.innerHTML = '<i class="fa fa-eye-slash" aria-hidden="true"  width="16.5" height="16.5"></i>';
+                }
+              });
+            </script>
+
+          </div>
+          <div class="form-icon-container mb-3">
+            <div class="form-floating">
+              <div class="container px-0">
+                <div>
+                  <input class="form-control form-icon-input" id="password2" type="password" name="newPassword" placeholder="New password" style="height: 3rem;" /><span class="fa-solid fa-key text-body fs-9 form-icon pt-1"></span>
+                </div>
+                <span type="button" class="position-absolute end-0 top-0 me-3" id="togglePassword2" style="margin-top: 0.75rem;">
+                  <i class="fa fa-eye-slash pt-1" aria-hidden="true" width="15" height="15"></i>
+                </span>
+              </div>
+            </div>
+
+            <script>
+              document.getElementById("togglePassword2").addEventListener("click", function() {
+                var passwordInput = document.getElementById("password2");
+                if (passwordInput.type === "password") {
+                  passwordInput.type = "text";
+                  this.innerHTML = '<i class="fa fa-eye" aria-hidden="true"  width="15" height="15"></i>';
+                } else {
+                  passwordInput.type = "password";
+                  this.innerHTML = '<i class="fa fa-eye-slash" aria-hidden="true"  width="16.5" height="16.5"></i>';
+                }
+              });
+            </script>
+
+          </div>
+          <div class="form-icon-container mb-3">
+            <div class="form-floating">
+              <div class="container px-0">
+                <div>
+                  <input class="form-control form-icon-input" id="password3" type="password" name="newPassword2" placeholder="Confirm password" style="height: 3rem;" />
+                </div>
+                <span type="button" class="position-absolute end-0 top-0 me-3" id="togglePassword3" style="margin-top: 0.75rem;">
+                  <i class="fa fa-eye-slash" aria-hidden="true" width="15" height="15"></i>
+                </span>
+              </div><span class="fa-solid fa-key text-body fs-9 form-icon pt-1"></span>
+            </div>
+
+            <script>
+              document.getElementById("togglePassword3").addEventListener("click", function() {
+                var passwordInput = document.getElementById("password3");
+                if (passwordInput.type === "password") {
+                  passwordInput.type = "text";
+                  this.innerHTML = '<i class="fa fa-eye" aria-hidden="true"  width="15" height="15"></i>';
+                } else {
+                  passwordInput.type = "password";
+                  this.innerHTML = '<i class="fa fa-eye-slash" aria-hidden="true"  width="16.5" height="16.5"></i>';
+                }
+              });
+            </script>
+
+          </div>
         </div>
-        <div class="col-12 col-md-6 d-none">
-          <h4 class="text-body-emphasis">Account Deletion</h4>
-          <p class="text-body-tertiary">Transfer this account to another person or to a company repository.</p>
-          <button class="btn btn-phoenix-danger">Delete account</button>
+        <div class="text-end mb-6">
+          <div>
+            <a class="btn btn-phoenix-secondary me-2" role="button" href="/settings">Cancel Changes</a>
+            <button class="btn btn-phoenix-primary" type="submit">Save Password</button>
+          </div>
         </div>
-      </div>
+      </form>
     </div>
   </div>
 </div>

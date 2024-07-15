@@ -139,8 +139,8 @@
             <thead>
               <tr>
                 <th class="sort white-space-nowrap align-middle pe-3 ps-0 text-uppercase" scope="col" data-sort="title" style="width:25%;min-width: 125px;">Title</th>
-                <th class="sort align-middle ps-0 text-start text-uppercase" scope="col" data-sort="type" style="width:15%;min-width: 100px;">Type</th>
                 <th class="sort align-middle pe-6 text-uppercase text-start" scope="col" data-sort="description" style="width:35%;min-width: 250px; ">Description</th>
+                <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="type" style="width:15%;min-width: 100px;">Type</th>
                 <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="date" style="width:15%;min-width: 100px;">Date</th>
                 <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="time" style="width:15%;min-width: 100px;">Time</th>
               </tr>
@@ -150,9 +150,9 @@
               <% if(activities && activities.length > 0){ %>
               <% activities.forEach(item => { %>
               <tr class="position-static">
-                <td class="title align-middle white-space-nowrap py-4 ps-0 fw-bold fs-9"><%= item.title %></td>
-                <td class="type align-middle fw-semibold text-start py-2 ps-0 fs-9 text-body-highlight"><%= item.type %></td>
-                <td class="description align-middle text-start fw-semibold py-2 text-start ps-2 fst-italic fs-9 text-body-highlight"><%= item.description%></td>
+                <td class="title align-middle white-space-nowrap py-4 ps-0 fw-bold text-body-highlight fs-9"><%= item.title %></td>
+                <td class="description align-middle text-start fw-semibold py-2 text-start text-body-highlight ps-2 fst-italic fs-9"><%= item.description%></td>
+                <td class="type align-middle fw-semibold text-center py-2 ps-0 fs-9"><%= item.type %></td>
                 <td class="date align-middle text-center py-2 ps-0 fs-9"><%= item.date.toLocaleDateString('en-UK', { day: '2-digit', month: 'short', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></td>
                 <td class="time align-middle text-center py-2 ps-0 fs-9"><%= item.date.toLocaleTimeString('en-UK', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone : 'Asia/Kuala_Lumpur' }) %></td>
               </tr>
@@ -205,10 +205,10 @@
                   RELIEF STAFF
                 </th>
                 <th class="sort align-middle text-center ps-3" scope="col" data-sort="startdate" style="width:15%;">
-                  START DATE
+                  START
                 </th>
                 <th class="sort align-middle text-center ps-3" scope="col" data-sort="returndate" style="width:15%;">
-                  RETURN DATE
+                  END
                 </th>
                 <th class="sort align-middle text-center" scope="col" data-sort="status" style="width:10%;">
                   STATUS
@@ -247,7 +247,7 @@
 
               <tr class="position-static">
                 <td class="align-middle time white-space-nowrap ps-0 type py-4">
-                  <a class="fw-bold fs-9 fs-md-8" href="/leave/details/<%= leaves._id %>"><%= leaves.type %></a>
+                  <a class="fw-bold fs-9" href="/leave/details/<%= leaves._id %>"><%= leaves.type %></a>
                 </td>
                 <td class="align-middle text-body white-space-nowrap reliefstaff ps-3">
                   <%
@@ -287,7 +287,9 @@
                 </td>
               </tr>
               <%  }); %> <% } else { %>
-              <p class="fs-8 text-center">No leave submitted</p>
+              <tr>
+                <td colspan="6" class="text-center fw-bold fs-9">No leave detected from <span class="fw-bold text-primary"><%= user.fullname %></span></td>
+              </tr>
               <% } %>
             </tbody>
           </table>
@@ -355,20 +357,20 @@
                 }
 
                 var badgeColour;
-                if (item.status === 'Late') {
+                if (item.status === 'Late' || item.status === 'Absent') {
                   badgeColour = 'danger';
-                } else if (item.status === 'Leave') {
+                } else if (item.status === 'Leave' || item.status === 'Non Working Day' ) {
                   badgeColour = 'info';
                 } else {
                   badgeColour = 'success';
                 }
               %>
               <tr class="position-static">
-                <td class="date align-middle fw-blod text-start py-2 ps-0 fs-8"><%= item.timestamp.toLocaleDateString('en-MY', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></td>
+                <td class="date align-middle fw-blod text-start text-body-highlight fst-italic fw-bold py-2 ps-0 fs-9"><%= item.timestamp.toLocaleDateString('en-MY', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></td>
                 <td class="type align-middle fw-semibold text-center py-2 ps-0 fs-9 fs-md-8 text-body-highlight"><span class="badge badge-phoenix fs-10 badge-phoenix-<%= badgeColour %>"><%= item.status %></span></td>
                 <td class="clockin align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-success"><%= signInTime %></span></td>
                 <td class="clockin align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-warning"><%= signOutTime %></span></td>
-                <td class="remarks align-middle fst-italic text-center text-body-highlight py-2 ps-0 fs-9"><%= item.remarks || 'No remarks added.' %></td>
+                <td class="remarks align-middle fst-italic text-center py-2 ps-0 fs-9"><%= item.remarks || 'No remarks added.' %></td>
                 <td class="align-middle text-end white-space-nowrap ps-0 action">
                   <div class="font-sans-serif btn-reveal-trigger position-static">
                     <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs--2" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
@@ -402,10 +404,8 @@
               </div>
               <% }); %>
               <% }else{ %>
-              <tr class="position-static">
-                <td class="align-middle white-space-nowrap border-bottom-0">
-                  <p>No activity detected from <span class="fw-bold text-primary"><%= user.fullname %></span></p>
-                </td>
+              <tr>
+                <td colspan="6" class="text-center fw-bold fs-9">No attendance detected from <span class="fw-bold text-primary"><%= user.fullname %></span></td>
               </tr>
               <% } %>
             </tbody>
