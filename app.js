@@ -6740,6 +6740,7 @@ app.post('/api/data/all-attendance/per-month/department-section', isAuthenticate
 // QR CODE API
 app.get('/api/qrcode/generate', async (req, res) => {
     const uniqueIdentifier = generateUniqueIdentifier();
+    const clientIP = req.clientIp;
 
     try {
         const qrCodeImage = await qr.toDataURL(uniqueIdentifier, {
@@ -6750,7 +6751,7 @@ app.get('/api/qrcode/generate', async (req, res) => {
             margin: 0 // Set the width of the QR code
         });
 
-        res.json({ qrCodeImage, uniqueIdentifier });
+        res.json({ qrCodeImage, uniqueIdentifier, clientIP });
     } catch (error) {
         console.error('Error generating QR code:', error);
         res.status(500).json({ error: 'Internal Server Error' });
@@ -6773,7 +6774,6 @@ app.post('/api/qrcode/save-data', async function (req, res) {
 app.post('/api/qrcode/process-data', isAuthenticated, async function (req, res) {
     const scannedData = req.body.scannedData;
     const id = req.body.id;
-    const clientIp = req.clientIp;
 
     console.log('Received scanned data from client:', scannedData);
     console.log('Id received is:', id);
@@ -6939,7 +6939,7 @@ app.post('/api/qrcode/process-data', isAuthenticated, async function (req, res) 
                                     type: 'sign in',
                                     'date.signInTime': new Date(),
                                     timestamp: new Date(),
-                                    'location.signIn' :location
+                                    'location.signIn': location
                                 }
                             },
                             { upsert: true, new: true }
