@@ -6925,7 +6925,7 @@ app.post('/api/qrcode/process-data', isAuthenticated, async function (req, res) 
                                 user: checkUser._id,
                                 timestamp: {
                                     $gte: today,
-                                    $lte: now
+                                    $lte: new Date()
                                 }
                             },
                             {
