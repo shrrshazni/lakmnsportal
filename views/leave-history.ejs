@@ -12,11 +12,9 @@ function formatDate(inputDate) {
 %>
 
 <style>
-
-#title{
-color: #3874ff;
-}
-
+  #title {
+    color: #3874ff;
+  }
 </style>
 
 <nav class="mb-2" aria-label="breadcrumb">
@@ -355,10 +353,19 @@ color: #3874ff;
         </script>
 
         <% 
-           const annual = ((userLeave.annual.leave - userLeave.annual.taken)/ userLeave.annual.leave) * 100;
-           const sick = ((userLeave.sick.leave - userLeave.sick.taken)/ userLeave.sick.leave) * 100;
-           const sickExtended = ((userLeave.sickExtended.leave - userLeave.sickExtended.taken)/ userLeave.sickExtended.leave) * 100;
-           const attendExam = ((userLeave.attendExam.leave - userLeave.attendExam.taken)/userLeave.attendExam.leave) * 100;
+           let annual = ((userLeave.annual.leave - userLeave.annual.taken) / userLeave.annual.leave) * 100;
+           annual = annual > 0 ? annual : 0;
+
+           let sick = ((userLeave.sick.leave - userLeave.sick.taken) / userLeave.sick.leave) * 100;
+           sick = sick > 0 ? sick : 0;
+
+           let sickExtended = ((userLeave.sickExtended.leave - userLeave.sickExtended.taken) / userLeave.sickExtended.leave) * 100;
+           sickExtended = sickExtended > 0 ? sickExtended : 0;
+
+           let attendExam = ((userLeave.attendExam.leave - userLeave.attendExam.taken) / userLeave.attendExam.leave) * 100;
+           attendExam = attendExam > 0 ? attendExam : 0;
+
+           console.log(sick);
 
            var showMarriage = '';
            var showPaternity = '';
@@ -411,7 +418,9 @@ color: #3874ff;
                 <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
               </svg>
             </div>
-            <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(-10%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.annual.leave - userLeave.annual.taken %></span>
+            <span <% /* eslint-disable css-propertyvalueexpected */ %> class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(<%= (userLeave.annual.leave - userLeave.annual.taken).toString().length === 1 ? '30%' : '-10%' %>, -25%); z-index: 1; font-size: 20px; color: #3874ff;">
+              <%= userLeave.annual.leave - userLeave.annual.taken %>
+            </span>
           </div>
 
         </div>
@@ -430,8 +439,9 @@ color: #3874ff;
                 <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
               </svg>
             </div>
-
-            <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(-10%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.sick.leave - userLeave.sick.taken %></span>
+            <span <% /* eslint-disable css-propertyvalueexpected */ %> class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(<%= (userLeave.sick.leave - userLeave.sick.taken).toString().length === 1 ? '30%' : '-10%' %>, -25%); z-index: 1; font-size: 20px; color: #3874ff;">
+              <%= userLeave.sick.leave - userLeave.sick.taken %>
+            </span>
           </div>
 
         </div>
@@ -450,7 +460,9 @@ color: #3874ff;
                 <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
               </svg>
             </div>
-            <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(-10%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.sickExtended.leave - userLeave.sickExtended.taken %></span>
+            <span <% /* eslint-disable css-propertyvalueexpected */ %> class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(<%= (userLeave.sickExtended.leave - userLeave.sickExtended.taken).toString().length === 1 ? '30%' : '-10%' %>, -25%); z-index: 1; font-size: 20px; color: #3874ff;">
+              <%= userLeave.sickExtended.leave - userLeave.sickExtended.taken %>
+            </span>
           </div>
 
         </div>
@@ -526,7 +538,9 @@ color: #3874ff;
                 <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
               </svg>
             </div>
-            <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.attendExam.leave - userLeave.attendExam.taken %></span>
+            <span <% /* eslint-disable css-propertyvalueexpected */ %> class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(<%= (userLeave.attendExam.leave - userLeave.attendExam.taken).toString().length === 1 ? '30%' : '-10%' %>, -25%); z-index: 1; font-size: 20px; color: #3874ff;">
+                <%= userLeave.attendExam.leave - userLeave.attendExam.taken %>
+            </span>
           </div>
 
         </div>

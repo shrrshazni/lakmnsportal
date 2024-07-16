@@ -907,11 +907,11 @@
                 let userReliefName;
                 let userLink;
 
-                if(leaves.assignee[0] === undefined){
+                if(leave.assignee[0] === undefined){
                   userReliefName = '-';
                   userLink = '#';
                 }else{
-                  const checkUserRelief = allUser.find(check => check._id.toString() === leaves.assignee[0].toString());
+                  const checkUserRelief = allUser.find(check => check._id.toString() === leave.assignee[0].toString());
                   userReliefName = checkUserRelief.fullname;
                   userLink = '/staff/details/'+checkUserRelief._id;
                 }

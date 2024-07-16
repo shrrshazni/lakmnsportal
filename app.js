@@ -347,6 +347,10 @@ const AttendanceSchema = new mongoose.Schema({
         enum: ['Present', 'Absent', 'Late', 'Invalid', 'Leave', 'Non Working Day'],
         default: 'Present'
     },
+    location: {
+        signIn: { type: String, default: 'tbd' },
+        signOut: { type: String, default: 'tbd' }
+    },
     remarks: {
         type: String
     },
@@ -6769,6 +6773,7 @@ app.post('/api/qrcode/save-data', async function (req, res) {
 app.post('/api/qrcode/process-data', isAuthenticated, async function (req, res) {
     const scannedData = req.body.scannedData;
     const id = req.body.id;
+    const clientIp = req.clientIp;
 
     console.log('Received scanned data from client:', scannedData);
     console.log('Id received is:', id);
@@ -6776,6 +6781,15 @@ app.post('/api/qrcode/process-data', isAuthenticated, async function (req, res) 
     const checkUser = await User.findOne({ _id: id });
 
     var log = '';
+    var location = '';
+
+    if (clientIp === '175.140.45.73') {
+        location = 'BMI';
+    } else {
+        location = 'Others';
+    }
+
+    console.log(location);
 
     if (checkUser) {
         const now = new Date();
@@ -6821,7 +6835,8 @@ app.post('/api/qrcode/process-data', isAuthenticated, async function (req, res) 
                                         signOutTime: now,
                                         type: 'sign out',
                                         status: 'Present',
-                                        timestamp: now
+                                        timestamp: now,
+                                        'location.signOut': location
                                     }
                                 },
                                 {
@@ -6870,7 +6885,8 @@ app.post('/api/qrcode/process-data', isAuthenticated, async function (req, res) 
                                     signOutTime: now,
                                     type: 'sign out',
                                     status: 'Present',
-                                    timestamp: now
+                                    timestamp: now,
+                                    'location.signOut': location
                                 }
                             },
                             {
@@ -6922,7 +6938,8 @@ app.post('/api/qrcode/process-data', isAuthenticated, async function (req, res) 
                                     status: 'Present',
                                     type: 'sign in',
                                     'date.signInTime': new Date(),
-                                    timestamp: new Date()
+                                    timestamp: new Date(),
+                                    'location.signIn' :location
                                 }
                             },
                             { upsert: true, new: true }
@@ -6979,7 +6996,8 @@ app.post('/api/qrcode/process-data', isAuthenticated, async function (req, res) 
                                         status: 'Late',
                                         type: 'sign in',
                                         'date.signInTime': new Date(),
-                                        timestamp: new Date()
+                                        timestamp: new Date(),
+                                        'location.signIn': location
                                     }
                                 },
                                 { upsert: true, new: true }
@@ -7025,7 +7043,8 @@ app.post('/api/qrcode/process-data', isAuthenticated, async function (req, res) 
                                         status: 'Present',
                                         type: 'sign in',
                                         'date.signInTime': new Date(),
-                                        timestamp: new Date()
+                                        timestamp: new Date(),
+                                        'location.signIn': location
                                     }
                                 },
                                 { upsert: true, new: true }
@@ -7843,7 +7862,7 @@ cron.schedule(
 
 // UPDATE ATTENDANCE AT 12:01AM
 cron.schedule(
-    '1 0 * * *',
+    '0 0 * * *',
     () => {
         console.log('Running cron job to update attendance at 1201AM');
         updateAbsentAttendance();
@@ -9216,8 +9235,10 @@ const updateAbsentAttendance = async () => {
             const newAttendance = new Attendance({
                 user: user._id,
                 type: 'invalid',
-                signInTime: null,
-                signOutTime: null,
+                'date.signInTime': null,
+                'date.signOutTime': null,
+                'location.signIn': null,
+                'location.signOut': null,
                 status: 'Absent',
                 timestamp: new Date(),
                 remarks: 'No remarks added'
@@ -9386,7 +9407,7 @@ const createPatrolReport = async (dutyHandoverId, location, date, shift, startTi
 };
 
 //  for restricted-link
-const allowedIPs = ['175.140.45.73', '104.28.242.42'];
+const allowedIPs = ['175.140.45.73', '104.28.242.42', '210.186.48.79', '60.50.17.102', '175.144.217.244'];
 
 function restrictAccess(req, res, next) {
     const clientIp = req.clientIp;
