@@ -6857,8 +6857,10 @@ app.post('/api/qrcode/process-data', isAuthenticated, async function (req, res) 
                 }
             });
 
+            console.log(existingAttendance);
+
             if (existingAttendance) {
-                if (existingAttendance.signInTime !== null && existingAttendance.signOutTime === null) {
+                if (existingAttendance.date.signInTime !== null && existingAttendance.date.signOutTime === null) {
                     // Check for non-office hour users (e.g., night shift)
                     if (checkUser.isNonOfficeHour) {
                         const startShift = new Date(existingAttendance.signInTime);
