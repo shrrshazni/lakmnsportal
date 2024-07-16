@@ -6774,6 +6774,7 @@ app.post('/api/qrcode/save-data', async function (req, res) {
 app.post('/api/qrcode/process-data', isAuthenticated, async function (req, res) {
     const scannedData = req.body.scannedData;
     const id = req.body.id;
+    const clientIp = req.clientIp;
 
     console.log('Received scanned data from client:', scannedData);
     console.log('Id received is:', id);
@@ -7860,7 +7861,7 @@ cron.schedule(
     }
 );
 
-// UPDATE ATTENDANCE AT 12:01AM
+// UPDATE ATTENDANCE AT 12:00AM
 cron.schedule(
     '0 0 * * *',
     () => {
