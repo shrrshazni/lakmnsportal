@@ -6743,7 +6743,7 @@ app.get('/api/qrcode/generate', async (req, res) => {
     const clientIP = req.clientIp;
 
     try {
-        const qrCodeImage = await qr.toDataURL(uniqueIdentifier, {
+        const qrCodeImage = await qr.toDataURL(uniqueIdentifier + clientIP, {
             type: 'image/png',
             errorCorrectionLevel: 'H',
             color: { dark: '#3874ff', light: '#f5f7fa' }, // Set the color (dark is the main color, light is the background color)
@@ -6751,7 +6751,7 @@ app.get('/api/qrcode/generate', async (req, res) => {
             margin: 0 // Set the width of the QR code
         });
 
-        res.json({ qrCodeImage, uniqueIdentifier, clientIP });
+        res.json({ qrCodeImage, uniqueIdentifier });
     } catch (error) {
         console.error('Error generating QR code:', error);
         res.status(500).json({ error: 'Internal Server Error' });
@@ -6774,330 +6774,331 @@ app.post('/api/qrcode/save-data', async function (req, res) {
 app.post('/api/qrcode/process-data', isAuthenticated, async function (req, res) {
     const scannedData = req.body.scannedData;
     const id = req.body.id;
-    const clientIp = req.clientIp;
 
     console.log('Received scanned data from client:', scannedData);
     console.log('Id received is:', id);
 
-    const checkUser = await User.findOne({ _id: id });
+    res.redirect('/');
 
-    var log = '';
-    var location = '';
+    // const checkUser = await User.findOne({ _id: id });
 
-    if (clientIp === '175.140.45.73') {
-        location = 'BMI';
-    } else {
-        location = 'Others';
-    }
+    // var log = '';
+    // var location = '';
 
-    console.log(location);
+    // if (clientIp === '175.140.45.73') {
+    //     location = 'BMI';
+    // } else {
+    //     location = 'Others';
+    // }
 
-    if (checkUser) {
-        const now = new Date();
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+    // console.log(location);
 
-        const checkQrCode = await QRCode.findOne({ uniqueId: id });
+    // if (checkUser) {
+    //     const now = new Date();
+    //     const today = new Date();
+    //     today.setHours(0, 0, 0, 0);
 
-        if (checkQrCode) {
-            console.log('You qr code is invalid, try to scan latest qr code!');
+    //     const checkQrCode = await QRCode.findOne({ uniqueId: id });
 
-            log = 'You qr code is invalid, try to scan latest qr code!';
-        } else {
-            const existingAttendance = await Attendance.findOne({
-                user: checkUser._id,
-                timestamp: {
-                    $gte: today,
-                    $lte: new Date()
-                }
-            });
+    //     if (checkQrCode) {
+    //         console.log('You qr code is invalid, try to scan latest qr code!');
 
-            if (existingAttendance) {
-                if (existingAttendance.signInTime !== null && existingAttendance.signOutTime === null) {
-                    // Check for non-office hour users (e.g., night shift)
-                    if (checkUser.isNonOfficeHour) {
-                        const startShift = new Date(existingAttendance.signInTime);
-                        const endShift = new Date(startShift);
-                        endShift.setDate(startShift.getDate() + 1);
-                        endShift.setHours(7, 0, 0, 0); // 07:00 of the next day
+    //         log = 'You qr code is invalid, try to scan latest qr code!';
+    //     } else {
+    //         const existingAttendance = await Attendance.findOne({
+    //             user: checkUser._id,
+    //             timestamp: {
+    //                 $gte: today,
+    //                 $lte: new Date()
+    //             }
+    //         });
 
-                        if (now > endShift) {
-                            // If current time is past the end shift time, it means it's a sign-out for the previous day's shift
-                            await Attendance.findOneAndUpdate(
-                                {
-                                    user: checkUser._id,
-                                    signInTime: {
-                                        $gte: startShift,
-                                        $lt: endShift
-                                    }
-                                },
-                                {
-                                    $set: {
-                                        signOutTime: now,
-                                        type: 'sign out',
-                                        status: 'Present',
-                                        timestamp: now,
-                                        'location.signOut': location
-                                    }
-                                },
-                                {
-                                    upsert: true,
-                                    new: true
-                                }
-                            );
+    //         if (existingAttendance) {
+    //             if (existingAttendance.signInTime !== null && existingAttendance.signOutTime === null) {
+    //                 // Check for non-office hour users (e.g., night shift)
+    //                 if (checkUser.isNonOfficeHour) {
+    //                     const startShift = new Date(existingAttendance.signInTime);
+    //                     const endShift = new Date(startShift);
+    //                     endShift.setDate(startShift.getDate() + 1);
+    //                     endShift.setHours(7, 0, 0, 0); // 07:00 of the next day
 
-                            console.log('You have successfully signed out for today, thank you');
+    //                     if (now > endShift) {
+    //                         // If current time is past the end shift time, it means it's a sign-out for the previous day's shift
+    //                         await Attendance.findOneAndUpdate(
+    //                             {
+    //                                 user: checkUser._id,
+    //                                 signInTime: {
+    //                                     $gte: startShift,
+    //                                     $lt: endShift
+    //                                 }
+    //                             },
+    //                             {
+    //                                 $set: {
+    //                                     signOutTime: now,
+    //                                     type: 'sign out',
+    //                                     status: 'Present',
+    //                                     timestamp: now,
+    //                                     'location.signOut': location
+    //                                 }
+    //                             },
+    //                             {
+    //                                 upsert: true,
+    //                                 new: true
+    //                             }
+    //                         );
 
-                            const tempAttendance = new TempAttendance({
-                                user: checkUser._id,
-                                timestamp: now,
-                                type: 'sign out'
-                            });
+    //                         console.log('You have successfully signed out for today, thank you');
 
-                            await tempAttendance.save();
+    //                         const tempAttendance = new TempAttendance({
+    //                             user: checkUser._id,
+    //                             timestamp: now,
+    //                             type: 'sign out'
+    //                         });
 
-                            // activity
-                            const activityUser = new Activity({
-                                user: checkUser._id,
-                                date: now,
-                                title: 'Sign out for today',
-                                type: 'Attendance',
-                                description: checkUser.fullname + ' has signed out for ' + getDateFormat2(today)
-                            });
+    //                         await tempAttendance.save();
 
-                            await activityUser.save();
+    //                         // activity
+    //                         const activityUser = new Activity({
+    //                             user: checkUser._id,
+    //                             date: now,
+    //                             title: 'Sign out for today',
+    //                             type: 'Attendance',
+    //                             description: checkUser.fullname + ' has signed out for ' + getDateFormat2(today)
+    //                         });
 
-                            console.log('New activity submitted', activityUser);
+    //                         await activityUser.save();
 
-                            log = 'You have successfully signed out for today, thank you!';
-                        }
-                    } else {
-                        // Regular shift sign-out
-                        await Attendance.findOneAndUpdate(
-                            {
-                                user: checkUser._id,
-                                timestamp: {
-                                    $gte: today,
-                                    $lte: now
-                                }
-                            },
-                            {
-                                $set: {
-                                    signOutTime: now,
-                                    type: 'sign out',
-                                    status: 'Present',
-                                    timestamp: now,
-                                    'location.signOut': location
-                                }
-                            },
-                            {
-                                upsert: true,
-                                new: true
-                            }
-                        );
+    //                         console.log('New activity submitted', activityUser);
 
-                        console.log('You have successfully signed out for today, thank you');
+    //                         log = 'You have successfully signed out for today, thank you!';
+    //                     }
+    //                 } else {
+    //                     // Regular shift sign-out
+    //                     await Attendance.findOneAndUpdate(
+    //                         {
+    //                             user: checkUser._id,
+    //                             timestamp: {
+    //                                 $gte: today,
+    //                                 $lte: now
+    //                             }
+    //                         },
+    //                         {
+    //                             $set: {
+    //                                 signOutTime: now,
+    //                                 type: 'sign out',
+    //                                 status: 'Present',
+    //                                 timestamp: now,
+    //                                 'location.signOut': location
+    //                             }
+    //                         },
+    //                         {
+    //                             upsert: true,
+    //                             new: true
+    //                         }
+    //                     );
 
-                        const tempAttendance = new TempAttendance({
-                            user: checkUser._id,
-                            timestamp: now,
-                            type: 'sign out'
-                        });
+    //                     console.log('You have successfully signed out for today, thank you');
 
-                        await tempAttendance.save();
+    //                     const tempAttendance = new TempAttendance({
+    //                         user: checkUser._id,
+    //                         timestamp: now,
+    //                         type: 'sign out'
+    //                     });
 
-                        // activity
-                        const activityUser = new Activity({
-                            user: checkUser._id,
-                            date: now,
-                            title: 'Sign out for today',
-                            type: 'Attendance',
-                            description: checkUser.fullname + ' has signed out for ' + getDateFormat2(today)
-                        });
+    //                     await tempAttendance.save();
 
-                        await activityUser.save();
+    //                     // activity
+    //                     const activityUser = new Activity({
+    //                         user: checkUser._id,
+    //                         date: now,
+    //                         title: 'Sign out for today',
+    //                         type: 'Attendance',
+    //                         description: checkUser.fullname + ' has signed out for ' + getDateFormat2(today)
+    //                     });
 
-                        console.log('New activity submitted', activityUser);
+    //                     await activityUser.save();
 
-                        log = 'You have successfully signed out for today, thank you!';
-                    }
-                } else if (
-                    existingAttendance.date.signInTime === null &&
-                    existingAttendance.date.signOutTime === null
-                ) {
-                    if (checkUser.isNonOfficeHour === true) {
-                        await Attendance.findOneAndUpdate(
-                            {
-                                user: checkUser._id,
-                                timestamp: {
-                                    $gte: today, // Greater than or equal to the start of today
-                                    $lte: new Date() // Less than the current time
-                                }
-                            },
-                            {
-                                $set: {
-                                    status: 'Present',
-                                    type: 'sign in',
-                                    'date.signInTime': new Date(),
-                                    timestamp: new Date(),
-                                    'location.signIn': location
-                                }
-                            },
-                            { upsert: true, new: true }
-                        );
+    //                     console.log('New activity submitted', activityUser);
 
-                        const tempAttendance = new TempAttendance({
-                            user: checkUser._id,
-                            timestamp: new Date(),
-                            type: 'sign in'
-                        });
+    //                     log = 'You have successfully signed out for today, thank you!';
+    //                 }
+    //             } else if (
+    //                 existingAttendance.date.signInTime === null &&
+    //                 existingAttendance.date.signOutTime === null
+    //             ) {
+    //                 if (checkUser.isNonOfficeHour === true) {
+    //                     await Attendance.findOneAndUpdate(
+    //                         {
+    //                             user: checkUser._id,
+    //                             timestamp: {
+    //                                 $gte: today, // Greater than or equal to the start of today
+    //                                 $lte: new Date() // Less than the current time
+    //                             }
+    //                         },
+    //                         {
+    //                             $set: {
+    //                                 status: 'Present',
+    //                                 type: 'sign in',
+    //                                 'date.signInTime': new Date(),
+    //                                 timestamp: new Date(),
+    //                                 'location.signIn': location
+    //                             }
+    //                         },
+    //                         { upsert: true, new: true }
+    //                     );
 
-                        await tempAttendance.save();
+    //                     const tempAttendance = new TempAttendance({
+    //                         user: checkUser._id,
+    //                         timestamp: new Date(),
+    //                         type: 'sign in'
+    //                     });
 
-                        // activity
-                        const activityUser = new Activity({
-                            user: checkUser._id,
-                            date: new Date(),
-                            title: 'Sign in for today',
-                            type: 'Attendance',
-                            description:
-                                checkUser.fullname +
-                                ' has sign in for ' + getDateFormat2(today)
-                        });
+    //                     await tempAttendance.save();
 
-                        activityUser.save();
+    //                     // activity
+    //                     const activityUser = new Activity({
+    //                         user: checkUser._id,
+    //                         date: new Date(),
+    //                         title: 'Sign in for today',
+    //                         type: 'Attendance',
+    //                         description:
+    //                             checkUser.fullname +
+    //                             ' has sign in for ' + getDateFormat2(today)
+    //                     });
 
-                        console.log('New activity submitted', activityUser);
+    //                     activityUser.save();
 
-                        log = 'You have successfully signed in for today, thank you!';
-                    } else {
-                        const currentTime = new Date();
-                        const pstTime = currentTime.toLocaleString('en-MY', {
-                            timeZone: 'Asia/Kuala_Lumpur',
-                            hour12: false
-                        });
-                        const pstHourString = pstTime.split(',')[1].trim().split(':')[0];
-                        const pstHour = parseInt(pstHourString);
+    //                     console.log('New activity submitted', activityUser);
 
-                        console.log(pstHour);
+    //                     log = 'You have successfully signed in for today, thank you!';
+    //                 } else {
+    //                     const currentTime = new Date();
+    //                     const pstTime = currentTime.toLocaleString('en-MY', {
+    //                         timeZone: 'Asia/Kuala_Lumpur',
+    //                         hour12: false
+    //                     });
+    //                     const pstHourString = pstTime.split(',')[1].trim().split(':')[0];
+    //                     const pstHour = parseInt(pstHourString);
 
-                        if (pstHour >= 8) {
-                            console.log('Clock in late confirmed');
+    //                     console.log(pstHour);
 
-                            await Attendance.findOneAndUpdate(
-                                {
-                                    user: checkUser._id,
-                                    timestamp: {
-                                        $gte: today, // Greater than or equal to the start of today
-                                        $lte: new Date() // Less than the current time
-                                    }
-                                },
-                                {
-                                    $set: {
-                                        status: 'Late',
-                                        type: 'sign in',
-                                        'date.signInTime': new Date(),
-                                        timestamp: new Date(),
-                                        'location.signIn': location
-                                    }
-                                },
-                                { upsert: true, new: true }
-                            );
+    //                     if (pstHour >= 8) {
+    //                         console.log('Clock in late confirmed');
 
-                            const tempAttendance = new TempAttendance({
-                                user: checkUser._id,
-                                timestamp: new Date(),
-                                type: 'sign in'
-                            });
+    //                         await Attendance.findOneAndUpdate(
+    //                             {
+    //                                 user: checkUser._id,
+    //                                 timestamp: {
+    //                                     $gte: today, // Greater than or equal to the start of today
+    //                                     $lte: new Date() // Less than the current time
+    //                                 }
+    //                             },
+    //                             {
+    //                                 $set: {
+    //                                     status: 'Late',
+    //                                     type: 'sign in',
+    //                                     'date.signInTime': new Date(),
+    //                                     timestamp: new Date(),
+    //                                     'location.signIn': location
+    //                                 }
+    //                             },
+    //                             { upsert: true, new: true }
+    //                         );
 
-                            await tempAttendance.save();
+    //                         const tempAttendance = new TempAttendance({
+    //                             user: checkUser._id,
+    //                             timestamp: new Date(),
+    //                             type: 'sign in'
+    //                         });
 
-                            // activity
-                            const activityUser = new Activity({
-                                user: checkUser._id,
-                                date: new Date(),
-                                title: 'Sign in late for today',
-                                type: 'Attendance',
-                                description:
-                                    checkUser.fullname +
-                                    ' has sign in late for ' + getDateFormat2(today)
-                            });
+    //                         await tempAttendance.save();
 
-                            activityUser.save();
+    //                         // activity
+    //                         const activityUser = new Activity({
+    //                             user: checkUser._id,
+    //                             date: new Date(),
+    //                             title: 'Sign in late for today',
+    //                             type: 'Attendance',
+    //                             description:
+    //                                 checkUser.fullname +
+    //                                 ' has sign in late for ' + getDateFormat2(today)
+    //                         });
 
-                            console.log('New activity submitted', activityUser);
+    //                         activityUser.save();
 
-                            log =
-                                'You have successfully signed in as late for today, thank you!';
-                        } else {
+    //                         console.log('New activity submitted', activityUser);
 
-                            await Attendance.findOneAndUpdate(
-                                {
-                                    user: checkUser._id,
-                                    timestamp: {
-                                        $gte: today, // Greater than or equal to the start of today
-                                        $lte: new Date() // Less than the current time
-                                    }
-                                },
-                                {
-                                    $set: {
-                                        status: 'Present',
-                                        type: 'sign in',
-                                        'date.signInTime': new Date(),
-                                        timestamp: new Date(),
-                                        'location.signIn': location
-                                    }
-                                },
-                                { upsert: true, new: true }
-                            );
+    //                         log =
+    //                             'You have successfully signed in as late for today, thank you!';
+    //                     } else {
 
-                            const tempAttendance = new TempAttendance({
-                                user: checkUser._id,
-                                timestamp: new Date(),
-                                type: 'sign in'
-                            });
+    //                         await Attendance.findOneAndUpdate(
+    //                             {
+    //                                 user: checkUser._id,
+    //                                 timestamp: {
+    //                                     $gte: today, // Greater than or equal to the start of today
+    //                                     $lte: new Date() // Less than the current time
+    //                                 }
+    //                             },
+    //                             {
+    //                                 $set: {
+    //                                     status: 'Present',
+    //                                     type: 'sign in',
+    //                                     'date.signInTime': new Date(),
+    //                                     timestamp: new Date(),
+    //                                     'location.signIn': location
+    //                                 }
+    //                             },
+    //                             { upsert: true, new: true }
+    //                         );
 
-                            await tempAttendance.save();
+    //                         const tempAttendance = new TempAttendance({
+    //                             user: checkUser._id,
+    //                             timestamp: new Date(),
+    //                             type: 'sign in'
+    //                         });
 
-                            // activity
-                            const activityUser = new Activity({
-                                user: checkUser._id,
-                                date: new Date(),
-                                title: 'Sign in for today',
-                                type: 'Attendance',
-                                description:
-                                    checkUser.fullname +
-                                    ' has sign in for ' + getDateFormat2(today)
-                            });
+    //                         await tempAttendance.save();
 
-                            activityUser.save();
+    //                         // activity
+    //                         const activityUser = new Activity({
+    //                             user: checkUser._id,
+    //                             date: new Date(),
+    //                             title: 'Sign in for today',
+    //                             type: 'Attendance',
+    //                             description:
+    //                                 checkUser.fullname +
+    //                                 ' has sign in for ' + getDateFormat2(today)
+    //                         });
 
-                            console.log('New activity submitted', activityUser);
+    //                         activityUser.save();
 
-                            log = 'You have successfully signed in for today, thank you!';
-                        }
-                    }
+    //                         console.log('New activity submitted', activityUser);
 
-                } else {
-                    console.log('You already sign out for today.');
-                    log = 'You already sign out for today, thank you!';
-                }
-            } else {
-                console.log(
-                    'The attendance for the user doesnt exist, please check the user id'
-                );
-                log =
-                    'The attendance for the user doesnt exist, please check the user id';
-            }
-        }
+    //                         log = 'You have successfully signed in for today, thank you!';
+    //                     }
+    //                 }
 
-        const response = {
-            user: checkUser,
-            message: log
-        };
+    //             } else {
+    //                 console.log('You already sign out for today.');
+    //                 log = 'You already sign out for today, thank you!';
+    //             }
+    //         } else {
+    //             console.log(
+    //                 'The attendance for the user doesnt exist, please check the user id'
+    //             );
+    //             log =
+    //                 'The attendance for the user doesnt exist, please check the user id';
+    //         }
+    //     }
 
-        res.json(response);
-    }
+    //     const response = {
+    //         user: checkUser,
+    //         message: log
+    //     };
+
+    //     res.json(response);
+    // }
 });
 
 app.get('/api/qrcode/get-latest', async function (req, res) {
