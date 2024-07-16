@@ -141,7 +141,7 @@
           },
           body: JSON.stringify({
             scannedData: data,
-            id: '<%= user._id %>'
+            id: '<%= user._id %>',
           })
         })
         .then(response => response.json()) // Parse response JSON

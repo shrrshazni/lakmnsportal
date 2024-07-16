@@ -309,7 +309,7 @@
     </div>
 
     <div class="tab-pane fade" id="tab-attendance" role="tabpanel" aria-labelledby="attendance-tab">
-      <div class="border-bottom border-translucent mt-3" id="attendance" data-list='{"valueNames":["type","date","clockin","clockout", "remarks"],"page":5,"pagination":true}'>
+      <div class="border-bottom border-translucent mt-3" id="attendance" data-list='{"valueNames":["type","date","clockin","clockout","location", "remarks"],"page":5,"pagination":true}'>
         <div class="row align-items-end justify-content-between pb-4 g-3">
 
           <div class="col-12 col-md-auto">
@@ -331,6 +331,7 @@
                 <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="type" style="width:15%;min-width: 100px;">Status</th>
                 <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="clockin" style="width:10%;min-width: 100px;">Clock In</th>
                 <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="clockout" style="width:10%;min-width: 100px;">Clock Out</th>
+                <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="location" style="width:10%;min-width: 100px;">Location</th>
                 <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="remarks" style="width:20%;min-width: 100px;">Remarks</th>
                 <th class="sort align-middle ps-0 text-end text-uppercase" scope="col" style="width:5%;min-width: 50px;"></th>
               </tr>
@@ -369,7 +370,8 @@
                 <td class="date align-middle fw-blod text-start text-body-highlight fst-italic fw-bold py-2 ps-0 fs-9"><%= item.timestamp.toLocaleDateString('en-MY', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></td>
                 <td class="type align-middle fw-semibold text-center py-2 ps-0 fs-9 fs-md-8 text-body-highlight"><span class="badge badge-phoenix fs-10 badge-phoenix-<%= badgeColour %>"><%= item.status %></span></td>
                 <td class="clockin align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-success"><%= signInTime %></span></td>
-                <td class="clockin align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-warning"><%= signOutTime %></span></td>
+                <td class="clockout align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-warning"><%= signOutTime %></span></td>
+                <td class="location align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-success"><%= item.location.signIn || '' %></span> <span class="badge badge-phoenix fs-10 badge-phoenix-warning"><%= item.location.signOut || '' %></span></td>
                 <td class="remarks align-middle fst-italic text-center py-2 ps-0 fs-9"><%= item.remarks || 'No remarks added.' %></td>
                 <td class="align-middle text-end white-space-nowrap ps-0 action">
                   <div class="font-sans-serif btn-reveal-trigger position-static">

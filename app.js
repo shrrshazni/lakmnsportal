@@ -2182,6 +2182,46 @@ app.get('/info/:type/:method/:id', async function (req, res) {
     }
 });
 
+// TUTORIAL
+app.get('/tutorial', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    })
+        .populate('sender')
+        .sort({ timestamp: -1 });
+
+    if (user) {
+        res.render('tutorial', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4()
+        });
+    }
+});
+
+// TUTORIAL
+app.get('/changelog', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    })
+        .populate('sender')
+        .sort({ timestamp: -1 });
+
+    if (user) {
+        res.render('changelog', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4()
+        });
+    }
+});
+
 //FULL CALENDAR
 
 app.get('/calendar', isAuthenticated, async function (req, res) {
@@ -6838,7 +6878,7 @@ app.post('/api/qrcode/process-data', isAuthenticated, async function (req, res) 
                                 },
                                 {
                                     $set: {
-                                        signOutTime: now,
+                                        'date.signOutTime': now,
                                         type: 'sign out',
                                         status: 'Present',
                                         timestamp: now,
@@ -6888,7 +6928,7 @@ app.post('/api/qrcode/process-data', isAuthenticated, async function (req, res) 
                             },
                             {
                                 $set: {
-                                    signOutTime: now,
+                                    'date.signOutTime': now,
                                     type: 'sign out',
                                     status: 'Present',
                                     timestamp: now,
