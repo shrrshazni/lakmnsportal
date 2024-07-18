@@ -22,7 +22,6 @@ const qr = require('qrcode');
 const { timeStamp, time } = require('console');
 const { type } = require('os');
 const requestIp = require('request-ip');
-const axios = require('axios');
 
 const mongoURI =
     'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/session';
@@ -5989,9 +5988,11 @@ app.post('/api/data/all-attendance/today/human-resources', isAuthenticated, asyn
     const limit = 5; // Number of items per page
     const skip = (page - 1) * limit;
 
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+
     // Get today's date
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Set hours, minutes, seconds, and milliseconds to 0 to get the start of the day
+    const today = moment().startOf('day'); // Start of today in local time
 
     try {
         // Query attendance records for today
@@ -6000,33 +6001,31 @@ app.post('/api/data/all-attendance/today/human-resources', isAuthenticated, asyn
             {
                 $match: {
                     timestamp: {
-                        $gte: today, // Find records where timestamp is greater than or equal to today
-                        $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000) // Less than tomorrow
+                        $gte: today.toDate(), // Find records where timestamp is greater than or equal to today
+                        $lt: moment().endOf('day').toDate() // Less than end of today
                     }
                 }
             },
             // Group by user and status, include attendance type, sign-in time, and sign-out time
             {
                 $group: {
-                    _id: {
-                        attendanceId: '$_id',
-                        user: '$user',
-                        status: '$status',
-                        type: '$type',
-                        signInTime: '$date.signInTime',
-                        signOutTime: '$date.signOutTime',
-                        timestamp: '$timestamp',
-                        remarks: '$remarks'
-                    },
+                    _id: '$user',
+                    status: { $first: '$status' },
+                    type: { $first: '$type' },
+                    signInTime: { $first: '$date.signInTime' },
+                    signOutTime: { $first: '$date.signOutTime' },
+                    timestamp: { $first: '$timestamp' },
+                    location: { $first: '$location' },
+                    remarks: { $first: '$remarks' },
                     count: { $sum: 1 }
                 }
             }
         ]);
 
         // Collect unique user IDs from attendanceData
-        const userIds = attendanceData.map(record => record._id.user);
+        const userIds = attendanceData.map(record => record._id);
 
-        // Query all users from the database
+        // Query all users in the same department or section as the logged-in user, excluding the logged-in user
         const allUser = await User.find();
 
         // Create a map to quickly access user details by user ID
@@ -6044,32 +6043,23 @@ app.post('/api/data/all-attendance/today/human-resources', isAuthenticated, asyn
         // Create the combined data from attendanceData and userMap
         const combinedData = allUser.map(user => {
             const attendanceRecord = attendanceData.find(record =>
-                record._id.user.equals(user._id)
+                record._id.equals(user._id)
             );
             return attendanceRecord
                 ? {
-                    _id: attendanceRecord._id.attendanceId,
+                    _id: attendanceRecord._id,
                     user: userMap[user._id],
-                    status: attendanceRecord._id.status,
-                    type: attendanceRecord._id.type,
-                    signInTime: attendanceRecord._id.signInTime,
-                    signOutTime: attendanceRecord._id.signOutTime,
-                    timestamp: attendanceRecord._id.timestamp,
-                    remarks: attendanceRecord._id.remarks,
+                    status: attendanceRecord.status,
+                    type: attendanceRecord.type,
+                    signInTime: attendanceRecord.signInTime,
+                    signOutTime: attendanceRecord.signOutTime,
+                    timestamp: attendanceRecord.timestamp,
+                    location: attendanceRecord.location,
+                    remarks: attendanceRecord.remarks,
                     count: attendanceRecord.count
                 }
-                : {
-                    _id: null,
-                    user: userMap[user._id],
-                    status: 'Absent',
-                    type: 'Nil',
-                    signInTime: null,
-                    signOutTime: null,
-                    timestamp: null,
-                    remarks: 'Attendance data not yet existed/submitted',
-                    count: 0
-                };
-        });
+                : null;
+        }).filter(item => item !== null); // Filter out null entries (users without attendance records)
 
         // Sort combinedData based on timestamp, placing users without attendance records at the end
         combinedData.sort((a, b) => {
@@ -6081,7 +6071,7 @@ app.post('/api/data/all-attendance/today/human-resources', isAuthenticated, asyn
         // Filter combinedData based on the search query
         const filteredData = combinedData.filter(item => {
             const { fullname, section, department, username } = item.user;
-            const { status, type, signInTime, signOutTime } = item;
+            const { status, type, signInTime, signOutTime, remarks, location } = item;
             const regex = new RegExp(searchQuery, 'i');
             return (
                 regex.test(fullname) ||
@@ -6090,24 +6080,15 @@ app.post('/api/data/all-attendance/today/human-resources', isAuthenticated, asyn
                 regex.test(username) ||
                 regex.test(status) ||
                 regex.test(type) ||
+                regex.test(location) ||
                 regex.test(remarks) ||
                 (signInTime &&
                     regex.test(
-                        new Date(signInTime).toLocaleTimeString('en-MY', {
-                            hour: 'numeric',
-                            minute: 'numeric',
-                            hour12: true,
-                            timeZone: 'Asia/Kuala_Lumpur'
-                        })
+                        moment(signInTime).format('LT') // Format sign-in time to 'hh:mm A'
                     )) ||
                 (signOutTime &&
                     regex.test(
-                        new Date(signOutTime).toLocaleTimeString('en-MY', {
-                            hour: 'numeric',
-                            minute: 'numeric',
-                            hour12: true,
-                            timeZone: 'Asia/Kuala_Lumpur'
-                        })
+                        moment(signOutTime).format('LT') // Format sign-out time to 'hh:mm A'
                     ))
             );
         });
@@ -6149,22 +6130,25 @@ app.post('/api/data/all-attendance/per-date/human-resources', isAuthenticated, a
     const limit = 10; // Number of items per page
     const skip = (page - 1) * limit; // Calculate the number of items to skip
 
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+
     try {
-        // Convert selected date to UTC midnight to UTC midnight of next day
-        const startDate = new Date(selectedDate);
-        startDate.setUTCHours(0, 0, 0, 0);
-        const endDate = new Date(selectedDate);
-        endDate.setUTCHours(23, 59, 59, 999);
+        const selectedLocalDate = moment(selectedDate).utcOffset(8).startOf('day');
+
+        // Calculate start and end date in UTC based on local time
+        const startDate = selectedLocalDate.clone().utc().toDate();
+        const endDate = selectedLocalDate.clone().endOf('day').utc().toDate();
 
         // Query attendance records for the selected date
         const attendanceData = await Attendance.find({
             timestamp: {
                 $gte: startDate,
-                $lte: endDate
+                $lt: endDate
             }
         });
 
-        // Get all users
+        // Get all users in the same department or section as the logged-in user
         const allUser = await User.find();
 
         // Create a map for quick lookup of users
@@ -6181,46 +6165,29 @@ app.post('/api/data/all-attendance/per-date/human-resources', isAuthenticated, a
 
         // Create combined data with attendance records
         const combinedData = allUser.map(user => {
-            const attendanceRecord = attendanceData.find(record =>
-                record.user && record.user._id.equals(user._id)
-            );
+            const attendanceRecord = attendanceData.find(record => record.user.equals(user._id));
+            if (!attendanceRecord) return null;
 
-            return attendanceRecord
-                ? {
-                    _id: attendanceRecord._id,
-                    user: userMap[user._id],
-                    status: attendanceRecord.status,
-                    type: attendanceRecord.type,
-                    signInTime: attendanceRecord.date.signInTime,
-                    signOutTime: attendanceRecord.date.signOutTime,
-                    timestamp: attendanceRecord.timestamp,
-                    remarks: attendanceRecord.remarks,
-                    count: 1 // Assuming each record represents one attendance
-                }
-                : {
-                    _id: null,
-                    user: userMap[user._id],
-                    status: 'Absent',
-                    type: 'Nil',
-                    signInTime: null,
-                    signOutTime: null,
-                    timestamp: null,
-                    remarks: 'Attendance data not yet existed/submitted',
-                    count: 0
-                };
-        });
+            return {
+                _id: attendanceRecord._id,
+                user: userMap[user._id],
+                status: attendanceRecord.status,
+                type: attendanceRecord.type,
+                signInTime: attendanceRecord.date.signInTime,
+                signOutTime: attendanceRecord.date.signOutTime,
+                timestamp: attendanceRecord.timestamp,
+                location: attendanceRecord.location,
+                remarks: attendanceRecord.remarks,
+            };
+        }).filter(item => item !== null);
 
-        // Sort combinedData based on timestamp, placing users without attendance records at the end
-        combinedData.sort((a, b) => {
-            if (!a.timestamp) return 1;
-            if (!b.timestamp) return -1;
-            return new Date(b.timestamp) - new Date(a.timestamp);
-        });
+        // Sort combinedData based on timestamp
+        combinedData.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
         // Filter combinedData based on the search query
         const filteredData = combinedData.filter(item => {
             const { fullname, section, department, username } = item.user;
-            const { status, type, signInTime, signOutTime, remarks } = item;
+            const { status, type, signInTime, signOutTime, remarks, location } = item;
             const regex = new RegExp(searchQuery, 'i');
             return (
                 regex.test(fullname) ||
@@ -6229,6 +6196,7 @@ app.post('/api/data/all-attendance/per-date/human-resources', isAuthenticated, a
                 regex.test(username) ||
                 regex.test(status) ||
                 regex.test(type) ||
+                regex.test(location) ||
                 regex.test(remarks) ||
                 (signInTime &&
                     regex.test(
@@ -6254,18 +6222,20 @@ app.post('/api/data/all-attendance/per-date/human-resources', isAuthenticated, a
         // Paginate the filtered data
         const paginatedData = filteredData.slice(skip, skip + limit);
 
+        if (!paginatedData || paginatedData.length === 0) {
+            return res.status(404).json({ message: 'No paginated attendance data found' });
+        }
+
         const response = {
             data1: paginatedData,
             data2: filteredData
         };
 
-        console.log(filteredData.length + ' & ' + selectedDate);
-
         // Respond with the paginated and filtered attendance data
         res.json(response);
     } catch (error) {
-        console.error('Error fetching attendance data:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        console.error('Error:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
@@ -6386,8 +6356,7 @@ app.post('/api/data/all-attendance/today/department-section', isAuthenticated, a
     const user = await User.findOne({ username: username });
 
     // Get today's date
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Set hours, minutes, seconds, and milliseconds to 0 to get the start of the day
+    const today = moment().startOf('day'); // Start of today in local time
 
     try {
         // Query attendance records for today
@@ -6396,39 +6365,38 @@ app.post('/api/data/all-attendance/today/department-section', isAuthenticated, a
             {
                 $match: {
                     timestamp: {
-                        $gte: today, // Find records where timestamp is greater than or equal to today
-                        $lt: new Date() // Less than tomorrow
+                        $gte: today.toDate(), // Find records where timestamp is greater than or equal to today
+                        $lt: moment().endOf('day').toDate() // Less than end of today
                     }
                 }
             },
             // Group by user and status, include attendance type, sign-in time, and sign-out time
             {
                 $group: {
-                    _id: {
-                        attendanceId: '$_id',
-                        user: '$user',
-                        status: '$status',
-                        type: '$type',
-                        signInTime: '$date.signInTime',
-                        signOutTime: '$date.signOutTime',
-                        timestamp: '$timestamp',
-                        remarks: '$remarks'
-                    },
+                    _id: '$user',
+                    status: { $first: '$status' },
+                    type: { $first: '$type' },
+                    signInTime: { $first: '$date.signInTime' },
+                    signOutTime: { $first: '$date.signOutTime' },
+                    timestamp: { $first: '$timestamp' },
+                    location: { $first: '$location' },
+                    remarks: { $first: '$remarks' },
                     count: { $sum: 1 }
                 }
             }
         ]);
 
         // Collect unique user IDs from attendanceData
-        const userIds = attendanceData.map(record => record._id.user);
+        const userIds = attendanceData.map(record => record._id);
 
-        var allUser;
+        // Query all users in the same department or section as the logged-in user, excluding the logged-in user
+        let allUser;
         if (user.isHeadOfDepartment) {
-            // Query all users from the database
             allUser = await User.find({ department: user.department, _id: { $ne: user._id } });
         } else if (user.isHeadOfSection) {
-            // Query all users from the database
             allUser = await User.find({ section: user.section, _id: { $ne: user._id } });
+        } else {
+            return res.status(403).json({ error: 'Unauthorized access' });
         }
 
         // Create a map to quickly access user details by user ID
@@ -6446,32 +6414,23 @@ app.post('/api/data/all-attendance/today/department-section', isAuthenticated, a
         // Create the combined data from attendanceData and userMap
         const combinedData = allUser.map(user => {
             const attendanceRecord = attendanceData.find(record =>
-                record._id.user.equals(user._id)
+                record._id.equals(user._id)
             );
             return attendanceRecord
                 ? {
-                    _id: attendanceRecord._id.attendanceId,
+                    _id: attendanceRecord._id,
                     user: userMap[user._id],
-                    status: attendanceRecord._id.status,
-                    type: attendanceRecord._id.type,
-                    signInTime: attendanceRecord._id.signInTime,
-                    signOutTime: attendanceRecord._id.signOutTime,
-                    timestamp: attendanceRecord._id.timestamp,
-                    remarks: attendanceRecord._id.remarks,
+                    status: attendanceRecord.status,
+                    type: attendanceRecord.type,
+                    signInTime: attendanceRecord.signInTime,
+                    signOutTime: attendanceRecord.signOutTime,
+                    timestamp: attendanceRecord.timestamp,
+                    location: attendanceRecord.location,
+                    remarks: attendanceRecord.remarks,
                     count: attendanceRecord.count
                 }
-                : {
-                    _id: null,
-                    user: userMap[user._id],
-                    status: 'Absent',
-                    type: 'Nil',
-                    signInTime: null,
-                    signOutTime: null,
-                    timestamp: null,
-                    remarks: 'Attendance data not yet existed/submitted',
-                    count: 0
-                };
-        });
+                : null;
+        }).filter(item => item !== null); // Filter out null entries (users without attendance records)
 
         // Sort combinedData based on timestamp, placing users without attendance records at the end
         combinedData.sort((a, b) => {
@@ -6483,7 +6442,7 @@ app.post('/api/data/all-attendance/today/department-section', isAuthenticated, a
         // Filter combinedData based on the search query
         const filteredData = combinedData.filter(item => {
             const { fullname, section, department, username } = item.user;
-            const { status, type, signInTime, signOutTime, remarks } = item;
+            const { status, type, signInTime, signOutTime, remarks, location } = item;
             const regex = new RegExp(searchQuery, 'i');
             return (
                 regex.test(fullname) ||
@@ -6492,24 +6451,15 @@ app.post('/api/data/all-attendance/today/department-section', isAuthenticated, a
                 regex.test(username) ||
                 regex.test(status) ||
                 regex.test(type) ||
+                regex.test(location) ||
                 regex.test(remarks) ||
                 (signInTime &&
                     regex.test(
-                        new Date(signInTime).toLocaleTimeString('en-MY', {
-                            hour: 'numeric',
-                            minute: 'numeric',
-                            hour12: true,
-                            timeZone: 'Asia/Kuala_Lumpur'
-                        })
+                        moment(signInTime).format('LT') // Format sign-in time to 'hh:mm A'
                     )) ||
                 (signOutTime &&
                     regex.test(
-                        new Date(signOutTime).toLocaleTimeString('en-MY', {
-                            hour: 'numeric',
-                            minute: 'numeric',
-                            hour12: true,
-                            timeZone: 'Asia/Kuala_Lumpur'
-                        })
+                        moment(signOutTime).format('LT') // Format sign-out time to 'hh:mm A'
                     ))
             );
         });
@@ -6540,8 +6490,7 @@ app.post('/api/data/all-attendance/today/department-section', isAuthenticated, a
         console.error('Error:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
-}
-);
+});
 
 app.post('/api/data/all-attendance/per-date/department-section', isAuthenticated, async function (req, res) {
     const selectedDate = req.body.date;
@@ -6554,14 +6503,11 @@ app.post('/api/data/all-attendance/per-date/department-section', isAuthenticated
     const user = await User.findOne({ username: username });
 
     try {
-        console.log(selectedDate);
-        const startDate = new Date(selectedDate);
-        startDate.setUTCHours(0, 0, 0, 0); // 00:00:00 UTC
+        const selectedLocalDate = moment(selectedDate).utcOffset(8).startOf('day');
 
-        // Setting end date to the end of the previous day
-        const endDate = new Date(selectedDate);
-        endDate.setUTCHours(23, 59, 59, 999);
-
+        // Calculate start and end date in UTC based on local time
+        const startDate = selectedLocalDate.clone().utc().toDate();
+        const endDate = selectedLocalDate.clone().endOf('day').utc().toDate();
 
         // Query attendance records for the selected date
         const attendanceData = await Attendance.find({
@@ -6571,14 +6517,14 @@ app.post('/api/data/all-attendance/per-date/department-section', isAuthenticated
             }
         });
 
-        // Get all users
+        // Get all users in the same department or section as the logged-in user
         let allUser;
         if (user.isHeadOfDepartment) {
-            // Query all users from the database
-            allUser = await User.find({ department: user.department, _id: { $ne: user._id } });
+            allUser = await User.find({ department: user.department });
         } else if (user.isHeadOfSection) {
-            // Query all users from the database
-            allUser = await User.find({ section: user.section, _id: { $ne: user._id } });
+            allUser = await User.find({ section: user.section });
+        } else {
+            return res.status(403).json({ error: 'Unauthorized access' });
         }
 
         // Create a map for quick lookup of users
@@ -6595,45 +6541,29 @@ app.post('/api/data/all-attendance/per-date/department-section', isAuthenticated
 
         // Create combined data with attendance records
         const combinedData = allUser.map(user => {
-            const attendanceRecord = attendanceData.find(record =>
-                record.user && record.user._id.equals(user._id)
-            );
+            const attendanceRecord = attendanceData.find(record => record.user.equals(user._id));
+            if (!attendanceRecord) return null;
 
-            return attendanceRecord
-                ? {
-                    _id: attendanceRecord._id,
-                    user: userMap[user._id],
-                    status: attendanceRecord.status,
-                    type: attendanceRecord.type,
-                    signInTime: attendanceRecord.date.signInTime,
-                    signOutTime: attendanceRecord.date.signOutTime,
-                    timestamp: attendanceRecord.timestamp,
-                    remarks: attendanceRecord.remarks,
-                    count: 1 // Assuming each record represents one attendance
-                }
-                : {
-                    _id: null,
-                    user: userMap[user._id],
-                    status: 'Absent',
-                    type: 'Nil',
-                    signInTime: null,
-                    signOutTime: null,
-                    timestamp: null,
-                    remarks: 'Attendance data not yet existed/submitted',
-                    count: 0
-                };
-        });
+            return {
+                _id: attendanceRecord._id,
+                user: userMap[user._id],
+                status: attendanceRecord.status,
+                type: attendanceRecord.type,
+                signInTime: attendanceRecord.date.signInTime,
+                signOutTime: attendanceRecord.date.signOutTime,
+                timestamp: attendanceRecord.timestamp,
+                location: attendanceRecord.location,
+                remarks: attendanceRecord.remarks,
+            };
+        }).filter(item => item !== null);
 
-        // Sort combinedData based on timestamp, placing users without attendance records at the end
-        combinedData.sort((a, b) => {
-            if (!a.timestamp) return 1;
-            if (!b.timestamp) return -1;
-            return new Date(b.timestamp) - new Date(a.timestamp);
-        });
+        // Sort combinedData based on timestamp
+        combinedData.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
+        // Filter combinedData based on the search query
         const filteredData = combinedData.filter(item => {
             const { fullname, section, department, username } = item.user;
-            const { status, type, signInTime, signOutTime, remarks } = item;
+            const { status, type, signInTime, signOutTime, remarks, location } = item;
             const regex = new RegExp(searchQuery, 'i');
             return (
                 regex.test(fullname) ||
@@ -6642,12 +6572,30 @@ app.post('/api/data/all-attendance/per-date/department-section', isAuthenticated
                 regex.test(username) ||
                 regex.test(status) ||
                 regex.test(type) ||
+                regex.test(location) ||
                 regex.test(remarks) ||
-                (signInTime && regex.test(new Date(signInTime).toLocaleTimeString('en-MY', { hour: 'numeric', minute: 'numeric', hour12: true, timeZone: 'Asia/Kuala_Lumpur' }))) ||
-                (signOutTime && regex.test(new Date(signOutTime).toLocaleTimeString('en-MY', { hour: 'numeric', minute: 'numeric', hour12: true, timeZone: 'Asia/Kuala_Lumpur' })))
+                (signInTime &&
+                    regex.test(
+                        new Date(signInTime).toLocaleTimeString('en-MY', {
+                            hour: 'numeric',
+                            minute: 'numeric',
+                            hour12: true,
+                            timeZone: 'Asia/Kuala_Lumpur'
+                        })
+                    )) ||
+                (signOutTime &&
+                    regex.test(
+                        new Date(signOutTime).toLocaleTimeString('en-MY', {
+                            hour: 'numeric',
+                            minute: 'numeric',
+                            hour12: true,
+                            timeZone: 'Asia/Kuala_Lumpur'
+                        })
+                    ))
             );
         });
 
+        // Paginate the filtered data
         const paginatedData = filteredData.slice(skip, skip + limit);
 
         if (!paginatedData || paginatedData.length === 0) {
@@ -6662,10 +6610,11 @@ app.post('/api/data/all-attendance/per-date/department-section', isAuthenticated
         // Respond with the paginated and filtered attendance data
         res.json(response);
     } catch (error) {
-        console.error('Error fetching attendance data:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        console.error('Error:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 });
+
 
 app.post('/api/data/all-attendance/per-month/department-section', isAuthenticated, async function (req, res) {
     const selectedDate = req.body.date;
@@ -6681,6 +6630,16 @@ app.post('/api/data/all-attendance/per-month/department-section', isAuthenticate
     const [month, year] = selectedDate.split('/');
 
     try {
+        // Determine the users to query based on the user's role
+        let allUser;
+        if (user.isHeadOfDepartment) {
+            allUser = await User.find({ department: user.department });
+        } else if (user.isHeadOfSection) {
+            allUser = await User.find({ section: user.section });
+        } else {
+            allUser = await User.find();
+        }
+
         // Create a set of all possible status types
         const allStatusTypes = ['Present', 'Absent', 'Late', 'Invalid', 'Leave', 'Non Working Day'];
 
@@ -6698,42 +6657,42 @@ app.post('/api/data/all-attendance/per-month/department-section', isAuthenticate
             // Group by user and status, count occurrences
             {
                 $group: {
-                    _id: { user: '$user', status: '$status' },
+                    _id: { user: '$user', status: '$status', type: '$type' },
                     count: { $sum: 1 }
                 }
             }
         ]);
 
         const userStatusCounts = {};
+        const publicHolidayCounts = {};
 
-        let allUser;
-        if (user.isHeadOfDepartment) {
-            // Query all users from the database in the same department
-            allUser = await User.find({ department: user.department });
-        } else if (user.isHeadOfSection) {
-            // Query all users from the database in the same section
-            allUser = await User.find({ section: user.section });
-        }
-
-        // Iterate over all users and initialize their status counts
+        // Initialize status counts and public holiday counts for each user
         allUser.forEach(user => {
             userStatusCounts[user._id] = {};
             allStatusTypes.forEach(statusType => {
                 userStatusCounts[user._id][statusType] = 0;
             });
+            publicHolidayCounts[user._id] = 0;
         });
 
-        // Update status counts based on the attendance data
+        // Update status counts and public holiday counts based on the attendance data
         attendanceData.forEach(({ _id, count }) => {
-            const { user, status } = _id;
+            const { user, status, type } = _id;
+            // Ensure userStatusCounts[user] is defined before updating
             if (userStatusCounts[user]) {
-                userStatusCounts[user][status] = count;
+                if (status) {
+                    userStatusCounts[user][status] = count;
+                }
+                if (type === 'public holiday') {
+                    publicHolidayCounts[user] = count;
+                }
             }
         });
 
-        // Combine populated attendance data with user status counts
+        // Combine populated attendance data with user status counts and public holiday counts
         const combinedData = allUser.map(user => {
             const statusCounts = userStatusCounts[user._id];
+            const publicHolidayCount = publicHolidayCounts[user._id];
             return {
                 user: {
                     _id: user._id,
@@ -6742,7 +6701,8 @@ app.post('/api/data/all-attendance/per-month/department-section', isAuthenticate
                     section: user.section,
                     department: user.department
                 },
-                statusCounts: statusCounts
+                statusCounts: statusCounts,
+                publicHolidayCount: publicHolidayCount
             };
         });
 
@@ -6763,17 +6723,19 @@ app.post('/api/data/all-attendance/per-month/department-section', isAuthenticate
 
         const response = {
             data1: paginatedData,
-            data2: filteredData // This seems to be the full filtered data, consider if it's needed
+            data2: filteredData
         };
 
-        console.log(filteredData.length);
+        console.log(paginatedData);
 
         // Respond with the paginated and filtered attendance data
         res.json(response);
     } catch (error) {
         console.error('Error fetching attendance data:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).send('Internal Server Error');
     }
+
+
 }
 );
 
@@ -7912,7 +7874,7 @@ cron.schedule(
 cron.schedule(
     '0 0 * * *',
     () => {
-        console.log('Running cron job to update attendance at 1201AM');
+        console.log('Running cron job to update attendance at 1200AM at my times');
         updateAbsentAttendance();
         updateAttendanceForApprovedLeaves();
         updateTodayAttendance();
@@ -9272,8 +9234,7 @@ const updateTodayAttendance = async () => {
 // Function to check and update attendance absent
 const updateAbsentAttendance = async () => {
     try {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        const today = moment().utcOffset(8).startOf('day').toDate();
 
         // Find all users
         const allUsers = await User.find();
@@ -9288,7 +9249,7 @@ const updateAbsentAttendance = async () => {
                 'location.signIn': null,
                 'location.signOut': null,
                 status: 'Absent',
-                timestamp: new Date(),
+                timestamp: today,
                 remarks: 'No remarks added'
             });
 

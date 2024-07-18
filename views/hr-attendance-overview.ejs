@@ -136,6 +136,7 @@
                 <th class="sort align-middle text-center ps-0" scope="col" style="width:10%;">TYPE</th>
                 <th class="sort align-middle text-center ps-0" scope="col" style="width:10%;">CLOCK IN</th>
                 <th class="sort align-middle text-center ps-0" scope="col" style="width:10%;">CLOCK OUT</th>
+                <th class="sort align-middle text-center ps-0" scope="col" style="width:10%;">LOCATION</th>
                 <th class="sort align-middle text-center ps-0" scope="col" style="width:20%;">REMARKS</th>
                 <th class="sort align-middle text-end" scope="col" style="width: 5%"></th>
               </tr>
@@ -277,28 +278,29 @@
 
               const row = document.createElement('tr');
               row.innerHTML = `
-                             <td class="align-middle text-body white-space-nowrap ps-0 staff">
-                               <div class="avatar avatar-2xl">
-                                   <div class="avatar-name rounded-circle"><span class="fs-8">${item.user ? item.user.username : 'Unknown'}</span></div>
+                           <td class="align-middle text-body white-space-nowrap ps-0 staff">
+                             <div class="avatar avatar-2xl">
+                                 <div class="avatar-name rounded-circle"><span class="fs-8">${item.user ? item.user.username : 'Unknown'}</span></div>
+                             </div>
+                             <a class="mb-0 ms-3 fw-bold fs-8" href="/staff/details/${item.user._id}">${item.user ? item.user.fullname : 'Unknown'}</a>
+                           </td>
+                            <td class="align-middle text-center"><span class="badge badge-phoenix badge-phoenix-${badgeColour} fs-10">${item.status}</span></td>
+                            <td class="align-middle text-center"><span class="badge badge-phoenix badge-phoenix-info fs-10">${item.type}</span></td>
+                            <td class="align-middle text-center"><span class="badge badge-phoenix badge-phoenix-success fs-10">${item.signInTime ? new Date(item.signInTime).toLocaleTimeString('en-MY', { hour: 'numeric', minute: 'numeric', hour12: true, timeZone: 'Asia/Kuala_Lumpur' } ) : 'Nil'}</span></td>
+                            <td class="align-middle text-center"><span class="badge badge-phoenix badge-phoenix-warning fs-10">${item.signOutTime ? new Date(item.signOutTime).toLocaleTimeString('en-MY', { hour: 'numeric', minute: 'numeric', hour12: true, timeZone: 'Asia/Kuala_Lumpur' }) : 'Nil'}</span></td>
+                             <td class="location align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-success">${item.location.signIn ? item.location.signIn : ''}</span> <span class="badge badge-phoenix fs-10 badge-phoenix-warning">${item.location.signOut ? item.location.signOut : ''}</span></td>
+                            <td class="align-middle text-center text-body-emphasis fst-italic">${item.remarks}</td>
+                            <td class="align-middle text-end white-space-nowrap ps-0 action">
+                               <div class="font-sans-serif btn-reveal-trigger position-static">
+                               <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs--2" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
+                                 <span class="fas fa-ellipsis-h fs-9"></span>
+                               </button>
+                               <div class="dropdown-menu dropdown-menu-end py-2">
+                                 <a class="dropdown-item" href="/attendance/acknowledged/${item._id.toString()}">Acknowledged</a>
                                </div>
-                               <a class="mb-0 ms-3 fw-bold fs-8" href="/staff/details/${item.user._id}">${item.user ? item.user.fullname : 'Unknown'}</a>
-                             </td>
-                              <td class="align-middle text-center"><span class="badge badge-phoenix badge-phoenix-${badgeColour} fs-10">${item.status}</span></td>
-                              <td class="align-middle text-center"><span class="badge badge-phoenix badge-phoenix-info fs-10">${item.type}</span></td>
-                              <td class="align-middle text-center"><span class="badge badge-phoenix badge-phoenix-warning fs-10">${item.signInTime ? new Date(item.signInTime).toLocaleTimeString('en-MY', { hour: 'numeric', minute: 'numeric', hour12: true, timeZone: 'Asia/Kuala_Lumpur' } ) : 'Nil'}</span></td>
-                              <td class="align-middle text-center"><span class="badge badge-phoenix badge-phoenix-warning fs-10">${item.signOutTime ? new Date(item.signOutTime).toLocaleTimeString('en-MY', { hour: 'numeric', minute: 'numeric', hour12: true, timeZone: 'Asia/Kuala_Lumpur' }) : 'Nil'}</span></td>
-                              <td class="align-middle text-center text-body-emphasis fst-italic">${item.remarks}</td>
-                              <td class="align-middle text-end white-space-nowrap ps-0 action">
-                                 <div class="font-sans-serif btn-reveal-trigger position-static">
-                                 <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs--2" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
-                                   <span class="fas fa-ellipsis-h fs-9"></span>
-                                 </button>
-                                 <div class="dropdown-menu dropdown-menu-end py-2">
-                                   <a class="dropdown-item" href="/attendance/acknowledged/${item._id.toString()}">Acknowledged</a>
-                                 </div>
-                                 </div>
-                              </td>
-                          `;
+                               </div>
+                            </td>
+                        `;
               dataContainer.appendChild(row);
             });
           }
@@ -348,7 +350,7 @@
 
         <div class="col-12 col-md-3 order-0 order-lg-1">
           <div class="form-icon-container">
-            <input class="form-control search-input search datetimepicker flatpickr-input form-icon-input" type="text" id="selectedDate-date" name="date" placeholder="Select date" data-options='{"disableMobile":true,"allowInput":true, "locale" : { "firstDayOfWeek" : 1}, "mode": "single", disable": [true] }' />
+            <input class="form-control search-input search datetimepicker flatpickr-input form-icon-input" type="text" id="selectedDate-date" name="date" placeholder="Select date" data-options='{"disableMobile":false,"allowInput":true, "locale" : { "firstDayOfWeek" : 1}, "mode": "single", "dateFormat": "m/Y","disable": [true] }' />
             <span class="fas fa-calendar text-900 fs-9 form-icon"></span>
           </div>
 
@@ -365,6 +367,7 @@
               <th class="sort align-middle text-center ps-0" scope="col" style="width:10%;">TYPE</th>
               <th class="sort align-middle text-center ps-0" scope="col" style="width:10%;">CLOCK IN</th>
               <th class="sort align-middle text-center ps-0" scope="col" style="width:10%;">CLOCK OUT</th>
+              <th class="sort align-middle text-center ps-0" scope="col" style="width:10%;">LOCATION</th>
               <th class="sort align-middle text-center ps-0" scope="col" style="width:20%;">REMARKS</th>
               <th class="sort align-middle text-end" scope="col" style="width: 5%"></th>
             </tr>
@@ -507,56 +510,63 @@
 
         // Update the table with the received attendance data
         function renderTable(data, date) {
-          const tbody = document.querySelector('#all-attendance-body-date');
+          let tbody = document.querySelector('#all-attendance-body-date');
           tbody.innerHTML = ''; // Clear existing rows
 
-          // Hide prev and next buttons if no data is present
-          prevPageButton.classList.remove('d-none');
-          nextPageButton.classList.remove('d-none');
+          if (!data || data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center fw-bold fs-9">No data on date selected</td></tr>';
+            prevPageButton.classList.add('d-none');
+            nextPageButton.classList.add('d-none');
+          } else {
 
-          data.forEach(entry => {
-            // Construct HTML row for each entry
-            var badgeColour;
-            if (entry.status === 'Late') {
-              badgeColour = 'danger';
-            } else if (entry.status === 'Leave') {
-              badgeColour = 'info';
-            } else {
-              badgeColour = 'success';
-            }
+            data.forEach(entry => {
+              // Hide prev and next buttons if no data is present
+              prevPageButton.classList.remove('d-none');
+              nextPageButton.classList.remove('d-none');
+              // Construct HTML row for each entry
+              var badgeColour;
+              if (entry.status === 'Late') {
+                badgeColour = 'danger';
+              } else if (entry.status === 'Leave') {
+                badgeColour = 'info';
+              } else {
+                badgeColour = 'success';
+              }
 
-            const row = `
-                  <tr class="position-static border-top">
-                      <td class="align-middle text-body white-space-nowrap ps-0 staff">
-                          <div class="avatar avatar-2xl">
-                              <div class="avatar-name rounded-circle"><span class="fs-8">${entry.user ? entry.user.username : 'Unknown'}</span></div>
-                          </div>
-                          <a class="mb-0 ms-3 fw-bold fs-8" href="/staff/details/${entry.user._id}">${entry.user ? entry.user.fullname : 'Unknown'}</a>
-                      </td>
-                       <td class="align-middle text-center"><span class="badge badge-phoenix badge-phoenix-${badgeColour} fs-10">${entry.status}</span></td>
-                       <td class="align-middle text-center"><span class="badge badge-phoenix badge-phoenix-info fs-10">${entry.type}</span></td>
-                       <td class="align-middle text-center"><span class="badge badge-phoenix badge-phoenix-warning fs-10">${entry.signInTime ? new Date(entry.signInTime).toLocaleTimeString('en-MY', { hour: 'numeric', minute: 'numeric', hour12: true, timeZone: 'Asia/Kuala_Lumpur' } ) : 'Nil'}</span></td>
-                       <td class="align-middle text-center"><span class="badge badge-phoenix badge-phoenix-warning fs-10">${entry.signOutTime ? new Date(entry.signOutTime).toLocaleTimeString('en-MY', { hour: 'numeric', minute: 'numeric', hour12: true, timeZone: 'Asia/Kuala_Lumpur' }) : 'Nil'}</span></td>
-                       <td class="align-middle text-center section ps-0">
-                          <p class="fw-semibold text-body-emphasis fs-9 mb-0">${entry ? entry.remarks : 'Unknown'}</p>
-                      </td>
-                       <td class="align-middle text-end white-space-nowrap ps-0 action">
-                        <div class="font-sans-serif btn-reveal-trigger position-static">
-                          <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs--2" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
-                            <span class="fas fa-ellipsis-h fs-9"></span>
-                          </button>
-                          <div class="dropdown-menu dropdown-menu-end py-2">
-                            <a class="dropdown-item" href="/attendance/acknowledged/${entry._id.toString()}">Acknowledged</a>
-                          </div>
-                          </div>
-                       </td>
-                  </tr>`;
-            // Insert the HTML row into the table body
-            tbody.insertAdjacentHTML('beforeend', row);
+              const row = `
+                    <tr class="position-static border-top">
+                        <td class="align-middle text-body white-space-nowrap ps-0 staff">
+                            <div class="avatar avatar-2xl">
+                                <div class="avatar-name rounded-circle"><span class="fs-8">${entry.user ? entry.user.username : 'Unknown'}</span></div>
+                            </div>
+                            <a class="mb-0 ms-3 fw-bold fs-8" href="/staff/details/${entry.user._id}">${entry.user ? entry.user.fullname : 'Unknown'}</a>
+                        </td>
+                         <td class="align-middle text-center"><span class="badge badge-phoenix badge-phoenix-${badgeColour} fs-10">${entry.status}</span></td>
+                         <td class="align-middle text-center"><span class="badge badge-phoenix badge-phoenix-info fs-10">${entry.type}</span></td>
+                         <td class="align-middle text-center"><span class="badge badge-phoenix badge-phoenix-success fs-10">${entry.signInTime ? new Date(entry.signInTime).toLocaleTimeString('en-MY', { hour: 'numeric', minute: 'numeric', hour12: true, timeZone: 'Asia/Kuala_Lumpur' } ) : 'Nil'}</span></td>
+                         <td class="align-middle text-center"><span class="badge badge-phoenix badge-phoenix-warning fs-10">${entry.signOutTime ? new Date(entry.signOutTime).toLocaleTimeString('en-MY', { hour: 'numeric', minute: 'numeric', hour12: true, timeZone: 'Asia/Kuala_Lumpur' }) : 'Nil'}</span></td>
+                         <td class="location align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-success">${entry.location.signIn ? entry.location.signIn : ''}</span> <span class="badge badge-phoenix fs-10 badge-phoenix-warning">${entry.location.signOut ? entry.location.signOut : ''}</span></td>
+                         <td class="align-middle text-center section ps-0">
+                            <p class="fw-semibold text-body-emphasis fst-italic fs-9 mb-0">${entry ? entry.remarks : 'Unknown'}</p>
+                        </td>
+                         <td class="align-middle text-end white-space-nowrap ps-0 action">
+                          <div class="font-sans-serif btn-reveal-trigger position-static">
+                            <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs--2" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
+                              <span class="fas fa-ellipsis-h fs-9"></span>
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-end py-2">
+                              <a class="dropdown-item" href="/attendance/acknowledged/${entry._id.toString()}">Acknowledged</a>
+                            </div>
+                            </div>
+                         </td>
+                    </tr>`;
+              // Insert the HTML row into the table body
+              tbody.insertAdjacentHTML('beforeend', row);
 
-            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
-            const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
-          });
+              const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+              const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+            });
+          }
         }
 
         function calculateAttendancePercentage(data, selectedDate) {
@@ -580,7 +590,7 @@
 
         function renderEmptyTable() {
           const tbody = document.querySelector('#all-attendance-body-date');
-          tbody.innerHTML = '<tr><td colspan="7" class="text-center fs-9">No date selected</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="7" class="text-center fw-bold fs-9">No date selected</td></tr>';
         }
 
         // Event listener for search input

@@ -53,3 +53,12 @@
 <p>"In the quiet town of Willow Creek, life moved at a slower pace. The townsfolk cherished their routines, from morning coffee at Maggie's Diner to evening strolls by the river. Amidst the tranquility, the town's charm lay in its simplicity and the warmth of its close-knit community."</p>
 
 <%- include('partials/public-footer.ejs') %>
+
+let allUser;
+if (user.isHeadOfDepartment) {
+    // Query all users from the database in the same department
+    allUser = await User.find({ department: user.department });
+} else if (user.isHeadOfSection) {
+    // Query all users from the database in the same section
+    allUser = await User.find({ section: user.section });
+}

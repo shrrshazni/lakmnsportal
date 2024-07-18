@@ -691,6 +691,7 @@
                       <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="type" style="width:15%;min-width: 100px;">Status</th>
                       <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="clockin" style="width:15%;min-width: 100px;">Clock In</th>
                       <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="clockout" style="width:15%;min-width: 100px;">Clock Out</th>
+                      <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="location" style="width:10%;min-width: 100px;">Location</th>
                       <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="remarks" style="width:20%;min-width: 100px;">Remarks</th>
                     </tr>
                   </thead>
@@ -730,6 +731,7 @@
                       <td class="type align-middle fw-semibold text-center py-2 ps-0 text-body-highlight"><span class="fs-10 badge badge-phoenix badge-phoenix-<%= badgeColour %>"><%= item.status %></span></td>
                       <td class="clockin align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-success"><%= signInTime %></span></td>
                       <td class="clockin align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-warning"><%= signOutTime %></span></td>
+                      <td class="location align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-success"><%= item.location.signIn || '' %></span> <span class="badge badge-phoenix fs-10 badge-phoenix-warning"><%= item.location.signOut || '' %></span></td>
                       <td class="remarks align-middle fst-italic text-center py-2 ps-0 fs-9"><%= item.remarks || 'No remarks added.' %></td>
                     </tr>
                     <% }); %>
