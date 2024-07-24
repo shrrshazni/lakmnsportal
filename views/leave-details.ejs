@@ -2,91 +2,83 @@
 
 <!-- function for EJS -->
 <%
-    function formatCustomDate(dateString) {
+ function formatCustomDate(dateString) {
     const date = new Date(dateString);
 
     if (isNaN(date.getTime())) {
-      return 'Invalid date';
+        return 'Invalid date';
     }
 
     return date.toLocaleString('en-US', {
-      timeZone: 'Asia/Kuala_Lumpur',
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
+        timeZone: 'Asia/Kuala_Lumpur',
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
     });
-    }
+}
 
-    var showAcknowledge = 'd-none';
-    var showApproval = 'd-none';
+var showAcknowledge = 'd-none';
+var showApproval = 'd-none';
+var showCancel = 'd-none';
 
-    const allOtherApprovalsApproved = approvals
-    .slice(0, approvals.length - 1) 
-    .slice(1) 
+// Check if all other approvals are approved
+const allOtherApprovalsApproved = approvals
+    .slice(0, approvals.length - 1) // Exclude the last approval
+    .slice(1) // Exclude the first approval
     .every(approval => approval.status === 'approved');
 
-    // for admin hr only
-    if (allOtherApprovalsApproved) {
-   
-       if(user.isAdmin){
-        if(leave.status=== 'approved' || leave.status=== 'denied' ){
-        showAcknowledge = 'd-none';
-       }else{
-        showAcknowledge = '';
-       }
-       }else{
-        showAcknowledge = 'd-none';
-       }
-      
+// Handle acknowledge button visibility for admin HR
+if (allOtherApprovalsApproved) {
+    if (user.isAdmin) {
+        if (leave.status === 'approved' || leave.status === 'denied') {
+            showAcknowledge = 'd-none';
+        } else {
+            showAcknowledge = '';
+        }
     } else {
-      
-      // for general approvals
-      if (approvals && approvals.length > 0) {
+        showAcknowledge = 'd-none';
+    }
+} else {
+    // Handle approval button visibility for general approvals
+    if (approvals && approvals.length > 0) {
         const userApprovalIndex = approvals.findIndex(approval => approval.recipient.equals(user._id));
-        const isUserLeaveOwner = user._id.toString() === leave._id.toString();
+        const isUserLeaveOwner = user._id.toString() === leave.user.toString(); // Correct comparison with leave.user
 
-        if (userApprovalIndex && !isUserLeaveOwner && leave.status !== 'approved' && leave.status !== 'denied' && leave.status !== 'cancelled') {
-            const previousApprovalEntries = approvals[userApprovalIndex-1];
+        if (userApprovalIndex !== -1 && !isUserLeaveOwner && leave.status !== 'approved' && leave.status !== 'denied' && leave.status !== 'cancelled') {
+            const previousApprovalEntries = approvals[userApprovalIndex - 1];
 
-            if ((previousApprovalEntries.status === 'approved' || previousApprovalEntries.status === 'submitted') &&
-                !(approvals[approvals.length - 1].status === 'approved' || approvals[approvals.length - 1].status === 'denied' || 
-                approvals[userApprovalIndex].status === 'approved' || approvals[userApprovalIndex].status === 'denied' )) {
-                        showApproval = '';
+            if (previousApprovalEntries && 
+                (previousApprovalEntries.status === 'approved' || previousApprovalEntries.status === 'submitted') &&
+                !(approvals[approvals.length - 1].status === 'approved' || approvals[approvals.length - 1].status === 'denied' ||
+                approvals[userApprovalIndex].status === 'approved' || approvals[userApprovalIndex].status === 'denied')) {
+                showApproval = '';
             }
         }
-      }
-
     }
+}
 
-    var showCancel = 'd-none';
+// Handle cancel button visibility
+const headDepartmentApprovalIndex = approvals.findIndex(approval => approval.role === 'Head of Department');
+const headSectionApprovalIndex = approvals.findIndex(approval => approval.role === 'Head of Section');
+const deputyChiefApprovalIndex = approvals.findIndex(approval => approval.role === 'Deputy Chief Executive Officer');
+const chiefApprovalIndex = approvals.findIndex(approval => approval.role === 'Chief Executive Officer');
 
-    const headDepartmentApprovalIndex = approvals.findIndex(approval => approval.role === 'Head of Department');
-    const headSectionApprovalIndex = approvals.findIndex(approval => approval.role === 'Head of Section');
-    const deputyChiefApprovalIndex = approvals.findIndex(approval => approval.role === 'Deputy Chief Executive Officer');
-    const chiefApprovalIndex = approvals.findIndex(approval => approval.role === 'Chief Executive Officer');
+const anyApprovalIndex = [headDepartmentApprovalIndex, headSectionApprovalIndex, deputyChiefApprovalIndex, chiefApprovalIndex]
+    .findIndex(index => index !== -1 && approvals[index] && approvals[index].recipient.toString() === user._id.toString());
 
-    const anyApprovalIndex = [headDepartmentApprovalIndex, headSectionApprovalIndex, deputyChiefApprovalIndex, chiefApprovalIndex].findIndex(index => index !== -1 && approvals[index].recipient.toString() === user._id);
-
-    if(leave.status === 'approved' && leave.date.start >= new Date()) {
-
-        if(leave.user.toString() === user._id.toString()){
-            showCancel = '';
-        }else if(anyApprovalIndex !== -1){
-            showCancel = '';
-        }
-
-    }else if(leave.status === 'pending' || leave.status === 'invalid' || leave.status === 'submitted'){
-            
-        if(leave.user.toString() === user._id.toString()){
-            showCancel = '';
-        }else if(anyApprovalIndex !== -1){
-            showCancel = '';
-        }
-
+if (leave.status === 'approved' && leave.date.start >= new Date()) {
+    if (leave.user.toString() === user._id.toString() || anyApprovalIndex !== -1) {
+        showCancel = '';
     }
+} else if (leave.status === 'pending' || leave.status === 'invalid' || leave.status === 'submitted') {
+    if (leave.user.toString() === user._id.toString() || anyApprovalIndex !== -1) {
+        showCancel = '';
+    }
+}
+
 %>
 
 <nav class="mb-2" aria-label="breadcrumb">

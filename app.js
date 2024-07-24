@@ -3335,7 +3335,8 @@ app.get('/leave/:approval/:id', async function (req, res) {
                     $set: {
                         'approvals.$.status': 'approved',
                         'approvals.$.comment': 'The request have been approved',
-                        'approvals.$.timestamp': moment().utcOffset(8).toDate()
+                        'approvals.$.timestamp': moment().utcOffset(8).toDate(),
+                        status: 'pending'
                     }
                 },
                 { new: true }
@@ -8041,7 +8042,7 @@ generateApprovals = function (
                         },
                         {
                             recipient: headOfSection._id,
-                            role: 'Head of Section',
+                            role: 'Head of Division',
                             status: 'pending',
                             comment: 'Leave request needs approval',
                             estimated: moment().utcOffset(8).add(1, 'day').toDate(),
@@ -8163,7 +8164,7 @@ generateApprovals = function (
                         },
                         {
                             recipient: headOfSection._id,
-                            role: 'Head of Section',
+                            role: 'Head of Division',
                             status: 'pending',
                             comment: 'Leave request needs approval',
                             estimated: moment().utcOffset(8).add(1, 'day').toDate(),
@@ -8213,7 +8214,7 @@ generateApprovals = function (
                         },
                         {
                             recipient: headOfSection._id,
-                            role: 'Head of Section',
+                            role: 'Head of Division',
                             status: 'pending',
                             comment: 'Leave request needs approval',
                             estimated: moment().utcOffset(8).add(1, 'day').toDate(),
@@ -8374,7 +8375,7 @@ generateApprovals = function (
                         },
                         {
                             recipient: headOfSection._id,
-                            role: 'Head of Section',
+                            role: 'Head of Division',
                             status: 'pending',
                             comment: 'Leave request needs approval',
                             estimated: moment().utcOffset(8).add(1, 'day').toDate(),
@@ -8455,7 +8456,7 @@ generateApprovals = function (
                             : []),
                         {
                             recipient: headOfSection._id,
-                            role: 'Head of Section',
+                            role: 'Head of Division',
                             status: 'pending',
                             comment: 'Leave request needs approval',
                             estimated: moment().utcOffset(8).add(1, 'day').toDate(),
@@ -8597,7 +8598,7 @@ generateApprovals = function (
                             : []),
                         {
                             recipient: headOfSection._id,
-                            role: 'Head of Section',
+                            role: 'Head of Division',
                             status: 'pending',
                             comment: 'Leave request needs approval',
                             estimated: moment().utcOffset(8).add(1, 'day').toDate(),
@@ -8667,7 +8668,7 @@ generateApprovals = function (
                             : []),
                         {
                             recipient: headOfSection._id,
-                            role: 'Head of Section',
+                            role: 'Head of Division',
                             status: 'pending',
                             comment: 'Leave request needs approval',
                             estimated: moment().utcOffset(8).add(1, 'day').toDate(),
@@ -8878,7 +8879,7 @@ generateApprovals = function (
                             : []),
                         {
                             recipient: headOfSection._id,
-                            role: 'Head of Section',
+                            role: 'Head of Division',
                             status: 'pending',
                             comment: 'Leave request needs approval',
                             estimated: moment().utcOffset(8).add(1, 'day').toDate(),
