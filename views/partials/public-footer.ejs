@@ -1,73 +1,113 @@
 <script>
-  var navbarTopStyle = window.config.config.phoenixNavbarTopStyle;
-  var navbarTop = document.querySelector('.navbar-top');
-  if (navbarTopStyle === 'darker') {
-    navbarTop.setAttribute('data-navbar-appearance', 'darker');
-  }
-
-  var navbarVerticalStyle = window.config.config.phoenixNavbarVerticalStyle;
-  var navbarVertical = document.querySelector('.navbar-vertical');
-  if (navbarVertical && navbarVerticalStyle === 'darker') {
-    navbarVertical.setAttribute('data-navbar-appearance', 'darker');
-  }
-</script>
-</main>
-<!-- ===============================================-->
-<!--    End of Main Content-->
-<!-- ===============================================-->
-
-
-<!-- ===============================================-->
-<!--    JavaScripts-->
-<!-- ===============================================-->
-<script src="/vendors/popper/popper.min.js"></script>
-<script src="/vendors/bootstrap/bootstrap.min.js"></script>
-<script src="/vendors/anchorjs/anchor.min.js"></script>
-<script src="/vendors/is/is.min.js"></script>
-<script src="/vendors/fontawesome/all.min.js"></script>
-<script src="/vendors/lodash/lodash.min.js"></script>
-<script src="https://polyfill.io/v3/polyfill.min.js?features=window.scroll"></script>
-<script src="/vendors/list.js/list.min.js"></script>
-<script src="/vendors/feather-icons/feather.min.js"></script>
-<script src="/vendors/dayjs/dayjs.min.js"></script>
-<script src="/assets/js/phoenix.js"></script>
-<script src="/vendors/echarts/echarts.min.js"></script>
-<script src="/vendors/leaflet/leaflet.js"></script>
-<script src="/vendors/leaflet.markercluster/leaflet.markercluster.js"></script>
-<script src="/vendors/leaflet.tilelayer.colorfilter/leaflet-tilelayer-colorfilter.min.js"></script>
-<script src="/assets/js/ecommerce-dashboard.js"></script>
-<script src="/vendors/isotope-layout/isotope.pkgd.min.js"></script>
-<script src="/vendors/isotope-packery/packery-mode.pkgd.min.js"></script>
-<script src="/vendors/bigpicture/BigPicture.js"></script>
-<script src="/vendors/lottie/lottie.min.js"></script>
-<script src="/vendors/countup/countUp.umd.js"></script>
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDbaQGvhe7Af-uOMJz68NWHnO34UjjE7Lo&callback=initMap" async></script>
-
-<!-- jquery -->
-<script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
-<!-- file uploader -->
-<script src="/vendors/dropzone/dropzone.js"></script>
-<!-- datepicker -->
-<script src="/assets/js/flatpickr.js"></script>
-<!-- swiper -->
-<script src="/assets/vendors/swiper/swiper-bundle.min.js"></script>
-
-<!-- javascript -->
-<script>
-  // button loading function
-  $(document).ready(function() {
-    $('.loading-button').on('click', function() {
-      $('.loading-button').addClass('loading');
-      $('.content-button').addClass('noshow');
-
-      setTimeout(function() {
-        $('.loading-button').removeClass('loading');
-        $('.content-button').removeClass('noshow');
-      }, 2500);
+    var navbarTopStyle = window.config.config.phoenixNavbarTopStyle;
+    var navbarTop = document.querySelector('.navbar-top');
+    if (navbarTopStyle === 'darker') {
+      navbarTop.setAttribute('data-navbar-appearance', 'darker');
+    }
+  
+    var navbarVerticalStyle = window.config.config.phoenixNavbarVerticalStyle;
+    var navbarVertical = document.querySelector('.navbar-vertical');
+    if (navbarVertical && navbarVerticalStyle === 'darker') {
+      navbarVertical.setAttribute('data-navbar-appearance', 'darker');
+    }
+  </script>
+  </main>
+  <!-- ===============================================-->
+  <!--    End of Main Content-->
+  <!-- ===============================================-->
+  
+  
+  <!-- ===============================================-->
+  <!--    JavaScripts-->
+  <!-- ===============================================-->
+  <script src="/vendors/popper/popper.min.js"></script>
+  <script src="/vendors/bootstrap/bootstrap.min.js"></script>
+  <script src="/vendors/fontawesome/all.min.js"></script>
+  <script src="/vendors/lodash/lodash.min.js"></script>
+  <script src="/vendors/feather-icons/feather.min.js"></script>
+  <script src="/assets/js/phoenix.js"></script>
+  <script src="/vendors/echarts/echarts.min.js"></script>
+  <script src="/assets/js/ecommerce-dashboard.js"></script>
+  <script src="/vendors/isotope-layout/isotope.pkgd.min.js"></script>
+  <script src="/vendors/isotope-packery/packery-mode.pkgd.min.js"></script>
+  <script src="/vendors/bigpicture/BigPicture.js"></script>
+  <script src="/vendors/lottie/lottie.min.js"></script>
+  <script src="/vendors/countup/countUp.umd.js"></script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDbaQGvhe7Af-uOMJz68NWHnO34UjjE7Lo&callback=initMap" async></script>
+  
+  <!-- jquery -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+  <!-- file uploader -->
+  <script src="/vendors/dropzone/dropzone.js"></script>
+  <!-- datepicker -->
+  <script src="/assets/js/flatpickr.js"></script>
+  <!-- swiper -->
+  <script src="/assets/vendors/swiper/swiper-bundle.min.js"></script>
+  <!-- google translate -->
+  <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+  
+  <!-- javascript -->
+  <script>
+    // button loading function
+    $(document).ready(function() {
+      $('.loading-button').on('click', function() {
+        $('.loading-button').addClass('loading');
+        $('.content-button').addClass('noshow');
+  
+        setTimeout(function() {
+          $('.loading-button').removeClass('loading');
+          $('.content-button').removeClass('noshow');
+        }, 2500);
+      });
     });
-  });
-</script>
-
-</body>
-
-</html>
+  </script>
+  
+  <script type="text/javascript">
+    function googleTranslateElementInit() {
+      new google.translate.TranslateElement({}, 'google_translate_element');
+    }
+  
+    function changeLanguage(language) {
+      var languageCode = document.getElementById(`language-${language}`).value;
+      var selectField = document.querySelector("#google_translate_element select");
+  
+      if (selectField) {
+        for (var i = 0; i < selectField.children.length; i++) {
+          var option = selectField.children[i];
+          if (option.value === languageCode) {
+            selectField.selectedIndex = i;
+            selectField.dispatchEvent(new Event('change', {
+              bubbles: true
+            }));
+            break;
+          }
+        }
+      } else {
+        console.error('Select field not found');
+      }
+  
+      // Toggle button visibility
+      var btnMs = document.getElementById('btn-ms');
+      var btnEn = document.getElementById('btn-en');
+      var btnMsMobile = document.getElementById('btn-ms-mobile');
+      var btnEnMobile = document.getElementById('btn-en-mobile');
+  
+      if (language === 'ms') {
+        btnMs.classList.add('d-none');
+        btnEn.classList.remove('d-none');
+  
+        btnMsMobile.classList.add('d-none');
+        btnEnMobile.classList.remove('d-none');
+      } else {
+        btnEn.classList.add('d-none');
+        btnMs.classList.remove('d-none');
+  
+        btnEnMobile.classList.add('d-none');
+        btnMsMobile.classList.remove('d-none');
+      }
+    }
+  </script>
+  
+  </body>
+  
+  </html>

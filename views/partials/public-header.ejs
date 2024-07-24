@@ -10,7 +10,7 @@
   <!-- ===============================================-->
   <!--    Document Title-->
   <!-- ===============================================-->
-   
+
   <title>LAKMNS</title>
 
   <!-- ===============================================-->
@@ -94,10 +94,163 @@
       console.log('Touch events supported:', touchEventsSupported);
     });
   </script>
-  
+
 
   <!-- ===============================================-->
   <!--    Main Content-->
   <!-- ===============================================-->
 
   <main class="main" id="top">
+
+    <!-- for google translation -->
+    <style>
+      /* Hide Google Translate toolbar and feedback elements */
+      .VIpgJd-ZVi9od-ORHb-OEVmcd {
+        display: none !important;
+      }
+
+      body {
+        top: 0 !important;
+      }
+
+      #goog-gt-tt {
+        display: none !important;
+        top: 0px !important;
+      }
+
+      .goog-tooltip skiptranslate {
+        display: none !important;
+        top: 0px !important;
+      }
+
+      .activity-root {
+        display: hide !important;
+      }
+
+      .status-message {
+        display: hide !important;
+      }
+
+      .started-activity-container {
+        display: hide !important;
+      }
+
+      #btn-ms {
+        height: 2rem;
+        width: 2rem;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        -webkit-box-pack: center;
+        -ms-flex-pack: center;
+        justify-content: center;
+        border: 1px solid var(--phoenix-border-color);
+        background-color: var(--phoenix-body-bg);
+        color: var(--phoenix-primary);
+        border-radius: 50%;
+        cursor: pointer;
+        -webkit-transition: all 0.2s ease-in-out;
+        -o-transition: all 0.2s ease-in-out;
+        transition: all 0.2s ease-in-out;
+      }
+
+      #btn-ms:hover {
+        background-color: var(--phoenix-primary);
+        color: var(--phoenix-body-bg);
+      }
+
+      #btn-en {
+        height: 2rem;
+        width: 2rem;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        -webkit-box-pack: center;
+        -ms-flex-pack: center;
+        justify-content: center;
+        border: 1px solid var(--phoenix-border-color);
+        background-color: var(--phoenix-primary);
+        color: var(--phoenix-body-bg);
+        border-radius: 50%;
+        cursor: pointer;
+        -webkit-transition: all 0.2s ease-in-out;
+        -o-transition: all 0.2s ease-in-out;
+        transition: all 0.2s ease-in-out;
+      }
+
+      #btn-en:hover {
+        background-color: var(--phoenix-body-bg);
+        color: var(--phoenix-primary);
+      }
+
+      /* button at mobile */
+      #btn-ms-mobile {
+        height: 2rem;
+        width: 2rem;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        -webkit-box-pack: center;
+        -ms-flex-pack: center;
+        justify-content: center;
+        border: 1px solid var(--phoenix-border-color);
+        background-color: var(--phoenix-body-bg);
+        color: var(--phoenix-primary);
+        border-radius: 50%;
+        cursor: pointer;
+        -webkit-transition: all 0.2s ease-in-out;
+        -o-transition: all 0.2s ease-in-out;
+        transition: all 0.2s ease-in-out;
+      }
+
+      #btn-ms-mobile:hover {
+        background-color: var(--phoenix-primary);
+        color: var(--phoenix-body-bg);
+      }
+
+      #btn-en-mobile {
+        height: 2rem;
+        width: 2rem;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        -webkit-box-pack: center;
+        -ms-flex-pack: center;
+        justify-content: center;
+        border: 1px solid var(--phoenix-border-color);
+        background-color: var(--phoenix-primary);
+        color: var(--phoenix-body-bg);
+        border-radius: 50%;
+        cursor: pointer;
+        -webkit-transition: all 0.2s ease-in-out;
+        -o-transition: all 0.2s ease-in-out;
+        transition: all 0.2s ease-in-out;
+      }
+
+      #btn-en-mobile:hover {
+        background-color: var(--phoenix-body-bg);
+        color: var(--phoenix-primary);
+      }
+    </style>
+
+    <!-- Hide auto-created selection field completely by hiding its container -->
+    <div class="d-none" id="google_translate_element"></div>
+
+    <!-- Input field for the language code -->
+    <input class="d-none" value="ms" id="language-ms" />
+    <input class="d-none" value="en" id="language-en" />
+
+    <!-- skiptranslate -->
+    <div id="goog-gt-tt" class="goog-tooltip skiptranslate d-none"></div>

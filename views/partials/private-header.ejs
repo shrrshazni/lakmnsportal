@@ -112,6 +112,158 @@
 
   <main class="main" id="top">
 
+    <style>
+      /* Hide Google Translate toolbar and feedback elements */
+      .VIpgJd-ZVi9od-ORHb-OEVmcd {
+        display: none !important;
+      }
+
+      body {
+        top: 0 !important;
+      }
+
+      #goog-gt-tt {
+        display: none !important;
+        top: 0px !important;
+      }
+
+      .goog-tooltip skiptranslate {
+        display: none !important;
+        top: 0px !important;
+      }
+
+      .activity-root {
+        display: hide !important;
+      }
+
+      .status-message {
+        display: hide !important;
+      }
+
+      .started-activity-container {
+        display: hide !important;
+      }
+
+      #btn-ms {
+        padding: 0 0.5rem;
+        height: 1rem;
+        width: auto;
+        border-radius: 50rem;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        -webkit-box-pack: center;
+        -ms-flex-pack: center;
+        justify-content: center;
+        border: 1px solid var(--phoenix-border-color);
+        background-color: var(--phoenix-primary-lighter);
+        color: var(--phoenix-primary);
+        cursor: pointer;
+        -webkit-transition: all 0.2s ease-in-out;
+        -o-transition: all 0.2s ease-in-out;
+        transition: all 0.2s ease-in-out;
+      }
+
+      #btn-ms:hover {
+        background-color: var(--phoenix-primary);
+        color: var(--phoenix-body-bg);
+      }
+
+      #btn-en {
+        padding: 0 0.5rem;
+        height: 1rem;
+        width: auto;
+        border-radius: 50rem;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        -webkit-box-pack: center;
+        -ms-flex-pack: center;
+        justify-content: center;
+        border: 1px solid var(--phoenix-border-color);
+        background-color: var(--phoenix-primary);
+        color: var(--phoenix-body-bg);
+        cursor: pointer;
+        -webkit-transition: all 0.2s ease-in-out;
+        -o-transition: all 0.2s ease-in-out;
+        transition: all 0.2s ease-in-out;
+      }
+
+      #btn-en:hover {
+        background-color: var(--phoenix-body-bg);
+        color: var(--phoenix-primary);
+      }
+
+      /* button at mobile */
+      #btn-ms-mobile {
+        padding: 0 0.5rem;
+        height: 1rem;
+        width: auto;
+        border-radius: 50rem;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        -webkit-box-pack: center;
+        -ms-flex-pack: center;
+        justify-content: center;
+        border: 1px solid var(--phoenix-border-color);
+        background-color: var(--phoenix-body-bg);
+        color: var(--phoenix-primary);
+        cursor: pointer;
+        -webkit-transition: all 0.2s ease-in-out;
+        -o-transition: all 0.2s ease-in-out;
+        transition: all 0.2s ease-in-out;
+      }
+
+      #btn-ms-mobile:hover {
+        background-color: var(--phoenix-primary);
+        color: var(--phoenix-body-bg);
+      }
+
+      #btn-en-mobile {
+        padding: 0 0.5rem;
+        height: 1rem;
+        width: auto;
+        border-radius: 50rem;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        -webkit-box-pack: center;
+        -ms-flex-pack: center;
+        justify-content: center;
+        border: 1px solid var(--phoenix-border-color);
+        background-color: var(--phoenix-primary);
+        color: var(--phoenix-body-bg);
+        cursor: pointer;
+        -webkit-transition: all 0.2s ease-in-out;
+        -o-transition: all 0.2s ease-in-out;
+        transition: all 0.2s ease-in-out;
+      }
+
+      #btn-en-mobile:hover {
+        background-color: var(--phoenix-body-bg);
+        color: var(--phoenix-primary);
+      }
+    </style>
+
+    <!-- Hide auto-created selection field completely by hiding its container -->
+    <div class="d-none" id="google_translate_element"></div>
+    <input class="d-none" value="ms" id="language-ms" />
+    <input class="d-none" value="en" id="language-en" />
+    <div id="goog-gt-tt" class="goog-tooltip skiptranslate d-none"></div>
+
     <!-- vertical navbar -->
     <nav class="navbar navbar-vertical navbar-expand-lg d-print-none">
       <script>
@@ -764,9 +916,26 @@
       <div class="navbar-logo">
 
         <button class="btn navbar-toggler navbar-toggler-humburger-icon hover-bg-transparent" type="button" data-bs-toggle="collapse" data-bs-target="#navbarVerticalCollapse" aria-controls="navbarVerticalCollapse" aria-expanded="false" aria-label="Toggle Navigation"><span class="navbar-toggle-icon"><span class="toggle-line"></span></span></button>
-        <a class="navbar-brand navbar-brand" href="/">lakmns<span class="text-body-highlight d-none d-sm-inline">portal</span></a>
+        <a class="navbar-brand navbar-brand notranslate" href="/">lakmns<span class="text-body-highlight d-none d-sm-inline">portal</span></a>
       </div>
       <ul class="navbar-nav navbar-nav-icons flex-row">
+
+        <li class="nav-item">
+          <div class="pe-2">
+
+            <div class="d-none d-lg-block">
+              <button id="btn-ms" class="fw-bold fs-9" onclick="changeLanguage('ms')"><span class="fa-brands fa-google fs-10 me-1"></span>Translate</button>
+              <button id="btn-en" class="fw-bold fs-9 d-none" onclick="changeLanguage('en')"><span class="fa-brands fa-google fs-10 me-1"></span>Translate</button>
+            </div>
+
+            <!-- Buttons for language selection -->
+            <div class="d-block d-lg-none">
+              <button id="btn-ms-mobile" class="" onclick="changeLanguage('ms')"><span class="fa-brands fa-google me-1"></span>Translate</button>
+              <button id="btn-en-mobile" class="d-none" onclick="changeLanguage('en')"><span class="fa-brands fa-google me-1"></span>Translate</button>
+            </div>
+
+          </div>
+        </li>
 
         <!-- theme -->
         <li class="nav-item">
@@ -942,7 +1111,7 @@
         </li>
 
         <!-- profiler -->
-        <li class="nav-item dropdown"><a class="nav-link lh-1 pe-0 white-space-nowrap" id="navbarDropdownUser" href="#!" role="button" data-bs-toggle="dropdown" aria-haspopup="true" data-bs-auto-close="outside" aria-expanded="false"><%= user.fullname.split(' ')[0] %> <span class="fa-solid fa-chevron-down fs-10"></span></a>
+        <li class="nav-item dropdown"><a class="nav-link lh-1 pe-0 white-space-nowrap notranslate" id="navbarDropdownUser" href="#!" role="button" data-bs-toggle="dropdown" aria-haspopup="true" data-bs-auto-close="outside" aria-expanded="false"><%= user.fullname.split(' ')[0] %> <span class="fa-solid fa-chevron-down fs-10"></span></a>
           <div class="dropdown-menu dropdown-menu-end navbar-dropdown-caret py-0 dropdown-profile shadow border" aria-labelledby="navbarDropdownUser">
             <div class="card position-relative border-0">
               <div class="card-body p-1">
