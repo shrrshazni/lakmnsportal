@@ -365,7 +365,7 @@
               const checkOnline = allInfo.find(item => item.user && department && item.user.toString() === department._id.toString());
 
               var showOnline = '';
-              if(checkOnline.isOnline === true){
+              if(checkOnline.isOnline){
                 showOnline = 'status-online';
               }else{
                 showOnline = '';
@@ -398,17 +398,21 @@
             <% } %>
 
             <td class="align-middle white-space-nowrap text-center when ps-0">
+              <% if (checkOnline && checkOnline.lastSeen) { %>
               <p class="fw-semibold text-body-secondary fs-9 mb-0">
                 <%= checkOnline.lastSeen.toLocaleDateString('en-US', {  
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: 'numeric',
-                    minute: 'numeric',
-                    hour12: true, 
-                    timeZone : 'Asia/Kuala_Lumpur' }) 
-                %>
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: 'numeric',
+                        minute: 'numeric',
+                        hour12: true, 
+                        timeZone: 'Asia/Kuala_Lumpur' 
+                    }) %>
               </p>
+              <% } else { %>
+              <p class="fw-semibold text-body-secondary fs-9 mb-0">N/A</p>
+              <% } %>
             </td>
 
             <%

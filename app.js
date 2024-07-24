@@ -7618,12 +7618,13 @@ app.get('/super-admin/update', isAuthenticated, async function (req, res) {
 
     if (user.isSuperAdmin) {
 
-        await User.updateMany(
-            {
-                fullname: /binti/i // Regex to match 'binti' case-insensitively
-            },
-            { $set: { gender: 'female' } }
-        );
+        try {
+            // Fetch all users
+            const currentTime = moment().utcOffset(8).toDate();
+            const result = await Info.updateMany({}, { lastSeen: currentTime });
+        } catch (error) {
+            console.error('Error creating Info documents:', error);
+        }
 
         console.log('Done update');
         res.redirect('/');
