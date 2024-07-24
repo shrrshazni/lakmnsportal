@@ -3,7 +3,7 @@
 <div class="mb-6">
   <div class="mb-6">
     <h2>Attendance Records</h2>
-    <p class="text-body-tertiary lh-sm mb-0">High, everyone present, no absences</p>
+    <p class="text-body-tertiary lh-sm mb-0">Tracking employee presence and absence.</p>
   </div>
 
   <div class="mb-3">
@@ -512,7 +512,7 @@
           let tbody = document.querySelector('#all-attendance-body-date');
           tbody.innerHTML = ''; // Clear existing rows
 
-          if (!data ||data.length === 0) {
+          if (!data || data.length === 0) {
             tbody.innerHTML = '<tr><td colspan="7" class="text-center fw-bold fs-9">No data on date selected</td></tr>';
             prevPageButton.classList.add('d-none');
             nextPageButton.classList.add('d-none');

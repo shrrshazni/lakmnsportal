@@ -300,8 +300,7 @@ const leaveSchema = new mongoose.Schema({
     estimated: {
         type: Date,
         default: () => {
-            const currentDate = new Date();
-            currentDate.setDate(currentDate.getDate() + 3);
+            const currentDate = moment().utcOffset(8).add(3, 'days').toDate();
             return currentDate;
         }
     },
@@ -591,33 +590,16 @@ app.get('/', isAuthenticated, async function (req, res) {
     const file = await File.find();
     const info = await Info.findOne({ user: user._id });
 
-    // find activities one week ago
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
     const otherTask = await Task.find({ assignee: { $ne: [user._id] } });
     const otherActivities = await Activity.find();
 
-    // find staff on leave today
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const dayOfWeek = today.getDay();
-
-    // Calculate the first date of the week (Monday)
-    const firstDayOfWeek = new Date(today);
-    firstDayOfWeek.setDate(today.getDate() - ((dayOfWeek + 6) % 7) + 1);
-
-    // Calculate the last date of the week (Sunday)
-    const lastDayOfWeek = new Date(today);
-    lastDayOfWeek.setDate(today.getDate() + (7 - dayOfWeek));
-
-    // Calculate the first day of the month
-    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 2);
-
-    // Calculate the last day of the month
-    const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-    lastDayOfMonth.setHours(23, 59, 59, 999);
+    // init date using moment
+    const today = moment().utcOffset(8).startOf('day');
+    const sevenDaysAgo = today.clone().subtract(7, 'days');
+    const firstDayOfWeek = today.clone().startOf('isoWeek');
+    const lastDayOfWeek = today.clone().endOf('isoWeek');
+    const firstDayOfMonth = today.clone().startOf('month');
+    const lastDayOfMonth = today.clone().endOf('month');
 
     let todayLeaves = [];
     let weekLeaves = [];
@@ -876,7 +858,7 @@ app.post('/task/add', isAuthenticated, async function (req, res) {
                 // activity
                 const activityUser = new Activity({
                     user: user._id,
-                    date: new Date(),
+                    date: moment().utcOffset(8).toDate(),
                     title: 'Add Assignee on Task',
                     type: 'Task',
                     description:
@@ -884,7 +866,7 @@ app.post('/task/add', isAuthenticated, async function (req, res) {
                         ' has add assignee '
                         + assignee[0].username +
                         ' at '
-                        + getDateFormat2(new Date())
+                        + getDateFormat2(moment().utcOffset(8).toDate())
                 });
 
                 activityUser.save();
@@ -926,7 +908,7 @@ app.post('/update/:content/:id', isAuthenticated, async function (req, res) {
                 // activity
                 const activityUser = new Activity({
                     user: user._id,
-                    date: new Date(),
+                    date: moment().utcOffset(8).toDate(),
                     title: 'Update Task Description',
                     type: 'Task',
                     description:
@@ -934,7 +916,7 @@ app.post('/update/:content/:id', isAuthenticated, async function (req, res) {
                         ' has update task description '
                         + update.name +
                         ' at '
-                        + getDateFormat2(new Date())
+                        + getDateFormat2(moment().utcOffset(8).toDate())
                 });
 
                 activityUser.save();
@@ -960,7 +942,7 @@ app.post('/update/:content/:id', isAuthenticated, async function (req, res) {
                 // activity
                 const activityUser = new Activity({
                     user: user._id,
-                    date: new Date(),
+                    date: moment().utcOffset(8).toDate(),
                     title: 'Update/Add Task Description',
                     type: 'Task',
                     description:
@@ -968,7 +950,7 @@ app.post('/update/:content/:id', isAuthenticated, async function (req, res) {
                         ' has update/add task description '
                         + update.name +
                         ' at '
-                        + getDateFormat2(new Date())
+                        + getDateFormat2(moment().utcOffset(8).toDate())
                 });
 
                 activityUser.save();
@@ -989,11 +971,11 @@ app.post('/update/:content/:id', isAuthenticated, async function (req, res) {
             const updateFields = {};
 
             if (due) {
-                updateFields.due = new Date(due);
+                updateFields.due = moment(due).utcOffset(8).toDate();
             }
 
             if (reminder) {
-                updateFields.reminder = new Date(reminder);
+                updateFields.reminder = moment(reminder).utcOffset(8).toDate();
             }
 
             if (status !== undefined && status !== null && status !== '') {
@@ -1024,7 +1006,7 @@ app.post('/update/:content/:id', isAuthenticated, async function (req, res) {
                 // activity
                 const activityUser = new Activity({
                     user: user._id,
-                    date: new Date(),
+                    date: moment().utcOffset(8).toDate(),
                     title: 'Update Task Content',
                     type: 'Task',
                     description:
@@ -1032,7 +1014,7 @@ app.post('/update/:content/:id', isAuthenticated, async function (req, res) {
                         ' has update task content '
                         + update.name +
                         ' at '
-                        + getDateFormat2(new Date())
+                        + getDateFormat2(moment().utcOffset(8).toDate())
                 });
 
                 activityUser.save();
@@ -1060,7 +1042,7 @@ app.post('/update/:content/:id', isAuthenticated, async function (req, res) {
                 for (const file of Object.values(req.files)) {
                     const upload = __dirname + '/public/uploads/' + file.name;
                     const pathUpload = '/uploads/' + file.name;
-                    const today = new Date();
+                    const today = moment().utcOffset(8).startOf('day').toDate();
                     const type = path.extname(file.name);
 
                     await file.mv(upload);
@@ -1088,13 +1070,13 @@ app.post('/update/:content/:id', isAuthenticated, async function (req, res) {
                 // activity
                 const activityUser = new Activity({
                     user: user._id,
-                    date: new Date(),
+                    date: moment().utcOffset(8).toDate(),
                     title: 'Upload File for Task',
                     type: 'Task',
                     description:
                         user.fullname +
                         ' has upload file at '
-                        + getDateFormat2(new Date())
+                        + getDateFormat2(moment().utcOffset(8).toDate())
                 });
 
                 activityUser.save();
@@ -1547,7 +1529,7 @@ app
                     },
                     {
                         isOnline: true,
-                        lastSeen: new Date()
+                        lastSeen: moment().utcOffset(8).toDate()
                     },
                     {
                         new: true
@@ -1555,7 +1537,7 @@ app
                 );
 
                 if (updateInfo) {
-                    console.log('Is online at ' + new Date());
+                    console.log('Is online at ' + moment().utcOffset(8).toDate());
                 } else {
                     console.log('Failed to update');
                 }
@@ -1704,7 +1686,7 @@ app.get('/sign-out/:id', async function (req, res) {
         },
         {
             isOnline: false,
-            lastSeen: new Date()
+            lastSeen: moment().utcOffset(8).toDate()
         },
         {
             new: true
@@ -1712,7 +1694,7 @@ app.get('/sign-out/:id', async function (req, res) {
     );
 
     if (updateInfo) {
-        console.log('Is online at ' + new Date());
+        console.log('Is online at ' + moment().utcOffset(8).toDate());
     } else {
         console.log('Failed to update');
     }
@@ -1824,10 +1806,10 @@ app
                 updateFields.phone = req.body.phone;
             }
             if (req.body.dateEmployed) {
-                updateFields.dateEmployed = new Date(req.body.dateEmployed);
+                updateFields.dateEmployed = moment(req.body.dateEmployed).utcOffset(8).toDate();
             }
             if (req.body.birthdate) {
-                updateFields.birthdate = new Date(req.body.birthdate);
+                updateFields.birthdate = moment(req.body.birthdate).utcOffset(8).toDate();
             }
             if (req.body.nric) {
                 updateFields.nric = req.body.nric;
@@ -1946,13 +1928,13 @@ app
                 console.log(updateUser);
                 console.log(updateFields);
 
-                const today = new Date();
+                const today = moment().utcOffset(8).startOf('day').toDate();
 
                 if (updateUser) {
                     // activity
                     const activityUser = new Activity({
                         user: user._id,
-                        date: new Date(),
+                        date: moment().utcOffset(8).toDate(),
                         title: 'Update profile',
                         type: 'Profile',
                         description:
@@ -2050,7 +2032,7 @@ app.post('/settings/upload/profile-image', isAuthenticated, async function (req,
             for (const file of Object.values(req.files)) {
                 const upload = __dirname + '/public/uploads/' + file.name;
                 const pathUpload = '/uploads/' + file.name;
-                const today = new Date();
+                const today = moment().utcOffset(8).startOf('day').toDate();
                 const type = path.extname(file.name);
 
                 await file.mv(upload);
@@ -2075,7 +2057,7 @@ app.post('/settings/upload/profile-image', isAuthenticated, async function (req,
             // activity
             const activityUser = new Activity({
                 user: user._id,
-                date: new Date(),
+                date: moment().utcOffset(8).toDate(),
                 title: 'Update profile',
                 type: 'Profile',
                 description:
@@ -2182,7 +2164,7 @@ app.get('/info/:type/:method/:id', async function (req, res) {
 });
 
 // TUTORIAL
-app.get('/tutorial', isAuthenticated, async function (req, res) {
+app.get('/guide', isAuthenticated, async function (req, res) {
     const username = req.user.username;
     const user = await User.findOne({ username: username });
     const notifications = await Notification.find({
@@ -2193,7 +2175,7 @@ app.get('/tutorial', isAuthenticated, async function (req, res) {
         .sort({ timestamp: -1 });
 
     if (user) {
-        res.render('tutorial', {
+        res.render('guide', {
             user: user,
             notifications: notifications,
             uuid: uuidv4()
@@ -2331,11 +2313,11 @@ app
             console.log(adminHR);
 
             const newDate = {
-                start: new Date(startDate),
-                return: new Date(returnDate)
+                start: moment(startDate).utcOffset(8).toDate(),
+                return: moment(returnDate).utcOffset(8).toDate()
             };
 
-            const today = new Date();
+            const today = moment().utcOffset(8).startOf('day').toDate();
 
             const amountDayRequest = calculateBusinessDays(today, startDate);
 
@@ -2970,7 +2952,7 @@ app
                 // activity
                 const activityUser = new Activity({
                     user: user._id,
-                    date: new Date(),
+                    date: moment().utcOffset(8).toDate(),
                     title: 'Submitted a leave application',
                     type: 'Leave request',
                     description:
@@ -3053,42 +3035,18 @@ app
                     .populate('assignee')
                     .exec();
                 const fileHome = await File.find();
-                const sevenDaysAgo = new Date();
-                sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+                const sevenDaysAgo = moment().utcOffset(8).subtract(7, 'days').toDate();
                 const otherTaskHome = await Task.find({
                     assignee: { $ne: [user._id] }
                 });
                 const otherActivitiesHome = await Activity.find();
                 const info = await Info.findOne({ user: user._id });
 
-                // find staff on leave today
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-
-                const dayOfWeek = today.getDay();
-
-                // Calculate the first date of the week (Monday)
-                const firstDayOfWeek = new Date(today);
-                firstDayOfWeek.setDate(today.getDate() - ((dayOfWeek + 6) % 7) + 1);
-
-                // Calculate the last date of the week (Sunday)
-                const lastDayOfWeek = new Date(today);
-                lastDayOfWeek.setDate(today.getDate() + (7 - dayOfWeek));
-
-                // Calculate the first day of the month
-                const firstDayOfMonth = new Date(
-                    today.getFullYear(),
-                    today.getMonth(),
-                    2
-                );
-
-                // Calculate the last day of the month
-                const lastDayOfMonth = new Date(
-                    today.getFullYear(),
-                    today.getMonth() + 1,
-                    0
-                );
-                lastDayOfMonth.setHours(23, 59, 59, 999);
+                const today = moment().utcOffset(8).startOf('day');
+                const firstDayOfWeek = today.clone().startOf('week').add(1, 'day');
+                const lastDayOfWeek = today.clone().endOf('week');
+                const firstDayOfMonth = today.clone().startOf('month');
+                const lastDayOfMonth = today.clone().endOf('month');
 
                 let todayLeaves = [];
                 let weekLeaves = [];
@@ -3377,7 +3335,7 @@ app.get('/leave/:approval/:id', async function (req, res) {
                     $set: {
                         'approvals.$.status': 'approved',
                         'approvals.$.comment': 'The request have been approved',
-                        'approvals.$.timestamp': new Date()
+                        'approvals.$.timestamp': moment().utcOffset(8).toDate()
                     }
                 },
                 { new: true }
@@ -3401,7 +3359,7 @@ app.get('/leave/:approval/:id', async function (req, res) {
             // activity
             const activityUser = new Activity({
                 user: user._id,
-                date: new Date(),
+                date: moment().utcOffset(8).toDate(),
                 title: 'Leave application approved',
                 type: 'Leave request',
                 description: 'Approved a leave request'
@@ -3465,7 +3423,7 @@ app.get('/leave/:approval/:id', async function (req, res) {
                         status: 'denied',
                         'approvals.$.status': 'denied',
                         'approvals.$.comment': 'The request have been denied',
-                        'approvals.$.timestamp': new Date()
+                        'approvals.$.timestamp': moment().utcOffset(8).toDate()
                     }
                 },
                 { new: true }
@@ -3528,7 +3486,7 @@ app.get('/leave/:approval/:id', async function (req, res) {
                 // activity
                 const activityUser = new Activity({
                     user: user._id,
-                    date: new Date(),
+                    date: moment().utcOffset(8).toDate(),
                     title: 'Leave application denied',
                     type: 'Leave request',
                     description: 'Denied a leave request'
@@ -3728,7 +3686,7 @@ app.get('/leave/:approval/:id', async function (req, res) {
             // activity
             const activityUser = new Activity({
                 user: user._id,
-                date: new Date(),
+                date: moment().utcOffset(8).toDate(),
                 title: 'Leave cancelled',
                 type: 'Leave approval',
                 description: 'Cancel the leave request'
@@ -3797,7 +3755,7 @@ app.get('/leave/:approval/:id', async function (req, res) {
                             'approvals.$.status': 'approved',
                             'approvals.$.comment':
                                 'The request have been officially approved',
-                            'approvals.$.timestamp': new Date()
+                            'approvals.$.timestamp': moment().utcOffset(8).toDate()
                         }
                     },
                     { new: true }
@@ -3937,7 +3895,7 @@ app.get('/leave/:approval/:id', async function (req, res) {
                 // activity
                 const activityUser = new Activity({
                     user: user._id,
-                    date: new Date(),
+                    date: moment().utcOffset(8).toDate(),
                     title: 'Leave application approved',
                     type: 'Leave request',
                     description: 'Approved a leave request'
@@ -4189,7 +4147,8 @@ app.get('/human-resource/staff-members/overview/update/:id', isAuthenticated, as
     const userId = req.params.id;
 
     const {
-        fullname, classification, grade, position, department, section, dateEmployed
+        fullname, classification, grade, position, department, section, dateEmployed,
+        isOfficer, isAdmin, isHeadOfDepartment, isHeadOfSection, isManagement, isPersonalAssistant
     } = req.body;
 
     // Initialize updatedFields with the extracted values
@@ -4231,19 +4190,19 @@ app.get('/human-resource/staff-members/overview/update/:id', isAuthenticated, as
     } else {
         // activity
         const activityUser = new Activity({
-            user: user._id,
-            date: new Date(),
+            user: req.user._id,
+            date: moment().utcOffset(8).toDate(),
             title: 'Update Staff Data',
             type: 'Admin',
             description:
-                user.fullname +
-                ' has update staff '
+                req.user.fullname +
+                ' has updated staff '
                 + updatedUser.username +
                 ' at '
-                + getDateFormat2(new Date())
+                + getDateFormat2(moment().utcOffset(8).toDate())
         });
 
-        activityUser.save();
+        await activityUser.save();
 
         console.log('New activity submitted', activityUser);
     }
@@ -4388,7 +4347,7 @@ app
                         emailVerified: false,
                         phoneVerified: false,
                         isOnline: false,
-                        lastSeen: new Date()
+                        lastSeen: moment().utcOffset(8).toDate()
                     });
                     await createInfo.save();
                     console.log('New info document created:', createInfo);
@@ -4396,7 +4355,7 @@ app
                     // activity
                     const activityUser = new Activity({
                         user: user1._id,
-                        date: new Date(),
+                        date: moment().utcOffset(8).toDate(),
                         title: 'Add new staff',
                         type: 'Admin HR',
                         description:
@@ -4404,7 +4363,7 @@ app
                             ' has add staff '
                             + newUserLeave.username +
                             ' at '
-                            + getDateFormat2(new Date())
+                            + getDateFormat2(moment().utcOffset(8).toDate())
                     });
 
                     activityUser.save();
@@ -4438,7 +4397,7 @@ app.get('/human-resource/leave/overview', isAuthenticated, async function (req, 
         read: false
     }).populate('sender');
 
-    const allLeave = await Leave.find();
+    const allLeave = await Leave.find().sort({ timestamp: -1 });
     const allUser = await User.find();
 
     if (user) {
@@ -4564,7 +4523,7 @@ app.get('/human-resource/leave/balances/update/:id', isAuthenticated, async func
             // activity
             const activityUser = new Activity({
                 user: user._id,
-                date: new Date(),
+                date: moment().utcOffset(8).toDate(),
                 title: 'Update staff leave balances',
                 type: 'Admin',
                 description:
@@ -4572,7 +4531,7 @@ app.get('/human-resource/leave/balances/update/:id', isAuthenticated, async func
                     ' has update staff leave balances '
                     + findUser.username +
                     ' at '
-                    + getDateFormat2(new Date())
+                    + getDateFormat2(moment().utcOffset(8).toDate())
             });
 
             activityUser.save();
@@ -4605,23 +4564,8 @@ app.get('/human-resource/attendance/overview', isAuthenticated, async function (
         .sort({ timestamp: -1 });
 
     if (user) {
-        const currentDate = new Date();
-        const startOfToday = new Date(
-            currentDate.getFullYear(),
-            currentDate.getMonth(),
-            currentDate.getDate(),
-            0,
-            0,
-            0
-        );
-        const endOfToday = new Date(
-            currentDate.getFullYear(),
-            currentDate.getMonth(),
-            currentDate.getDate(),
-            23,
-            59,
-            59
-        );
+        const startOfToday = moment().utcOffset(8).startOf('day').toDate();
+        const endOfToday = moment().utcOffset(8).endOf('day').toDate();
 
         const attendance = await Attendance.find({
             timestamp: { $gte: startOfToday, $lte: endOfToday }
@@ -4722,7 +4666,7 @@ app.get('/auxiliary-police/duty-handover/submit', isAuthenticated, async functio
 
         let dutyHandover = await DutyHandoverAux.findOne({
             location: location,
-            date: new Date(date),
+            date: moment(date).utcOffset(8).toDate(),
             time: time,
             shift: shift
         });
@@ -4732,7 +4676,7 @@ app.get('/auxiliary-police/duty-handover/submit', isAuthenticated, async functio
             dutyHandover.remarks = notes;
             dutyHandover.staff = shiftStaff;
             dutyHandover.status = 'completed';
-            dutyHandover.timestamp = new Date();
+            dutyHandover.timestamp = moment().utcOffset(8).toDate();
 
             await dutyHandover.save();
             console.log('Exisitng handover updated');
@@ -4754,14 +4698,14 @@ app.get('/auxiliary-police/duty-handover/submit', isAuthenticated, async functio
             // Create a new duty handover
             dutyHandover = new DutyHandoverAux({
                 headShift: user.fullname,
-                date: new Date(date),
+                date: moment(date).utcOffset(8).toDate(),
                 location: location,
                 remarks: notes,
                 status: "pending",
                 shift: shift,
                 time: time,
                 staff: shiftStaff,
-                timestamp: new Date()
+                timestamp: moment().utcOffset(8).toDate()
             });
 
             const create = await dutyHandover.save();
@@ -4832,7 +4776,7 @@ app.get('/search-duty-handover', isAuthenticated, async function (req, res) {
     const { location, date, shift, time } = req.query;
 
     let shiftTime;
-    let adjustedDate = new Date(date);
+    let adjustedDate = moment(date).utcOffset(8).toDate();
 
     if (time === '0700') {
         shiftTime = '2300';
@@ -4851,7 +4795,7 @@ app.get('/search-duty-handover', isAuthenticated, async function (req, res) {
 
     const resultsSchedule = await ScheduleAux.findOne({
         location: location,
-        date: new Date(date),
+        date: moment(date).utcOffset(8).toDate(),
         'shift.shiftName': shift
     });
 
@@ -4941,12 +4885,12 @@ app.get('/auxiliary-police/schedule/add', isAuthenticated, async function (req, 
 
             const findSchedule = await ScheduleAux.findOne({
                 location: location,
-                date: new Date(date)
+                date: moment(date).utcOffset(8).toDate()
             });
 
             if (findSchedule) {
                 const updateSchedule = await ScheduleAux.findOneAndUpdate(
-                    { location: location, date: new Date(date) },
+                    { location: location, date: moment(date).utcOffset(8).toDate() },
                     { $set: { shifts: shifts } },
                     { upsert: true }
                 );
@@ -4963,7 +4907,7 @@ app.get('/auxiliary-police/schedule/add', isAuthenticated, async function (req, 
                 }
             } else {
                 const newSchedule = new ScheduleAux({
-                    date: new Date(date),
+                    date: moment(date).utcOffset(8).toDate(),
                     location: location,
                     shift: shifts
                 });
@@ -5081,7 +5025,7 @@ app.get('/auxiliary-police/case/add', isAuthenticated, async function (req, res)
         const newCase = new CaseAux({
             fullname: user.fullname, // You can update this to fetch the actual user fullname if needed
             time: time,
-            date: new Date(date),
+            date: moment(date).utcOffset(8).toDate(),
             location: location,
             summary: eventSummary + '\n' + actionTaken,
             actionTaken: actionTaken,
@@ -5188,10 +5132,8 @@ app.get('/auxiliary-police/patrol/shift-member-location/details/:id', isAuthenti
 
         const shiftMemberCycles = checkReport.shiftMember.cycle;
 
-        const currentTime = new Date().toLocaleTimeString('en-MY', {
-            hour12: false,
-            timeZone: 'Asia/Kuala_Lumpur'
-        });
+        const currentTime = moment.utc().add(8, 'hours').format('HH:mm:ss');
+
         const currentTimeNumeric = parseInt(currentTime.replace(':', ''), 10);
 
         for (const cycle of shiftMemberCycles) {
@@ -5413,7 +5355,7 @@ app.get(
         const checkPatrolUnit = await PatrolAux.findOneAndUpdate(
             {
                 type: 'Patrol Unit',
-                date: new Date(),
+                date: moment().utcOffset(8).toDate(),
                 'patrolUnit.checkpointName': checkpointName
             },
             {
@@ -5481,8 +5423,7 @@ app.get(
             req.params.checkpointName.replace(/-/g, ' ')
         );
 
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        const today = moment().utcOffset(8).startOf('day').toDate();
 
         const kualaLumpurTimeZoneOffset1 = 8; // Kuala Lumpur is UTC+8
         const now1 = moment().utcOffset(kualaLumpurTimeZoneOffset1 * 60); // Convert hours to minutes
@@ -5563,10 +5504,7 @@ app.get(
                     const [startTime, endTime] = timeSlot.split('-');
 
                     // Get the current time in numeric format (e.g., HHmm)
-                    const currentTimeNumeric = new Date().toLocaleTimeString('en-MY', {
-                        hour12: false,
-                        timeZone: 'Asia/Kuala_Lumpur'
-                    });
+                    const currentTimeNumeric = moment.utc().add(8, 'hours').format('HH:mm:ss');
                     const currentTime = parseInt(currentTimeNumeric.replace(':', ''), 10);
 
                     var startNumeric = '';
@@ -5596,10 +5534,7 @@ app.get(
 
                     if (checkpointToUpdate) {
                         // Get the current time in numeric format (e.g., HHmm)
-                        const currentTimeNumeric1 = new Date().toLocaleTimeString('en-MY', {
-                            hour12: false,
-                            timeZone: 'Asia/Kuala_Lumpur'
-                        });
+                        const currentTimeNumeric1 = moment.utc().add(8, 'hours').format('HH:mm:ss')
                         const currentTime1 = parseInt(
                             currentTimeNumeric1.replace(':', ''),
                             10
@@ -5664,26 +5599,16 @@ app.get('/notifications/history', isAuthenticated, async function (req, res) {
         .populate('sender')
         .sort({ timestamp: -1 });
 
-    // find notification based on date
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Set time to the beginning of the day
+    // init day using moment
 
-    const tomorrow = new Date(today);
-    tomorrow.setDate(today.getDate() + 1);
+    const today = moment().utcOffset(8).startOf('day').toDate();
+    const tomorrow = moment(today).add(1, 'days').toDate();
+    const yesterday = moment(today).subtract(1, 'days').toDate();
+    const firstDayOfWeek = moment(today).startOf('isoWeek').toDate();
+    const lastDayOfWeek = moment(today).endOf('isoWeek').toDate();
+    const firstDayOfMonth = moment(today).startOf('month').toDate();
+    const lastDayOfMonth = moment(today).endOf('month').toDate();
 
-    const yesterday = new Date(today);
-    yesterday.setDate(today.getDate() - 1);
-
-    const firstDayOfWeek = new Date(today);
-    firstDayOfWeek.setDate(today.getDate() - today.getDay()); // Set to the first day of the week (Sunday)
-    firstDayOfWeek.setHours(0, 0, 0, 0); // Set time to the beginning of the day
-
-    const lastDayOfWeek = new Date(firstDayOfWeek);
-    lastDayOfWeek.setDate(firstDayOfWeek.getDate() + 6); // Set to the last day of the week (Saturday)
-    lastDayOfWeek.setHours(23, 59, 59, 999);
-
-    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-    const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
 
     const notificationsToday = await Notification.find({
         recipient: user._id,
@@ -5798,7 +5723,7 @@ app.post('/files/upload', isAuthenticated, async (reqFiles, resFiles) => {
         for (const file of Object.values(reqFiles.files)) {
             const upload = __dirname + '/public/uploads/' + file.name;
             const pathUpload = '/uploads/' + file.name;
-            const today = new Date();
+            const today = moment().utcOffset(8).startOf('day').toDate();
             const type = path.extname(file.name);
 
             await file.mv(upload);
@@ -5908,11 +5833,10 @@ app.post('/status-update', isAuthenticated, async (req, res) => {
 app.get('/api/all-attendance/today/all', async function (req, res) {
     try {
         // Get today's date
-        const today = new Date();
-        today.setHours(0, 0, 0, 0); // Set hours, minutes, seconds, and milliseconds to 0 to get the start of the day
+        const today = moment().utcOffset(8).startOf('day').toDate();// Set hours, minutes, seconds, and milliseconds to 0 to get the start of the day
 
         // Get the current time
-        const currentTime = new Date();
+        const currentTime = moment().utcOffset(8);
 
         // Find attendance data for today within the specified time range
         const attendanceData = await Attendance.find({
@@ -5965,7 +5889,7 @@ app.get('/api/all-attendance/today/all', async function (req, res) {
                         // Add other user fields as needed
                     }
                     : null,
-                datetime: formatDateTime(new Date(entry.date.signInTime)),
+                datetime: formatDateTime(moment(entry.date.signInTime).utcOffset(8).toDate()),
                 signInTime: entry.date.signInTime,
                 signOutTime: entry.date.signOutTime,
                 status: entry.status,
@@ -5992,7 +5916,7 @@ app.post('/api/data/all-attendance/today/human-resources', isAuthenticated, asyn
     const user = await User.findOne({ username: username });
 
     // Get today's date
-    const today = moment().startOf('day'); // Start of today in local time
+    const today = moment().startOf('day').toDate(); // Start of today in local time
 
     try {
         // Query attendance records for today
@@ -6001,7 +5925,7 @@ app.post('/api/data/all-attendance/today/human-resources', isAuthenticated, asyn
             {
                 $match: {
                     timestamp: {
-                        $gte: today.toDate(), // Find records where timestamp is greater than or equal to today
+                        $gte: today, // Find records where timestamp is greater than or equal to today
                         $lt: moment().endOf('day').toDate() // Less than end of today
                     }
                 }
@@ -6065,7 +5989,7 @@ app.post('/api/data/all-attendance/today/human-resources', isAuthenticated, asyn
         combinedData.sort((a, b) => {
             if (!a.timestamp) return 1;
             if (!b.timestamp) return -1;
-            return new Date(b.timestamp) - new Date(a.timestamp);
+            return moment(b.timestamp).diff(moment(a.timestamp));
         });
 
         // Filter combinedData based on the search query
@@ -6182,7 +6106,11 @@ app.post('/api/data/all-attendance/per-date/human-resources', isAuthenticated, a
         }).filter(item => item !== null);
 
         // Sort combinedData based on timestamp
-        combinedData.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        combinedData.sort((a, b) => {
+            const dateA = moment(a.timestamp);
+            const dateB = moment(b.timestamp);
+            return dateB - dateA; // Sort in descending order
+        });
 
         // Filter combinedData based on the search query
         const filteredData = combinedData.filter(item => {
@@ -6199,22 +6127,15 @@ app.post('/api/data/all-attendance/per-date/human-resources', isAuthenticated, a
                 regex.test(location) ||
                 regex.test(remarks) ||
                 (signInTime &&
-                    regex.test(
-                        new Date(signInTime).toLocaleTimeString('en-MY', {
-                            hour: 'numeric',
-                            minute: 'numeric',
-                            hour12: true,
-                            timeZone: 'Asia/Kuala_Lumpur'
-                        })
+                    regex.test(moment(signInTime)
+                        .utcOffset(8) // Asia/Kuala_Lumpur timezone (UTC+8)
+                        .format('h:mm A')
                     )) ||
                 (signOutTime &&
                     regex.test(
-                        new Date(signOutTime).toLocaleTimeString('en-MY', {
-                            hour: 'numeric',
-                            minute: 'numeric',
-                            hour12: true,
-                            timeZone: 'Asia/Kuala_Lumpur'
-                        })
+                        moment(signOutTime)
+                            .utcOffset(8) // Asia/Kuala_Lumpur timezone (UTC+8)
+                            .format('h:mm A')
                     ))
             );
         });
@@ -6261,8 +6182,8 @@ app.post('/api/data/all-attendance/per-month/human-resources', isAuthenticated, 
             {
                 $match: {
                     timestamp: {
-                        $gte: new Date(`${year}-${month}-01`),
-                        $lt: new Date(`${year}-${parseInt(month) + 1}-01`)
+                        $gte: moment([year, month - 1]).startOf('month').toDate(),
+                        $lt: moment([year, month]).startOf('month').toDate()
                     }
                 }
             },
@@ -6356,7 +6277,7 @@ app.post('/api/data/all-attendance/today/department-section', isAuthenticated, a
     const user = await User.findOne({ username: username });
 
     // Get today's date
-    const today = moment().startOf('day'); // Start of today in local time
+    const today = moment().startOf('day').toDate(); // Start of today in local time
 
     try {
         // Query attendance records for today
@@ -6365,7 +6286,7 @@ app.post('/api/data/all-attendance/today/department-section', isAuthenticated, a
             {
                 $match: {
                     timestamp: {
-                        $gte: today.toDate(), // Find records where timestamp is greater than or equal to today
+                        $gte: today, // Find records where timestamp is greater than or equal to today
                         $lt: moment().endOf('day').toDate() // Less than end of today
                     }
                 }
@@ -6434,9 +6355,16 @@ app.post('/api/data/all-attendance/today/department-section', isAuthenticated, a
 
         // Sort combinedData based on timestamp, placing users without attendance records at the end
         combinedData.sort((a, b) => {
+            // Check if either timestamp is missing
             if (!a.timestamp) return 1;
             if (!b.timestamp) return -1;
-            return new Date(b.timestamp) - new Date(a.timestamp);
+
+            // Convert timestamps to Moment.js objects
+            const dateA = moment(a.timestamp);
+            const dateB = moment(b.timestamp);
+
+            // Compare Moment.js objects
+            return dateB.diff(dateA);
         });
 
         // Filter combinedData based on the search query
@@ -6557,8 +6485,14 @@ app.post('/api/data/all-attendance/per-date/department-section', isAuthenticated
             };
         }).filter(item => item !== null);
 
-        // Sort combinedData based on timestamp
-        combinedData.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        combinedData.sort((a, b) => {
+            // Convert timestamps to Moment.js objects
+            const dateA = moment(a.timestamp);
+            const dateB = moment(b.timestamp);
+
+            // Compare Moment.js objects in descending order
+            return dateB.diff(dateA);
+        });
 
         // Filter combinedData based on the search query
         const filteredData = combinedData.filter(item => {
@@ -6576,21 +6510,15 @@ app.post('/api/data/all-attendance/per-date/department-section', isAuthenticated
                 regex.test(remarks) ||
                 (signInTime &&
                     regex.test(
-                        new Date(signInTime).toLocaleTimeString('en-MY', {
-                            hour: 'numeric',
-                            minute: 'numeric',
-                            hour12: true,
-                            timeZone: 'Asia/Kuala_Lumpur'
-                        })
+                        moment(signInTime)
+                            .utcOffset(8) // Asia/Kuala_Lumpur timezone (UTC+8)
+                            .format('h:mm A')
                     )) ||
                 (signOutTime &&
                     regex.test(
-                        new Date(signOutTime).toLocaleTimeString('en-MY', {
-                            hour: 'numeric',
-                            minute: 'numeric',
-                            hour12: true,
-                            timeZone: 'Asia/Kuala_Lumpur'
-                        })
+                        moment(signOutTime)
+                            .utcOffset(8) // Asia/Kuala_Lumpur timezone (UTC+8)
+                            .format('h:mm A')
                     ))
             );
         });
@@ -6649,8 +6577,14 @@ app.post('/api/data/all-attendance/per-month/department-section', isAuthenticate
             {
                 $match: {
                     timestamp: {
-                        $gte: new Date(`${year}-${month}-01`),
-                        $lt: new Date(`${year}-${parseInt(month) + 1}-01`)
+                        $gte: moment(`${year}-${month}-01`)
+                            .utcOffset(8) // Apply UTC+8 offset
+                            .startOf('day') // Start of the day (00:00:00)
+                            .toDate(),
+                        $lt: moment(`${year}-${month + 1}-01`)
+                            .utcOffset(8) // Apply UTC+8 offset
+                            .startOf('day') // Start of the day (00:00:00)
+                            .toDate()
                     }
                 }
             },
@@ -6767,7 +6701,7 @@ app.post('/api/qrcode/save-data', async function (req, res) {
     // Save the raw URL in the database
     await QRCode.create({
         uniqueId: qrData,
-        createdAt: new Date()
+        createdAt: moment().utcOffset(8).toDate()
     });
 
     res.status(200).send('QR code data received and saved successfully');
@@ -6800,9 +6734,8 @@ app.post('/api/qrcode/process-data', isAuthenticated, async function (req, res) 
     console.log(location);
 
     if (checkUser) {
-        const now = new Date();
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        const now = moment().utcOffset(8).toDate();
+        const today = moment().utcOffset(8).startOf('day').toDate();
 
         const checkQrCode = await QRCode.findOne({ uniqueId: uniqueIdentifier });
 
@@ -6815,7 +6748,7 @@ app.post('/api/qrcode/process-data', isAuthenticated, async function (req, res) 
                 user: checkUser._id,
                 timestamp: {
                     $gte: today,
-                    $lte: new Date()
+                    $lte: now
                 }
             });
 
@@ -6825,10 +6758,13 @@ app.post('/api/qrcode/process-data', isAuthenticated, async function (req, res) 
                 if (existingAttendance.date.signInTime !== null && existingAttendance.date.signOutTime === null) {
                     // Check for non-office hour users (e.g., night shift)
                     if (checkUser.isNonOfficeHour) {
-                        const startShift = new Date(existingAttendance.signInTime);
-                        const endShift = new Date(startShift);
-                        endShift.setDate(startShift.getDate() + 1);
-                        endShift.setHours(7, 0, 0, 0); // 07:00 of the next day
+                        const startShift = moment(existingAttendance.signInTime).utcOffset(8);
+
+                        // Calculate endShift: one day after startShift, at 07:00 of the next day
+                        const endShift = moment(startShift)
+                            .add(1, 'days') // Add one day
+                            .set({ hour: 7, minute: 0, second: 0, millisecond: 0 }) // Set time to 07:00:00.000
+                            .toDate(); // 07:00 of the next day
 
                         if (now > endShift) {
                             // If current time is past the end shift time, it means it's a sign-out for the previous day's shift
@@ -6887,7 +6823,7 @@ app.post('/api/qrcode/process-data', isAuthenticated, async function (req, res) 
                                 user: checkUser._id,
                                 timestamp: {
                                     $gte: today,
-                                    $lte: new Date()
+                                    $lte: moment().utcOffset(8).toDate()
                                 }
                             },
                             {
@@ -6940,15 +6876,15 @@ app.post('/api/qrcode/process-data', isAuthenticated, async function (req, res) 
                                 user: checkUser._id,
                                 timestamp: {
                                     $gte: today, // Greater than or equal to the start of today
-                                    $lte: new Date() // Less than the current time
+                                    $lte: moment().utcOffset(8).toDate() // Less than the current time
                                 }
                             },
                             {
                                 $set: {
                                     status: 'Present',
                                     type: 'sign in',
-                                    'date.signInTime': new Date(),
-                                    timestamp: new Date(),
+                                    'date.signInTime': moment().utcOffset(8).toDate(),
+                                    timestamp: moment().utcOffset(8).toDate(),
                                     'location.signIn': location
                                 }
                             },
@@ -6957,7 +6893,7 @@ app.post('/api/qrcode/process-data', isAuthenticated, async function (req, res) 
 
                         const tempAttendance = new TempAttendance({
                             user: checkUser._id,
-                            timestamp: new Date(),
+                            timestamp: moment().utcOffset(8).toDate(),
                             type: 'sign in'
                         });
 
@@ -6966,7 +6902,7 @@ app.post('/api/qrcode/process-data', isAuthenticated, async function (req, res) 
                         // activity
                         const activityUser = new Activity({
                             user: checkUser._id,
-                            date: new Date(),
+                            date: moment().utcOffset(8).toDate(),
                             title: 'Sign in for today',
                             type: 'Attendance',
                             description:
@@ -6980,7 +6916,7 @@ app.post('/api/qrcode/process-data', isAuthenticated, async function (req, res) 
 
                         log = 'You have successfully signed in for today, thank you!';
                     } else {
-                        const currentTime = new Date();
+                        const currentTime = moment().utcOffset(8).toDate();
                         const pstTime = currentTime.toLocaleString('en-MY', {
                             timeZone: 'Asia/Kuala_Lumpur',
                             hour12: false
@@ -6998,15 +6934,15 @@ app.post('/api/qrcode/process-data', isAuthenticated, async function (req, res) 
                                     user: checkUser._id,
                                     timestamp: {
                                         $gte: today, // Greater than or equal to the start of today
-                                        $lte: new Date() // Less than the current time
+                                        $lte: moment().utcOffset(8).toDate() // Less than the current time
                                     }
                                 },
                                 {
                                     $set: {
                                         status: 'Late',
                                         type: 'sign in',
-                                        'date.signInTime': new Date(),
-                                        timestamp: new Date(),
+                                        'date.signInTime': moment().utcOffset(8).toDate(),
+                                        timestamp: moment().utcOffset(8).toDate(),
                                         'location.signIn': location
                                     }
                                 },
@@ -7015,7 +6951,7 @@ app.post('/api/qrcode/process-data', isAuthenticated, async function (req, res) 
 
                             const tempAttendance = new TempAttendance({
                                 user: checkUser._id,
-                                timestamp: new Date(),
+                                timestamp: moment().utcOffset(8).toDate(),
                                 type: 'sign in'
                             });
 
@@ -7024,7 +6960,7 @@ app.post('/api/qrcode/process-data', isAuthenticated, async function (req, res) 
                             // activity
                             const activityUser = new Activity({
                                 user: checkUser._id,
-                                date: new Date(),
+                                date: moment().utcOffset(8).toDate(),
                                 title: 'Sign in late for today',
                                 type: 'Attendance',
                                 description:
@@ -7045,15 +6981,15 @@ app.post('/api/qrcode/process-data', isAuthenticated, async function (req, res) 
                                     user: checkUser._id,
                                     timestamp: {
                                         $gte: today, // Greater than or equal to the start of today
-                                        $lte: new Date() // Less than the current time
+                                        $lte: moment().utcOffset(8).toDate() // Less than the current time
                                     }
                                 },
                                 {
                                     $set: {
                                         status: 'Present',
                                         type: 'sign in',
-                                        'date.signInTime': new Date(),
-                                        timestamp: new Date(),
+                                        'date.signInTime': moment().utcOffset(8).toDate(),
+                                        timestamp: moment().utcOffset(8).toDate(),
                                         'location.signIn': location
                                     }
                                 },
@@ -7062,7 +6998,7 @@ app.post('/api/qrcode/process-data', isAuthenticated, async function (req, res) 
 
                             const tempAttendance = new TempAttendance({
                                 user: checkUser._id,
-                                timestamp: new Date(),
+                                timestamp: moment().utcOffset(8).toDate(),
                                 type: 'sign in'
                             });
 
@@ -7071,7 +7007,7 @@ app.post('/api/qrcode/process-data', isAuthenticated, async function (req, res) 
                             // activity
                             const activityUser = new Activity({
                                 user: checkUser._id,
-                                date: new Date(),
+                                date: moment().utcOffset(8).toDate(),
                                 title: 'Sign in for today',
                                 type: 'Attendance',
                                 description:
@@ -7111,13 +7047,12 @@ app.post('/api/qrcode/process-data', isAuthenticated, async function (req, res) 
 
 app.get('/api/qrcode/get-latest', async function (req, res) {
     try {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        const today = moment().utcOffset(8).startOf('day').toDate();
 
         const tempAttendance = await TempAttendance.findOne({
             timestamp: {
                 $gte: today, // Greater than or equal to the start of today
-                $lte: new Date() // Less than the current time
+                $lte: moment().utcOffset(8).toDate // Less than the current time
             }
         })
             .sort({ timestamp: -1 })
@@ -7194,7 +7129,7 @@ app.get('/api/leave/selectedmonth', isAuthenticated, async function (req, res) {
 
             // Retrieve leave records for the selected month
             const leaveRecords = await Leave.find({
-                'date.start': {
+                'timestamp': {
                     $gte: startOfMonth.toDate(),
                     $lt: endOfMonth.toDate()
                 }
@@ -7270,15 +7205,16 @@ app.get('/api/leave/pending-invalid', isAuthenticated, async function (req, res)
     const user = await User.findOne({ username: username });
 
     if (user) {
-        const currentDate = new Date();
-        const sevenDaysAgo = new Date(currentDate);
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+        // Get the current date and seven days ago with UTC+8 offset
+        const currentDate = moment().utcOffset(8).startOf('day');
+        const sevenDaysAgo = moment().utcOffset(8).subtract(7, 'days').startOf('day');
 
         // Assuming 'Leave' is your Mongoose model
         const leaveData = await Leave.find({
             'date.start': {
-                $gte: sevenDaysAgo,
-                $lte: currentDate
+                $gte: sevenDaysAgo.toDate(),
+                $lte: currentDate.toDate()
             }
         }).select('date.start status invalid');
 
@@ -7286,20 +7222,22 @@ app.get('/api/leave/pending-invalid', isAuthenticated, async function (req, res)
         const dateCounts = {};
 
         // Initialize counts for all dates in the range
-        let currentDatePointer = new Date(sevenDaysAgo);
-        while (currentDatePointer <= currentDate) {
-            const formattedDate = currentDatePointer.toISOString().split('T')[0];
+        let currentDatePointer = sevenDaysAgo.clone();
+        while (currentDatePointer.isSameOrBefore(currentDate, 'day')) {
+            const formattedDate = currentDatePointer.format('YYYY-MM-DD');
             dateCounts[formattedDate] = { pending: 0, invalid: 0, percentage: 0 };
-            currentDatePointer.setDate(currentDatePointer.getDate() + 1);
+            currentDatePointer.add(1, 'days');
         }
 
         // Process the retrieved data
         leaveData.forEach(entry => {
-            const formattedDate = entry.date.start.toISOString().split('T')[0];
+            const formattedDate = moment(entry.date.start).utcOffset(8).format('YYYY-MM-DD');
 
             // Update counts for the date
-            dateCounts[formattedDate].pending += entry.status === 'pending' ? 1 : 0;
-            dateCounts[formattedDate].invalid += entry.status === 'invalid' ? 1 : 0;
+            if (dateCounts[formattedDate]) {
+                dateCounts[formattedDate].pending += entry.status === 'pending' ? 1 : 0;
+                dateCounts[formattedDate].invalid += entry.status === 'invalid' ? 1 : 0;
+            }
         });
 
         // Calculate percentage for each date
@@ -7323,57 +7261,39 @@ app.get('/api/leave/pending-invalid', isAuthenticated, async function (req, res)
                 : 0;
         const totalPercentageInvalid = 100 - totalPercentagePending;
 
-        // find previous 7 days
-
-        const fourteenDaysAgo = new Date(currentDate);
-        fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+        // Find previous 7 days
+        const fourteenDaysAgo = sevenDaysAgo.clone().subtract(7, 'days');
 
         const leaveDataPrevious7Days = await Leave.find({
             'date.start': {
-                $gte: fourteenDaysAgo,
-                $lt: sevenDaysAgo
+                $gte: fourteenDaysAgo.toDate(),
+                $lt: sevenDaysAgo.toDate()
             }
         }).select('date.start status invalid');
 
         const dateCountsPrevious7Days = {};
 
-        let currentDatePointerPrevious7Days = new Date(fourteenDaysAgo);
-        while (currentDatePointerPrevious7Days < sevenDaysAgo) {
-            const formattedDate = currentDatePointerPrevious7Days
-                .toISOString()
-                .split('T')[0];
-            dateCountsPrevious7Days[formattedDate] = {
-                pending: 0,
-                invalid: 0,
-                percentage: 0
-            };
-            currentDatePointerPrevious7Days.setDate(
-                currentDatePointerPrevious7Days.getDate() + 1
-            );
+        let currentDatePointerPrevious7Days = fourteenDaysAgo.clone();
+        while (currentDatePointerPrevious7Days.isBefore(sevenDaysAgo, 'day')) {
+            const formattedDate = currentDatePointerPrevious7Days.format('YYYY-MM-DD');
+            dateCountsPrevious7Days[formattedDate] = { pending: 0, invalid: 0, percentage: 0 };
+            currentDatePointerPrevious7Days.add(1, 'days');
         }
 
         leaveDataPrevious7Days.forEach(entry => {
-            const formattedDate = entry.date.start.toISOString().split('T')[0];
+            const formattedDate = moment(entry.date.start).utcOffset(8).format('YYYY-MM-DD');
 
             if (!dateCountsPrevious7Days[formattedDate]) {
-                dateCountsPrevious7Days[formattedDate] = {
-                    pending: 0,
-                    invalid: 0,
-                    percentage: 0
-                };
+                dateCountsPrevious7Days[formattedDate] = { pending: 0, invalid: 0, percentage: 0 };
             }
 
             // Update counts for the date
-            dateCountsPrevious7Days[formattedDate].pending +=
-                entry.status === 'pending' ? 1 : 0;
-            dateCountsPrevious7Days[formattedDate].invalid +=
-                entry.status === 'invalid' ? 1 : 0;
+            dateCountsPrevious7Days[formattedDate].pending += entry.status === 'pending' ? 1 : 0;
+            dateCountsPrevious7Days[formattedDate].invalid += entry.status === 'invalid' ? 1 : 0;
         });
 
         Object.keys(dateCountsPrevious7Days).forEach(date => {
-            const total =
-                dateCountsPrevious7Days[date].pending +
-                dateCountsPrevious7Days[date].invalid;
+            const total = dateCountsPrevious7Days[date].pending + dateCountsPrevious7Days[date].invalid;
             dateCountsPrevious7Days[date].percentage =
                 total > 0 ? (dateCountsPrevious7Days[date].pending / total) * 100 : 0;
         });
@@ -7388,17 +7308,13 @@ app.get('/api/leave/pending-invalid', isAuthenticated, async function (req, res)
 
         const totalPercentagePendingPrevious7Days =
             totalPendingPrevious7Days + totalInvalidPrevious7Days > 0
-                ? (totalPendingPrevious7Days /
-                    (totalPendingPrevious7Days + totalInvalidPrevious7Days)) *
-                100
+                ? (totalPendingPrevious7Days / (totalPendingPrevious7Days + totalInvalidPrevious7Days)) * 100
                 : 0;
 
-        const differencePending =
-            totalPercentagePending - totalPercentagePendingPrevious7Days;
+        const differencePending = totalPercentagePending - totalPercentagePendingPrevious7Days;
 
         const formattedDifferencePending =
-            (differencePending >= 0 ? '+' : '-') +
-            Math.abs(differencePending).toFixed(2);
+            (differencePending >= 0 ? '+' : '-') + Math.abs(differencePending).toFixed(2);
 
         const responseData = {
             dateCounts,
@@ -7409,6 +7325,7 @@ app.get('/api/leave/pending-invalid', isAuthenticated, async function (req, res)
         };
 
         res.json(responseData);
+
     }
 }
 );
@@ -7419,26 +7336,25 @@ app.get('/api/leave/submmitted', isAuthenticated, async function (req, res) {
 
     if (user) {
         try {
-            const currentDate = new Date();
-            const fourteenDaysAgo = new Date(currentDate);
-            fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
 
-            const sevenDaysAgo = new Date(currentDate);
-            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+            // Get the current date with UTC+8 offset
+            const currentDate = moment().utcOffset(8).startOf('day');
+            const fourteenDaysAgo = moment().utcOffset(8).subtract(14, 'days').startOf('day');
+            const sevenDaysAgo = moment().utcOffset(8).subtract(7, 'days').startOf('day');
 
             // Assuming 'Leave' is your Mongoose model
             const leaveDataLast14Days = await Leave.find({
                 timestamp: {
-                    $gte: fourteenDaysAgo,
-                    $lte: sevenDaysAgo
+                    $gte: fourteenDaysAgo.toDate(),
+                    $lte: sevenDaysAgo.toDate()
                 },
                 status: 'submitted'
             });
 
             const leaveDataLast7Days = await Leave.find({
                 timestamp: {
-                    $gte: sevenDaysAgo,
-                    $lte: currentDate
+                    $gte: sevenDaysAgo.toDate(),
+                    $lte: currentDate.toDate()
                 },
                 status: 'submitted'
             });
@@ -7448,49 +7364,39 @@ app.get('/api/leave/submmitted', isAuthenticated, async function (req, res) {
             const submittedCountsLast7Days = {};
 
             // Initialize counts for all dates in the range
-            let currentDatePointerLast14Days = new Date(fourteenDaysAgo);
-            let currentDatePointerLast7Days = new Date(sevenDaysAgo);
+            let currentDatePointerLast14Days = fourteenDaysAgo.clone();
+            let currentDatePointerLast7Days = sevenDaysAgo.clone();
 
-            while (currentDatePointerLast14Days <= currentDate) {
-                const formattedDate = currentDatePointerLast14Days
-                    .toISOString()
-                    .split('T')[0];
+            while (currentDatePointerLast14Days.isSameOrBefore(currentDate, 'day')) {
+                const formattedDate = currentDatePointerLast14Days.format('YYYY-MM-DD');
                 submittedCountsLast14Days[formattedDate] = 0;
-                currentDatePointerLast14Days.setDate(
-                    currentDatePointerLast14Days.getDate() + 1
-                );
+                currentDatePointerLast14Days.add(1, 'days');
             }
 
-            while (currentDatePointerLast7Days <= currentDate) {
-                const formattedDate = currentDatePointerLast7Days
-                    .toISOString()
-                    .split('T')[0];
+            while (currentDatePointerLast7Days.isSameOrBefore(currentDate, 'day')) {
+                const formattedDate = currentDatePointerLast7Days.format('YYYY-MM-DD');
                 submittedCountsLast7Days[formattedDate] = 0;
-                currentDatePointerLast7Days.setDate(
-                    currentDatePointerLast7Days.getDate() + 1
-                );
+                currentDatePointerLast7Days.add(1, 'days');
             }
 
             // Process the retrieved data for the last 14 days
             leaveDataLast14Days.forEach(entry => {
-                // Assuming 'timestamp' is a valid field in your Leave model
-                const formattedDate = new Date(entry.timestamp)
-                    .toISOString()
-                    .split('T')[0];
+                const formattedDate = moment(entry.timestamp).utcOffset(8).format('YYYY-MM-DD');
 
                 // Update submitted counts for the date
-                submittedCountsLast14Days[formattedDate]++;
+                if (submittedCountsLast14Days[formattedDate] !== undefined) {
+                    submittedCountsLast14Days[formattedDate]++;
+                }
             });
 
             // Process the retrieved data for the last 7 days
             leaveDataLast7Days.forEach(entry => {
-                // Assuming 'timestamp' is a valid field in your Leave model
-                const formattedDate = new Date(entry.timestamp)
-                    .toISOString()
-                    .split('T')[0];
+                const formattedDate = moment(entry.timestamp).utcOffset(8).format('YYYY-MM-DD');
 
                 // Update submitted counts for the date
-                submittedCountsLast7Days[formattedDate]++;
+                if (submittedCountsLast7Days[formattedDate] !== undefined) {
+                    submittedCountsLast7Days[formattedDate]++;
+                }
             });
 
             const totalSubmittedLast14Days = leaveDataLast14Days.length;
@@ -7498,15 +7404,12 @@ app.get('/api/leave/submmitted', isAuthenticated, async function (req, res) {
             const totalPercentageLast7 =
                 (totalSubmitted / (totalSubmitted + totalSubmittedLast14Days)) * 100;
             const totalPercentageLast14 =
-                (totalSubmittedLast14Days /
-                    (totalSubmitted + totalSubmittedLast14Days)) *
-                100;
+                (totalSubmittedLast14Days / (totalSubmitted + totalSubmittedLast14Days)) * 100;
             const differencePercentage = totalPercentageLast7 - totalPercentageLast14;
             const formattedDifference =
                 totalSubmitted > 0
-                    ? (differencePercentage >= 0 ? '+' : '-') +
-                    Math.abs(differencePercentage).toFixed(2)
-                    : 0 + '%';
+                    ? (differencePercentage >= 0 ? '+' : '-') + Math.abs(differencePercentage).toFixed(2) + '%'
+                    : '0%';
 
             // Create a single JSON object to send as the response
             const responseDataSubmittedCountsLast7Days = {
@@ -7516,6 +7419,7 @@ app.get('/api/leave/submmitted', isAuthenticated, async function (req, res) {
             };
 
             res.json(responseDataSubmittedCountsLast7Days);
+
         } catch (error) {
             console.error('Error:', error);
             res.status(500).json({ error: 'Internal Server Error' });
@@ -7528,15 +7432,16 @@ app.get('/api/leave/status', isAuthenticated, async function (req, res) {
     const user = await User.findOne({ username: username });
 
     if (user) {
-        const currentDate = new Date();
-        const sevenDaysAgo = new Date(currentDate);
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+        // Get the current date with UTC+8 offset
+        const currentDate = moment().utcOffset(8).startOf('day');
+        const sevenDaysAgo = moment().utcOffset(8).subtract(7, 'days').startOf('day');
 
         // Assuming 'Leave' is your Mongoose model
         const leaveDataLast7Days = await Leave.find({
             timestamp: {
-                $gte: sevenDaysAgo,
-                $lte: currentDate
+                $gte: sevenDaysAgo.toDate(),
+                $lte: currentDate.toDate()
             }
         }).select('status');
 
@@ -7570,16 +7475,11 @@ app.get('/api/leave/status', isAuthenticated, async function (req, res) {
 
         // Calculate percentages
         const totalLeaves = leaveDataLast7Days.length;
-        const percentageSubmitted =
-            totalLeaves > 0 ? ((submittedCount / totalLeaves) * 100).toFixed(0) : 0;
-        const percentagePending =
-            totalLeaves > 0 ? ((pendingCount / totalLeaves) * 100).toFixed(0) : 0;
-        const percentageInvalid =
-            totalLeaves > 0 ? ((invalidCount / totalLeaves) * 100).toFixed(0) : 0;
-        const percentageDenied =
-            totalLeaves > 0 ? ((deniedCount / totalLeaves) * 100).toFixed(0) : 0;
-        const percentageApproved =
-            totalLeaves > 0 ? ((approvedCount / totalLeaves) * 100).toFixed(0) : 0;
+        const percentageSubmitted = totalLeaves > 0 ? ((submittedCount / totalLeaves) * 100).toFixed(0) : 0;
+        const percentagePending = totalLeaves > 0 ? ((pendingCount / totalLeaves) * 100).toFixed(0) : 0;
+        const percentageInvalid = totalLeaves > 0 ? ((invalidCount / totalLeaves) * 100).toFixed(0) : 0;
+        const percentageDenied = totalLeaves > 0 ? ((deniedCount / totalLeaves) * 100).toFixed(0) : 0;
+        const percentageApproved = totalLeaves > 0 ? ((approvedCount / totalLeaves) * 100).toFixed(0) : 0;
 
         // Create a single JSON object to send as the response
         const responseDataLast7Days = {
@@ -7593,6 +7493,7 @@ app.get('/api/leave/status', isAuthenticated, async function (req, res) {
 
         // Respond with the data
         res.json(responseDataLast7Days);
+
     }
 });
 
@@ -7739,10 +7640,15 @@ app.get('/temp', async function (req, res) {
 cron.schedule(
     '0 0 * * *',
     async () => {
-        // Find leave records with date.start timestamp less than or equal to 3 days from now
-        const currentDate = new Date();
+
+        // Get the current date with UTC+8 offset
+        const currentDate = moment().utcOffset(8);
+        const threeDaysAgo = moment().utcOffset(8).subtract(3, 'days');
+        const threeDaysFromNow = moment().utcOffset(8).add(3, 'days');
+
+        // Find invalid leaves
         const invalidLeaves = await Leave.find({
-            timestamp: { $lte: currentDate.setDate(currentDate.getDate() - 3) },
+            timestamp: { $lte: threeDaysAgo.toDate() },
             status: 'pending'
         });
 
@@ -7759,28 +7665,6 @@ cron.schedule(
             // Check if the user is an admin
             if (user.isDeputyChiefExec) {
                 leave.status = 'invalid';
-                leave.approvals = leave.approvals.filter(
-                    approval => approval.role === 'Staff'
-                );
-
-                leave.approvals.push(
-                    {
-                        recipient: chiefExec._id,
-                        role: 'Chief Executive Officer',
-                        status: 'pending',
-                        comment: 'Leave request needs approval',
-                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-                        timestamp: ''
-                    },
-                    {
-                        recipient: adminHR._id,
-                        role: 'Human Resource',
-                        status: 'pending',
-                        comment: 'Leave request needs approval',
-                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                        timestamp: ''
-                    }
-                );
 
                 await leave.save();
             } else {
@@ -7795,7 +7679,7 @@ cron.schedule(
                         role: 'Deputy Chief Executive Officer',
                         status: 'pending',
                         comment: 'Leave request needs approval',
-                        estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                        estimated: moment().utcOffset(8).add(1, 'days').toDate(),
                         timestamp: ''
                     },
                     {
@@ -7803,7 +7687,7 @@ cron.schedule(
                         role: 'Human Resource',
                         status: 'pending',
                         comment: 'Leave request needs approval',
-                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                        estimated: moment().utcOffset(8).add(2, 'days').toDate(),
                         timestamp: ''
                     }
                 );
@@ -7812,8 +7696,9 @@ cron.schedule(
             }
         }
 
+        // Find pending leaves
         const pendingLeaves = await Leave.find({
-            estimated: { $lte: currentDate.setDate(currentDate.getDate() + 3) },
+            estimated: { $lte: threeDaysFromNow.toDate() },
             status: 'submitted'
         });
 
@@ -7825,6 +7710,7 @@ cron.schedule(
 
         console.log('Invalid leaves updated:', invalidLeaves.length);
         console.log('Pending leaves updated:', pendingLeaves.length);
+
     },
     {
         scheduled: true,
@@ -7836,6 +7722,7 @@ cron.schedule(
 cron.schedule(
     '0 * * * *', // Runs every hour
     () => {
+
         store.all((error, sessions) => {
             if (error) {
                 console.error('Error retrieving sessions:', error);
@@ -7845,13 +7732,13 @@ cron.schedule(
             // Iterate through each session
             sessions.forEach(async session => {
                 // Extract relevant session data
-
                 const sessionUser = session.session.passport.user;
 
                 // Check if session has expired
-                const currentTime = Date.now();
-                const sessionExpirationTime = new Date(session.expires).getTime();
-                if (currentTime > sessionExpirationTime) {
+                const currentTime = moment();
+                const sessionExpirationTime = moment(session.expires);
+
+                if (currentTime.isAfter(sessionExpirationTime)) {
                     try {
                         // Set user's isOnline to false
                         await Info.findOneAndUpdate({ sessionUser }, { isOnline: false });
@@ -7861,8 +7748,10 @@ cron.schedule(
                     }
                 }
             });
+
             console.log('Session check complete');
         });
+
     },
     {
         scheduled: true,
@@ -7944,7 +7833,7 @@ cron.schedule(
         const patrolUnitData = {
             reportId: uuidv4(),
             type: 'Patrol Unit',
-            date: new Date(),
+            date: moment().utcOffset(8).toDate(),
             status: 'Open',
             startShift: '08:00',
             endShift: '17:00',
@@ -8062,16 +7951,8 @@ calculateAge = function (birthdate) {
 
 // GET NUMBERS OF DAYS BETWEEN TWO DATES
 calculateBusinessDays = function (startDateString, endDateString) {
-    const start = new Date(startDateString);
-    const end = new Date(endDateString);
-
-    // Convert dates to Malaysia Time (UTC+8)
-    start.setUTCHours(start.getUTCHours() + 8);
-    end.setUTCHours(end.getUTCHours() + 8);
-
-    // Ensure the dates are set to midnight to exclude time from the calculation
-    start.setUTCHours(0, 0, 0, 0);
-    end.setUTCHours(0, 0, 0, 0);
+    const start = moment(startDateString).utcOffset(8).startOf('day').toDate();
+    const end = moment(endDateString).utcOffset(8).startOf('day').toDate();
 
     const defaultPublicHolidays = ['2024-02-16', '2024-05-01', '2024-05-07'];
     const allPublicHolidays = defaultPublicHolidays;
@@ -8097,6 +7978,10 @@ calculateBusinessDays = function (startDateString, endDateString) {
     return count + 1;
 };
 
+const formatDate = function (date) {
+    return moment(date).format('YYYY-MM-DD');
+};
+
 isPublicHoliday = function (date, publicHolidays) {
     const formattedDate = formatDate(date);
 
@@ -8104,16 +7989,12 @@ isPublicHoliday = function (date, publicHolidays) {
 };
 
 isWeekend = function (date) {
-    const dayOfWeek = date.getUTCDay();
+    const dayOfWeek = moment(date).day();
     return dayOfWeek === 0 || dayOfWeek === 6; // 0 = Sunday, 6 = Saturday
 };
 
 setOrCheckTodayHolidayOrWeekend = function () {
-    const today = new Date();
-    // Convert today's date to Malaysia Time (UTC+8)
-    today.setUTCHours(today.getUTCHours() + 8);
-    // Ensure the date is set to midnight to exclude time from the calculation
-    today.setUTCHours(0, 0, 0, 0);
+    const today = moment().utcOffset(8).startOf('day').toDate();
 
     const defaultPublicHolidays = ['2024-06-01', '2024-06-02', '2024-06-03', '2024-06-04', '2024-06-16', '2024-07-07', '2024-07-08', '2024-07-22'
         , '2024-08-31', '2024-09-16', '2024-12-25'
@@ -8127,10 +8008,6 @@ setOrCheckTodayHolidayOrWeekend = function () {
         isHoliday,
         isWeekend: isWeekendDay
     };
-};
-
-formatDate = function (date) {
-    return date.toISOString().split('T')[0];
 };
 
 // GENERATES APPROVALS
@@ -8159,7 +8036,7 @@ generateApprovals = function (
                             role: 'Staff',
                             status: 'submitted',
                             comment: 'Submitted leave request',
-                            timestamp: new Date(),
+                            timestamp: moment().utcOffset(8).toDate(),
                             estimated: ''
                         },
                         {
@@ -8167,7 +8044,7 @@ generateApprovals = function (
                             role: 'Head of Section',
                             status: 'pending',
                             comment: 'Leave request needs approval',
-                            estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                            estimated: moment().utcOffset(8).add(1, 'day').toDate(),
                             timestamp: ''
                         },
                         {
@@ -8175,7 +8052,7 @@ generateApprovals = function (
                             role: 'Human Resource',
                             status: 'pending',
                             comment: 'Leave request needs to be reviewed',
-                            estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                            estimated: moment().utcOffset(8).add(2, 'days').toDate(),
                             timestamp: ''
                         }
                     ];
@@ -8186,7 +8063,7 @@ generateApprovals = function (
                             role: 'Staff',
                             status: 'submitted',
                             comment: 'Submitted leave request',
-                            timestamp: new Date(),
+                            timestamp: moment().utcOffset(8).toDate(),
                             estimated: ''
                         },
                         {
@@ -8194,7 +8071,7 @@ generateApprovals = function (
                             role: 'Human Resource',
                             status: 'pending',
                             comment: 'Leave request needs to be reviewed',
-                            estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+                            estimated: moment().utcOffset(8).add(3, 'days').toDate(),
                             timestamp: ''
                         }
                     ];
@@ -8206,7 +8083,7 @@ generateApprovals = function (
                         role: 'Staff',
                         status: 'submitted',
                         comment: 'Submitted leave request',
-                        timestamp: new Date(),
+                        timestamp: moment().utcOffset(8).toDate(),
                         estimated: ''
                     },
                     ...(assignee && assignee.length > 0
@@ -8215,7 +8092,7 @@ generateApprovals = function (
                             role: 'Relief Staff',
                             status: 'pending',
                             comment: `Relief Staff for leave by ${assigneeItem.fullname}`,
-                            estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                            estimated: moment().utcOffset(8).add(1, 'day').toDate(),
                             timestamp: ''
                         }))
                         : []),
@@ -8224,7 +8101,7 @@ generateApprovals = function (
                         role: 'Deputy Chief Executive Officer',
                         status: 'pending',
                         comment: 'Leave request needs approval',
-                        estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+                        estimated: moment().utcOffset(8).add(3, 'days').toDate(),
                         timestamp: ''
                     },
                     {
@@ -8232,7 +8109,7 @@ generateApprovals = function (
                         role: 'Human Resource',
                         status: 'pending',
                         comment: 'Leave request needs to be reviewed',
-                        estimated: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
+                        estimated: moment().utcOffset(8).add(3, 'days').toDate(),
                         timestamp: ''
                     }
                 ];
@@ -8243,7 +8120,7 @@ generateApprovals = function (
                         role: 'Staff',
                         status: 'submitted',
                         comment: 'Submitted leave request',
-                        timestamp: new Date(),
+                        timestamp: moment().utcOffset(8).toDate(),
                         estimated: ''
                     },
                     ...(assignee && assignee.length > 0
@@ -8252,7 +8129,7 @@ generateApprovals = function (
                             role: 'Relief Staff',
                             status: 'pending',
                             comment: `Relief Staff for leave by ${assigneeItem.fullname}`,
-                            estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                            estimated: moment().utcOffset(8).add(1, 'day').toDate(),
                             timestamp: ''
                         }))
                         : []),
@@ -8261,7 +8138,7 @@ generateApprovals = function (
                         role: 'Chief Executive Officer',
                         status: 'pending',
                         comment: 'Leave request needs approval',
-                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                        estimated: moment().utcOffset(8).add(2, 'days').toDate(),
                         timestamp: ''
                     },
                     {
@@ -8269,7 +8146,7 @@ generateApprovals = function (
                         role: 'Human Resource',
                         status: 'pending',
                         comment: 'Leave request needs to be reviewed',
-                        estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+                        estimated: moment().utcOffset(8).add(3, 'days').toDate(),
                         timestamp: ''
                     }
                 ];
@@ -8281,7 +8158,7 @@ generateApprovals = function (
                             role: 'Staff',
                             status: 'submitted',
                             comment: 'Submitted leave request',
-                            timestamp: new Date(),
+                            timestamp: moment().utcOffset(8).toDate(),
                             estimated: ''
                         },
                         {
@@ -8289,7 +8166,7 @@ generateApprovals = function (
                             role: 'Head of Section',
                             status: 'pending',
                             comment: 'Leave request needs approval',
-                            estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                            estimated: moment().utcOffset(8).add(1, 'day').toDate(),
                             timestamp: ''
                         },
                         {
@@ -8297,7 +8174,7 @@ generateApprovals = function (
                             role: 'Human Resource',
                             status: 'pending',
                             comment: 'Leave request needs to be reviewed',
-                            estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+                            estimated: moment().utcOffset(8).add(3, 'days').toDate(),
                             timestamp: ''
                         }
                     ];
@@ -8308,7 +8185,7 @@ generateApprovals = function (
                             role: 'Staff',
                             status: 'submitted',
                             comment: 'Submitted leave request',
-                            timestamp: new Date(),
+                            timestamp: moment().utcOffset(8).toDate(),
                             estimated: ''
                         },
                         {
@@ -8316,7 +8193,7 @@ generateApprovals = function (
                             role: 'Human Resource',
                             status: 'pending',
                             comment: 'Leave request needs to be reviewed',
-                            estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+                            estimated: moment().utcOffset(8).add(3, 'days').toDate(),
                             timestamp: ''
                         }
                     ];
@@ -8331,7 +8208,7 @@ generateApprovals = function (
                             role: 'Staff',
                             status: 'submitted',
                             comment: 'Submitted leave request',
-                            timestamp: new Date(),
+                            timestamp: moment().utcOffset(8).toDate(),
                             estimated: ''
                         },
                         {
@@ -8339,7 +8216,7 @@ generateApprovals = function (
                             role: 'Head of Section',
                             status: 'pending',
                             comment: 'Leave request needs approval',
-                            estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                            estimated: moment().utcOffset(8).add(1, 'day').toDate(),
                             timestamp: ''
                         },
                         {
@@ -8347,7 +8224,7 @@ generateApprovals = function (
                             role: 'Head of Department',
                             status: 'pending',
                             comment: 'Leave request needs approval',
-                            estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                            estimated: moment().utcOffset(8).add(1, 'day').toDate(),
                             timestamp: ''
                         },
                         {
@@ -8355,7 +8232,7 @@ generateApprovals = function (
                             role: 'Human Resource',
                             status: 'pending',
                             comment: 'Leave request needs to be reviewed',
-                            estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                            estimated: moment().utcOffset(8).add(2, 'days').toDate(),
                             timestamp: ''
                         }
                     ];
@@ -8366,7 +8243,7 @@ generateApprovals = function (
                             role: 'Staff',
                             status: 'submitted',
                             comment: 'Submitted leave request',
-                            timestamp: new Date(),
+                            timestamp: moment().utcOffset(8).toDate(),
                             estimated: ''
                         },
                         {
@@ -8374,7 +8251,7 @@ generateApprovals = function (
                             role: 'Head of Department',
                             status: 'pending',
                             comment: 'Leave request needs approval',
-                            estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                            estimated: moment().utcOffset(8).add(2, 'days').toDate(),
                             timestamp: ''
                         },
                         {
@@ -8382,7 +8259,7 @@ generateApprovals = function (
                             role: 'Human Resource',
                             status: 'pending',
                             comment: 'Leave request needs to be reviewed',
-                            estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+                            estimated: moment().utcOffset(8).add(3, 'days').toDate(),
                             timestamp: ''
                         }
                     ];
@@ -8394,7 +8271,7 @@ generateApprovals = function (
                         role: 'Staff',
                         status: 'submitted',
                         comment: 'Submitted leave request',
-                        timestamp: new Date(),
+                        timestamp: moment().utcOffset(8).toDate(),
                         estimated: ''
                     },
                     {
@@ -8402,7 +8279,7 @@ generateApprovals = function (
                         role: 'Head of Department',
                         status: 'pending',
                         comment: 'Leave request needs approval',
-                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                        estimated: moment().utcOffset(8).add(2, 'days').toDate(),
                         timestamp: ''
                     },
                     {
@@ -8410,7 +8287,7 @@ generateApprovals = function (
                         role: 'Deputy Chief Executive Officer',
                         status: 'pending',
                         comment: 'Leave request needs approval',
-                        estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+                        estimated: moment().utcOffset(8).add(3, 'days').toDate(),
                         timestamp: ''
                     },
                     {
@@ -8418,7 +8295,7 @@ generateApprovals = function (
                         role: 'Human Resource',
                         status: 'pending',
                         comment: 'Leave request needs to be reviewed',
-                        estimated: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
+                        estimated: moment().utcOffset(8).add(3, 'days').toDate(),
                         timestamp: ''
                     }
                 ];
@@ -8429,7 +8306,7 @@ generateApprovals = function (
                         role: 'Staff',
                         status: 'submitted',
                         comment: 'Submitted leave request',
-                        timestamp: new Date(),
+                        timestamp: moment().utcOffset(8).toDate(),
                         estimated: ''
                     },
                     {
@@ -8437,7 +8314,7 @@ generateApprovals = function (
                         role: 'Deputy Chief Executive Officer',
                         status: 'pending',
                         comment: 'Leave request needs approval',
-                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                        estimated: moment().utcOffset(8).add(2, 'days').toDate(),
                         timestamp: ''
                     },
                     {
@@ -8445,7 +8322,7 @@ generateApprovals = function (
                         role: 'Chief Executive Officer',
                         status: 'pending',
                         comment: 'Leave request needs approval',
-                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                        estimated: moment().utcOffset(8).add(2, 'days').toDate(),
                         timestamp: ''
                     },
                     {
@@ -8453,7 +8330,7 @@ generateApprovals = function (
                         role: 'Human Resource',
                         status: 'pending',
                         comment: 'Leave request needs to be reviewed',
-                        estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+                        estimated: moment().utcOffset(8).add(3, 'days').toDate(),
                         timestamp: ''
                     }
                 ];
@@ -8464,7 +8341,7 @@ generateApprovals = function (
                         role: 'Staff',
                         status: 'submitted',
                         comment: 'Submitted leave request',
-                        timestamp: new Date(),
+                        timestamp: moment().utcOffset(8).toDate(),
                         estimated: ''
                     },
                     {
@@ -8472,7 +8349,7 @@ generateApprovals = function (
                         role: 'Chief Executive Officer',
                         status: 'pending',
                         comment: 'Leave request needs approval',
-                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                        estimated: moment().utcOffset(8).add(2, 'days').toDate(),
                         timestamp: ''
                     },
                     {
@@ -8480,7 +8357,7 @@ generateApprovals = function (
                         role: 'Human Resource',
                         status: 'pending',
                         comment: 'Leave request needs to be reviewed',
-                        estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+                        estimated: moment().utcOffset(8).add(3, 'days').toDate(),
                         timestamp: ''
                     }
                 ];
@@ -8492,7 +8369,7 @@ generateApprovals = function (
                             role: 'Staff',
                             status: 'submitted',
                             comment: 'Submitted leave request',
-                            timestamp: new Date(),
+                            timestamp: moment().utcOffset(8).toDate(),
                             estimated: ''
                         },
                         {
@@ -8500,7 +8377,7 @@ generateApprovals = function (
                             role: 'Head of Section',
                             status: 'pending',
                             comment: 'Leave request needs approval',
-                            estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                            estimated: moment().utcOffset(8).add(1, 'day').toDate(),
                             timestamp: ''
                         },
                         {
@@ -8508,7 +8385,7 @@ generateApprovals = function (
                             role: 'Head of Department',
                             status: 'pending',
                             comment: 'Leave request needs approval',
-                            estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                            estimated: moment().utcOffset(8).add(2, 'days').toDate(),
                             timestamp: ''
                         },
                         {
@@ -8516,7 +8393,7 @@ generateApprovals = function (
                             role: 'Human Resource',
                             status: 'pending',
                             comment: 'Leave request needs to be reviewed',
-                            estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+                            estimated: moment().utcOffset(8).add(3, 'days').toDate(),
                             timestamp: ''
                         }
                     ];
@@ -8527,7 +8404,7 @@ generateApprovals = function (
                             role: 'Staff',
                             status: 'submitted',
                             comment: 'Submitted leave request',
-                            timestamp: new Date(),
+                            timestamp: moment().utcOffset(8).toDate(),
                             estimated: ''
                         },
                         {
@@ -8535,7 +8412,7 @@ generateApprovals = function (
                             role: 'Head of Department',
                             status: 'pending',
                             comment: 'Leave request needs approval',
-                            estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                            estimated: moment().utcOffset(8).add(2, 'days').toDate(),
                             timestamp: ''
                         },
                         {
@@ -8543,7 +8420,7 @@ generateApprovals = function (
                             role: 'Human Resource',
                             status: 'pending',
                             comment: 'Leave request needs to be reviewed',
-                            estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+                            estimated: moment().utcOffset(8).add(3, 'days').toDate(),
                             timestamp: ''
                         }
                     ];
@@ -8563,7 +8440,7 @@ generateApprovals = function (
                             role: 'Staff',
                             status: 'submitted',
                             comment: 'Submitted leave request',
-                            timestamp: new Date(),
+                            timestamp: moment().utcOffset(8).toDate(),
                             estimated: ''
                         },
                         ...(assignee && assignee.length > 0
@@ -8572,7 +8449,7 @@ generateApprovals = function (
                                 role: 'Relief Staff',
                                 status: 'pending',
                                 comment: `Relief Staff for leave by ${assigneeItem.fullname}`,
-                                estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                                estimated: moment().utcOffset(8).add(1, 'day').toDate(),
                                 timestamp: ''
                             }))
                             : []),
@@ -8581,7 +8458,7 @@ generateApprovals = function (
                             role: 'Head of Section',
                             status: 'pending',
                             comment: 'Leave request needs approval',
-                            estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                            estimated: moment().utcOffset(8).add(1, 'day').toDate(),
                             timestamp: ''
                         },
                         {
@@ -8589,7 +8466,7 @@ generateApprovals = function (
                             role: 'Human Resource',
                             status: 'pending',
                             comment: 'Leave request needs to be reviewed',
-                            estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                            estimated: moment().utcOffset(8).add(2, 'days').toDate(),
                             timestamp: ''
                         }
                     ];
@@ -8600,7 +8477,7 @@ generateApprovals = function (
                             role: 'Staff',
                             status: 'submitted',
                             comment: 'Submitted leave request',
-                            timestamp: new Date(),
+                            timestamp: moment().utcOffset(8).toDate(),
                             estimated: ''
                         },
                         ...(assignee && assignee.length > 0
@@ -8609,7 +8486,7 @@ generateApprovals = function (
                                 role: 'Relief Staff',
                                 status: 'pending',
                                 comment: `Relief Staff for leave by ${assigneeItem.fullname}`,
-                                estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                                estimated: moment().utcOffset(8).add(1, 'day').toDate(),
                                 timestamp: ''
                             }))
                             : []),
@@ -8618,7 +8495,7 @@ generateApprovals = function (
                             role: 'Human Resource',
                             status: 'pending',
                             comment: 'Leave request needs to be reviewed',
-                            estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+                            estimated: moment().utcOffset(8).add(3, 'days').toDate(),
                             timestamp: ''
                         }
                     ];
@@ -8630,7 +8507,7 @@ generateApprovals = function (
                         role: 'Staff',
                         status: 'submitted',
                         comment: 'Submitted leave request',
-                        timestamp: new Date(),
+                        timestamp: moment().utcOffset(8).toDate(),
                         estimated: ''
                     },
                     ...(assignee && assignee.length > 0
@@ -8639,7 +8516,7 @@ generateApprovals = function (
                             role: 'Relief Staff',
                             status: 'pending',
                             comment: `Relief Staff for leave by ${assigneeItem.fullname}`,
-                            estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                            estimated: moment().utcOffset(8).add(1, 'day').toDate(),
                             timestamp: ''
                         }))
                         : []),
@@ -8648,7 +8525,7 @@ generateApprovals = function (
                         role: 'Deputy Chief Executive Officer',
                         status: 'pending',
                         comment: 'Leave request needs approval',
-                        estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+                        estimated: moment().utcOffset(8).add(3, 'days').toDate(),
                         timestamp: ''
                     },
                     {
@@ -8656,7 +8533,7 @@ generateApprovals = function (
                         role: 'Human Resource',
                         status: 'pending',
                         comment: 'Leave request needs to be reviewed',
-                        estimated: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
+                        estimated: moment().utcOffset(8).add(3, 'days').toDate(),
                         timestamp: ''
                     }
                 ];
@@ -8667,7 +8544,7 @@ generateApprovals = function (
                         role: 'Staff',
                         status: 'submitted',
                         comment: 'Submitted leave request',
-                        timestamp: new Date(),
+                        timestamp: moment().utcOffset(8).toDate(),
                         estimated: ''
                     },
                     ...(assignee && assignee.length > 0
@@ -8676,7 +8553,7 @@ generateApprovals = function (
                             role: 'Relief Staff',
                             status: 'pending',
                             comment: `Relief Staff for leave by ${assigneeItem.fullname}`,
-                            estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                            estimated: moment().utcOffset(8).add(1, 'day').toDate(),
                             timestamp: ''
                         }))
                         : []),
@@ -8685,7 +8562,7 @@ generateApprovals = function (
                         role: 'Chief Executive Officer',
                         status: 'pending',
                         comment: 'Leave request needs approval',
-                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                        estimated: moment().utcOffset(8).add(2, 'days').toDate(),
                         timestamp: ''
                     },
                     {
@@ -8693,7 +8570,7 @@ generateApprovals = function (
                         role: 'Human Resource',
                         status: 'pending',
                         comment: 'Leave request needs to be reviewed',
-                        estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+                        estimated: moment().utcOffset(8).add(3, 'days').toDate(),
                         timestamp: ''
                     }
                 ];
@@ -8705,7 +8582,7 @@ generateApprovals = function (
                             role: 'Staff',
                             status: 'submitted',
                             comment: 'Submitted leave request',
-                            timestamp: new Date(),
+                            timestamp: moment().utcOffset(8).toDate(),
                             estimated: ''
                         },
                         ...(assignee && assignee.length > 0
@@ -8714,7 +8591,7 @@ generateApprovals = function (
                                 role: 'Relief Staff',
                                 status: 'pending',
                                 comment: `Relief Staff for leave by ${assigneeItem.fullname}`,
-                                estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                                estimated: moment().utcOffset(8).add(1, 'day').toDate(),
                                 timestamp: ''
                             }))
                             : []),
@@ -8723,7 +8600,7 @@ generateApprovals = function (
                             role: 'Head of Section',
                             status: 'pending',
                             comment: 'Leave request needs approval',
-                            estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                            estimated: moment().utcOffset(8).add(1, 'day').toDate(),
                             timestamp: ''
                         },
                         {
@@ -8731,7 +8608,7 @@ generateApprovals = function (
                             role: 'Human Resource',
                             status: 'pending',
                             comment: 'Leave request needs to be reviewed',
-                            estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+                            estimated: moment().utcOffset(8).add(3, 'day').toDate(),
                             timestamp: ''
                         }
                     ];
@@ -8742,7 +8619,7 @@ generateApprovals = function (
                             role: 'Staff',
                             status: 'submitted',
                             comment: 'Submitted leave request',
-                            timestamp: new Date(),
+                            timestamp: moment().utcOffset(8).toDate(),
                             estimated: ''
                         },
                         ...(assignee && assignee.length > 0
@@ -8751,7 +8628,7 @@ generateApprovals = function (
                                 role: 'Relief Staff',
                                 status: 'pending',
                                 comment: `Relief Staff for leave by ${assigneeItem.fullname}`,
-                                estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                                estimated: moment().utcOffset(8).add(1, 'day').toDate(),
                                 timestamp: ''
                             }))
                             : []),
@@ -8760,7 +8637,7 @@ generateApprovals = function (
                             role: 'Human Resource',
                             status: 'pending',
                             comment: 'Leave request needs to be reviewed',
-                            estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+                            estimated: moment().utcOffset(8).add(3, 'days').toDate(),
                             timestamp: ''
                         }
                     ];
@@ -8775,7 +8652,7 @@ generateApprovals = function (
                             role: 'Staff',
                             status: 'submitted',
                             comment: 'Submitted leave request',
-                            timestamp: new Date(),
+                            timestamp: moment().utcOffset(8).toDate(),
                             estimated: ''
                         },
                         ...(assignee && assignee.length > 0
@@ -8784,7 +8661,7 @@ generateApprovals = function (
                                 role: 'Relief Staff',
                                 status: 'pending',
                                 comment: `Relief Staff for leave by ${assigneeItem.fullname}`,
-                                estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                                estimated: moment().utcOffset(8).add(1, 'day').toDate(),
                                 timestamp: ''
                             }))
                             : []),
@@ -8793,7 +8670,7 @@ generateApprovals = function (
                             role: 'Head of Section',
                             status: 'pending',
                             comment: 'Leave request needs approval',
-                            estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                            estimated: moment().utcOffset(8).add(1, 'day').toDate(),
                             timestamp: ''
                         },
                         {
@@ -8801,7 +8678,7 @@ generateApprovals = function (
                             role: 'Head of Department',
                             status: 'pending',
                             comment: 'Leave request needs approval',
-                            estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                            estimated: moment().utcOffset(8).add(1, 'day').toDate(),
                             timestamp: ''
                         },
                         {
@@ -8809,7 +8686,7 @@ generateApprovals = function (
                             role: 'Human Resource',
                             status: 'pending',
                             comment: 'Leave request needs to be reviewed',
-                            estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                            estimated: moment().utcOffset(8).add(2, 'days').toDate(),
                             timestamp: ''
                         }
                     ];
@@ -8820,7 +8697,7 @@ generateApprovals = function (
                             role: 'Staff',
                             status: 'submitted',
                             comment: 'Submitted leave request',
-                            timestamp: new Date(),
+                            timestamp: moment().utcOffset(8).add(1, 'day').toDate(),
                             estimated: ''
                         },
                         ...(assignee && assignee.length > 0
@@ -8829,7 +8706,7 @@ generateApprovals = function (
                                 role: 'Relief Staff',
                                 status: 'pending',
                                 comment: `Relief Staff for leave by ${assigneeItem.fullname}`,
-                                estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                                estimated: moment().utcOffset(8).add(1, 'day').toDate(),
                                 timestamp: ''
                             }))
                             : []),
@@ -8838,7 +8715,7 @@ generateApprovals = function (
                             role: 'Head of Department',
                             status: 'pending',
                             comment: 'Leave request needs approval',
-                            estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                            estimated: moment().utcOffset(8).add(2, 'days').toDate(),
                             timestamp: ''
                         },
                         {
@@ -8846,7 +8723,7 @@ generateApprovals = function (
                             role: 'Human Resource',
                             status: 'pending',
                             comment: 'Leave request needs to be reviewed',
-                            estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+                            estimated: moment().utcOffset(8).add(3, 'days').toDate(),
                             timestamp: ''
                         }
                     ];
@@ -8858,7 +8735,7 @@ generateApprovals = function (
                         role: 'Staff',
                         status: 'submitted',
                         comment: 'Submitted leave request',
-                        timestamp: new Date(),
+                        timestamp: moment().utcOffset(8).toDate(),
                         estimated: ''
                     },
                     ...(assignee && assignee.length > 0
@@ -8867,7 +8744,7 @@ generateApprovals = function (
                             role: 'Relief Staff',
                             status: 'pending',
                             comment: `Relief Staff for leave by ${assigneeItem.fullname}`,
-                            estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                            estimated: moment().utcOffset(8).add(1, 'day').toDate(),
                             timestamp: ''
                         }))
                         : []),
@@ -8876,7 +8753,7 @@ generateApprovals = function (
                         role: 'Head of Department',
                         status: 'pending',
                         comment: 'Leave request needs approval',
-                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                        estimated: moment().utcOffset(8).add(2, 'days').toDate(),
                         timestamp: ''
                     },
                     {
@@ -8884,7 +8761,7 @@ generateApprovals = function (
                         role: 'Deputy Chief Executive Officer',
                         status: 'pending',
                         comment: 'Leave request needs approval',
-                        estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+                        estimated: moment().utcOffset(8).add(3, 'days').toDate(),
                         timestamp: ''
                     },
                     {
@@ -8892,7 +8769,7 @@ generateApprovals = function (
                         role: 'Human Resource',
                         status: 'pending',
                         comment: 'Leave request needs to be reviewed',
-                        estimated: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
+                        estimated: moment().utcOffset(8).add(3, 'days').toDate(),
                         timestamp: ''
                     }
                 ];
@@ -8903,7 +8780,7 @@ generateApprovals = function (
                         role: 'Staff',
                         status: 'submitted',
                         comment: 'Submitted leave request',
-                        timestamp: new Date(),
+                        timestamp: moment().utcOffset(8).toDate(),
                         estimated: ''
                     },
                     ...(assignee && assignee.length > 0
@@ -8912,7 +8789,7 @@ generateApprovals = function (
                             role: 'Relief Staff',
                             status: 'pending',
                             comment: `Relief Staff for leave by ${assigneeItem.fullname}`,
-                            estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                            estimated: moment().utcOffset(8).add(1, 'day').toDate(),
                             timestamp: ''
                         }))
                         : []),
@@ -8921,7 +8798,7 @@ generateApprovals = function (
                         role: 'Deputy Chief Executive Officer',
                         status: 'pending',
                         comment: 'Leave request needs approval',
-                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                        estimated: moment().utcOffset(8).add(2, 'days').toDate(),
                         timestamp: ''
                     },
                     {
@@ -8929,7 +8806,7 @@ generateApprovals = function (
                         role: 'Chief Executive Officer',
                         status: 'pending',
                         comment: 'Leave request needs approval',
-                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                        estimated: moment().utcOffset(8).add(3, 'days').toDate(),
                         timestamp: ''
                     },
                     {
@@ -8937,7 +8814,7 @@ generateApprovals = function (
                         role: 'Human Resource',
                         status: 'pending',
                         comment: 'Leave request needs to be reviewed',
-                        estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+                        estimated: moment().utcOffset(8).add(3, 'days').toDate(),
                         timestamp: ''
                     }
                 ];
@@ -8948,7 +8825,7 @@ generateApprovals = function (
                         role: 'Staff',
                         status: 'submitted',
                         comment: 'Submitted leave request',
-                        timestamp: new Date(),
+                        timestamp: moment().utcOffset(8).toDate(),
                         estimated: ''
                     },
                     ...(assignee && assignee.length > 0
@@ -8957,7 +8834,7 @@ generateApprovals = function (
                             role: 'Relief Staff',
                             status: 'pending',
                             comment: `Relief Staff for leave by ${assigneeItem.fullname}`,
-                            estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                            estimated: moment().utcOffset(8).add(1, 'day').toDate(),
                             timestamp: ''
                         }))
                         : []),
@@ -8966,7 +8843,7 @@ generateApprovals = function (
                         role: 'Chief Executive Officer',
                         status: 'pending',
                         comment: 'Leave request needs approval',
-                        estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                        estimated: moment().utcOffset(8).add(2, 'days').toDate(),
                         timestamp: ''
                     },
                     {
@@ -8974,7 +8851,7 @@ generateApprovals = function (
                         role: 'Human Resource',
                         status: 'pending',
                         comment: 'Leave request needs to be reviewed',
-                        estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+                        estimated: moment().utcOffset(8).add(3, 'days').toDate(),
                         timestamp: ''
                     }
                 ];
@@ -8986,7 +8863,7 @@ generateApprovals = function (
                             role: 'Staff',
                             status: 'submitted',
                             comment: 'Submitted leave request',
-                            timestamp: new Date(),
+                            timestamp: moment().utcOffset(8).toDate(),
                             estimated: ''
                         },
                         ...(assignee && assignee.length > 0
@@ -8995,7 +8872,7 @@ generateApprovals = function (
                                 role: 'Relief Staff',
                                 status: 'pending',
                                 comment: `Relief Staff for leave by ${assigneeItem.fullname}`,
-                                estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                                estimated: moment().utcOffset(8).add(1, 'day').toDate(),
                                 timestamp: ''
                             }))
                             : []),
@@ -9004,7 +8881,7 @@ generateApprovals = function (
                             role: 'Head of Section',
                             status: 'pending',
                             comment: 'Leave request needs approval',
-                            estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                            estimated: moment().utcOffset(8).add(1, 'day').toDate(),
                             timestamp: ''
                         },
                         {
@@ -9012,7 +8889,7 @@ generateApprovals = function (
                             role: 'Head of Department',
                             status: 'pending',
                             comment: 'Leave request needs approval',
-                            estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                            estimated: moment().utcOffset(8).add(2, 'days').toDate(),
                             timestamp: ''
                         },
                         {
@@ -9020,7 +8897,7 @@ generateApprovals = function (
                             role: 'Human Resource',
                             status: 'pending',
                             comment: 'Leave request needs to be reviewed',
-                            estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+                            estimated: moment().utcOffset(8).add(3, 'days').toDate(),
                             timestamp: ''
                         }
                     ];
@@ -9031,7 +8908,7 @@ generateApprovals = function (
                             role: 'Staff',
                             status: 'submitted',
                             comment: 'Submitted leave request',
-                            timestamp: new Date(),
+                            timestamp: moment().utcOffset(8).toDate(),
                             estimated: ''
                         },
                         ...(assignee && assignee.length > 0
@@ -9040,7 +8917,7 @@ generateApprovals = function (
                                 role: 'Relief Staff',
                                 status: 'pending',
                                 comment: `Relief Staff for leave by ${assigneeItem.fullname}`,
-                                estimated: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+                                estimated: moment().utcOffset(8).add(1, 'day').toDate(),
                                 timestamp: ''
                             }))
                             : []),
@@ -9049,7 +8926,7 @@ generateApprovals = function (
                             role: 'Head of Department',
                             status: 'pending',
                             comment: 'Leave request needs approval',
-                            estimated: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                            estimated: moment().utcOffset(8).add(2, 'days').toDate(),
                             timestamp: ''
                         },
                         {
@@ -9057,7 +8934,7 @@ generateApprovals = function (
                             role: 'Human Resource',
                             status: 'pending',
                             comment: 'Leave request needs to be reviewed',
-                            estimated: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+                            estimated: moment().utcOffset(8).add(3, 'days').toDate(),
                             timestamp: ''
                         }
                     ];
@@ -9071,18 +8948,16 @@ generateApprovals = function (
 
 // CHECK DATE TODAY BETWEEN TWO DATES IN RANGE
 isDateInRange = function (startDate, endDate) {
-    const currentDate = new Date();
 
-    // Convert start and end dates to Date objects
-    const startDateObj = new Date(startDate);
-    const endDateObj = new Date(endDate);
+    // Initialize current time with UTC offset +8 (if required)
+    const currentDate = moment().utcOffset(8);
 
-    // Set time component to 00:00:00 for both start and end dates
-    startDateObj.setHours(0, 0, 0, 0);
-    endDateObj.setHours(23, 59, 59, 999);
+    // Convert start and end dates to Moment.js objects
+    const startDateObj = moment(startDate).utcOffset(8).startOf('day');
+    const endDateObj = moment(endDate).utcOffset(8).endOf('day');
 
     // Check if the current date is between the start and end dates
-    return startDateObj <= currentDate && currentDate <= endDateObj;
+    return startDateObj.isSameOrBefore(currentDate) && currentDate.isSameOrBefore(endDateObj);
 };
 
 // Function to generate a unique identifier (replace this with your own logic)
@@ -9097,23 +8972,9 @@ const generateUniqueIdentifier = () => {
 // Function to update attendance
 const updateAttendanceEndOfDays = async () => {
     try {
-        const now = new Date();
-        const todayStart = new Date(
-            now.getFullYear(),
-            now.getMonth(),
-            now.getDate(),
-            0,
-            0,
-            0
-        );
-        const todayEnd = new Date(
-            now.getFullYear(),
-            now.getMonth(),
-            now.getDate(),
-            23,
-            59,
-            59
-        );
+        const now = moment().utcOffset(8);
+        const todayStart = now.clone().startOf('day').toDate();
+        const todayEnd = now.clone().endOf('day').toDate();
 
         // Find all attendance records for today with signOutTime as null
         const attendanceRecords = await Attendance.find({
@@ -9136,8 +8997,7 @@ const updateAttendanceEndOfDays = async () => {
 // Function to check leave on attendance
 const updateAttendanceForApprovedLeaves = async () => {
     try {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        const today = moment().utcOffset(8).startOf('day').toDate();
 
         // Find leave requests with status 'approved' and return date of today
         const approvedLeaves = await Leave.find({
@@ -9159,14 +9019,14 @@ const updateAttendanceForApprovedLeaves = async () => {
                     user: leave.user,
                     timestamp: {
                         $gte: today, // Greater than or equal to the start of today
-                        $lte: new Date() // Less than the current time
+                        $lte: moment().utcOffset(8).toDate() // Less than the current time
                     }
                 },
                 {
                     $set: {
                         status: 'Leave',
                         type: 'manual add',
-                        timestamp: new Date()
+                        timestamp: moment().utcOffset(8).toDate()
                     }
                 },
                 { upsert: true, new: true }
@@ -9182,25 +9042,10 @@ const updateAttendanceForApprovedLeaves = async () => {
 
 const updateTodayAttendance = async () => {
 
-    // Today's date range
-    const now = new Date();
-    const todayStart = new Date(
-        now.getUTCFullYear(),
-        now.getUTCMonth(),
-        now.getUTCDate(),
-        0,   // Adding UTC offset to hours
-        0,
-        0
-    );
-
-    const todayEnd = new Date(
-        now.getUTCFullYear(),
-        now.getUTCMonth(),
-        now.getUTCDate(),
-        23,  // Adding UTC offset to hours
-        59,
-        59
-    );
+    // Get the current time as a Moment.js object
+    const now = moment().utcOffset(8);
+    const todayStart = now.clone().startOf('day').toDate();
+    const todayEnd = now.clone().endOf('day').toDate();
 
     const todayStatus = setOrCheckTodayHolidayOrWeekend();
     let updateType, updateStatus;
@@ -9399,12 +9244,12 @@ const createPatrolReport = async (dutyHandoverId, location, date, shift, startTi
         shift: shift,
         startShift: startTime,
         endShift: endTime,
-        date: new Date(date),
+        date: moment(date).utcOffset(8).toDate(),
         location: location,
         status: 'Open',
         staff: selectedNames,
         shiftMember: { cycle: cycles },
-        timestamp: new Date()
+        timestamp: moment().utcOffset(8).toDate()
     });
 
     try {

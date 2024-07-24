@@ -6,6 +6,7 @@
     <h2 class="mb-2">Leave Overview</h2>
     <h5 class="text-body-tertiary fw-semibold">Temporary absence for personal reasons</h5>
   </div>
+  
   <!-- colour script for echarts -->
   <script>
     // take the root of the colour from css for echarts
@@ -73,7 +74,7 @@
 
     <div class="row g-4">
 
-      <div class="col-12">
+      <div class="col-12 d-none">
         <div class="row g-3">
           <div class="col-12 col-md-6">
             <div class="card h-100">
@@ -861,7 +862,7 @@
                   }else if (leave.status == "invalid"){
                       statusApprovalColor = 'warning';
                   }else if (leave.status == "submitted"){
-                      statusApprovalColor = 'info-lighter';
+                      statusApprovalColor = 'info';
                   }   
             %>
 
@@ -891,11 +892,11 @@
                 <% 
                 const checkUser = allUser.find(check => check._id.toString() === leave.user.toString());
                 %>
-                <a class="mb-0 fw-bold fs-8" href="/staff/details/<%= checkUser._id %>"><%= checkUser.fullname %></a>
+                <a class="mb-0 fw-bold fs-9" href="/staff/details/<%= checkUser._id %>"><%= checkUser.fullname %></a>
               </td>
 
               <td class="align-middle white-space-nowrap position ps-3">
-                <a class="mb-0 fs-8 fw-semibold" href="/leave/details/<%= leave._id %> "><%= leave.type %></a>
+                <a class="mb-0 fs-9 fw-bold" href="/leave/details/<%= leave._id %> "><%= leave.type %></a>
               </td>
 
               <td class="align-middle department ps-3">

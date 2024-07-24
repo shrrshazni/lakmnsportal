@@ -2,8 +2,8 @@
 
 <div class="px-0 mb-6">
   <div class="mb-6">
-    <h2 class="mb-2">Leave Staff's Balances</h2>
-    <h5 class="text-body-tertiary fw-semibold">Reviewing and displaying an staff's available leave days.</h5>
+    <h2>Leave Balances</h2>
+    <p class="text-body-tertiary lh-sm mb-0">Remaining time-off days for employees.</p>
   </div>
 
   <div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis pt-7 pb-3 border-y mb-6">
@@ -30,7 +30,7 @@
         <table class="table fs-9 mb-0 border-top border-translucent">
           <thead>
             <tr>
-              <th class="sort white-space-nowrap align-middle ps-0" scope="col" data-sort="staff" style="width:20%;">STAFF</th>
+              <th class="sort white-space-nowrap align-middle ps-0" scope="col" data-sort="staff" style="width:25%;">STAFF</th>
               <th class="sort align-middle ps-3" scope="col" data-sort="annual" style="width:auto;">ANNUAL BALANCES</th>
               <th class="sort align-middle ps-3" scope="col" data-sort="sick" style="width:auto;">SICK BALANCES</th>
               <th class="sort align-middle ps-3" scope="col" data-sort="sickextended" style="width:auto;">SICK EXTENDED BALANCES</th>
@@ -56,7 +56,7 @@
             <tr class="position-static">
 
               <td class="align-middle text-body ps-0">
-                <a class="mb-0 fw-bold fs-8 staff" href="/staff/details/<%= checkUser._id %>"><%= checkUser.fullname %></a>
+                <a class="mb-0 fw-bold white-space-nowrap fs-8 staff" href="/staff/details/<%= checkUser._id %>"><%= checkUser.fullname %></a>
               </td>
 
               <td class="align-middle text-body text-center white-space-nowrap ps-0 annual">
