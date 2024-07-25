@@ -7053,7 +7053,7 @@ app.get('/api/qrcode/get-latest', async function (req, res) {
         const tempAttendance = await TempAttendance.findOne({
             timestamp: {
                 $gte: today, // Greater than or equal to the start of today
-                $lte: moment().utcOffset(8).toDate // Less than the current time
+                $lte: moment().utcOffset(8).toDate() // Less than the current time
             }
         })
             .sort({ timestamp: -1 })
