@@ -5101,8 +5101,6 @@ app.get('/auxiliary-police/patrol/shift-member-location/view', async function (r
             type: 'Shift Member Location'
         }).sort({ date: -1 });
 
-        console.log(bmi);
-
         res.render('auxiliarypolice-patrol-shiftmemberlocation-view', {
             user: user,
             notifications: notifications,
@@ -7632,8 +7630,63 @@ app.get('/super-admin/update', isAuthenticated, async function (req, res) {
 });
 
 //TEMPORARY PAGE
-app.get('/temp', async function (req, res) {
-    res.render('temp');
+app.get('/temp',isAuthenticated, async (req, res) => {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    })
+        .populate('sender')
+        .sort({ timestamp: -1 });
+
+    if (user) {
+        res.render('temp', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4(),
+        });
+    }
+});
+
+app.post('/search-schedule-temp', async (req, res) => {
+    try {
+        const { date, location } = req.body;
+        const query = {};
+
+        if (date) {
+            const [month, year] = date.split('/');
+            // Convert MM/YYYY to start and end of month
+            const startDate = moment().year(year).month(month - 1).startOf('month').utcOffset(8).toDate();
+            const endDate = moment().year(year).month(month - 1).endOf('month').utcOffset(8).toDate();
+
+
+            query.date = { $gte: startDate, $lte: endDate };
+        }
+
+        if (location) {
+            query.location = location;
+        }
+
+        const schedules = await Schedule.find(query);
+
+        // Collect all staff names with their corresponding dates
+        const staffDetails = schedules.flatMap(schedule =>
+            schedule.shift.map(name => ({ name, date: schedule.date }))
+        );
+
+        // Remove duplicates based on staff name and date
+        const uniqueStaffDetails = Array.from(new Map(
+            staffDetails.map(detail => [`${detail.name}-${detail.date}`, detail])
+        ).values());
+
+        console.log(schedules);
+
+        res.json({ schedules, staffDetails: uniqueStaffDetails });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Server error' });
+    }
 });
 
 //SCHEDULER

@@ -116,7 +116,7 @@
                   <div class="text2 d-flex mt-n2">&nbsp;<span class="fw-normal text-700 ms-0 fs-9 my-auto badge badge-phoenix badge-phoenix-warning align-items-center ms-n2"><%= cycle.timeSlot %></span></div>
                 </div>
               </h2>
-              <div class="btn btn-link text-body text-end my-auto"><span id="countdown<%= index %>" class="fs-8 fs-lg-6"></span></div>
+              <div class="btn btn-link text-body text-end my-auto notranslate"><span id="countdown<%= index %>" class="fs-8 fs-lg-6"></span></div>
             </div>
             <div class="row justify-content-center px-3 mb-0">
               <% cycle.checkpoint.forEach((checkpoint, checkpointIndex) => { %>
@@ -153,7 +153,7 @@
           <script>
             // Update countdown for this cycle
             setInterval(() => {
-              updateCountdown('<%= cycle.timeSlot %>', 'countdown<%= index %>');
+              updateCountdown('<%= patrolReport.date %>','<%= cycle.timeSlot %>', 'countdown<%= index %>');
             }, 1000);
           </script>
           <% }); %>
@@ -163,18 +163,35 @@
 
     <script>
       // Function to update the countdown
-      function updateCountdown(targetTimeSlot, countdownElementId) {
+      function updateCountdown(targetDate, targetTimeSlot, countdownElementId) {
         // Extract the end time from the timeSlot (assuming the format is HHMM-HHMM)
         const endTimeString = targetTimeSlot.split('-')[1];
 
         // Parse the end time in the Kuala Lumpur time zone
-        const endTime = new Date();
+        const endTime = new Date(targetDate);
         endTime.setHours(parseInt(endTimeString.substring(0, 2), 10));
         endTime.setMinutes(parseInt(endTimeString.substring(2), 10));
         endTime.setSeconds(0);
 
+        // Get current time in the Kuala Lumpur time zone
+        const now = new Date();
+        const currentTime = new Date(now.toLocaleString('en-US', {
+          timeZone: 'Asia/Kuala_Lumpur'
+        }));
+
+        // Check if the date matches today's date
+        if (
+          endTime.getFullYear() !== currentTime.getFullYear() ||
+          endTime.getMonth() !== currentTime.getMonth() ||
+          endTime.getDate() !== currentTime.getDate()
+        ) {
+          const countdownElement = document.getElementById(countdownElementId);
+          countdownElement.innerHTML = '-';
+          return;
+        }
+
         // Calculate the difference in milliseconds between current time and end time
-        const difference = endTime - new Date();
+        const difference = endTime - currentTime;
 
         // Check if the end time has already passed
         if (difference <= 0) {
@@ -191,7 +208,16 @@
         // Display the countdown in the specified element
         const countdownElement = document.getElementById(countdownElementId);
         countdownElement.innerHTML = `${hours}h ${minutes}m ${seconds}s`;
+
+        // Update the countdown every second
+        setTimeout(() => updateCountdown(targetDate, targetTimeSlot, countdownElementId), 1000);
       }
+
+      // Example usage
+      const targetDate = '2024-07-25'; // Set your target date here in 'YYYY-MM-DD' format
+      const targetTimeSlot = '0800-1700'; // Set your target time slot here
+      const countdownElementId = 'countdown'; // Set the ID of your countdown element
+      updateCountdown(targetDate, targetTimeSlot, countdownElementId);
     </script>
 
     <hr>

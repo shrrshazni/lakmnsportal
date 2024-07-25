@@ -18,7 +18,7 @@
       <button id="btn-baitul-makmur-i" class="btn btn-primary btn-location me-2" data-location="baitul-makmur-i">Baitul Makmur I</button>
       <button id="btn-baitul-makmur-ii" class="btn btn-outline-secondary btn-location me-2" data-location="baitul-makmur-ii">Baitul Makmur II</button>
       <button id="btn-jamek-mosque" class="btn btn-outline-secondary btn-location me-2" data-location="jamek-mosque">Jamek Mosque</button>
-      <button id="btn-city-mosque" class="btn btn-outline-secondary btn-location me-2" data-location="city-mosque">City Mosque</button>
+      <button id="btn-city-mosque" class="btn btn-outline-secondary btn-location me-2 notranslate" data-location="city-mosque">City Mosque</button>
       <button id="btn-raudhatul-sakinah" class="btn btn-outline-secondary btn-location me-2" data-location="raudhatul-sakinah">Raudhatul Sakinah</button>
     </div>
 
@@ -26,9 +26,9 @@
 
     <div id="detailsBaitulMakmurI" class="content-section">
       <div class="mb-5" id="shiftButtonsBaitulMakmurI">
-        <button type="button" class="btn btn-primary btn-shift" data-location="baitul-makmur-i" data-shift="A">Shift A</button>
-        <button type="button" class="btn btn-outline-secondary btn-shift" data-location="baitul-makmur-i" data-shift="B">Shift B</button>
-        <button type="button" class="btn btn-outline-secondary btn-shift" data-location="baitul-makmur-i" data-shift="C">Shift C</button>
+        <button type="button" class="btn btn-primary btn-shift notranslate" data-location="baitul-makmur-i" data-shift="A">Shift A</button>
+        <button type="button" class="btn btn-outline-secondary btn-shift notranslate" data-location="baitul-makmur-i" data-shift="B">Shift B</button>
+        <button type="button" class="btn btn-outline-secondary btn-shift notranslate" data-location="baitul-makmur-i" data-shift="C">Shift C</button>
       </div>
       <h3>Baitul Makmur I</h3>
       <div id="detailsBaitulMakmurIA" class="mt-3 shift-details">
@@ -67,8 +67,6 @@
                 if (filteredbmi.length > 0) { 
                 
                  filteredbmi.forEach((item, index) => { %>
-
-                <% console.log%>
 
                 <tr class="position-static">
                   <td class="date align-middle fw-bold text-start text-primary py-2 ps-0 fs-8"><a href="/auxiliary-police/patrol/shift-member-location/details/<%= item._id %>"><%= item.date.toLocaleDateString('en-MY', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></a></td>
@@ -290,9 +288,9 @@
 
     <div id="detailsBaitulMakmurII" class="content-section d-none">
       <div class="mb-5" id="shiftButtonsBaitulMakmurII">
-        <button type="button" class="btn btn-primary btn-shift" data-location="baitul-makmur-ii" data-shift="A">Shift A</button>
-        <button type="button" class="btn btn-outline-secondary btn-shift" data-location="baitul-makmur-ii" data-shift="B">Shift B</button>
-        <button type="button" class="btn btn-outline-secondary btn-shift" data-location="baitul-makmur-ii" data-shift="C">Shift C</button>
+        <button type="button" class="btn btn-primary btn-shift notranslate" data-location="baitul-makmur-ii" data-shift="A">Shift A</button>
+        <button type="button" class="btn btn-outline-secondary btn-shift notranslate" data-location="baitul-makmur-ii" data-shift="B">Shift B</button>
+        <button type="button" class="btn btn-outline-secondary btn-shift notranslate" data-location="baitul-makmur-ii" data-shift="C">Shift C</button>
       </div>
       <h3>Baitul Makmur II</h3>
       <div id="detailsBaitulMakmurIIA" class="mt-3 shift-details">
@@ -415,7 +413,7 @@
                 const filteredbmii = bmii.filter(item => item.shift === 'Shift B');
                 if (filteredbmii.length > 0) { 
                 
-                 filteredbmi.forEach((item, index) => { %>
+                 filteredbmii.forEach((item, index) => { %>
 
                 <% console.log%>
 
@@ -554,9 +552,9 @@
 
     <div id="detailsJamekMosque" class="content-section d-none">
       <div class="mb-5" id="shiftButtonsJamekMosque">
-        <button type="button" class="btn btn-primary btn-shift" data-location="jamek-mosque" data-shift="A">Shift A</button>
-        <button type="button" class="btn btn-outline-secondary btn-shift" data-location="jamek-mosque" data-shift="B">Shift B</button>
-        <button type="button" class="btn btn-outline-secondary btn-shift" data-location="jamek-mosque" data-shift="C">Shift C</button>
+        <button type="button" class="btn btn-primary btn-shift notranslate" data-location="jamek-mosque" data-shift="A">Shift A</button>
+        <button type="button" class="btn btn-outline-secondary btn-shift notranslate" data-location="jamek-mosque" data-shift="B">Shift B</button>
+        <button type="button" class="btn btn-outline-secondary btn-shift notranslate" data-location="jamek-mosque" data-shift="C">Shift C</button>
       </div>
       <h3>Jamek Mosque</h3>
       <div id="detailsJamekMosqueA" class="mt-3 shift-details">
@@ -818,11 +816,11 @@
 
     <div id="detailsCityMosque" class="content-section d-none">
       <div class="mb-5" id="shiftButtonsCityMosque">
-        <button type="button" class="btn btn-primary btn-shift" data-location="city-mosque" data-shift="A">Shift A</button>
-        <button type="button" class="btn btn-outline-secondary btn-shift" data-location="city-mosque" data-shift="B">Shift B</button>
-        <button type="button" class="btn btn-outline-secondary btn-shift" data-location="city-mosque" data-shift="C">Shift C</button>
+        <button type="button" class="btn btn-primary btn-shift notranslate" data-location="city-mosque" data-shift="A">Shift A</button>
+        <button type="button" class="btn btn-outline-secondary btn-shift notranslate" data-location="city-mosque" data-shift="B">Shift B</button>
+        <button type="button" class="btn btn-outline-secondary btn-shift notranslate" data-location="city-mosque" data-shift="C">Shift C</button>
       </div>
-      <h3>City Mosque</h3>
+      <h3 class="notranslate">City Mosque</h3>
       <div id="detailsCityMosqueA" class="mt-3 shift-details">
         <div class="border-bottom border-translucent mt-3" data-list='{"valueNames":["date", "status","staff","startshift","endshift", "remarks"],"page":10,"pagination":true}'>
           <div class="row align-items-end justify-content-between pb-4 g-3">
@@ -1082,9 +1080,9 @@
 
     <div id="detailsRaudhatulSakinah" class="content-section d-none">
       <div class="mb-5" id="shiftButtonsRaudhatulSakinah">
-        <button type="button" class="btn btn-primary btn-shift" data-location="raudhatul-sakinah" data-shift="A">Shift A</button>
-        <button type="button" class="btn btn-outline-secondary btn-shift" data-location="raudhatul-sakinah" data-shift="B">Shift B</button>
-        <button type="button" class="btn btn-outline-secondary btn-shift" data-location="raudhatul-sakinah" data-shift="C">Shift C</button>
+        <button type="button" class="btn btn-primary btn-shift notranslate" data-location="raudhatul-sakinah" data-shift="A">Shift A</button>
+        <button type="button" class="btn btn-outline-secondary btn-shift notranslate" data-location="raudhatul-sakinah" data-shift="B">Shift B</button>
+        <button type="button" class="btn btn-outline-secondary btn-shift notranslate" data-location="raudhatul-sakinah" data-shift="C">Shift C</button>
       </div>
       <h3>Raudhatul Sakinah</h3>
       <div id="detailsRaudhatulSakinahA" class="mt-3 shift-details">
