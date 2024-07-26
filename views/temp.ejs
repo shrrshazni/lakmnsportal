@@ -1,31 +1,29 @@
 <%- include("partials/private-header.ejs") %>
 
 <div class="container mt-5">
-  <h3>Schedule Search</h3>
+  <h3 class="mb-3">Schedule Search</h3>
   <form id="schedule-form">
     <div class="row">
       <div class="col-12 col-md-3 mb-3">
-        <div class="form-icon-container">
-          <input class="form-control search-input search datetimepicker flatpickr-input form-icon-input" type="text" id="selectedDate" name="date" placeholder="Select date" data-options='{"disableMobile":false,"allowInput":true, "locale" : { "firstDayOfWeek" : 1}, "mode": "single", "dateFormat": "m/Y","disable": [true]}' />
-          <span class="fas fa-calendar text-900 fs-9 form-icon"></span>
+        <div class="input-group">
+          <input class="form-control flatpickr-input" type="text" id="selectedDate" name="date" placeholder="Select date" data-options='{"disableMobile":false,"allowInput":true, "locale" : { "firstDayOfWeek" : 1}, "mode": "single", "dateFormat": "m/Y","disable": [true]}' />
+          <span class="input-group-text"><i class="fas fa-calendar"></i></span>
         </div>
       </div>
       <div class="col-12 col-md-3">
-        <div class="form-floating">
-          <select class="form-select" id="floatingSelectTask" name="location" required>
-            <option value="Baitul Makmur I">Baitul Makmur I</option>
-            <option value="Baitul Makmur II">Baitul Makmur II</option>
-            <option value="Jamek Mosque">Jamek Mosque</option>
-            <option value="City Mosque">City Mosque</option>
-            <option value="Raudhatul Sakinah">Raudhatul Sakinah</option>
-          </select>
-          <label for="floatingSelectTask">Location</label>
-        </div>
+        <select class="form-select" id="floatingSelectTask" name="location" required>
+          <option value="">Select Location</option>
+          <option value="Baitul Makmur I">Baitul Makmur I</option>
+          <option value="Baitul Makmur II">Baitul Makmur II</option>
+          <option value="Jamek Mosque">Jamek Mosque</option>
+          <option value="City Mosque">City Mosque</option>
+          <option value="Raudhatul Sakinah">Raudhatul Sakinah</option>
+        </select>
       </div>
     </div>
-    <button type="button" id="searchButton" class="btn btn-primary">Search</button>
   </form>
   <div id="schedule-results" class="mt-4"></div>
+  <div id="staff-results" class="mt-4"></div>
 </div>
 
 <script>
@@ -33,7 +31,6 @@
     const form = document.querySelector('#schedule-form');
     const selectedDateInput = document.querySelector('#selectedDate');
     const locationSelect = document.querySelector('#floatingSelectTask');
-    const searchButton = document.querySelector('#searchButton');
 
     // Initialize Flatpickr with the specified options
     flatpickr(selectedDateInput, {
@@ -47,7 +44,6 @@
       disable: [true] // Add specific dates to disable if needed
     });
 
-    // Fetch schedules based on selected date and location
     function fetchSchedules() {
       const formData = new FormData(form);
       const date = formData.get('date');
@@ -64,8 +60,6 @@
           location: location
         }).toString();
 
-        console.log('Query Params:', queryParams);
-
         fetch('/search-schedule-temp', {
             method: 'POST',
             headers: {
@@ -75,59 +69,141 @@
           })
           .then(response => response.json())
           .then(data => {
-            console.log('Fetch response:', data);
-            displaySchedules(data.schedules, data.staffDetails);
+            displaySchedules(data.schedules, year, month);
+            displayStaffDetails(data.staffDetails, date, location);
           })
           .catch(error => {
             console.error('Fetch error:', error);
           });
       } else {
         const resultContainer = document.getElementById('schedule-results');
+        const staffContainer = document.getElementById('staff-results');
         resultContainer.innerHTML = '<p>Please select both date and location.</p>';
+        staffContainer.innerHTML = '';
       }
     }
 
-    function displaySchedules(schedules, staffDetails) {
+    function calculateEndTime(startTime) {
+      const startHour = parseInt(startTime.slice(0, 2), 10);
+      const startMinute = parseInt(startTime.slice(2), 10);
+      const startDate = new Date(1970, 0, 1, startHour, startMinute);
+      const endDate = new Date(startDate.getTime() + 8 * 60 * 60 * 1000);
+      const endHour = endDate.getHours().toString().padStart(2, '0');
+      const endMinute = endDate.getMinutes().toString().padStart(2, '0');
+      return `${endHour}${endMinute}`;
+    }
+
+    function displaySchedules(schedules, year, month) {
       const resultContainer = document.getElementById('schedule-results');
       resultContainer.innerHTML = '';
 
-      if (schedules.length > 0) {
+      const daysInMonth = moment(`${year}-${month}`, "YYYY-MM").daysInMonth();
+      const firstDayOfWeek = moment(`${year}-${month}-01`).day(); // 0: Sunday, 1: Monday, ..., 6: Saturday
+
+      const table = document.createElement('table');
+      table.className = 'table table-bordered';
+      table.style.width = '100%'; // Ensures the table takes full width
+      table.style.tableLayout = 'fixed'; // Ensures fixed column width
+
+      const thead = document.createElement('thead');
+      const tbody = document.createElement('tbody');
+
+      const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      const headerRow = document.createElement('tr');
+      daysOfWeek.forEach(day => {
+        const th = document.createElement('th');
+        th.innerText = day;
+        th.style.width = '14.2857142857%'; // Adjusts width to fit 7 columns
+        headerRow.appendChild(th);
+      });
+      thead.appendChild(headerRow);
+      table.appendChild(thead);
+
+      let currentRow = document.createElement('tr');
+      for (let i = 0; i < firstDayOfWeek; i++) {
+        currentRow.appendChild(document.createElement('td'));
+      }
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        if (currentRow.children.length === 7) {
+          tbody.appendChild(currentRow);
+          currentRow = document.createElement('tr');
+        }
+        const cell = document.createElement('td');
+        cell.className = 'p-0'; // No padding
+        cell.style.height = '150px'; // Fixed height for cells
+
+        const schedulesForDay = schedules.filter(schedule => new Date(schedule.date).getDate() === day);
+        if (schedulesForDay.length > 0) {
+          const innerTable = document.createElement('table');
+          innerTable.className = 'table table-sm table-borderless'; // Bootstrap classes
+          innerTable.style.width = '100%'; // Ensures the inner table takes full width
+          innerTable.style.tableLayout = 'fixed'; // Ensures fixed column width
+
+          schedulesForDay.forEach(schedule => {
+            schedule.shift.forEach((shiftDetail, index) => {
+              const endTime = calculateEndTime(shiftDetail.time);
+              const row = document.createElement('tr');
+              row.style.height = '30px'; // Fixed height for rows
+
+              const shiftCell = document.createElement('td');
+              shiftCell.className = 'p-1'; // Minimal padding
+              shiftCell.style.border = '1px solid #dee2e6'; // Border for inner table cells
+              shiftCell.innerHTML = `${String.fromCharCode(65 + index)} (${shiftDetail.time} - ${endTime})`; // A, B, C for shifts
+
+              const staffCell = document.createElement('td');
+              staffCell.className = 'p-1'; // Minimal padding
+              staffCell.style.border = '1px solid #dee2e6'; // Border for inner table cells
+              staffCell.innerHTML = shiftDetail.staff.map((staffMember, idx) => `${idx + 1}. ${staffMember}`).join('<br>');
+
+              row.appendChild(shiftCell);
+              row.appendChild(staffCell);
+              innerTable.appendChild(row);
+            });
+          });
+          cell.appendChild(innerTable);
+        } else {
+          cell.innerHTML += 'No schedule';
+        }
+
+        currentRow.appendChild(cell);
+      }
+
+      while (currentRow.children.length < 7) {
+        currentRow.appendChild(document.createElement('td'));
+      }
+      tbody.appendChild(currentRow);
+      table.appendChild(tbody);
+      resultContainer.appendChild(table);
+    }
+
+    function displayStaffDetails(staffDetails, date, location) {
+      const staffContainer = document.getElementById('staff-results');
+      staffContainer.innerHTML = '';
+
+      if (staffDetails.length > 0) {
+        const header = document.createElement('h4');
+        header.innerText = `Details for ${moment(date, 'MM/YYYY').format('MMMM YYYY')} at ${location}`;
+        staffContainer.appendChild(header);
+
         const ul = document.createElement('ul');
-        schedules.forEach(schedule => {
+        staffDetails.forEach((detail, index) => {
           const li = document.createElement('li');
-          li.innerHTML = `
-                        <strong>Date:</strong> ${new Date(schedule.date).toDateString()} <br>
-                        <strong>Location:</strong> ${schedule.location} <br>
-                        <strong>Shift:</strong> ${schedule.shift.join(', ')} <br>
-                    `;
+          const endTime = calculateEndTime(detail.time);
+          li.innerHTML = `${index + 1}. Shift: ${detail.shiftName}, Staff: ${detail.staff.join(', ')}, Time: ${detail.time} - ${endTime}, Date: ${new Date(detail.date).toDateString()}`;
           ul.appendChild(li);
         });
 
-        resultContainer.appendChild(ul);
-
-        if (staffDetails.length > 0) {
-          const staffContainer = document.createElement('div');
-          staffContainer.innerHTML = `
-                        <h3>Staff Names with Dates</h3>
-                        <ul>
-                          ${staffDetails.map(detail => `<li>${detail.name} - ${new Date(detail.date).toDateString()}</li>`).join('')}
-                        </ul>
-                    `;
-          resultContainer.appendChild(staffContainer);
-        } else {
-          const staffContainer = document.createElement('div');
-          staffContainer.innerHTML = '<p>No staff names found.</p>';
-          resultContainer.appendChild(staffContainer);
-        }
+        staffContainer.appendChild(ul);
       } else {
-        resultContainer.innerHTML = '<p>No schedules found.</p>';
+        staffContainer.innerHTML = '<p>No staff details found.</p>';
       }
     }
 
-    // Add event listener to the search button
-    searchButton.addEventListener('click', fetchSchedules);
+    // Add event listeners to the date and location inputs
+    selectedDateInput.addEventListener('change', fetchSchedules);
+    locationSelect.addEventListener('change', fetchSchedules);
   });
 </script>
-
 
 <%- include("partials/private-footer.ejs") %>

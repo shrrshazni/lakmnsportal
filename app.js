@@ -7630,7 +7630,7 @@ app.get('/super-admin/update', isAuthenticated, async function (req, res) {
 });
 
 //TEMPORARY PAGE
-app.get('/temp',isAuthenticated, async (req, res) => {
+app.get('/temp', async (req, res) => {
     const username = req.user.username;
     const user = await User.findOne({ username: username });
     const notifications = await Notification.find({
@@ -7655,11 +7655,9 @@ app.post('/search-schedule-temp', async (req, res) => {
         const query = {};
 
         if (date) {
-            const [month, year] = date.split('/');
-            // Convert MM/YYYY to start and end of month
-            const startDate = moment().year(year).month(month - 1).startOf('month').utcOffset(8).toDate();
-            const endDate = moment().year(year).month(month - 1).endOf('month').utcOffset(8).toDate();
-
+            // Use moment to handle dates with UTC+8 offset
+            const startDate = moment(date).utcOffset(8).startOf('month').toDate();
+            const endDate = moment(date).utcOffset(8).endOf('month').toDate();
 
             query.date = { $gte: startDate, $lte: endDate };
         }
@@ -7668,19 +7666,24 @@ app.post('/search-schedule-temp', async (req, res) => {
             query.location = location;
         }
 
-        const schedules = await Schedule.find(query);
+        const schedules = await ScheduleAux.find(query);
 
-        // Collect all staff names with their corresponding dates
+        // Collect all staff details with their corresponding dates
         const staffDetails = schedules.flatMap(schedule =>
-            schedule.shift.map(name => ({ name, date: schedule.date }))
+            schedule.shift.map(shiftDetail => ({
+                shift: shiftDetail.shiftName,
+                staff: shiftDetail.staff,
+                time: shiftDetail.time,
+                date: schedule.date
+            }))
         );
 
         // Remove duplicates based on staff name and date
         const uniqueStaffDetails = Array.from(new Map(
-            staffDetails.map(detail => [`${detail.name}-${detail.date}`, detail])
+            staffDetails.map(detail => [`${detail.staff}-${detail.date}`, detail])
         ).values());
 
-        console.log(schedules);
+        console.log(schedules[0]);
 
         res.json({ schedules, staffDetails: uniqueStaffDetails });
     } catch (error) {
