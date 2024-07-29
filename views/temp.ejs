@@ -1,5 +1,41 @@
 <%- include("partials/private-header.ejs") %>
 
+<script>
+  // take the root of the colour from css for echarts
+  const style = getComputedStyle(document.body);
+  const theme = {
+    primary: style.getPropertyValue('--phoenix-primary'),
+    secondary: style.getPropertyValue('--phoenix-secondary'),
+    success: style.getPropertyValue('--phoenix-success'),
+    info: style.getPropertyValue('--phoenix-info'),
+    warning: style.getPropertyValue('--phoenix-warning'),
+    danger: style.getPropertyValue('--phoenix-danger'),
+    bg_primary_subtle: style.getPropertyValue('--phoenix-primary-bg-subtle'),
+    tertiary: style.getPropertyPriority('--phoenix-tertiary-color'),
+    light: style.getPropertyValue('--phoenix-light'),
+    dark: style.getPropertyValue('--phoenix-dark'),
+    secondary_subtle: style.getPropertyValue('--phoenix-secondary-border-subtle'),
+    cyan: style.getPropertyValue('--phoenix-cyan'),
+    gray_100: style.getPropertyValue('--phoenix-gray-100'),
+    card_bg: style.getPropertyValue('--phoenix-card-color')
+
+  };
+
+  //   take css class color based on their property color/bg-colour for echarts
+  function getColor(className, property) {
+    var element = document.createElement('div');
+    element.className = className;
+    document.body.appendChild(element);
+
+    var computedStyle = window.getComputedStyle(element);
+    var color = computedStyle.getPropertyValue(property);
+
+    document.body.removeChild(element);
+
+    return color;
+  }
+</script>
+
 <div class="container mt-5">
   <h3 class="mb-3">Schedule Search</h3>
   <form id="schedule-form">
@@ -69,7 +105,7 @@
           })
           .then(response => response.json())
           .then(data => {
-            displaySchedules(data.schedules, year, month);
+            displaySchedules(data.schedules, year, month, location);
             displayStaffDetails(data.staffDetails, date, location);
           })
           .catch(error => {
@@ -93,7 +129,7 @@
       return `${endHour}${endMinute}`;
     }
 
-    function displaySchedules(schedules, year, month) {
+    function displaySchedules(schedules, year, month, location) {
       const resultContainer = document.getElementById('schedule-results');
       resultContainer.innerHTML = '';
 
@@ -113,6 +149,7 @@
       daysOfWeek.forEach(day => {
         const th = document.createElement('th');
         th.innerText = day;
+        th.className = 'text-center';
         th.style.width = '14.2857142857%'; // Adjusts width to fit 7 columns
         headerRow.appendChild(th);
       });
@@ -130,41 +167,96 @@
           currentRow = document.createElement('tr');
         }
         const cell = document.createElement('td');
-        cell.className = 'p-0'; // No padding
-        cell.style.height = '150px'; // Fixed height for cells
+        cell.className = 'p-0 fs-9 fw-bold'; // No padding
+        cell.style.backgroundColor = '#fff';
+        cell.style.height = '175px';
+        cell.style.minHeight = '175px'; // Fixed height for cells
+
+        // Create a container for the date and location
+        const container = document.createElement('div');
+        container.style.position = 'relative'; // Position relative for the date and location
+
+        // Add the full date
+        const fullDate = moment(`${year}-${month}-${day}`).format('DD.MM.YYYY'); // Format as "01.07.2024"
+        const dateDiv = document.createElement('div');
+        dateDiv.className = 'px-1 py-0 text-center bg-light fst-italic'; // Light background for visibility
+        dateDiv.style.width = '100%'; // Make sure it takes the full width of the container
+        dateDiv.innerHTML = `<strong>${fullDate}</strong>`;
+        container.appendChild(dateDiv);
+
+        // Add location row
+        const locationRow = document.createElement('div');
+        locationRow.className = 'px-1 py-0 text-center bg-light notranslate'; // Light background for visibility
+        locationRow.style.width = '100%'; // Make sure it takes the full width of the container
+        locationRow.innerHTML = `<strong>${location}</strong>`;
+        container.appendChild(locationRow);
+
+        // Create the inner table
+        const innerTable = document.createElement('table');
+        innerTable.className = 'table table-sm table-borderless'; // Bootstrap classes
+        innerTable.style.width = '100%'; // Ensures the inner table takes full width
+        innerTable.style.tableLayout = 'fixed'; // Ensures fixed column width
 
         const schedulesForDay = schedules.filter(schedule => new Date(schedule.date).getDate() === day);
-        if (schedulesForDay.length > 0) {
-          const innerTable = document.createElement('table');
-          innerTable.className = 'table table-sm table-borderless'; // Bootstrap classes
-          innerTable.style.width = '100%'; // Ensures the inner table takes full width
-          innerTable.style.tableLayout = 'fixed'; // Ensures fixed column width
 
+        if (schedulesForDay.length === 0) {
+          // Display "No schedule yet" if there are no schedules for the day
+          const noScheduleRow = document.createElement('tr');
+          const noScheduleCell = document.createElement('td');
+          noScheduleCell.colSpan = 2; // Span across the inner table columns
+          noScheduleCell.className = 'text-center text-muted my-auto'; // Centered and muted text
+
+          // Style for centering text vertically and horizontally
+          noScheduleCell.style.display = 'flex';
+          noScheduleCell.style.alignItems = 'center'; // Vertical center
+          noScheduleCell.style.justifyContent = 'center'; // Horizontal center
+          noScheduleCell.style.height = '130px'; // Ensure the cell takes full height
+
+          noScheduleCell.innerHTML = 'No schedule yet';
+          noScheduleRow.appendChild(noScheduleCell);
+          innerTable.appendChild(noScheduleRow);
+        } else {
           schedulesForDay.forEach(schedule => {
             schedule.shift.forEach((shiftDetail, index) => {
-              const endTime = calculateEndTime(shiftDetail.time);
               const row = document.createElement('tr');
               row.style.height = '30px'; // Fixed height for rows
 
+              // Create the shift cell
               const shiftCell = document.createElement('td');
-              shiftCell.className = 'p-1'; // Minimal padding
+              shiftCell.className = 'p-1 py-0'; // Minimal padding
               shiftCell.style.border = '1px solid #dee2e6'; // Border for inner table cells
-              shiftCell.innerHTML = `${String.fromCharCode(65 + index)} (${shiftDetail.time} - ${endTime})`; // A, B, C for shifts
+              shiftCell.style.borderLeft = 'none'; // No left border
+              shiftCell.style.borderRight = 'none'; // No right border
+              shiftCell.style.width = '10%'; // Minimal width for the shift letter
+              shiftCell.style.minWidth = '0'; // Ensures it doesn't take up more space
+              shiftCell.style.maxWidth = '10%'; // Ensures it doesn't exceed 10% width
+              shiftCell.style.whiteSpace = 'nowrap'; // Prevents wrapping
+              shiftCell.innerHTML = String.fromCharCode(65 + index); // A, B, C, D for shifts
 
+              // Create the staff cell
               const staffCell = document.createElement('td');
-              staffCell.className = 'p-1'; // Minimal padding
-              staffCell.style.border = '1px solid #dee2e6'; // Border for inner table cells
-              staffCell.innerHTML = shiftDetail.staff.map((staffMember, idx) => `${idx + 1}. ${staffMember}`).join('<br>');
+              staffCell.style.border = '1px solid #dee2e6';
+              staffCell.style.borderRight = 'none'; // Border for inner table cells
+              staffCell.style.width = '90%'; // Allows staff cell to take up remaining space
+              staffCell.style.whiteSpace = 'nowrap'; // Prevents wrapping
+              // Create a span for each staff member index with a right border
+              staffCell.innerHTML = shiftDetail.staff.map((staffMember, idx) => {
+                return `<span style="display: inline-block; border-right: 1px solid #dee2e6;" class="px-2">${idx + 1}</span>`;
+              }).join('');
 
+              // Append cells to the row
               row.appendChild(shiftCell);
               row.appendChild(staffCell);
               innerTable.appendChild(row);
             });
           });
-          cell.appendChild(innerTable);
-        } else {
-          cell.innerHTML += 'No schedule';
         }
+
+        // Append the inner table to the container
+        container.appendChild(innerTable);
+
+        // Append the container to the cell
+        cell.appendChild(container);
 
         currentRow.appendChild(cell);
       }
@@ -183,26 +275,49 @@
 
       if (staffDetails.length > 0) {
         const header = document.createElement('h4');
-        header.innerText = `Details for ${moment(date, 'MM/YYYY').format('MMMM YYYY')} at ${location}`;
+        header.innerText = `Staff Details for ${location} (${date})`;
         staffContainer.appendChild(header);
 
-        const ul = document.createElement('ul');
-        staffDetails.forEach((detail, index) => {
-          const li = document.createElement('li');
-          const endTime = calculateEndTime(detail.time);
-          li.innerHTML = `${index + 1}. Shift: ${detail.shiftName}, Staff: ${detail.staff.join(', ')}, Time: ${detail.time} - ${endTime}, Date: ${new Date(detail.date).toDateString()}`;
-          ul.appendChild(li);
+        const table = document.createElement('table');
+        table.className = 'table table-striped';
+        const thead = document.createElement('thead');
+        const tbody = document.createElement('tbody');
+
+        const headerRow = document.createElement('tr');
+        const columns = ['No.', 'Shift', 'Staff'];
+        columns.forEach(col => {
+          const th = document.createElement('th');
+          th.innerText = col;
+          headerRow.appendChild(th);
+        });
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
+
+        staffDetails.forEach((staff, index) => {
+          const row = document.createElement('tr');
+          const noCell = document.createElement('td');
+          noCell.innerText = index + 1;
+          row.appendChild(noCell);
+
+          const shiftCell = document.createElement('td');
+          shiftCell.innerText = staff.shift;
+          row.appendChild(shiftCell);
+
+          const staffCell = document.createElement('td');
+          staffCell.innerText = staff.staff.join(', ');
+          row.appendChild(staffCell);
+
+          tbody.appendChild(row);
         });
 
-        staffContainer.appendChild(ul);
+        table.appendChild(tbody);
+        staffContainer.appendChild(table);
       } else {
-        staffContainer.innerHTML = '<p>No staff details found.</p>';
+        staffContainer.innerHTML = '<p>No staff details available for the selected date and location.</p>';
       }
     }
 
-    // Add event listeners to the date and location inputs
-    selectedDateInput.addEventListener('change', fetchSchedules);
-    locationSelect.addEventListener('change', fetchSchedules);
+    form.addEventListener('change', fetchSchedules);
   });
 </script>
 

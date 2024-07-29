@@ -296,6 +296,100 @@
           </div>
         </div>
 
+        <!-- Fourth Instance -->
+        <div class="col-12 border rounded-3 p-3">
+          <div class=" row g-3">
+
+            <div class="d-flex justify-content-between">
+              <div class="d-flex align-items-center">
+                <h4>Shift D</h4>
+              </div>
+              <div>
+                <div class="form-floating">
+                  <select class="form-select" id="time4" name="time4" required>
+                    <option selected>Select shift time</option>
+                    <option value="0800">0800</option>
+                    <option value="1400">1400</option>
+                  </select>
+                  <label for="time3">Time</label>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-12 col-md-8">
+              <div id="selectedNames4" class="d-flex flex-wrap border border-300 rounded-3 px-2" style="min-height: 3rem"></div>
+            </div>
+
+            <div class="col-12 col-md-4">
+              <div class="form-floating">
+                <input type="text" name="query" id="queryInput4" class="form-control"" />
+                  <label class=" form-label" for="queryInput4">Search Staff</label>
+                <div class="invalid-feedback">Please select staff</div>
+              </div>
+            </div>
+
+            <div id="results4" class="col-12"></div>
+
+            <input type="hidden" id="selectedNamesInput4" name="selectedNames4" />
+          </div>
+        </div>
+
+        <!-- Fifth Instance -->
+        <div class="col-12 border rounded-3 p-3">
+          <div class=" row g-3">
+
+            <div class="d-flex justify-content-between">
+              <div class="d-flex align-items-center">
+                <h4>Raised Flag Duty</h4>
+              </div>
+            </div>
+
+            <div class="col-12 col-md-8">
+              <div id="selectedNames5" class="d-flex flex-wrap border border-300 rounded-3 px-2" style="min-height: 3rem"></div>
+            </div>
+
+            <div class="col-12 col-md-4">
+              <div class="form-floating">
+                <input type="text" name="query" id="queryInput5" class="form-control"" />
+                    <label class=" form-label" for="queryInput5">Search Staff</label>
+                <div class="invalid-feedback">Please select staff</div>
+              </div>
+            </div>
+
+            <div id="results5" class="col-12"></div>
+
+            <input type="hidden" id="selectedNamesInput5" name="selectedNames5" />
+          </div>
+        </div>
+
+        <!-- Six Instance -->
+        <div class="col-12 border rounded-3 p-3">
+          <div class=" row g-3">
+
+            <div class="d-flex justify-content-between">
+              <div class="d-flex align-items-center">
+                <h4>Lowered Flag Duty</h4>
+              </div>
+            </div>
+
+            <div class="col-12 col-md-8">
+              <div id="selectedNames6" class="d-flex flex-wrap border border-300 rounded-3 px-2" style="min-height: 3rem"></div>
+            </div>
+
+            <div class="col-12 col-md-4">
+              <div class="form-floating">
+                <input type="text" name="query" id="queryInput6" class="form-control"" />
+                    <label class=" form-label" for="queryInput6">Search Staff</label>
+                <div class="invalid-feedback">Please select staff</div>
+              </div>
+            </div>
+
+            <div id="results6" class="col-12"></div>
+
+            <input type="hidden" id="selectedNamesInput6" name="selectedNames6" />
+          </div>
+        </div>
+
         <div class="col-12 gy-6">
           <div class="row g-3 justify-content-end">
             <div class="col-auto">
@@ -379,12 +473,18 @@
           initializeStaffSearch('#queryInput1', '#selectedNames1', '#results1', '#selectedNamesInput1');
           initializeStaffSearch('#queryInput2', '#selectedNames2', '#results2', '#selectedNamesInput2');
           initializeStaffSearch('#queryInput3', '#selectedNames3', '#results3', '#selectedNamesInput3');
+          initializeStaffSearch('#queryInput4', '#selectedNames4', '#results4', '#selectedNamesInput4');
+          initializeStaffSearch('#queryInput5', '#selectedNames5', '#results5', '#selectedNamesInput5');
+          initializeStaffSearch('#queryInput6', '#selectedNames6', '#results6', '#selectedNamesInput6');
 
           // For debugging: Log the values before form submission
           $('#scheduleForm').submit(function(event) {
             console.log('Selected Names 1:', $('#selectedNamesInput1').val());
             console.log('Selected Names 2:', $('#selectedNamesInput2').val());
             console.log('Selected Names 3:', $('#selectedNamesInput3').val());
+            console.log('Selected Names 4:', $('#selectedNamesInput4').val());
+            console.log('Selected Names 5:', $('#selectedNamesInput5').val());
+            console.log('Selected Names 6:', $('#selectedNamesInput6').val());
           });
         });
       </script>

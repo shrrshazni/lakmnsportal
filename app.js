@@ -426,6 +426,8 @@ const scheduleAuxSchema = new mongoose.Schema({
     date: { type: Date, required: true },
     location: { type: String },
     shift: [],
+    staffRaisedFlag: [],
+    staffLoweredFlag: []
 });
 
 // PATROL REPORT 
@@ -1639,7 +1641,7 @@ app.get('/reset-password/:id', async function (req, res) {
         alert: ''
     });
 
-}).post('/reset-password/id', async function (rrq, res) {
+}).post('/reset-password/:id', async function (rrq, res) {
     const id = req.params.id;
     const user = await User.findOne({ _id: id });
 
@@ -4860,9 +4862,37 @@ app.get('/auxiliary-police/schedule/add', isAuthenticated, async function (req, 
     }).populate('sender');
 
     if (user) {
-        const { location, date, selectedNames1, selectedNames2, selectedNames3, time1, time2, time3 } = req.body;
+        const {
+            location,
+            date,
+            selectedNames1,
+            selectedNames2,
+            selectedNames3,
+            selectedNames4 = '',  // Optional field for Shift D
+            time1,
+            time2,
+            time3,
+            time4 = '',  // Optional field for Shift D
+            selectedNames5 = '',  // Optional field for Raised Flag Duty
+            selectedNames6 = ''  // Optional field for Lowered Flag Duty
+        } = req.body;
 
-        if (!location || !date || !selectedNames1 || !selectedNames2 || !selectedNames3 || time1 === 'Select shift time' || time2 === 'Select shift time' || time3 === 'Select shift time') {
+        console.log('Received form data:', {
+            location,
+            date,
+            selectedNames1,
+            selectedNames2,
+            selectedNames3,
+            selectedNames4,
+            time1,
+            time2,
+            time3,
+            time4,
+            selectedNames5,
+            selectedNames6
+        });
+
+        if (!location || !date || !selectedNames1 || !selectedNames2 || !selectedNames3 || time1 === 'Select shift time' || time2 === 'Select shift time' || time3 === 'Select shift time' || (selectedNames4 && time4 === 'Select shift time')) {
             console.log('Failed to add auxiliary police schedule');
             res.render('auxiliarypolice-schedule-add', {
                 user: user,
@@ -4876,13 +4906,29 @@ app.get('/auxiliary-police/schedule/add', isAuthenticated, async function (req, 
             const selectedNames1Array = selectedNames1 ? selectedNames1.split(',') : [];
             const selectedNames2Array = selectedNames2 ? selectedNames2.split(',') : [];
             const selectedNames3Array = selectedNames3 ? selectedNames3.split(',') : [];
+            const selectedNames4Array = selectedNames4 ? selectedNames4.split(',') : [];  // Handle new shift
+            const staffRaisedFlagArray = selectedNames5 ? selectedNames5.split(',') : [];  // Handle raised flag duty
+            const staffLoweredFlagArray = selectedNames6 ? selectedNames6.split(',') : [];  // Handle lowered flag duty
+
+            console.log('Parsed selected names arrays:', {
+                selectedNames1Array,
+                selectedNames2Array,
+                selectedNames3Array,
+                selectedNames4Array,
+                staffRaisedFlagArray,
+                staffLoweredFlagArray
+            });
 
             // Construct the shifts array
             const shifts = [
                 { shiftName: 'Shift A', staff: selectedNames1Array, time: time1 },
                 { shiftName: 'Shift B', staff: selectedNames2Array, time: time2 },
-                { shiftName: 'Shift C', staff: selectedNames3Array, time: time3 }
+                { shiftName: 'Shift C', staff: selectedNames3Array, time: time3 },
+                ...(selectedNames4Array.length > 0 ? [{ shiftName: 'Shift D', staff: selectedNames4Array, time: time4 }] : [])
             ];
+
+            // Log shifts array for debugging
+            console.log('Constructed shifts array:', shifts);
 
             const findSchedule = await ScheduleAux.findOne({
                 location: location,
@@ -4892,7 +4938,13 @@ app.get('/auxiliary-police/schedule/add', isAuthenticated, async function (req, 
             if (findSchedule) {
                 const updateSchedule = await ScheduleAux.findOneAndUpdate(
                     { location: location, date: moment(date).utcOffset(8).toDate() },
-                    { $set: { shifts: shifts } },
+                    {
+                        $set: {
+                            shift: shifts,
+                            staffRaisedFlag: staffRaisedFlagArray,
+                            staffLoweredFlag: staffLoweredFlagArray
+                        }
+                    },
                     { upsert: true }
                 );
 
@@ -4910,19 +4962,21 @@ app.get('/auxiliary-police/schedule/add', isAuthenticated, async function (req, 
                 const newSchedule = new ScheduleAux({
                     date: moment(date).utcOffset(8).toDate(),
                     location: location,
-                    shift: shifts
+                    shift: shifts,
+                    staffRaisedFlag: staffRaisedFlagArray,
+                    staffLoweredFlag: staffLoweredFlagArray
                 });
 
                 const saveSchedule = await newSchedule.save();
 
                 if (saveSchedule) {
-                    console.log('Successfully add auxiliary police schedule on ' + date);
+                    console.log('Successfully added auxiliary police schedule on ' + date);
                     res.render('auxiliarypolice-schedule-add', {
                         user: user,
                         notifications: notifications,
                         uuid: uuidv4(),
                         show: 'show',
-                        alert: 'Successfully add auxiliary police schedule on ' + date
+                        alert: 'Successfully added auxiliary police schedule on ' + date
                     });
                 } else {
                     console.log('Failed to add auxiliary police schedule on ' + date);
@@ -4936,9 +4990,10 @@ app.get('/auxiliary-police/schedule/add', isAuthenticated, async function (req, 
                 }
             }
         }
-
     }
 });
+
+
 
 // CASE
 
@@ -5009,55 +5064,119 @@ app.get('/auxiliary-police/case/add', isAuthenticated, async function (req, res)
             alert: ''
         });
     }
-}).post('/auxiliary-police/case/add', isAuthenticated, async function (req, res) {
+}).post('/auxiliary-police/schedule/add', isAuthenticated, async function (req, res) {
     const username = req.user.username;
     const user = await User.findOne({ username: username });
     const notifications = await Notification.find({
         recipient: user._id,
         read: false
-    })
-        .populate('sender')
-        .sort({ timestamp: -1 });
+    }).populate('sender');
 
     if (user) {
-        const { date, time, location, eventSummary, actionTaken, selectedNames1, remarks } = req.body;
+        const {
+            location,
+            date,
+            selectedNames1,
+            selectedNames2,
+            selectedNames3,
+            selectedNames4 = '',  // Optional field for Shift D
+            time1,
+            time2,
+            time3,
+            time4 = '',  // Optional field for Shift D
+            selectedNames5 = '',  // Optional field for Raised Flag Duty
+            selectedNames6 = ''  // Optional field for Lowered Flag Duty
+        } = req.body;
 
-        // Create a new Case document
-        const newCase = new CaseAux({
-            fullname: user.fullname, // You can update this to fetch the actual user fullname if needed
-            time: time,
-            date: moment(date).utcOffset(8).toDate(),
-            location: location,
-            summary: eventSummary + '\n' + actionTaken,
-            actionTaken: actionTaken,
-            staffOnDuty: selectedNames1.split(','), // Convert comma-separated string to array
-            remarks: remarks
-        });
-
-        // Save the document to the database
-        const addReport = await newCase.save();
-
-        if (addReport) {
-
-            console.log('Successfully add case report');
-
-            res.render('auxiliarypolice-case-add', {
+        if (!location || !date || !selectedNames1 || !selectedNames2 || !selectedNames3 || time1 === 'Select shift time' || time2 === 'Select shift time' || time3 === 'Select shift time' || (selectedNames4 && time4 === 'Select shift time')) {
+            console.log('Failed to add auxiliary police schedule');
+            res.render('auxiliarypolice-schedule-add', {
                 user: user,
                 notifications: notifications,
                 uuid: uuidv4(),
                 show: 'show',
-                alert: 'Successfully add case report'
+                alert: 'All form must be filled, there is an empty input'
             });
         } else {
-            console.log('Failed add case report, please check all your input');
+            // Ensure the selected names are split into arrays
+            const selectedNames1Array = selectedNames1 ? selectedNames1.split(',') : [];
+            const selectedNames2Array = selectedNames2 ? selectedNames2.split(',') : [];
+            const selectedNames3Array = selectedNames3 ? selectedNames3.split(',') : [];
+            const selectedNames4Array = selectedNames4 ? selectedNames4.split(',') : [];  // Handle new shift
+            const staffRaisedFlagArray = selectedNames5 ? selectedNames5.split(',') : [];  // Handle raised flag duty
+            const staffLoweredFlagArray = selectedNames6 ? selectedNames6.split(',') : [];  // Handle lowered flag duty
 
-            res.render('auxiliarypolice-case-add', {
-                user: user,
-                notifications: notifications,
-                uuid: uuidv4(),
-                show: 'show',
-                alert: 'Failed add case report, please check all your input'
+            // Construct the shifts array
+            const shifts = [
+                { shiftName: 'Shift A', staff: selectedNames1Array, time: time1 },
+                { shiftName: 'Shift B', staff: selectedNames2Array, time: time2 },
+                { shiftName: 'Shift C', staff: selectedNames3Array, time: time3 },
+                ...(selectedNames4Array.length > 0 ? [{ shiftName: 'Shift D', staff: selectedNames4Array, time: time4 }] : [])
+            ];
+
+            // Log shifts array for debugging
+            console.log('Constructed shifts array:', shifts);
+
+            const findSchedule = await ScheduleAux.findOne({
+                location: location,
+                date: moment(date).utcOffset(8).toDate()
             });
+
+            if (findSchedule) {
+                const updateSchedule = await ScheduleAux.findOneAndUpdate(
+                    { location: location, date: moment(date).utcOffset(8).toDate() },
+                    {
+                        $set: {
+                            shift: shifts,
+                            staffRaisedFlag: staffRaisedFlagArray,
+                            staffLoweredFlag: staffLoweredFlagArray
+                        }
+                    },
+                    { upsert: true }
+                );
+
+                if (updateSchedule) {
+                    console.log('Successfully updated auxiliary police schedule');
+                    res.render('auxiliarypolice-schedule-add', {
+                        user: user,
+                        notifications: notifications,
+                        uuid: uuidv4(),
+                        show: 'show',
+                        alert: 'Successfully updated auxiliary police schedule on'
+                    });
+                }
+            } else {
+
+                const newSchedule = new ScheduleAux({
+                    date: moment(date).utcOffset(8).toDate(),
+                    location: location,
+                    shift: shifts,
+                    staffRaisedFlag: staffRaisedFlagArray,
+                    staffLoweredFlag: staffLoweredFlagArray
+                });
+
+                const saveSchedule = await newSchedule.save();
+
+                if (saveSchedule) {
+                    console.log('Successfully added auxiliary police schedule on ' + date);
+                    res.render('auxiliarypolice-schedule-add', {
+                        user: user,
+                        notifications: notifications,
+                        uuid: uuidv4(),
+                        show: 'show',
+                        alert: 'Successfully added auxiliary police schedule on ' + date
+                    });
+                } else {
+                    console.log('Failed to add auxiliary police schedule on ' + date);
+                    res.render('auxiliarypolice-schedule-add', {
+                        user: user,
+                        notifications: notifications,
+                        uuid: uuidv4(),
+                        show: 'show',
+                        alert: 'Failed to add auxiliary police schedule on ' + date
+                    });
+                }
+            }
         }
     }
 });
