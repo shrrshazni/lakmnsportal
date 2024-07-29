@@ -558,7 +558,7 @@ let transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
         user: 'protech@lakmns.org',
-        pass: 'wkwgjdxlsdaxozgu'
+        pass: 'authxzcjfhfqvhkh'
     }
 });
 
@@ -1800,7 +1800,6 @@ app
             if (req.body.officenumber) {
                 updateFields.officenumber = req.body.officenumber;
             }
-
             if (req.body.email) {
                 updateFields.email = req.body.email;
             }
@@ -1816,16 +1815,10 @@ app
             if (req.body.nric) {
                 updateFields.nric = req.body.nric;
             }
-            if (
-                req.body.marital &&
-                req.body.marital !== 'Select your marital status'
-            ) {
+            if (req.body.marital && req.body.marital !== 'Select your marital status') {
                 updateFields.marital = req.body.marital;
             }
-            if (
-                req.body.education &&
-                req.body.education !== 'Select your highest education'
-            ) {
+            if (req.body.education && req.body.education !== 'Select your highest education') {
                 updateFields.education = req.body.education;
             }
             if (req.body.address) {
@@ -1835,6 +1828,8 @@ app
                 updateFields.children = parseInt(req.body.children);
             }
 
+            console.log('Update fields:', updateFields);
+
             if (Object.keys(updateFields).length === 0) {
                 res.render('settings', {
                     user: user,
@@ -1842,126 +1837,84 @@ app
                     notifications: notifications,
                     info: info,
                     show: 'show',
-                    alert: 'Update unsuccessful, there no any input to be updated'
+                    alert: 'Update unsuccessful, there is no input to be updated'
                 });
             } else {
-                let updateUser = '';
-
-                if (updateFields.phone !== '') {
-                    updateUser = await User.findOneAndUpdate(
-                        {
-                            _id: user._id
-                        },
-                        {
-                            $set: updateFields
-                        },
-                        { new: true }
-                    );
-
-                    await Info.findOneAndUpdate(
-                        {
-                            user: user._id
-                        },
-                        {
-                            phoneVerified: false
-                        },
-                        {
-                            new: true
-                        }
-                    );
-                } else if (updateFields.email !== '') {
-                    updateUser = await User.findOneAndUpdate(
-                        {
-                            _id: user._id
-                        },
-                        {
-                            $set: updateFields
-                        },
-                        { new: true }
-                    );
-
-                    await Info.findOneAndUpdate(
-                        {
-                            user: user._id
-                        },
-                        {
-                            emailVerified: false
-                        },
-                        {
-                            new: true
-                        }
-                    );
-                } else if (updateFields.phone !== '' && updateFields.email !== '') {
-                    updateUser = await User.findOneAndUpdate(
-                        {
-                            _id: user._id
-                        },
-                        {
-                            $set: updateFields
-                        },
-                        { new: true }
-                    );
-
-                    await Info.findOneAndUpdate(
-                        {
-                            user: user._id
-                        },
-                        {
-                            emailVerified: false,
-                            phoneVerified: false
-                        },
-                        {
-                            new: true
-                        }
-                    );
-
-                } else {
-                    updateUser = await User.findOneAndUpdate(
-                        {
-                            _id: user._id
-                        },
-                        {
-                            $set: updateFields
-                        },
-                        { new: true }
-                    );
+                // Check if email already exists
+                if (updateFields.email) {
+                    const emailExists = await User.findOne({ email: updateFields.email });
+                    if (emailExists && emailExists._id.toString() !== user._id.toString()) {
+                        return res.render('settings', {
+                            user: user,
+                            uuid: uuidv4(),
+                            notifications: notifications,
+                            info: info,
+                            show: 'show',
+                            alert: 'The email address is already in use by another account.'
+                        });
+                    }
                 }
 
-                console.log(updateUser);
-                console.log(updateFields);
-
-                const today = moment().utcOffset(8).startOf('day').toDate();
+                const updateUser = await User.findOneAndUpdate(
+                    { _id: user._id },
+                    { $set: updateFields },
+                    { upsert: true, new: true }
+                );
 
                 if (updateUser) {
-                    // activity
+                    // If email or phone are updated, set verification fields to false
+                    const updateInfoFields = {};
+                    if (updateFields.phone) {
+                        updateInfoFields.phoneVerified = false;
+                    }
+                    if (updateFields.email) {
+                        updateInfoFields.emailVerified = false;
+                    }
+
+                    if (Object.keys(updateInfoFields).length > 0) {
+                        await Info.findOneAndUpdate(
+                            { user: user._id },
+                            { $set: updateInfoFields },
+                            { upsert: true, new: true }
+                        );
+                    }
+
+                    console.log('Update successful:', updateUser);
+
                     const activityUser = new Activity({
                         user: user._id,
                         date: moment().utcOffset(8).toDate(),
                         title: 'Update profile',
                         type: 'Profile',
-                        description:
-                            user.fullname +
-                            ' has update their profile at ' + getDateFormat2(today)
+                        description: `${user.fullname} has updated their profile on ${moment().format('YYYY-MM-DD')}`
                     });
 
-                    activityUser.save();
+                    await activityUser.save();
+                    console.log('New activity submitted:', activityUser);
 
-                    console.log('New activity submitted', activityUser);
-
-                    console.log('Update successful');
                     res.render('settings', {
                         user: user,
                         uuid: uuidv4(),
                         notifications: notifications,
                         info: info,
                         show: 'show',
-                        alert:
-                            'Update sucessful on basic or personal information, please do check your profile to see the changes'
+                        alert: 'Update successful. Please check your profile to see the changes.'
+                    });
+                } else {
+                    console.log('Update unsuccessful');
+                    res.render('settings', {
+                        user: user,
+                        uuid: uuidv4(),
+                        notifications: notifications,
+                        info: info,
+                        show: 'show',
+                        alert: 'Update unsuccessful. Please check your profile to see the changes.'
                     });
                 }
             }
         }
     });
+
 
 app.post('/settings/change-password', isAuthenticated, async function (req, res) {
     const username = req.user.username;
