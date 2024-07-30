@@ -1983,64 +1983,56 @@ app.post('/settings/change-password', isAuthenticated, async function (req, res)
 
 app.post('/settings/upload/profile-image', isAuthenticated, async function (req, res) {
     const username = req.user.username;
-    const user = await User.find({ username: username });
+    const user = await User.findOne({ username: username });
 
-    if (user) {
-        if (!req.files || Object.keys(req.files).length === 0) {
-            console.log('There is no files selected');
-
-            res.redirect('/settings');
-        } else {
-            console.log('There are files try to be uploaded');
-
-            // No file with the report ID found, proceed with file upload
-            for (const file of Object.values(req.files)) {
-                const upload = __dirname + '/public/uploads/' + file.name;
-                const pathUpload = '/uploads/' + file.name;
-                const today = moment().utcOffset(8).startOf('day').toDate();
-                const type = path.extname(file.name);
-
-                await file.mv(upload);
-
-                // Calculate file size in megabytes
-                const fileSizeInBytes = (await fs.stat(upload)).size;
-                const fileSizeInMB = fileSizeInBytes / (1024 * 1024);
-
-                console.log(fileSizeInMB);
-
-                await User.findOneAndUpdate(
-                    {
-                        username: username
-                    },
-                    {
-                        profile: pathUpload
-                    },
-                    { upsert: true, new: true }
-                );
-            }
-
-            // activity
-            const activityUser = new Activity({
-                user: user._id,
-                date: moment().utcOffset(8).toDate(),
-                title: 'Update profile',
-                type: 'Profile',
-                description:
-                    user.fullname +
-                    ' has update their profile at ' + getDateFormat2(today)
-            });
-
-            activityUser.save();
-
-            console.log('New activity submitted', activityUser);
-
-            console.log('Done upload files!');
-
-            res.redirect('/settings');
-        }
+    if (!user) {
+        console.log('User not found');
+        return res.redirect('/settings');
     }
-}
-);
+
+    if (!req.files || Object.keys(req.files).length === 0) {
+        console.log('There are no files selected');
+        return res.redirect('/settings');
+    }
+
+    console.log('Files to be uploaded');
+
+    for (const file of Object.values(req.files)) {
+        const upload = __dirname + '/public/uploads/' + file.name;
+        const pathUpload = '/uploads/' + file.name;
+        const today = moment().utcOffset(8).startOf('day').toDate();
+        const type = path.extname(file.name);
+
+        await file.mv(upload);
+
+        const fileSizeInBytes = (await fs.stat(upload)).size;
+        const fileSizeInMB = fileSizeInBytes / (1024 * 1024);
+
+        console.log(fileSizeInMB);
+
+        await User.findOneAndUpdate(
+            { username: username },
+            { profile: pathUpload },
+            { upsert: true, new: true }
+        );
+    }
+
+    const activityUser = new Activity({
+        user: user._id, // Ensure this is the correct reference
+        date: moment().utcOffset(8).toDate(),
+        title: 'Update profile',
+        type: 'Profile',
+        description: `${user.fullname} has updated their profile at ${getDateFormat2(moment().utcOffset(8).toDate())}`
+    });
+
+    await activityUser.save();
+
+    console.log('New activity submitted', activityUser);
+    console.log('Done uploading files!');
+
+    res.redirect('/settings');
+});
+
 
 app.get('/info/:type/:method/:id', async function (req, res) {
     const id = req.params.id;
