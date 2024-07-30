@@ -558,7 +558,7 @@ let transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
         user: 'protech@lakmns.org',
-        pass: 'authxzcjfhfqvhkh'
+        pass: 'lxiwvlgvibxcbsxy'
     }
 });
 
@@ -1641,34 +1641,44 @@ app.get('/reset-password/:id', async function (req, res) {
         alert: ''
     });
 
-}).post('/reset-password/:id', async function (rrq, res) {
+}).post('/reset-password/:id', async function (req, res) {
     const id = req.params.id;
     const user = await User.findOne({ _id: id });
 
-    await user.setPassword(req.body.newPassword);
-    const updatePassword = await user.save();
+    if (req.body.confirmPassword === req.body.password) {
+        await user.setPassword(req.body.password);
+        const updatePassword = await user.save();
 
-    if (updatePassword) {
+        if (updatePassword) {
 
-        res.render('sign-in', {
-            validationUsername: '',
-            validationPassword: '',
-            // input value
-            username: '',
-            password: '',
-            // toast
-            toastShow: 'show',
-            toastMsg: 'Reset password successful!'
-        });
+            res.render('sign-in', {
+                validationUsername: '',
+                validationPassword: '',
+                // input value
+                username: '',
+                password: '',
+                // toast
+                toastShow: 'show',
+                toastMsg: 'Reset password successful!'
+            });
 
+        } else {
+
+            res.render('reset-password', {
+                id: id,
+                show: 'show',
+                alert: 'Update password failed!'
+            });
+        }
     } else {
-
         res.render('reset-password', {
             id: id,
             show: 'show',
-            alert: 'Update password failed!'
+            alert: 'New password and confirm password is not a match!'
         });
     }
+
+
 });
 
 //SIGNOUT
@@ -2060,6 +2070,8 @@ app.get('/info/:type/:method/:id', async function (req, res) {
                 subject: 'lakmnsportal - Email Verification',
                 html: emailHTML
             };
+
+            console.log(mailOptions);
 
             transporter.sendMail(mailOptions, (error, info) => {
                 if (error) {
