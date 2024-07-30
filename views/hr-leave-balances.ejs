@@ -56,8 +56,13 @@
             <tr class="position-static">
 
               <td class="align-middle text-body ps-0">
-                <a class="mb-0 fw-bold white-space-nowrap fs-8 staff" href="/staff/details/<%= checkUser._id %>"><%= checkUser.fullname %></a>
+                <% if (checkUser) { %>
+                <a class="mb-0 fw-bold white-space-nowrap notranslate fs-8 staff" href="/staff/details/<%= checkUser._id %>"><%= checkUser.fullname %></a>
+                <% } else { %>
+                <p class="mb-0 fs-8">User not found</p>
+                <% } %>
               </td>
+
 
               <td class="align-middle text-body text-center white-space-nowrap ps-0 annual">
                 <p class="mb-0 fs-8 fw-bold"><%= leave.annual.leave - leave.annual.taken %></p>
