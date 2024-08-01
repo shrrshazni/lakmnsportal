@@ -67,31 +67,73 @@ app.use(passport.session());
 // Users Database
 const userDatabase = mongoose.createConnection(
     'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/user'
+    ,
+    {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+        serverSelectionTimeoutMS: 30000, // Increase timeout to 30 seconds
+        socketTimeoutMS: 45000 // Increase socket timeout to 45 seconds
+    }
 );
 
 // Leave Database
 const leaveDatabase = mongoose.createConnection(
     'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/leave'
+    ,
+    {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+        serverSelectionTimeoutMS: 30000, // Increase timeout to 30 seconds
+        socketTimeoutMS: 45000 // Increase socket timeout to 45 seconds
+    }
 );
 
 // File Database
 const fileDatabase = mongoose.createConnection(
     'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/file'
+    ,
+    {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+        serverSelectionTimeoutMS: 30000, // Increase timeout to 30 seconds
+        socketTimeoutMS: 45000 // Increase socket timeout to 45 seconds
+    }
 );
 
 // Attendance Database
 const attendanceDatabase = mongoose.createConnection(
-    'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/attendance'
+    'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@tek/attendance'
+    ,
+    {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+        serverSelectionTimeoutMS: 30000, // Increase timeout to 30 seconds
+        socketTimeoutMS: 45000 // Increase socket timeout to 45 seconds
+    }
 );
 
 // Tender Database
 const tenderDatabase = mongoose.createConnection(
-    'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/tender'
+    'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@ping/tender'
+    ,
+    {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+        serverSelectionTimeoutMS: 30000, // Increase timeout to 30 seconds
+        socketTimeoutMS: 45000 // Increase socket timeout to 45 seconds
+    }
 );
 
 // Auxiliary Police
 const auxPoliceDatabase = mongoose.createConnection(
     'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/auxipolice'
+    ,
+    {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+        serverSelectionTimeoutMS: 30000, // Increase timeout to 30 seconds
+        socketTimeoutMS: 45000 // Increase socket timeout to 45 seconds
+    }
 );
 
 // SCHEMA INITIALIZATION
