@@ -1198,7 +1198,7 @@ app.get('/search/staff/assignee-relief', isAuthenticated, async function (req, r
                 });
             } else {
                 results = await User.find({
-                    section: user.section,
+                    department: user.department,
                     fullname: { $regex: query, $options: 'i' }
                 });
             }
@@ -3702,7 +3702,7 @@ app.get('/leave/:approval/:id', async function (req, res) {
         } else if (approval === 'acknowledged') {
             if (
                 checkLeave.approvals[humanResourceIndex - 1].status === 'approved' &&
-                user.isAdmin
+                user.isAdmin && user.section === 'Human Resource Management Division'
             ) {
                 const findrecipient = await Leave.findOneAndUpdate(
                     {
@@ -3841,7 +3841,7 @@ app.get('/leave/:approval/:id', async function (req, res) {
                     { new: true }
                 );
 
-                // send noti
+                // // send noti
                 const newNotification = new Notification({
                     sender: user._id,
                     recipient: new mongoose.Types.ObjectId(firstRecipientId),
@@ -3867,11 +3867,9 @@ app.get('/leave/:approval/:id', async function (req, res) {
                     _id: firstRecipientId
                 });
 
-                // turn off the email notications
-                // send email to the recipient
                 // let mailOptions = {
                 //     from: 'protech@lakmns.org',
-                //     to: firstlRecipientEmail.email,
+                //     to: firstRecipientEmail.email,
                 //     subject: 'lakmnsportal - Approval Leave Follow up',
                 //     html: `
                 //       <html>
@@ -7911,9 +7909,17 @@ cron.schedule(
 // UPDATE ATTENDANCE TO INVALID AT 
 cron.schedule(
     '59 23 * * *',
-    () => {
+    async () => {
         console.log('Running cron job to update attendance');
         updateAttendanceEndOfDays();
+
+        const clearQr = await QRCode.deleteMany();
+
+        if (clearQr) {
+            console.log('QR codes cleared');
+        } else {
+            console.log('QR codes not cleared');
+        }
     },
     {
         scheduled: true,
