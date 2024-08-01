@@ -136,6 +136,7 @@ const userSchema = new mongoose.Schema({
     isPersonalAssistant: { type: Boolean, default: false },
     isNonOfficeHour: { type: Boolean, default: false },
     isSuperAdmin: { type: Boolean, default: false },
+    isDriver: { type: Boolean, default: false },
     dateEmployed: { type: Date },
     birthdate: { type: Date }
 });
@@ -1196,26 +1197,40 @@ app.get('/search/staff/assignee-relief', isAuthenticated, async function (req, r
                 results = await User.find({
                     $or: [departmentQuery, personalAssistant]
                 });
+            } else if (user.isDriver) {
+                const departmentQuery = {
+                    department: user.department,
+                    fullname: { $regex: query, $options: 'i' }
+                };
+
+                const driver = {
+                    isDriver: true,
+                    fullname: { $regex: query, $options: 'i' }
+                };
+
+                results = await User.find({
+                    $or: [departmentQuery, driver]
+                });
+            } else if (user.isAdmin) {
+                const departmentQuery = {
+                    department: user.department,
+                    fullname: { $regex: query, $options: 'i' }
+                };
+
+                const admin = {
+                    isAdmin: true,
+                    fullname: { $regex: query, $options: 'i' }
+                };
+
+                results = await User.find({
+                    $or: [departmentQuery, admin]
+                });
             } else {
                 results = await User.find({
                     department: user.department,
                     fullname: { $regex: query, $options: 'i' }
                 });
             }
-        } else if (user.isAdmin) {
-            const departmentQuery = {
-                department: user.department,
-                fullname: { $regex: query, $options: 'i' }
-            };
-
-            const admin = {
-                isAdmin: true,
-                fullname: { $regex: query, $options: 'i' }
-            };
-
-            results = await User.find({
-                $or: [departmentQuery, admin]
-            });
         } else {
             results = [];
         }
@@ -2259,7 +2274,7 @@ app
             const adminHR = await User.findOne({
                 isAdmin: true,
                 isHeadOfSection: true,
-                section: 'Administration and Human Resource Management Division'
+                section: 'Human Resource Management Division'
             });
             const userLeave = await UserLeave.findOne({ user: user._id })
                 .populate('user')
@@ -2855,7 +2870,7 @@ app
             } else {
                 const adminUsers = await User.find({
                     isAdmin: true,
-                    section: 'Administration and Human Resource Management Division',
+                    section: 'Human Resource Management Division',
                     _id: { $ne: adminHR._id }
                 });
 
@@ -7691,9 +7706,17 @@ app.get('/super-admin/update', isAuthenticated, async function (req, res) {
     if (user.isSuperAdmin) {
 
         try {
-            // Fetch all users
-            const currentTime = moment().utcOffset(8).toDate();
-            const result = await Info.updateMany({}, { lastSeen: currentTime });
+            const updateUser = await User.updateMany(
+                { username: 'P358' },
+                { $set: { department: 'Management and Services Department', section: 'Management and Communication' } }
+            );
+
+            if (updateUser) {
+                console.log('Update for many user');
+            } else {
+                console.log('Update for many user');
+            }
+
         } catch (error) {
             console.error('Error creating Info documents:', error);
         }
@@ -7773,8 +7796,6 @@ cron.schedule(
     '0 0 * * *',
     async () => {
 
-        // Get the current date with UTC+8 offset
-        const currentDate = moment().utcOffset(8);
         const threeDaysAgo = moment().utcOffset(8).subtract(3, 'days');
         const threeDaysFromNow = moment().utcOffset(8).add(3, 'days');
 
@@ -7786,45 +7807,50 @@ cron.schedule(
 
         console.log(invalidLeaves);
 
-        const adminHR = await User.findOne({ isAdmin: true });
-        const depChiefExec = await User.findOne({ isDeputyChiefExec: true });
-        const chiefExec = await User.findOne({ isChiefExec: true });
-
         // Update the status of invalid leaves
         for (const leave of invalidLeaves) {
             const user = await User.findById(leave.user);
 
-            // Check if the user is an admin
+            // Check if the user is a Deputy Chief Executive
             if (user.isDeputyChiefExec) {
                 leave.status = 'invalid';
 
                 await leave.save();
             } else {
                 leave.status = 'invalid';
-                leave.approvals = leave.approvals.filter(
-                    approval => approval.role === 'Staff'
-                );
 
-                leave.approvals.push(
-                    {
-                        recipient: depChiefExec._id,
-                        role: 'Deputy Chief Executive Officer',
-                        status: 'pending',
-                        comment: 'Leave request needs approval',
-                        estimated: moment().utcOffset(8).add(1, 'days').toDate(),
-                        timestamp: ''
-                    },
-                    {
-                        recipient: adminHR._id,
-                        role: 'Human Resource',
-                        status: 'pending',
-                        comment: 'Leave request needs approval',
-                        estimated: moment().utcOffset(8).add(2, 'days').toDate(),
-                        timestamp: ''
+                // Filter approvals up to the last 'approved' or 'submitted' status
+                let lastValidIndex = -1;
+                leave.approvals.forEach((approval, index) => {
+                    if (approval.status === 'approved' || approval.status === 'submitted') {
+                        lastValidIndex = index;
                     }
-                );
+                });
+
+                if (lastValidIndex !== -1) {
+                    leave.approvals = leave.approvals.slice(0, lastValidIndex + 1);
+                }
 
                 await leave.save();
+
+                // Send notifications
+                const sendNoti = leave.approvals.map(approval => approval.recipient);
+
+                if (sendNoti.length > 0) {
+                    for (const recipientId of sendNoti) {
+                        const newNotification = new Notification({
+                            sender: user._id,
+                            recipient: new mongoose.Types.ObjectId(recipientId),
+                            type: 'Leave request',
+                            url: '/leave/details/' + leave._id,
+                            message: 'Leave has becomes invalid due to it already past 3 days of approval, please do check the leave request.'
+                        });
+
+                        await newNotification.save();
+                    }
+
+                    console.log('Done sending notifications!');
+                }
             }
         }
 
@@ -8089,43 +8115,38 @@ calculateAge = function (birthdate) {
     return age;
 };
 
-// GET NUMBERS OF DAYS BETWEEN TWO DATES
-calculateBusinessDays = function (startDateString, endDateString) {
-    const start = moment(startDateString).utcOffset(8).startOf('day').toDate();
-    const end = moment(endDateString).utcOffset(8).startOf('day').toDate();
+const defaultPublicHolidays = ['2024-02-16', '2024-05-01', '2024-05-07'];
+const allPublicHolidays = defaultPublicHolidays.map(date => moment(date).startOf('day').toDate());
 
-    const defaultPublicHolidays = ['2024-02-16', '2024-05-01', '2024-05-07'];
-    const allPublicHolidays = defaultPublicHolidays;
-
+function calculateBusinessDays(startDateString, endDateString) {
     let count = 0;
+    let start = moment(startDateString).startOf('day');
+    let end = moment(endDateString).startOf('day');
 
-    // Use '<' to include the end date in the calculation
-    while (start < end) {
-        const dayOfWeek = start.getUTCDay();
+    while (start.isSameOrBefore(end)) {
+        const dayOfWeek = start.day();
 
         // Check if the current day is a business day (Monday to Friday) and not a public holiday
         if (
             dayOfWeek >= 1 &&
             dayOfWeek <= 5 &&
-            !isPublicHoliday(start, allPublicHolidays)
+            !isPublicHoliday(start.toDate(), allPublicHolidays)
         ) {
             count++;
         }
 
-        start.setUTCDate(start.getUTCDate() + 1);
+        start.add(1, 'days');
     }
 
-    return count + 1;
-};
+    return count;
+}
+
+function isPublicHoliday(date, allPublicHolidays) {
+    return allPublicHolidays.some(holiday => moment(date).isSame(moment(holiday), 'day'));
+}
 
 const formatDate = function (date) {
     return moment(date).format('YYYY-MM-DD');
-};
-
-isPublicHoliday = function (date, publicHolidays) {
-    const formattedDate = formatDate(date);
-
-    return publicHolidays.some(holiday => holiday === formattedDate);
 };
 
 isWeekend = function (date) {
@@ -8161,924 +8182,378 @@ generateApprovals = function (
     assignee,
     type
 ) {
-    let approvals;
+    let approvals = [];
 
     if (type === 'Emergency Leave') {
-        if (
-            user.isAdmin &&
-            user.section === 'Administration and Human Resource Management Division'
-        ) {
-            if (user.isOfficer === true) {
-                if (headOfSection) {
-                    approvals = [
-                        {
-                            recipient: user._id,
-                            role: 'Staff',
-                            status: 'submitted',
-                            comment: 'Submitted leave request',
-                            timestamp: moment().utcOffset(8).toDate(),
-                            estimated: ''
-                        },
-                        {
-                            recipient: headOfSection._id,
-                            role: 'Head of Division',
-                            status: 'pending',
-                            comment: 'Leave request needs approval',
-                            estimated: moment().utcOffset(8).add(1, 'day').toDate(),
-                            timestamp: ''
-                        },
-                        {
-                            recipient: adminHR._id,
-                            role: 'Human Resource',
-                            status: 'pending',
-                            comment: 'Leave request needs to be reviewed',
-                            estimated: moment().utcOffset(8).add(2, 'days').toDate(),
-                            timestamp: ''
-                        }
-                    ];
-                } else {
-                    approvals = [
-                        {
-                            recipient: user._id,
-                            role: 'Staff',
-                            status: 'submitted',
-                            comment: 'Submitted leave request',
-                            timestamp: moment().utcOffset(8).toDate(),
-                            estimated: ''
-                        },
-                        {
-                            recipient: adminHR._id,
-                            role: 'Human Resource',
-                            status: 'pending',
-                            comment: 'Leave request needs to be reviewed',
-                            estimated: moment().utcOffset(8).add(3, 'days').toDate(),
-                            timestamp: ''
-                        }
-                    ];
-                }
-            } else if (user.isHeadOfSection === true) {
-                approvals = [
-                    {
-                        recipient: user._id,
-                        role: 'Staff',
-                        status: 'submitted',
-                        comment: 'Submitted leave request',
-                        timestamp: moment().utcOffset(8).toDate(),
-                        estimated: ''
-                    },
-                    ...(assignee && assignee.length > 0
-                        ? assignee.map(assigneeItem => ({
-                            recipient: assigneeItem._id,
-                            role: 'Relief Staff',
-                            status: 'pending',
-                            comment: `Relief Staff for leave by ${assigneeItem.fullname}`,
-                            estimated: moment().utcOffset(8).add(1, 'day').toDate(),
-                            timestamp: ''
-                        }))
-                        : []),
-                    {
-                        recipient: depChiefExec._id,
-                        role: 'Deputy Chief Executive Officer',
-                        status: 'pending',
-                        comment: 'Leave request needs approval',
-                        estimated: moment().utcOffset(8).add(3, 'days').toDate(),
-                        timestamp: ''
-                    },
-                    {
-                        recipient: adminHR._id,
-                        role: 'Human Resource',
-                        status: 'pending',
-                        comment: 'Leave request needs to be reviewed',
-                        estimated: moment().utcOffset(8).add(3, 'days').toDate(),
-                        timestamp: ''
-                    }
-                ];
-            } else if (user.isDeputyChiefExec === true) {
-                approvals = [
-                    {
-                        recipient: user._id,
-                        role: 'Staff',
-                        status: 'submitted',
-                        comment: 'Submitted leave request',
-                        timestamp: moment().utcOffset(8).toDate(),
-                        estimated: ''
-                    },
-                    ...(assignee && assignee.length > 0
-                        ? assignee.map(assigneeItem => ({
-                            recipient: assigneeItem._id,
-                            role: 'Relief Staff',
-                            status: 'pending',
-                            comment: `Relief Staff for leave by ${assigneeItem.fullname}`,
-                            estimated: moment().utcOffset(8).add(1, 'day').toDate(),
-                            timestamp: ''
-                        }))
-                        : []),
-                    {
-                        recipient: chiefExec._id,
-                        role: 'Chief Executive Officer',
-                        status: 'pending',
-                        comment: 'Leave request needs approval',
-                        estimated: moment().utcOffset(8).add(2, 'days').toDate(),
-                        timestamp: ''
-                    },
-                    {
-                        recipient: adminHR._id,
-                        role: 'Human Resource',
-                        status: 'pending',
-                        comment: 'Leave request needs to be reviewed',
-                        estimated: moment().utcOffset(8).add(3, 'days').toDate(),
-                        timestamp: ''
-                    }
-                ];
-            } else {
-                if (headOfSection) {
-                    approvals = [
-                        {
-                            recipient: user._id,
-                            role: 'Staff',
-                            status: 'submitted',
-                            comment: 'Submitted leave request',
-                            timestamp: moment().utcOffset(8).toDate(),
-                            estimated: ''
-                        },
-                        {
-                            recipient: headOfSection._id,
-                            role: 'Head of Division',
-                            status: 'pending',
-                            comment: 'Leave request needs approval',
-                            estimated: moment().utcOffset(8).add(1, 'day').toDate(),
-                            timestamp: ''
-                        },
-                        {
-                            recipient: adminHR._id,
-                            role: 'Human Resource',
-                            status: 'pending',
-                            comment: 'Leave request needs to be reviewed',
-                            estimated: moment().utcOffset(8).add(3, 'days').toDate(),
-                            timestamp: ''
-                        }
-                    ];
-                } else {
-                    approvals = [
-                        {
-                            recipient: user._id,
-                            role: 'Staff',
-                            status: 'submitted',
-                            comment: 'Submitted leave request',
-                            timestamp: moment().utcOffset(8).toDate(),
-                            estimated: ''
-                        },
-                        {
-                            recipient: adminHR._id,
-                            role: 'Human Resource',
-                            status: 'pending',
-                            comment: 'Leave request needs to be reviewed',
-                            estimated: moment().utcOffset(8).add(3, 'days').toDate(),
-                            timestamp: ''
-                        }
-                    ];
-                }
+        if (user.isOfficer === true) {
+            approvals.push({
+                recipient: user._id,
+                role: 'Staff',
+                status: 'submitted',
+                comment: 'Submitted leave request',
+                timestamp: moment().utcOffset(8).toDate(),
+                estimated: ''
+            });
+
+            if (headOfSection) {
+                approvals.push({
+                    recipient: headOfSection._id,
+                    role: 'Head of Division',
+                    status: 'pending',
+                    comment: 'Leave request needs approval',
+                    estimated: moment().utcOffset(8).add(1, 'day').toDate(),
+                    timestamp: ''
+                });
+            }
+
+            if (headOfDepartment) {
+                approvals.push({
+                    recipient: headOfDepartment._id,
+                    role: 'Head of Department',
+                    status: 'pending',
+                    comment: 'Leave request needs approval',
+                    estimated: moment().utcOffset(8).add(1, 'day').toDate(),
+                    timestamp: ''
+                });
+            }
+
+            if (adminHR) {
+                approvals.push({
+                    recipient: adminHR._id,
+                    role: 'Human Resource',
+                    status: 'pending',
+                    comment: 'Leave request needs to be reviewed',
+                    estimated: moment().utcOffset(8).add(3, 'days').toDate(),
+                    timestamp: ''
+                });
+            }
+        } else if (user.isHeadOfSection === true) {
+            approvals.push({
+                recipient: user._id,
+                role: 'Staff',
+                status: 'submitted',
+                comment: 'Submitted leave request',
+                timestamp: moment().utcOffset(8).toDate(),
+                estimated: ''
+            });
+
+            if (headOfDepartment) {
+                approvals.push({
+                    recipient: headOfDepartment._id,
+                    role: 'Head of Department',
+                    status: 'pending',
+                    comment: 'Leave request needs approval',
+                    estimated: moment().utcOffset(8).add(1, 'day').toDate(),
+                    timestamp: ''
+                });
+            }
+
+            if (depChiefExec) {
+                approvals.push({
+                    recipient: depChiefExec._id,
+                    role: 'Deputy Chief Executive Officer',
+                    status: 'pending',
+                    comment: 'Leave request needs approval',
+                    estimated: moment().utcOffset(8).add(3, 'days').toDate(),
+                    timestamp: ''
+                });
+            }
+
+            if (adminHR) {
+                approvals.push({
+                    recipient: adminHR._id,
+                    role: 'Human Resource',
+                    status: 'pending',
+                    comment: 'Leave request needs to be reviewed',
+                    estimated: moment().utcOffset(8).add(3, 'days').toDate(),
+                    timestamp: ''
+                });
+            }
+        } else if (user.isDeputyChiefExec === true) {
+            approvals.push({
+                recipient: user._id,
+                role: 'Staff',
+                status: 'submitted',
+                comment: 'Submitted leave request',
+                timestamp: moment().utcOffset(8).toDate(),
+                estimated: ''
+            });
+
+            if (chiefExec) {
+                approvals.push({
+                    recipient: chiefExec._id,
+                    role: 'Chief Executive Officer',
+                    status: 'pending',
+                    comment: 'Leave request needs approval',
+                    estimated: moment().utcOffset(8).add(2, 'days').toDate(),
+                    timestamp: ''
+                });
+            }
+
+            if (adminHR) {
+                approvals.push({
+                    recipient: adminHR._id,
+                    role: 'Human Resource',
+                    status: 'pending',
+                    comment: 'Leave request needs to be reviewed',
+                    estimated: moment().utcOffset(8).add(3, 'days').toDate(),
+                    timestamp: ''
+                });
             }
         } else {
-            if (user.isOfficer === true) {
-                if (headOfSection) {
-                    approvals = [
-                        {
-                            recipient: user._id,
-                            role: 'Staff',
-                            status: 'submitted',
-                            comment: 'Submitted leave request',
-                            timestamp: moment().utcOffset(8).toDate(),
-                            estimated: ''
-                        },
-                        {
-                            recipient: headOfSection._id,
-                            role: 'Head of Division',
-                            status: 'pending',
-                            comment: 'Leave request needs approval',
-                            estimated: moment().utcOffset(8).add(1, 'day').toDate(),
-                            timestamp: ''
-                        },
-                        {
-                            recipient: headOfDepartment._id,
-                            role: 'Head of Department',
-                            status: 'pending',
-                            comment: 'Leave request needs approval',
-                            estimated: moment().utcOffset(8).add(1, 'day').toDate(),
-                            timestamp: ''
-                        },
-                        {
-                            recipient: adminHR._id,
-                            role: 'Human Resource',
-                            status: 'pending',
-                            comment: 'Leave request needs to be reviewed',
-                            estimated: moment().utcOffset(8).add(2, 'days').toDate(),
-                            timestamp: ''
-                        }
-                    ];
-                } else {
-                    approvals = [
-                        {
-                            recipient: user._id,
-                            role: 'Staff',
-                            status: 'submitted',
-                            comment: 'Submitted leave request',
-                            timestamp: moment().utcOffset(8).toDate(),
-                            estimated: ''
-                        },
-                        {
-                            recipient: headOfDepartment._id,
-                            role: 'Head of Department',
-                            status: 'pending',
-                            comment: 'Leave request needs approval',
-                            estimated: moment().utcOffset(8).add(2, 'days').toDate(),
-                            timestamp: ''
-                        },
-                        {
-                            recipient: adminHR._id,
-                            role: 'Human Resource',
-                            status: 'pending',
-                            comment: 'Leave request needs to be reviewed',
-                            estimated: moment().utcOffset(8).add(3, 'days').toDate(),
-                            timestamp: ''
-                        }
-                    ];
-                }
-            } else if (user.isHeadOfSection === true) {
-                approvals = [
-                    {
-                        recipient: user._id,
-                        role: 'Staff',
-                        status: 'submitted',
-                        comment: 'Submitted leave request',
-                        timestamp: moment().utcOffset(8).toDate(),
-                        estimated: ''
-                    },
-                    {
-                        recipient: headOfDepartment._id,
-                        role: 'Head of Department',
-                        status: 'pending',
-                        comment: 'Leave request needs approval',
-                        estimated: moment().utcOffset(8).add(2, 'days').toDate(),
-                        timestamp: ''
-                    },
-                    {
-                        recipient: depChiefExec._id,
-                        role: 'Deputy Chief Executive Officer',
-                        status: 'pending',
-                        comment: 'Leave request needs approval',
-                        estimated: moment().utcOffset(8).add(3, 'days').toDate(),
-                        timestamp: ''
-                    },
-                    {
-                        recipient: adminHR._id,
-                        role: 'Human Resource',
-                        status: 'pending',
-                        comment: 'Leave request needs to be reviewed',
-                        estimated: moment().utcOffset(8).add(3, 'days').toDate(),
-                        timestamp: ''
-                    }
-                ];
-            } else if (user.isHeadOfDepartment === true) {
-                approvals = [
-                    {
-                        recipient: user._id,
-                        role: 'Staff',
-                        status: 'submitted',
-                        comment: 'Submitted leave request',
-                        timestamp: moment().utcOffset(8).toDate(),
-                        estimated: ''
-                    },
-                    {
-                        recipient: depChiefExec._id,
-                        role: 'Deputy Chief Executive Officer',
-                        status: 'pending',
-                        comment: 'Leave request needs approval',
-                        estimated: moment().utcOffset(8).add(2, 'days').toDate(),
-                        timestamp: ''
-                    },
-                    {
-                        recipient: chiefExec._id,
-                        role: 'Chief Executive Officer',
-                        status: 'pending',
-                        comment: 'Leave request needs approval',
-                        estimated: moment().utcOffset(8).add(2, 'days').toDate(),
-                        timestamp: ''
-                    },
-                    {
-                        recipient: adminHR._id,
-                        role: 'Human Resource',
-                        status: 'pending',
-                        comment: 'Leave request needs to be reviewed',
-                        estimated: moment().utcOffset(8).add(3, 'days').toDate(),
-                        timestamp: ''
-                    }
-                ];
-            } else if (user.isDeputyChiefExec === true) {
-                approvals = [
-                    {
-                        recipient: user._id,
-                        role: 'Staff',
-                        status: 'submitted',
-                        comment: 'Submitted leave request',
-                        timestamp: moment().utcOffset(8).toDate(),
-                        estimated: ''
-                    },
-                    {
-                        recipient: chiefExec._id,
-                        role: 'Chief Executive Officer',
-                        status: 'pending',
-                        comment: 'Leave request needs approval',
-                        estimated: moment().utcOffset(8).add(2, 'days').toDate(),
-                        timestamp: ''
-                    },
-                    {
-                        recipient: adminHR._id,
-                        role: 'Human Resource',
-                        status: 'pending',
-                        comment: 'Leave request needs to be reviewed',
-                        estimated: moment().utcOffset(8).add(3, 'days').toDate(),
-                        timestamp: ''
-                    }
-                ];
-            } else {
-                if (headOfSection) {
-                    approvals = [
-                        {
-                            recipient: user._id,
-                            role: 'Staff',
-                            status: 'submitted',
-                            comment: 'Submitted leave request',
-                            timestamp: moment().utcOffset(8).toDate(),
-                            estimated: ''
-                        },
-                        {
-                            recipient: headOfSection._id,
-                            role: 'Head of Division',
-                            status: 'pending',
-                            comment: 'Leave request needs approval',
-                            estimated: moment().utcOffset(8).add(1, 'day').toDate(),
-                            timestamp: ''
-                        },
-                        {
-                            recipient: headOfDepartment._id,
-                            role: 'Head of Department',
-                            status: 'pending',
-                            comment: 'Leave request needs approval',
-                            estimated: moment().utcOffset(8).add(2, 'days').toDate(),
-                            timestamp: ''
-                        },
-                        {
-                            recipient: adminHR._id,
-                            role: 'Human Resource',
-                            status: 'pending',
-                            comment: 'Leave request needs to be reviewed',
-                            estimated: moment().utcOffset(8).add(3, 'days').toDate(),
-                            timestamp: ''
-                        }
-                    ];
-                } else {
-                    approvals = [
-                        {
-                            recipient: user._id,
-                            role: 'Staff',
-                            status: 'submitted',
-                            comment: 'Submitted leave request',
-                            timestamp: moment().utcOffset(8).toDate(),
-                            estimated: ''
-                        },
-                        {
-                            recipient: headOfDepartment._id,
-                            role: 'Head of Department',
-                            status: 'pending',
-                            comment: 'Leave request needs approval',
-                            estimated: moment().utcOffset(8).add(2, 'days').toDate(),
-                            timestamp: ''
-                        },
-                        {
-                            recipient: adminHR._id,
-                            role: 'Human Resource',
-                            status: 'pending',
-                            comment: 'Leave request needs to be reviewed',
-                            estimated: moment().utcOffset(8).add(3, 'days').toDate(),
-                            timestamp: ''
-                        }
-                    ];
-                }
+            approvals.push({
+                recipient: user._id,
+                role: 'Staff',
+                status: 'submitted',
+                comment: 'Submitted leave request',
+                timestamp: moment().utcOffset(8).toDate(),
+                estimated: ''
+            });
+
+            if (headOfSection) {
+                approvals.push({
+                    recipient: headOfSection._id,
+                    role: 'Head of Division',
+                    status: 'pending',
+                    comment: 'Leave request needs approval',
+                    estimated: moment().utcOffset(8).add(1, 'day').toDate(),
+                    timestamp: ''
+                });
+            }
+
+            if (headOfDepartment) {
+                approvals.push({
+                    recipient: headOfDepartment._id,
+                    role: 'Head of Department',
+                    status: 'pending',
+                    comment: 'Leave request needs approval',
+                    estimated: moment().utcOffset(8).add(1, 'day').toDate(),
+                    timestamp: ''
+                });
+            }
+
+            if (adminHR) {
+                approvals.push({
+                    recipient: adminHR._id,
+                    role: 'Human Resource',
+                    status: 'pending',
+                    comment: 'Leave request needs to be reviewed',
+                    estimated: moment().utcOffset(8).add(3, 'days').toDate(),
+                    timestamp: ''
+                });
             }
         }
     } else {
-        if (
-            user.isAdmin &&
-            user.section === 'Administration and Human Resource Management Division'
-        ) {
-            if (user.isOfficer === true) {
-                if (headOfSection) {
-                    approvals = [
-                        {
-                            recipient: user._id,
-                            role: 'Staff',
-                            status: 'submitted',
-                            comment: 'Submitted leave request',
-                            timestamp: moment().utcOffset(8).toDate(),
-                            estimated: ''
-                        },
-                        ...(assignee && assignee.length > 0
-                            ? assignee.map(assigneeItem => ({
-                                recipient: assigneeItem._id,
-                                role: 'Relief Staff',
-                                status: 'pending',
-                                comment: `Relief Staff for leave by ${assigneeItem.fullname}`,
-                                estimated: moment().utcOffset(8).add(1, 'day').toDate(),
-                                timestamp: ''
-                            }))
-                            : []),
-                        {
-                            recipient: headOfSection._id,
-                            role: 'Head of Division',
-                            status: 'pending',
-                            comment: 'Leave request needs approval',
-                            estimated: moment().utcOffset(8).add(1, 'day').toDate(),
-                            timestamp: ''
-                        },
-                        {
-                            recipient: adminHR._id,
-                            role: 'Human Resource',
-                            status: 'pending',
-                            comment: 'Leave request needs to be reviewed',
-                            estimated: moment().utcOffset(8).add(2, 'days').toDate(),
-                            timestamp: ''
-                        }
-                    ];
-                } else {
-                    approvals = [
-                        {
-                            recipient: user._id,
-                            role: 'Staff',
-                            status: 'submitted',
-                            comment: 'Submitted leave request',
-                            timestamp: moment().utcOffset(8).toDate(),
-                            estimated: ''
-                        },
-                        ...(assignee && assignee.length > 0
-                            ? assignee.map(assigneeItem => ({
-                                recipient: assigneeItem._id,
-                                role: 'Relief Staff',
-                                status: 'pending',
-                                comment: `Relief Staff for leave by ${assigneeItem.fullname}`,
-                                estimated: moment().utcOffset(8).add(1, 'day').toDate(),
-                                timestamp: ''
-                            }))
-                            : []),
-                        {
-                            recipient: adminHR._id,
-                            role: 'Human Resource',
-                            status: 'pending',
-                            comment: 'Leave request needs to be reviewed',
-                            estimated: moment().utcOffset(8).add(3, 'days').toDate(),
-                            timestamp: ''
-                        }
-                    ];
-                }
-            } else if (user.isHeadOfSection === true) {
-                approvals = [
-                    {
-                        recipient: user._id,
-                        role: 'Staff',
-                        status: 'submitted',
-                        comment: 'Submitted leave request',
-                        timestamp: moment().utcOffset(8).toDate(),
-                        estimated: ''
-                    },
-                    ...(assignee && assignee.length > 0
-                        ? assignee.map(assigneeItem => ({
-                            recipient: assigneeItem._id,
-                            role: 'Relief Staff',
-                            status: 'pending',
-                            comment: `Relief Staff for leave by ${assigneeItem.fullname}`,
-                            estimated: moment().utcOffset(8).add(1, 'day').toDate(),
-                            timestamp: ''
-                        }))
-                        : []),
-                    {
-                        recipient: depChiefExec._id,
-                        role: 'Deputy Chief Executive Officer',
+        // Logic for other leave types
+        if (user.isOfficer) {
+            approvals.push({
+                recipient: user._id,
+                role: 'Staff',
+                status: 'submitted',
+                comment: 'Submitted leave request',
+                timestamp: moment().utcOffset(8).toDate(),
+                estimated: ''
+            });
+
+            if (assignee && assignee.length > 0) {
+                assignee.forEach(assigneeItem => {
+                    approvals.push({
+                        recipient: assigneeItem._id,
+                        role: 'Relief Staff',
                         status: 'pending',
-                        comment: 'Leave request needs approval',
-                        estimated: moment().utcOffset(8).add(3, 'days').toDate(),
+                        comment: `Relief Staff for leave by ${assigneeItem.fullname}`,
+                        estimated: moment().utcOffset(8).add(1, 'day').toDate(),
                         timestamp: ''
-                    },
-                    {
-                        recipient: adminHR._id,
-                        role: 'Human Resource',
+                    });
+                });
+            }
+
+            if (headOfSection) {
+                approvals.push({
+                    recipient: headOfSection._id,
+                    role: 'Head of Division',
+                    status: 'pending',
+                    comment: 'Leave request needs approval',
+                    estimated: moment().utcOffset(8).add(1, 'day').toDate(),
+                    timestamp: ''
+                });
+            }
+
+            if (headOfDepartment) {
+                approvals.push({
+                    recipient: headOfDepartment._id,
+                    role: 'Head of Department',
+                    status: 'pending',
+                    comment: 'Leave request needs approval',
+                    estimated: moment().utcOffset(8).add(1, 'day').toDate(),
+                    timestamp: ''
+                });
+            }
+
+            if (adminHR) {
+                approvals.push({
+                    recipient: adminHR._id,
+                    role: 'Human Resource',
+                    status: 'pending',
+                    comment: 'Leave request needs to be reviewed',
+                    estimated: moment().utcOffset(8).add(3, 'days').toDate(),
+                    timestamp: ''
+                });
+            }
+        } else if (user.isHeadOfSection) {
+            approvals.push({
+                recipient: user._id,
+                role: 'Staff',
+                status: 'submitted',
+                comment: 'Submitted leave request',
+                timestamp: moment().utcOffset(8).toDate(),
+                estimated: ''
+            });
+
+            if (assignee && assignee.length > 0) {
+                assignee.forEach(assigneeItem => {
+                    approvals.push({
+                        recipient: assigneeItem._id,
+                        role: 'Relief Staff',
                         status: 'pending',
-                        comment: 'Leave request needs to be reviewed',
-                        estimated: moment().utcOffset(8).add(3, 'days').toDate(),
+                        comment: `Relief Staff for leave by ${assigneeItem.fullname}`,
+                        estimated: moment().utcOffset(8).add(1, 'day').toDate(),
                         timestamp: ''
-                    }
-                ];
-            } else if (user.isDeputyChiefExec === true) {
-                approvals = [
-                    {
-                        recipient: user._id,
-                        role: 'Staff',
-                        status: 'submitted',
-                        comment: 'Submitted leave request',
-                        timestamp: moment().utcOffset(8).toDate(),
-                        estimated: ''
-                    },
-                    ...(assignee && assignee.length > 0
-                        ? assignee.map(assigneeItem => ({
-                            recipient: assigneeItem._id,
-                            role: 'Relief Staff',
-                            status: 'pending',
-                            comment: `Relief Staff for leave by ${assigneeItem.fullname}`,
-                            estimated: moment().utcOffset(8).add(1, 'day').toDate(),
-                            timestamp: ''
-                        }))
-                        : []),
-                    {
-                        recipient: chiefExec._id,
-                        role: 'Chief Executive Officer',
+                    });
+                });
+            }
+
+            if (headOfDepartment) {
+                approvals.push({
+                    recipient: headOfDepartment._id,
+                    role: 'Head of Department',
+                    status: 'pending',
+                    comment: 'Leave request needs approval',
+                    estimated: moment().utcOffset(8).add(1, 'day').toDate(),
+                    timestamp: ''
+                });
+            }
+
+            if (depChiefExec) {
+                approvals.push({
+                    recipient: depChiefExec._id,
+                    role: 'Deputy Chief Executive Officer',
+                    status: 'pending',
+                    comment: 'Leave request needs approval',
+                    estimated: moment().utcOffset(8).add(3, 'days').toDate(),
+                    timestamp: ''
+                });
+            }
+
+
+            if (adminHR) {
+                approvals.push({
+                    recipient: adminHR._id,
+                    role: 'Human Resource',
+                    status: 'pending',
+                    comment: 'Leave request needs to be reviewed',
+                    estimated: moment().utcOffset(8).add(3, 'days').toDate(),
+                    timestamp: ''
+                });
+            }
+        } else if (user.isDeputyChiefExec) {
+            approvals.push({
+                recipient: user._id,
+                role: 'Staff',
+                status: 'submitted',
+                comment: 'Submitted leave request',
+                timestamp: moment().utcOffset(8).toDate(),
+                estimated: ''
+            });
+
+            if (assignee && assignee.length > 0) {
+                assignee.forEach(assigneeItem => {
+                    approvals.push({
+                        recipient: assigneeItem._id,
+                        role: 'Relief Staff',
                         status: 'pending',
-                        comment: 'Leave request needs approval',
-                        estimated: moment().utcOffset(8).add(2, 'days').toDate(),
+                        comment: `Relief Staff for leave by ${assigneeItem.fullname}`,
+                        estimated: moment().utcOffset(8).add(1, 'day').toDate(),
                         timestamp: ''
-                    },
-                    {
-                        recipient: adminHR._id,
-                        role: 'Human Resource',
-                        status: 'pending',
-                        comment: 'Leave request needs to be reviewed',
-                        estimated: moment().utcOffset(8).add(3, 'days').toDate(),
-                        timestamp: ''
-                    }
-                ];
-            } else {
-                if (headOfSection) {
-                    approvals = [
-                        {
-                            recipient: user._id,
-                            role: 'Staff',
-                            status: 'submitted',
-                            comment: 'Submitted leave request',
-                            timestamp: moment().utcOffset(8).toDate(),
-                            estimated: ''
-                        },
-                        ...(assignee && assignee.length > 0
-                            ? assignee.map(assigneeItem => ({
-                                recipient: assigneeItem._id,
-                                role: 'Relief Staff',
-                                status: 'pending',
-                                comment: `Relief Staff for leave by ${assigneeItem.fullname}`,
-                                estimated: moment().utcOffset(8).add(1, 'day').toDate(),
-                                timestamp: ''
-                            }))
-                            : []),
-                        {
-                            recipient: headOfSection._id,
-                            role: 'Head of Division',
-                            status: 'pending',
-                            comment: 'Leave request needs approval',
-                            estimated: moment().utcOffset(8).add(1, 'day').toDate(),
-                            timestamp: ''
-                        },
-                        {
-                            recipient: adminHR._id,
-                            role: 'Human Resource',
-                            status: 'pending',
-                            comment: 'Leave request needs to be reviewed',
-                            estimated: moment().utcOffset(8).add(3, 'day').toDate(),
-                            timestamp: ''
-                        }
-                    ];
-                } else {
-                    approvals = [
-                        {
-                            recipient: user._id,
-                            role: 'Staff',
-                            status: 'submitted',
-                            comment: 'Submitted leave request',
-                            timestamp: moment().utcOffset(8).toDate(),
-                            estimated: ''
-                        },
-                        ...(assignee && assignee.length > 0
-                            ? assignee.map(assigneeItem => ({
-                                recipient: assigneeItem._id,
-                                role: 'Relief Staff',
-                                status: 'pending',
-                                comment: `Relief Staff for leave by ${assigneeItem.fullname}`,
-                                estimated: moment().utcOffset(8).add(1, 'day').toDate(),
-                                timestamp: ''
-                            }))
-                            : []),
-                        {
-                            recipient: adminHR._id,
-                            role: 'Human Resource',
-                            status: 'pending',
-                            comment: 'Leave request needs to be reviewed',
-                            estimated: moment().utcOffset(8).add(3, 'days').toDate(),
-                            timestamp: ''
-                        }
-                    ];
-                }
+                    });
+                });
+            }
+
+            if (chiefExec) {
+                approvals.push({
+                    recipient: chiefExec._id,
+                    role: 'Chief Executive Officer',
+                    status: 'pending',
+                    comment: 'Leave request needs approval',
+                    estimated: moment().utcOffset(8).add(2, 'days').toDate(),
+                    timestamp: ''
+                });
+            }
+
+            if (adminHR) {
+                approvals.push({
+                    recipient: adminHR._id,
+                    role: 'Human Resource',
+                    status: 'pending',
+                    comment: 'Leave request needs to be reviewed',
+                    estimated: moment().utcOffset(8).add(3, 'days').toDate(),
+                    timestamp: ''
+                });
             }
         } else {
-            if (user.isOfficer === true) {
-                if (headOfSection) {
-                    approvals = [
-                        {
-                            recipient: user._id,
-                            role: 'Staff',
-                            status: 'submitted',
-                            comment: 'Submitted leave request',
-                            timestamp: moment().utcOffset(8).toDate(),
-                            estimated: ''
-                        },
-                        ...(assignee && assignee.length > 0
-                            ? assignee.map(assigneeItem => ({
-                                recipient: assigneeItem._id,
-                                role: 'Relief Staff',
-                                status: 'pending',
-                                comment: `Relief Staff for leave by ${assigneeItem.fullname}`,
-                                estimated: moment().utcOffset(8).add(1, 'day').toDate(),
-                                timestamp: ''
-                            }))
-                            : []),
-                        {
-                            recipient: headOfSection._id,
-                            role: 'Head of Division',
-                            status: 'pending',
-                            comment: 'Leave request needs approval',
-                            estimated: moment().utcOffset(8).add(1, 'day').toDate(),
-                            timestamp: ''
-                        },
-                        {
-                            recipient: headOfDepartment._id,
-                            role: 'Head of Department',
-                            status: 'pending',
-                            comment: 'Leave request needs approval',
-                            estimated: moment().utcOffset(8).add(1, 'day').toDate(),
-                            timestamp: ''
-                        },
-                        {
-                            recipient: adminHR._id,
-                            role: 'Human Resource',
-                            status: 'pending',
-                            comment: 'Leave request needs to be reviewed',
-                            estimated: moment().utcOffset(8).add(2, 'days').toDate(),
-                            timestamp: ''
-                        }
-                    ];
-                } else {
-                    approvals = [
-                        {
-                            recipient: user._id,
-                            role: 'Staff',
-                            status: 'submitted',
-                            comment: 'Submitted leave request',
-                            timestamp: moment().utcOffset(8).add(1, 'day').toDate(),
-                            estimated: ''
-                        },
-                        ...(assignee && assignee.length > 0
-                            ? assignee.map(assigneeItem => ({
-                                recipient: assigneeItem._id,
-                                role: 'Relief Staff',
-                                status: 'pending',
-                                comment: `Relief Staff for leave by ${assigneeItem.fullname}`,
-                                estimated: moment().utcOffset(8).add(1, 'day').toDate(),
-                                timestamp: ''
-                            }))
-                            : []),
-                        {
-                            recipient: headOfDepartment._id,
-                            role: 'Head of Department',
-                            status: 'pending',
-                            comment: 'Leave request needs approval',
-                            estimated: moment().utcOffset(8).add(2, 'days').toDate(),
-                            timestamp: ''
-                        },
-                        {
-                            recipient: adminHR._id,
-                            role: 'Human Resource',
-                            status: 'pending',
-                            comment: 'Leave request needs to be reviewed',
-                            estimated: moment().utcOffset(8).add(3, 'days').toDate(),
-                            timestamp: ''
-                        }
-                    ];
-                }
-            } else if (user.isHeadOfSection === true) {
-                approvals = [
-                    {
-                        recipient: user._id,
-                        role: 'Staff',
-                        status: 'submitted',
-                        comment: 'Submitted leave request',
-                        timestamp: moment().utcOffset(8).toDate(),
-                        estimated: ''
-                    },
-                    ...(assignee && assignee.length > 0
-                        ? assignee.map(assigneeItem => ({
-                            recipient: assigneeItem._id,
-                            role: 'Relief Staff',
-                            status: 'pending',
-                            comment: `Relief Staff for leave by ${assigneeItem.fullname}`,
-                            estimated: moment().utcOffset(8).add(1, 'day').toDate(),
-                            timestamp: ''
-                        }))
-                        : []),
-                    {
-                        recipient: headOfDepartment._id,
-                        role: 'Head of Department',
+            approvals.push({
+                recipient: user._id,
+                role: 'Staff',
+                status: 'submitted',
+                comment: 'Submitted leave request',
+                timestamp: moment().utcOffset(8).toDate(),
+                estimated: ''
+            });
+
+            if (assignee && assignee.length > 0) {
+                assignee.forEach(assigneeItem => {
+                    approvals.push({
+                        recipient: assigneeItem._id,
+                        role: 'Relief Staff',
                         status: 'pending',
-                        comment: 'Leave request needs approval',
-                        estimated: moment().utcOffset(8).add(2, 'days').toDate(),
+                        comment: `Relief Staff for leave by ${assigneeItem.fullname}`,
+                        estimated: moment().utcOffset(8).add(1, 'day').toDate(),
                         timestamp: ''
-                    },
-                    {
-                        recipient: depChiefExec._id,
-                        role: 'Deputy Chief Executive Officer',
-                        status: 'pending',
-                        comment: 'Leave request needs approval',
-                        estimated: moment().utcOffset(8).add(3, 'days').toDate(),
-                        timestamp: ''
-                    },
-                    {
-                        recipient: adminHR._id,
-                        role: 'Human Resource',
-                        status: 'pending',
-                        comment: 'Leave request needs to be reviewed',
-                        estimated: moment().utcOffset(8).add(3, 'days').toDate(),
-                        timestamp: ''
-                    }
-                ];
-            } else if (user.isHeadOfDepartment === true) {
-                approvals = [
-                    {
-                        recipient: user._id,
-                        role: 'Staff',
-                        status: 'submitted',
-                        comment: 'Submitted leave request',
-                        timestamp: moment().utcOffset(8).toDate(),
-                        estimated: ''
-                    },
-                    ...(assignee && assignee.length > 0
-                        ? assignee.map(assigneeItem => ({
-                            recipient: assigneeItem._id,
-                            role: 'Relief Staff',
-                            status: 'pending',
-                            comment: `Relief Staff for leave by ${assigneeItem.fullname}`,
-                            estimated: moment().utcOffset(8).add(1, 'day').toDate(),
-                            timestamp: ''
-                        }))
-                        : []),
-                    {
-                        recipient: depChiefExec._id,
-                        role: 'Deputy Chief Executive Officer',
-                        status: 'pending',
-                        comment: 'Leave request needs approval',
-                        estimated: moment().utcOffset(8).add(2, 'days').toDate(),
-                        timestamp: ''
-                    },
-                    {
-                        recipient: chiefExec._id,
-                        role: 'Chief Executive Officer',
-                        status: 'pending',
-                        comment: 'Leave request needs approval',
-                        estimated: moment().utcOffset(8).add(3, 'days').toDate(),
-                        timestamp: ''
-                    },
-                    {
-                        recipient: adminHR._id,
-                        role: 'Human Resource',
-                        status: 'pending',
-                        comment: 'Leave request needs to be reviewed',
-                        estimated: moment().utcOffset(8).add(3, 'days').toDate(),
-                        timestamp: ''
-                    }
-                ];
-            } else if (user.isDeputyChiefExec === true) {
-                approvals = [
-                    {
-                        recipient: user._id,
-                        role: 'Staff',
-                        status: 'submitted',
-                        comment: 'Submitted leave request',
-                        timestamp: moment().utcOffset(8).toDate(),
-                        estimated: ''
-                    },
-                    ...(assignee && assignee.length > 0
-                        ? assignee.map(assigneeItem => ({
-                            recipient: assigneeItem._id,
-                            role: 'Relief Staff',
-                            status: 'pending',
-                            comment: `Relief Staff for leave by ${assigneeItem.fullname}`,
-                            estimated: moment().utcOffset(8).add(1, 'day').toDate(),
-                            timestamp: ''
-                        }))
-                        : []),
-                    {
-                        recipient: chiefExec._id,
-                        role: 'Chief Executive Officer',
-                        status: 'pending',
-                        comment: 'Leave request needs approval',
-                        estimated: moment().utcOffset(8).add(2, 'days').toDate(),
-                        timestamp: ''
-                    },
-                    {
-                        recipient: adminHR._id,
-                        role: 'Human Resource',
-                        status: 'pending',
-                        comment: 'Leave request needs to be reviewed',
-                        estimated: moment().utcOffset(8).add(3, 'days').toDate(),
-                        timestamp: ''
-                    }
-                ];
-            } else {
-                if (headOfSection) {
-                    approvals = [
-                        {
-                            recipient: user._id,
-                            role: 'Staff',
-                            status: 'submitted',
-                            comment: 'Submitted leave request',
-                            timestamp: moment().utcOffset(8).toDate(),
-                            estimated: ''
-                        },
-                        ...(assignee && assignee.length > 0
-                            ? assignee.map(assigneeItem => ({
-                                recipient: assigneeItem._id,
-                                role: 'Relief Staff',
-                                status: 'pending',
-                                comment: `Relief Staff for leave by ${assigneeItem.fullname}`,
-                                estimated: moment().utcOffset(8).add(1, 'day').toDate(),
-                                timestamp: ''
-                            }))
-                            : []),
-                        {
-                            recipient: headOfSection._id,
-                            role: 'Head of Division',
-                            status: 'pending',
-                            comment: 'Leave request needs approval',
-                            estimated: moment().utcOffset(8).add(1, 'day').toDate(),
-                            timestamp: ''
-                        },
-                        {
-                            recipient: headOfDepartment._id,
-                            role: 'Head of Department',
-                            status: 'pending',
-                            comment: 'Leave request needs approval',
-                            estimated: moment().utcOffset(8).add(2, 'days').toDate(),
-                            timestamp: ''
-                        },
-                        {
-                            recipient: adminHR._id,
-                            role: 'Human Resource',
-                            status: 'pending',
-                            comment: 'Leave request needs to be reviewed',
-                            estimated: moment().utcOffset(8).add(3, 'days').toDate(),
-                            timestamp: ''
-                        }
-                    ];
-                } else {
-                    approvals = [
-                        {
-                            recipient: user._id,
-                            role: 'Staff',
-                            status: 'submitted',
-                            comment: 'Submitted leave request',
-                            timestamp: moment().utcOffset(8).toDate(),
-                            estimated: ''
-                        },
-                        ...(assignee && assignee.length > 0
-                            ? assignee.map(assigneeItem => ({
-                                recipient: assigneeItem._id,
-                                role: 'Relief Staff',
-                                status: 'pending',
-                                comment: `Relief Staff for leave by ${assigneeItem.fullname}`,
-                                estimated: moment().utcOffset(8).add(1, 'day').toDate(),
-                                timestamp: ''
-                            }))
-                            : []),
-                        {
-                            recipient: headOfDepartment._id,
-                            role: 'Head of Department',
-                            status: 'pending',
-                            comment: 'Leave request needs approval',
-                            estimated: moment().utcOffset(8).add(2, 'days').toDate(),
-                            timestamp: ''
-                        },
-                        {
-                            recipient: adminHR._id,
-                            role: 'Human Resource',
-                            status: 'pending',
-                            comment: 'Leave request needs to be reviewed',
-                            estimated: moment().utcOffset(8).add(3, 'days').toDate(),
-                            timestamp: ''
-                        }
-                    ];
-                }
+                    });
+                });
+            }
+
+            if (headOfSection) {
+                approvals.push({
+                    recipient: headOfSection._id,
+                    role: 'Head of Division',
+                    status: 'pending',
+                    comment: 'Leave request needs approval',
+                    estimated: moment().utcOffset(8).add(1, 'day').toDate(),
+                    timestamp: ''
+                });
+            }
+
+            if (headOfDepartment) {
+                approvals.push({
+                    recipient: headOfDepartment._id,
+                    role: 'Head of Department',
+                    status: 'pending',
+                    comment: 'Leave request needs approval',
+                    estimated: moment().utcOffset(8).add(1, 'day').toDate(),
+                    timestamp: ''
+                });
+            }
+
+            if (adminHR) {
+                approvals.push({
+                    recipient: adminHR._id,
+                    role: 'Human Resource',
+                    status: 'pending',
+                    comment: 'Leave request needs to be reviewed',
+                    estimated: moment().utcOffset(8).add(3, 'days').toDate(),
+                    timestamp: ''
+                });
             }
         }
     }
