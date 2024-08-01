@@ -2318,9 +2318,8 @@ app
                 type === 'Special Leave' ||
                 type === 'Extended Sick Leave'
             ) {
-                timeDifference = returnDate.getTime() - startDate.getTime();
                 // Convert milliseconds to days
-                numberOfDays = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
+                numberOfDays = moment(returnDate).diff(moment(startDate), 'days') + 1;
             }
 
             let renderDataError = {};
@@ -2868,18 +2867,18 @@ app
                     });
                 }
             } else {
-                const adminUsers = await User.find({
-                    isAdmin: true,
-                    section: 'Human Resource Management Division',
-                    _id: { $ne: adminHR._id }
-                });
+                // const adminUsers = await User.find({
+                //     isAdmin: true,
+                //     section: 'Human Resource Management Division',
+                //     _id: { $ne: adminHR._id }
+                // });
 
-                // Push the IDs of admin users to sendNoti
-                adminUsers.forEach(user => {
-                    if (!sendNoti.includes(user._id)) {
-                        sendNoti.push(user._id);
-                    }
-                });
+                // // Push the IDs of admin users to sendNoti
+                // adminUsers.forEach(user => {
+                //     if (!sendNoti.includes(user._id)) {
+                //         sendNoti.push(user._id);
+                //     }
+                // });
 
                 let i = 0;
                 // set user id to be send
@@ -3258,10 +3257,7 @@ app.get('/leave/details/:id', isAuthenticated, async function (req, res) {
             leave.type === 'Unpaid Leave' ||
             leave.type === 'Special Leave'
         ) {
-            timeDifference = returnDate.getTime() - startDate.getTime();
-
-            // Convert milliseconds to days
-            daysDifference = Math.ceil(timeDifference / (1000 * 60 * 60 * 24)) + 1;
+            daysDifference = moment(returnDate).diff(moment(startDate), 'days') + 1;
         }
 
         //find file from leave
@@ -3524,9 +3520,6 @@ app.get('/leave/:approval/:id', async function (req, res) {
                 const startDate = checkLeave.date.start;
                 const returnDate = checkLeave.date.return;
 
-                var timeDifference = '';
-                var daysDifference = '';
-
                 // Calculate the difference in hours between the two dates
                 if (
                     checkLeave.type === 'Annual Leave' ||
@@ -3536,7 +3529,7 @@ app.get('/leave/:approval/:id', async function (req, res) {
                 } else if (checkLeave.type === 'Half Day Leave') {
                     numberOfDays = calculateBusinessDays(startDate, returnDate) / 2;
                 } else if (checkLeave.type === 'Emergency Leave') {
-                    daysDifference = calculateBusinessDays(startDate, today);
+                    daysDifference = calculateBusinessDays(startDate, moment().utcOffset(8).startOf('day').toDate());
                 } else if (
                     checkLeave.type === 'Marriage Leave' ||
                     checkLeave.type === 'Paternity Leave' ||
@@ -3547,9 +3540,7 @@ app.get('/leave/:approval/:id', async function (req, res) {
                     checkLeave.type === 'Special Leave' ||
                     checkLeave.type === 'Extended Sick Leave'
                 ) {
-                    timeDifference = returnDate.getTime() - startDate.getTime();
-                    // Convert milliseconds to days
-                    daysDifference = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
+                    daysDifference = moment(returnDate).diff(moment(startDate), 'days') + 1;
                 }
 
                 switch (checkLeave.type) {
@@ -3751,9 +3742,6 @@ app.get('/leave/:approval/:id', async function (req, res) {
                 const startDate = checkLeave.date.start;
                 const returnDate = checkLeave.date.return;
 
-                var timeDifference = '';
-                var daysDifference = '';
-
                 // Calculate the difference in hours between the two dates
                 if (
                     checkLeave.type === 'Annual Leave' ||
@@ -3763,7 +3751,7 @@ app.get('/leave/:approval/:id', async function (req, res) {
                 } else if (checkLeave.type === 'Half Day Leave') {
                     numberOfDays = calculateBusinessDays(startDate, returnDate) / 2;
                 } else if (checkLeave.type === 'Emergency Leave') {
-                    daysDifference = calculateBusinessDays(startDate, today);
+                    daysDifference = calculateBusinessDays(startDate, moment().utcOffset(8).startOf('day').toDate());
                 } else if (
                     checkLeave.type === 'Marriage Leave' ||
                     checkLeave.type === 'Paternity Leave' ||
@@ -3774,9 +3762,7 @@ app.get('/leave/:approval/:id', async function (req, res) {
                     checkLeave.type === 'Special Leave' ||
                     checkLeave.type === 'Extended Sick Leave'
                 ) {
-                    timeDifference = returnDate.getTime() - startDate.getTime();
-                    // Convert milliseconds to days
-                    daysDifference = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
+                    daysDifference = moment(returnDate).diff(moment(startDate), 'days') + 1;
                 }
 
                 switch (checkLeave.type) {
@@ -7706,16 +7692,6 @@ app.get('/super-admin/update', isAuthenticated, async function (req, res) {
     if (user.isSuperAdmin) {
 
         try {
-            const updateUser = await User.updateMany(
-                { username: 'P358' },
-                { $set: { department: 'Management and Services Department', section: 'Management and Communication' } }
-            );
-
-            if (updateUser) {
-                console.log('Update for many user');
-            } else {
-                console.log('Update for many user');
-            }
 
         } catch (error) {
             console.error('Error creating Info documents:', error);
