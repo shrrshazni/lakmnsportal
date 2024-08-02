@@ -22,6 +22,7 @@ const qr = require('qrcode');
 const { timeStamp, time } = require('console');
 const { type } = require('os');
 const requestIp = require('request-ip');
+const { performance } = require('perf_hooks');
 
 const mongoURI =
     'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/session';
@@ -67,73 +68,31 @@ app.use(passport.session());
 // Users Database
 const userDatabase = mongoose.createConnection(
     'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/user'
-    ,
-    {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-        serverSelectionTimeoutMS: 30000, // Increase timeout to 30 seconds
-        socketTimeoutMS: 45000 // Increase socket timeout to 45 seconds
-    }
 );
 
 // Leave Database
 const leaveDatabase = mongoose.createConnection(
     'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/leave'
-    ,
-    {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-        serverSelectionTimeoutMS: 30000, // Increase timeout to 30 seconds
-        socketTimeoutMS: 45000 // Increase socket timeout to 45 seconds
-    }
 );
 
 // File Database
 const fileDatabase = mongoose.createConnection(
     'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/file'
-    ,
-    {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-        serverSelectionTimeoutMS: 30000, // Increase timeout to 30 seconds
-        socketTimeoutMS: 45000 // Increase socket timeout to 45 seconds
-    }
 );
 
 // Attendance Database
 const attendanceDatabase = mongoose.createConnection(
-    'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@tek/attendance'
-    ,
-    {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-        serverSelectionTimeoutMS: 30000, // Increase timeout to 30 seconds
-        socketTimeoutMS: 45000 // Increase socket timeout to 45 seconds
-    }
+    'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/attendance'
 );
 
 // Tender Database
 const tenderDatabase = mongoose.createConnection(
-    'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@ping/tender'
-    ,
-    {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-        serverSelectionTimeoutMS: 30000, // Increase timeout to 30 seconds
-        socketTimeoutMS: 45000 // Increase socket timeout to 45 seconds
-    }
+    'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/tender'
 );
 
 // Auxiliary Police
 const auxPoliceDatabase = mongoose.createConnection(
     'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/auxipolice'
-    ,
-    {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-        serverSelectionTimeoutMS: 30000, // Increase timeout to 30 seconds
-        socketTimeoutMS: 45000 // Increase socket timeout to 45 seconds
-    }
 );
 
 // SCHEMA INITIALIZATION
@@ -143,8 +102,8 @@ const auxPoliceDatabase = mongoose.createConnection(
 // USER
 const userSchema = new mongoose.Schema({
     fullname: { type: String, required: true },
-    username: { type: String, required: true, unique: true },
-    email: { type: String, required: true, unique: true },
+    username: { type: String, required: true, unique: true, index: true }, // Add index here
+    email: { type: String, required: true, unique: true, index: true },
     nric: { type: String },
     phone: String,
     officePhone: String,
@@ -546,6 +505,8 @@ const caseSchema = new mongoose.Schema({
 //mongoose passport-local
 userSchema.plugin(passportLocalMongoose);
 userSchema.plugin(findOrCreate);
+userSchema.index({ username: 1 });
+userSchema.index({ email: 1 });
 
 const User = userDatabase.model('User', userSchema);
 const Activity = userDatabase.model('Activity', activitySchema);
@@ -561,14 +522,14 @@ const TempAttendance = attendanceDatabase.model(
     TempAttendanceSchema
 );
 const QRCode = attendanceDatabase.model('QRCode', qrCodeSchema);
-const Tender = tenderDatabase.model('Tender', tenderSchema);
-const TenderCompany = tenderDatabase.model('TenderCompany', tenderCompanySchema);
+// const Tender = tenderDatabase.model('Tender', tenderSchema);
+// const TenderCompany = tenderDatabase.model('TenderCompany', tenderCompanySchema);
 const ScheduleAux = auxPoliceDatabase.model('ScheduleAux', scheduleAuxSchema);
 const PatrolAux = auxPoliceDatabase.model('PatrolAux', patrolSchema);
 const CaseAux = auxPoliceDatabase.model('CaseAux', caseSchema);
 const DutyHandoverAux = auxPoliceDatabase.model('DutyHandoverAux', dutyHandoverSchema);
 
-passport.use(User.createStrategy());
+passport.use(new LocalStrategy(User.authenticate()));
 
 passport.serializeUser(function (user, done) {
     done(null, user.id);
@@ -607,38 +568,79 @@ let transporter = nodemailer.createTransport({
 
 // BASIC USER PART
 //HOME
+
 app.get('/', isAuthenticated, async function (req, res) {
     const username = req.user.username;
+    const startTotal = performance.now();
+
+    // Logging execution time for each query
+    const logTime = (label, start) => {
+        const end = performance.now();
+        console.log(`${label} took ${end - start}ms`);
+    };
+
+    const startUserQuery = performance.now();
     const user = await User.findOne({ username: username });
+    logTime('User Query', startUserQuery);
+
+    const startNotificationsQuery = performance.now();
     const notifications = await Notification.find({
         recipient: user._id,
         read: false
     })
         .populate('sender')
         .sort({ timestamp: -1 });
+    logTime('Notifications Query', startNotificationsQuery);
 
-    const clientIp = req.clientIp;
-    console.log(clientIp);
+    // Run queries in parallel
+    const [
+        allUser,
+        allLeave,
+        allUserLeave,
+        allInfo,
+        userLeave,
+        leave,
+        task,
+        file,
+        info,
+        otherTask,
+        otherActivities,
+        staffOnLeave,
+        userTeamMembers,
+        activities
+    ] = await Promise.all([
+        User.find().sort({ timestamp: -1 }),
+        Leave.find().sort({ timestamp: -1 }),
+        UserLeave.find().sort({ timestamp: -1 }),
+        Info.find(),
+        UserLeave.findOne({ user: user._id }).populate('user').exec(),
+        Leave.find({ user: user._id }),
+        Task.find({ assignee: { $in: [user._id] } })
+            .sort({ timestamp: -1 })
+            .populate('assignee')
+            .exec(),
+        File.find(),
+        Info.findOne({ user: user._id }),
+        Task.find({ assignee: { $ne: [user._id] } }),
+        Activity.find(),
+        user.isAdmin || user.isChiefExec || user.isDeputyChiefExec
+            ? Leave.find({ status: 'approved' })
+            : Leave.find({ status: 'approved', department: user.department }),
+        user.isChiefExec || user.isDeputyChiefExec
+            ? User.find({ isManagement: true, _id: { $ne: user._id } })
+            : user.isHeadOfDepartment
+                ? User.find({ department: user.department, _id: { $ne: user._id } })
+                : User.find({ section: user.section, _id: { $ne: user._id } }),
+        Activity.find({ date: { $gte: moment().utcOffset(8).startOf('day').clone().subtract(7, 'days') } })
+            .populate({ path: 'user' })
+            .sort({ date: -1 })
+            .exec()
+    ]);
 
-    const allUser = await User.find().sort({ timestamp: -1 });
-    const allLeave = await Leave.find().sort({ timestamp: -1 });
-    const allUserLeave = await UserLeave.find().sort({ timestamp: -1 });
-    const allInfo = await Info.find();
-    const userLeave = await UserLeave.findOne({ user: user._id })
-        .populate('user')
-        .exec();
-    const leave = await Leave.find({ user: user._id });
-    const task = await Task.find({ assignee: { $in: [user._id] } })
-        .sort({ timestamp: -1 })
-        .populate('assignee')
-        .exec();
-    const file = await File.find();
-    const info = await Info.findOne({ user: user._id });
-
-    const otherTask = await Task.find({ assignee: { $ne: [user._id] } });
-    const otherActivities = await Activity.find();
-
-    // init date using moment
+    const startLeaveProcessing = performance.now();
+    let todayLeaves = [];
+    let weekLeaves = [];
+    let monthLeaves = [];
     const today = moment().utcOffset(8).startOf('day');
     const sevenDaysAgo = today.clone().subtract(7, 'days');
     const firstDayOfWeek = today.clone().startOf('isoWeek');
@@ -646,102 +648,34 @@ app.get('/', isAuthenticated, async function (req, res) {
     const firstDayOfMonth = today.clone().startOf('month');
     const lastDayOfMonth = today.clone().endOf('month');
 
-    let todayLeaves = [];
-    let weekLeaves = [];
-    let monthLeaves = [];
-    let staffOnLeave = [];
-
-    if (user.isAdmin || user.isChiefExec || user.isDeputyChiefExec) {
-        staffOnLeave = await Leave.find({
-            status: 'approved'
-        });
-
-        staffOnLeave.forEach(leave => {
-            if (isDateInRange(leave.date.start, leave.date.return)) {
-                todayLeaves.push(leave);
-            }
-
-            if (
-                leave.date.start <= lastDayOfWeek &&
-                leave.date.return >= firstDayOfWeek
-            ) {
-                weekLeaves.push(leave);
-            }
-
-            if (
-                leave.date.start <= lastDayOfMonth &&
-                leave.date.return >= firstDayOfMonth
-            ) {
-                monthLeaves.push(leave);
-            }
-        });
-    } else {
-        staffOnLeave = await Leave.find({
-            status: 'approved',
-            department: user.department
-        });
-
-        staffOnLeave.forEach(leave => {
-            if (isDateInRange(leave.date.start, leave.date.return)) {
-                todayLeaves.push(leave);
-            }
-
-            if (
-                leave.date.start <= lastDayOfWeek &&
-                leave.date.return >= firstDayOfWeek
-            ) {
-                weekLeaves.push(leave);
-            }
-
-            if (
-                leave.date.start <= lastDayOfMonth &&
-                leave.date.return >= firstDayOfMonth
-            ) {
-                monthLeaves.push(leave);
-            }
-        });
-    }
-
-    let userTeamMembers = '';
-
-    if (user.isChiefExec || user.isDeputyChiefExec) {
-        userTeamMembers = await User.find({
-            isManagement: true,
-            _id: { $ne: user._id }
-        });
-    } else {
-        if (user.isHeadOfDepartment) {
-            userTeamMembers = await User.find({
-                department: user.department,
-                _id: { $ne: user._id }
-            });
-        } else {
-            userTeamMembers = await User.find({
-                section: user.section,
-                _id: { $ne: user._id }
-            });
+    staffOnLeave.forEach(leave => {
+        if (isDateInRange(leave.date.start, leave.date.return)) {
+            todayLeaves.push(leave);
         }
-    }
 
-    const activities = await Activity.find({
-        date: { $gte: sevenDaysAgo }
-    })
-        .populate({
-            path: 'user'
-        })
-        .sort({ date: -1 })
-        .exec();
+        if (
+            leave.date.start <= lastDayOfWeek &&
+            leave.date.return >= firstDayOfWeek
+        ) {
+            weekLeaves.push(leave);
+        }
 
-    // leave approvals
+        if (
+            leave.date.start <= lastDayOfMonth &&
+            leave.date.return >= firstDayOfMonth
+        ) {
+            monthLeaves.push(leave);
+        }
+    });
+    logTime('Leave Processing', startLeaveProcessing);
+
+    const startLeaveApprovals = performance.now();
     let filteredApprovalLeaves;
-
     if (user.isAdmin) {
-        // If the user is an admin, show all leave approvals except for 'approved' and 'denied'
         filteredApprovalLeaves = allLeave.filter(
             leave => leave.status !== 'approved' && leave.status !== 'denied'
         );
     } else {
-        // If the user is not an admin, show leave approvals based on your existing logic
         filteredApprovalLeaves = allLeave.filter(leave => {
             return (
                 leave.user.toString() !== user._id.toString() &&
@@ -754,24 +688,20 @@ app.get('/', isAuthenticated, async function (req, res) {
             );
         });
     }
+    logTime('Leave Approvals', startLeaveApprovals);
 
+    const startUniqueCollections = performance.now();
     const uniqueDepartments = new Set();
-    const uniqueSection = new Set();
+    const uniqueSections = new Set();
 
     allUser.forEach(user => {
-        if (user.department) {
-            uniqueDepartments.add(user.department);
-        }
-    });
-
-    allUser.forEach(user => {
-        if (user.section) {
-            uniqueSection.add(user.section);
-        }
+        if (user.department) uniqueDepartments.add(user.department);
+        if (user.section) uniqueSections.add(user.section);
     });
 
     const departments = Array.from(uniqueDepartments);
-    const sections = Array.from(uniqueSection);
+    const sections = Array.from(uniqueSections);
+    logTime('Unique Collections', startUniqueCollections);
 
     if (user) {
         res.render('home', {
@@ -787,7 +717,6 @@ app.get('/', isAuthenticated, async function (req, res) {
             filteredApprovalLeaves: filteredApprovalLeaves,
             departments: departments,
             sections: sections,
-            // all data
             allUser: allUser,
             allUserLeave: allUserLeave,
             allLeave: allLeave,
@@ -799,12 +728,14 @@ app.get('/', isAuthenticated, async function (req, res) {
             activities: activities,
             selectedNames: '',
             info: info,
-            // toast
             show: '',
             alert: ''
         });
     }
+
+    logTime('Total', startTotal);
 });
+
 
 //STAFF DETAILS
 app.get('/staff/details/:id', isAuthenticated, async function (req, res) {
@@ -1490,131 +1421,70 @@ app
             toastMsg: ''
         });
     })
-    .post('/sign-in', async function (req, res) {
-        const username = req.body.username;
-        const password = req.body.password;
-        const rememberMe = req.body.rememberMe;
+    .post('/sign-in', async (req, res, next) => {
+        const { username, password, rememberMe } = req.body;
 
         // Set the session duration based on the 'rememberMe' checkbox
-        const sessionDuration = rememberMe
-            ? 7 * 24 * 60 * 60 * 1000
-            : 1 * 60 * 60 * 1000;
+        req.session.cookie.maxAge = rememberMe ? 7 * 24 * 60 * 60 * 1000 : 1 * 60 * 60 * 1000;
 
-        req.session.cookie.maxAge = sessionDuration;
-
-        console.log(
-            `Current Session maxAge: ${req.session.cookie.maxAge} milliseconds`
-        );
-
-        var validationUsername = '';
-        var validationPassword = '';
+        console.log(`Current Session maxAge: ${req.session.cookie.maxAge} milliseconds`);
 
         const passwordRegex = /^(?:\d+|[a-zA-Z0-9]{4,})/;
 
-        const user = await User.findByUsername(username);
-        var checkUser = '';
+        try {
+            const user = await User.findByUsername(username);
 
-        if (!user) {
-            checkUser = 'Not found';
-        } else {
-            checkUser = 'Found';
-        }
+            // validation username
+            let validationUsername = username && user ? 'is-valid' : 'is-invalid';
 
-        // validation username
-        if (username === '' || checkUser === 'Not found') {
-            validationUsername = 'is-invalid';
-        } else {
-            validationUsername = 'is-valid';
-        }
+            // validation password
+            let validationPassword = password && passwordRegex.test(password) ? 'is-valid' : 'is-invalid';
 
-        // validation username
-        if (password === '' || passwordRegex.test(password) === 'false') {
-            validationPassword = 'is-invalid';
-        } else {
-            validationPassword = 'is-valid';
-        }
-
-        if (
-            validationUsername === 'is-valid' &&
-            validationPassword === 'is-valid'
-        ) {
-            try {
-                const user = await User.findOne({ username: username });
-
-                if (!user) {
-                    validationUsername = 'is-valid';
-
-                    return res.render('sign-in', {
-                        // validation
-                        validationUsername: validationUsername,
-                        validationPassword: validationPassword,
-                        // input value
-                        username: username,
-                        password: password,
-                        toastShow: 'show',
-                        toastMsg: 'Username not found'
-                    });
-                }
-
-                // Use the authenticate method from passport-local-mongoose
-                user.authenticate(password, (err, authenticatedUser) => {
+            if (validationUsername === 'is-valid' && validationPassword === 'is-valid') {
+                user.authenticate(password, async (err, authenticatedUser) => {
                     if (err || !authenticatedUser) {
-                        validationPassword = 'is-invalid';
-
                         return res.render('sign-in', {
                             // validation
-                            validationUsername: validationUsername,
-                            validationPassword: validationPassword,
+                            validationUsername,
+                            validationPassword: 'is-invalid',
                             // input value
-                            username: username,
-                            password: password,
+                            username,
+                            password,
                             toastShow: 'show',
                             toastMsg: 'Incorrect password'
                         });
                     }
 
                     // Password is correct, log in the user
-                    req.logIn(authenticatedUser, err => {
+                    req.logIn(authenticatedUser, async err => {
                         if (err) {
                             return next(err);
                         }
+
+                        await Info.findOneAndUpdate(
+                            { user: user._id },
+                            { isOnline: true, lastSeen: moment().utcOffset(8).toDate() },
+                            { new: true }
+                        );
+
                         return res.redirect('/');
                     });
                 });
-
-                const updateInfo = await Info.findOneAndUpdate(
-                    {
-                        user: user._id
-                    },
-                    {
-                        isOnline: true,
-                        lastSeen: moment().utcOffset(8).toDate()
-                    },
-                    {
-                        new: true
-                    }
-                );
-
-                if (updateInfo) {
-                    console.log('Is online at ' + moment().utcOffset(8).toDate());
-                } else {
-                    console.log('Failed to update');
-                }
-            } catch (error) {
-                console.error(error);
-                res.status(500).send('Internal Server Error');
+            } else {
+                res.render('sign-in', {
+                    // validation
+                    validationUsername,
+                    validationPassword,
+                    // input value
+                    username,
+                    password,
+                    toastShow: 'show',
+                    toastMsg: 'There is an error, please do check your input'
+                });
             }
-        } else {
-            res.render('sign-in', {
-                // validation
-                validationUsername: validationUsername,
-                validationPassword: validationPassword,
-                // input value
-                username: username,
-                password: password,
-                toastShow: 'show',
-                toastMsg: 'There is an error, please do check your input'
-            });
+        } catch (error) {
+            console.error(error);
+            res.status(500).send('Internal Server Error');
         }
     });
 
