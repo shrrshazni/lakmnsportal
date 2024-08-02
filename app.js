@@ -141,6 +141,8 @@ const userSchema = new mongoose.Schema({
     dateEmployed: { type: Date },
     birthdate: { type: Date }
 });
+userSchema.index({ username: 1 });
+userSchema.index({ email: 1 });
 
 // USER LEAVE
 const userLeaveSchema = new mongoose.Schema({
@@ -212,6 +214,7 @@ const notificationSchema = new mongoose.Schema({
     timestamp: { type: Date, default: Date.now },
     read: { type: Boolean, default: false }
 });
+notificationSchema.index({ recipient: 1, read: 1 });
 
 // ACTIVITY
 const activitySchema = new mongoose.Schema({
@@ -221,6 +224,7 @@ const activitySchema = new mongoose.Schema({
     type: { type: String },
     description: { type: String }
 });
+activitySchema.index({ user: 1, date: -1 });
 
 // TASK
 const taskSchema = new mongoose.Schema({
@@ -257,6 +261,9 @@ const infoSchema = new mongoose.Schema({
     isOnline: { type: Boolean, default: false },
     lastSeen: { type: Date }
 });
+infoSchema.index({ user: 1 }); // Index on user
+infoSchema.index({ status: 1 }); // Index on status
+infoSchema.index({ isOnline: 1 }); // Index on isOnline
 
 // LEAVE
 
@@ -308,6 +315,7 @@ const leaveSchema = new mongoose.Schema({
     },
     approvals: [approvalSchema]
 });
+leaveSchema.index({ status: 1 });
 
 // FILE
 const FileSchema = new mongoose.Schema({
@@ -320,6 +328,8 @@ const FileSchema = new mongoose.Schema({
     origin: String,
     size: String
 });
+FileSchema.index({ user: 1 }); // Index on user
+FileSchema.index({ date: -1 });
 
 // ATTENDANCE
 const AttendanceSchema = new mongoose.Schema({
@@ -356,6 +366,10 @@ const AttendanceSchema = new mongoose.Schema({
     },
     timestamp: { type: Date, default: null }
 });
+// Add indexes
+AttendanceSchema.index({ user: 1, date: 1 }); // Compound index on user and date
+AttendanceSchema.index({ type: 1 }); // Index on type
+AttendanceSchema.index({ status: 1 }); // Index on status
 
 const TempAttendanceSchema = new mongoose.Schema({
     user: {
@@ -381,56 +395,9 @@ const qrCodeSchema = new mongoose.Schema({
         required: true
     }
 });
-
-// TENDER
-const tenderSchema = new mongoose.Schema({
-    id: {
-        type: String,
-        required: true
-    },
-    title: {
-        type: String,
-        required: true
-    },
-    date: {
-        start: { type: String },
-        deadline: {
-            type: Date,
-            required: true
-        }
-    },
-    budget: {
-        type: Number,
-        required: true
-    },
-    twc: {
-        type: mongoose.Schema.Types.ObjectId,
-        required: true
-    }
-});
-
-const tenderCompanySchema = new mongoose.Schema({
-    name: { type: String, required: true },
-    registration: { type: String, required: true },
-    email: { type: String, required: true },
-    documents: [
-        {
-            tenderId: { type: String },
-            budgetSub: { type: Number },
-            fileId: { type: String }
-
-        }
-    ]
-});
+qrCodeSchema.index({ uniqueId: 1 });
 
 // AUXILIARY POLICE
-const scheduleAuxSchema = new mongoose.Schema({
-    date: { type: Date, required: true },
-    location: { type: String },
-    shift: [],
-    staffRaisedFlag: [],
-    staffLoweredFlag: []
-});
 
 // PATROL REPORT 
 const checkpoint = {
@@ -469,6 +436,22 @@ const patrolSchema = new mongoose.Schema({
     patrolUnit: [checkpoint],
     timestamp: { type: Date }
 });
+patrolSchema.index({ reportId: 1 }); // Index on reportId
+patrolSchema.index({ shift: 1 }); // Index on shift
+patrolSchema.index({ date: 1 }); // Index on date
+patrolSchema.index({ location: 1 }); // Index on location
+patrolSchema.index({ status: 1 }); // Index on status
+
+// SCHEDULE
+const scheduleAuxSchema = new mongoose.Schema({
+    date: { type: Date, required: true },
+    location: { type: String },
+    shift: [],
+    staffRaisedFlag: [],
+    staffLoweredFlag: []
+});
+scheduleAuxSchema.index({ date: 1 }); // Index on date
+scheduleAuxSchema.index({ location: 1 }); // Index on location
 
 // DUTY HANDOVER
 
@@ -487,6 +470,10 @@ const dutyHandoverSchema = new mongoose.Schema({
     staff: [String],
     timestamp: { type: Date }
 });
+dutyHandoverSchema.index({ date: 1 }); // Index on date
+dutyHandoverSchema.index({ location: 1 }); // Index on location
+dutyHandoverSchema.index({ status: 1 }); // Index on status
+dutyHandoverSchema.index({ shift: 1 }); // Index on shift
 
 // CASE SCHEMA
 const caseSchema = new mongoose.Schema({
@@ -500,13 +487,55 @@ const caseSchema = new mongoose.Schema({
     staffOnDuty: [],
     remarks: String
 });
+caseSchema.index({ date: 1 }); // Index on date
+caseSchema.index({ location: 1 }); // Index on location
+caseSchema.index({ fullname: 1 }); // Index on fullname
+
+// TENDER
+// const tenderSchema = new mongoose.Schema({
+//     id: {
+//         type: String,
+//         required: true
+//     },
+//     title: {
+//         type: String,
+//         required: true
+//     },
+//     date: {
+//         start: { type: String },
+//         deadline: {
+//             type: Date,
+//             required: true
+//         }
+//     },
+//     budget: {
+//         type: Number,
+//         required: true
+//     },
+//     twc: {
+//         type: mongoose.Schema.Types.ObjectId,
+//         required: true
+//     }
+// });
+
+// const tenderCompanySchema = new mongoose.Schema({
+//     name: { type: String, required: true },
+//     registration: { type: String, required: true },
+//     email: { type: String, required: true },
+//     documents: [
+//         {
+//             tenderId: { type: String },
+//             budgetSub: { type: Number },
+//             fileId: { type: String }
+
+//         }
+//     ]
+// });
 
 
 //mongoose passport-local
 userSchema.plugin(passportLocalMongoose);
 userSchema.plugin(findOrCreate);
-userSchema.index({ username: 1 });
-userSchema.index({ email: 1 });
 
 const User = userDatabase.model('User', userSchema);
 const Activity = userDatabase.model('Activity', activitySchema);
@@ -522,12 +551,211 @@ const TempAttendance = attendanceDatabase.model(
     TempAttendanceSchema
 );
 const QRCode = attendanceDatabase.model('QRCode', qrCodeSchema);
-// const Tender = tenderDatabase.model('Tender', tenderSchema);
-// const TenderCompany = tenderDatabase.model('TenderCompany', tenderCompanySchema);
 const ScheduleAux = auxPoliceDatabase.model('ScheduleAux', scheduleAuxSchema);
 const PatrolAux = auxPoliceDatabase.model('PatrolAux', patrolSchema);
 const CaseAux = auxPoliceDatabase.model('CaseAux', caseSchema);
 const DutyHandoverAux = auxPoliceDatabase.model('DutyHandoverAux', dutyHandoverSchema);
+// const Tender = tenderDatabase.model('Tender', tenderSchema);
+// const TenderCompany = tenderDatabase.model('TenderCompany', tenderCompanySchema);
+
+// Create mongo indexes query for efficiently
+// Create all indexes
+async function createAllIndexes() {
+    try {
+        await User.createIndexes();
+        await UserLeave.createIndexes();
+        await Notification.createIndexes();
+        await Activity.createIndexes();
+        await Task.createIndexes();
+        await Info.createIndexes();
+        await Leave.createIndexes();
+        await File.createIndexes();
+        await Attendance.createIndexes();
+        await TempAttendance.createIndexes();
+        await QRCode.createIndexes();
+        await PatrolAux.createIndexes();
+        await ScheduleAux.createIndexes();
+        await DutyHandoverAux.createIndexes();
+        await CaseAux.createIndexes();
+
+        console.log('All indexes created successfully');
+    } catch (err) {
+        console.error('Error creating indexes:', err);
+    }
+}
+// createAllIndexes();
+
+// Deleted all indexes
+async function deleteAllIndexes(collection) {
+    try {
+        const indexes = await collection.indexes();
+        const indexNames = indexes
+            .filter(index => index.name !== '_id_') // Avoid dropping the default _id index
+            .map(index => index.name);
+
+        for (const indexName of indexNames) {
+            await collection.dropIndex(indexName);
+            console.log(`Dropped index: ${indexName}`);
+        }
+    } catch (err) {
+        console.error('Error deleting indexes:', err);
+    }
+}
+async function deleteAllIndexesFromCollections() {
+    try {
+        // Define the collections
+        const collections = [
+            User.collection,
+            UserLeave.collection,
+            Notification.collection,
+            Activity.collection,
+            Task.collection,
+            Info.collection,
+            Leave.collection,
+            File.collection,
+            Attendance.collection,
+            TempAttendance.collection,
+            QRCode.collection,
+            PatrolAux.collection,
+            ScheduleAux.collection,
+            DutyHandoverAux.collection,
+            CaseAux.collection
+        ];
+
+        for (const collection of collections) {
+            await deleteAllIndexes(collection);
+        }
+
+        console.log('All indexes deleted successfully');
+    } catch (err) {
+        console.error('Error deleting indexes from collections:', err);
+    }
+}
+// deleteAllIndexesFromCollections();
+
+// Update mongo indexes
+async function updateIndex(collection, indexName, indexSpec) {
+    try {
+        // Drop existing index if it exists
+        const existingIndexes = await collection.indexes();
+        const indexExists = existingIndexes.some(index => index.name === indexName);
+
+        if (indexExists) {
+            await collection.dropIndex(indexName);
+        }
+
+        // Create the new index
+        await collection.createIndex(indexSpec.key, {
+            name: indexSpec.name,
+            unique: indexSpec.unique || false,
+            background: true
+        });
+
+        console.log(`Index updated: ${indexSpec.name}`);
+    } catch (err) {
+        console.error(`Error updating index ${indexSpec.name}:`, err);
+    }
+}
+async function updateAllIndexes() {
+    try {
+        // User Collection
+        await updateIndex(User.collection, 'username_1', { key: { username: 1 }, name: 'username_1', unique: true });
+        await updateIndex(User.collection, 'email_1', { key: { email: 1 }, name: 'email_1', unique: true });
+
+        // UserLeave Collection
+        await updateIndex(UserLeave.collection, 'user_1', { key: { user: 1 }, name: 'user_1' });
+        await updateIndex(UserLeave.collection, 'date_start_1', { key: { 'date.start': 1 }, name: 'date_start_1' });
+
+        // Notification Collection
+        await updateIndex(Notification.collection, 'user_1', { key: { user: 1 }, name: 'user_1' });
+        await updateIndex(Notification.collection, 'timestamp_1', { key: { timestamp: 1 }, name: 'timestamp_1' });
+
+        // Activity Collection
+        await updateIndex(Activity.collection, 'user_1', { key: { user: 1 }, name: 'user_1' });
+        await updateIndex(Activity.collection, 'timestamp_1', { key: { timestamp: 1 }, name: 'timestamp_1' });
+
+        // Task Collection
+        await updateIndex(Task.collection, 'user_1', { key: { user: 1 }, name: 'user_1' });
+        await updateIndex(Task.collection, 'status_1', { key: { status: 1 }, name: 'status_1' });
+
+        // Info Collection
+        await updateIndex(Info.collection, 'type_1', { key: { type: 1 }, name: 'type_1' });
+        await updateIndex(Info.collection, 'timestamp_1', { key: { timestamp: 1 }, name: 'timestamp_1' });
+
+        // Leave Collection
+        await updateIndex(Leave.collection, 'user_1', { key: { user: 1 }, name: 'user_1' });
+        await updateIndex(Leave.collection, 'status_1', { key: { status: 1 }, name: 'status_1' });
+
+        // File Collection
+        await updateIndex(File.collection, 'fileId_1', { key: { fileId: 1 }, name: 'fileId_1', unique: true });
+
+        // Attendance Collection
+        await updateIndex(Attendance.collection, 'user_1', { key: { user: 1 }, name: 'user_1' });
+        await updateIndex(Attendance.collection, 'date_signIn_1', { key: { 'date.signInTime': 1 }, name: 'date_signIn_1' });
+
+        // TempAttendance Collection
+        await updateIndex(TempAttendance.collection, 'user_1', { key: { user: 1 }, name: 'user_1' });
+        await updateIndex(TempAttendance.collection, 'timestamp_1', { key: { timestamp: 1 }, name: 'timestamp_1' });
+
+        // QRCode Collection
+        await updateIndex(QRCode.collection, 'code_1', { key: { code: 1 }, name: 'code_1', unique: true });
+
+        // PatrolAux Collection
+        await updateIndex(PatrolAux.collection, 'date_1', { key: { date: 1 }, name: 'date_1' });
+        await updateIndex(PatrolAux.collection, 'location_1', { key: { location: 1 }, name: 'location_1' });
+
+        // ScheduleAux Collection
+        await updateIndex(ScheduleAux.collection, 'date_1', { key: { date: 1 }, name: 'date_1' });
+        await updateIndex(ScheduleAux.collection, 'location_1', { key: { location: 1 }, name: 'location_1' });
+
+        // DutyHandoverAux Collection
+        await updateIndex(DutyHandoverAux.collection, 'date_1', { key: { date: 1 }, name: 'date_1' });
+        await updateIndex(DutyHandoverAux.collection, 'location_1', { key: { location: 1 }, name: 'location_1' });
+
+        // CaseAux Collection
+        await updateIndex(CaseAux.collection, 'date_1', { key: { date: 1 }, name: 'date_1' });
+        await updateIndex(CaseAux.collection, 'location_1', { key: { location: 1 }, name: 'location_1' });
+
+        console.log('All indexes updated successfully');
+    } catch (err) {
+        console.error('Error updating indexes:', err);
+    }
+}
+// updateAllIndexes();
+
+async function listIndexes(collection) {
+    try {
+        const indexes = await collection.indexes();
+        console.log(`Indexes for ${collection.collectionName}:`, indexes);
+    } catch (err) {
+        console.error(`Error listing indexes for ${collection.collectionName}:`, err);
+    }
+}
+// Check indexes for all collections
+async function checkIndexes() {
+    try {
+        await listIndexes(User.collection);
+        await listIndexes(UserLeave.collection);
+        await listIndexes(Notification.collection);
+        await listIndexes(Activity.collection);
+        await listIndexes(Task.collection);
+        await listIndexes(Info.collection);
+        await listIndexes(Leave.collection);
+        await listIndexes(File.collection);
+        await listIndexes(Attendance.collection);
+        await listIndexes(TempAttendance.collection);
+        await listIndexes(QRCode.collection);
+        await listIndexes(PatrolAux.collection);
+        await listIndexes(ScheduleAux.collection);
+        await listIndexes(DutyHandoverAux.collection);
+        await listIndexes(CaseAux.collection);
+
+        console.log('All indexes listed successfully');
+    } catch (err) {
+        console.error('Error listing indexes:', err);
+    }
+}
+// checkIndexes();
 
 passport.use(new LocalStrategy(User.authenticate()));
 
@@ -567,8 +795,8 @@ let transporter = nodemailer.createTransport({
 });
 
 // BASIC USER PART
-//HOME
 
+//HOME
 app.get('/', isAuthenticated, async function (req, res) {
     const username = req.user.username;
     const startTotal = performance.now();
@@ -582,6 +810,10 @@ app.get('/', isAuthenticated, async function (req, res) {
     const startUserQuery = performance.now();
     const user = await User.findOne({ username: username });
     logTime('User Query', startUserQuery);
+
+    const oneMonthAgo = moment().subtract(1, 'months').toDate();
+    // Delete notifications older than one month
+    await Notification.deleteMany({ createdAt: { $lt: oneMonthAgo } });
 
     const startNotificationsQuery = performance.now();
     const notifications = await Notification.find({
@@ -735,7 +967,6 @@ app.get('/', isAuthenticated, async function (req, res) {
 
     logTime('Total', startTotal);
 });
-
 
 //STAFF DETAILS
 app.get('/staff/details/:id', isAuthenticated, async function (req, res) {
@@ -1421,8 +1652,11 @@ app
             toastMsg: ''
         });
     })
-    .post('/sign-in', async (req, res, next) => {
+    .post('/sign-in', async function (req, res) {
         const { username, password, rememberMe } = req.body;
+
+        // Start measuring time
+        console.time('Sign-in Process');
 
         // Set the session duration based on the 'rememberMe' checkbox
         req.session.cookie.maxAge = rememberMe ? 7 * 24 * 60 * 60 * 1000 : 1 * 60 * 60 * 1000;
@@ -1443,6 +1677,9 @@ app
             if (validationUsername === 'is-valid' && validationPassword === 'is-valid') {
                 user.authenticate(password, async (err, authenticatedUser) => {
                     if (err || !authenticatedUser) {
+                        // End timing and log
+                        console.timeEnd('Sign-in Process');
+
                         return res.render('sign-in', {
                             // validation
                             validationUsername,
@@ -1458,6 +1695,9 @@ app
                     // Password is correct, log in the user
                     req.logIn(authenticatedUser, async err => {
                         if (err) {
+                            // End timing and log
+                            console.timeEnd('Sign-in Process');
+
                             return next(err);
                         }
 
@@ -1467,10 +1707,16 @@ app
                             { new: true }
                         );
 
+                        // End timing and log
+                        console.timeEnd('Sign-in Process');
+
                         return res.redirect('/');
                     });
                 });
             } else {
+                // End timing and log
+                console.timeEnd('Sign-in Process');
+
                 res.render('sign-in', {
                     // validation
                     validationUsername,
@@ -1483,6 +1729,9 @@ app
                 });
             }
         } catch (error) {
+            // End timing and log
+            console.timeEnd('Sign-in Process');
+
             console.error(error);
             res.status(500).send('Internal Server Error');
         }
@@ -7596,6 +7845,22 @@ app.get('/api/auxiliary-police/schedule/calendar-data', async (req, res) => {
     }
 });
 
+//EMAIL
+app.get('/email', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    }).populate('sender');
+
+    res.render('email', {
+        user: user,
+        notifications: notifications,
+        uuid: uuidv4(),
+    });
+});
+
 //SUPER ADMIN
 app.get('/super-admin/update', isAuthenticated, async function (req, res) {
     const username = req.user.username;
@@ -7610,6 +7875,23 @@ app.get('/super-admin/update', isAuthenticated, async function (req, res) {
         }
 
         console.log('Done update');
+        res.redirect('/');
+    }
+});
+
+app.get('/super-admin/logout', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+
+    if (user.isSuperAdmin) {
+
+        try {
+
+        } catch (error) {
+            console.error('error logging out all user', error);
+        }
+
+        console.log('All users have been logged out.');
         res.redirect('/');
     }
 });
@@ -7945,22 +8227,6 @@ const scheduler = async data => {
         console.log('Error');
     }
 };
-
-//EMAIL
-app.get('/email', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    }).populate('sender');
-
-    res.render('email', {
-        user: user,
-        notifications: notifications,
-        uuid: uuidv4(),
-    });
-});
 
 // FUNCTIONS
 
