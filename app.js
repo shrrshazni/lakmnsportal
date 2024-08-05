@@ -37,13 +37,17 @@ app.use(express.static('public'));
 app.use(requestIp.mw());
 app.set('trust proxy', true);
 
+// Sessions Database
+const sessionDatabase = mongoose.createConnection('mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/session');
+
 // mongoose session option
 const store = new MongoDBSession({
     uri: mongoURI,
     collection: 'sessions',
     stringify: false,
-    autoRemove: 'interval',
-    autoRemoveInterval: 1
+    connection: sessionDatabase
+    // autoRemove: 'interval',
+    // autoRemoveInterval: 1
 });
 
 //init session
@@ -1662,10 +1666,10 @@ app
         // Start measuring time
         console.time('Sign-in Process');
 
-        // Set the session duration based on the 'rememberMe' checkbox
-        req.session.cookie.maxAge = rememberMe ? 7 * 24 * 60 * 60 * 1000 : 1 * 60 * 60 * 1000;
-
-        console.log(`Current Session maxAge: ${req.session.cookie.maxAge} milliseconds`);
+        // Calculate the expiration date based on the 'rememberMe' checkbox
+        const expirationDate = rememberMe
+            ? moment().utcOffset(8).add(7, 'days').toDate()  // 7 days if rememberMe is checked
+            : moment().utcOffset(8).add(1, 'hour').toDate(); // 1 hour otherwise
 
         const passwordRegex = /^(?:\d+|[a-zA-Z0-9]{4,})/;
 
@@ -1710,6 +1714,10 @@ app
                             { isOnline: true, lastSeen: moment().utcOffset(8).toDate() },
                             { new: true }
                         );
+
+                        req.session.cookie.expires = expirationDate;
+
+                        console.log(`Current Session expires: ${req.session.cookie.expires}`);
 
                         // End timing and log
                         console.timeEnd('Sign-in Process');
@@ -8023,6 +8031,28 @@ app.post('/search-schedule-temp', async (req, res) => {
 
 //SCHEDULER
 
+// Check every minutes a session for user
+cron.schedule('* * * * *', async () => {
+    console.log('Running cron job to remove expired sessions');
+
+    try {
+        // Get the current date in Asia/Kuala_Lumpur timezone
+        const now = moment().utcOffset(8).toDate();
+        console.log(now);
+
+        // Ensure you are using the correct database and collection
+        const sessions = sessionDatabase.collection('sessions');
+
+        // Remove expired sessions
+        const result = await sessions.deleteMany({ expires: { $lt: now } });
+    } catch (error) {
+        console.error('Error removing expired sessions:', error);
+    }
+}, {
+    scheduled: true,
+    timezone: 'Asia/Kuala_Lumpur' // Adjust timezone accordingly
+});
+
 // CHECK EACH LEAVE VALIDITY
 cron.schedule(
     '0 0 * * *',
@@ -9106,58 +9136,58 @@ const createPatrolReport = async (dutyHandoverId, location, date, shift, startTi
     }
 };
 
-async function archiveOldData() {
-    const archiveDate = moment().subtract(1, 'months').toDate();
+// async function archiveOldData() {
+//     const archiveDate = moment().subtract(1, 'months').toDate();
 
-    // Find old records
-    const oldRecords = await Attendance.find({ timestamp: { $lt: archiveDate } }).exec();
+//     // Find old records
+//     const oldRecords = await Attendance.find({ timestamp: { $lt: archiveDate } }).exec();
 
-    if (oldRecords.length > 0) {
-        // Insert old records into the archive collection
-        await ArchivedAttendance.insertMany(oldRecords);
+//     if (oldRecords.length > 0) {
+//         // Insert old records into the archive collection
+//         await ArchivedAttendance.insertMany(oldRecords);
 
-        // Remove old records from the main collection
-        await Attendance.deleteMany({ timestamp: { $lt: archiveDate } });
+//         // Remove old records from the main collection
+//         await Attendance.deleteMany({ timestamp: { $lt: archiveDate } });
 
-        console.log(`Archived ${oldRecords.length} records.`);
-    } else {
-        console.log('No records to archive.');
-    }
-}
+//         console.log(`Archived ${oldRecords.length} records.`);
+//     } else {
+//         console.log('No records to archive.');
+//     }
+// }
 
-async function fetchArchivedData(userId, startDate, endDate) {
-    const archivedRecords = await ArchivedAttendance.find({
-        user: userId,
-        timestamp: {
-            $gte: new Date(startDate),
-            $lte: new Date(endDate)
-        }
-    }).exec();
+// async function fetchArchivedData(userId, startDate, endDate) {
+//     const archivedRecords = await ArchivedAttendance.find({
+//         user: userId,
+//         timestamp: {
+//             $gte: new Date(startDate),
+//             $lte: new Date(endDate)
+//         }
+//     }).exec();
 
-    console.log('Archived Records:', archivedRecords);
-}
+//     console.log('Archived Records:', archivedRecords);
+// }
 
-async function fetchAllData(userId, startDate, endDate) {
-    const currentRecords = await Attendance.find({
-        user: userId,
-        timestamp: {
-            $gte: new Date(startDate),
-            $lte: new Date(endDate)
-        }
-    }).exec();
+// async function fetchAllData(userId, startDate, endDate) {
+//     const currentRecords = await Attendance.find({
+//         user: userId,
+//         timestamp: {
+//             $gte: new Date(startDate),
+//             $lte: new Date(endDate)
+//         }
+//     }).exec();
 
-    const archivedRecords = await ArchivedAttendance.find({
-        user: userId,
-        timestamp: {
-            $gte: new Date(startDate),
-            $lte: new Date(endDate)
-        }
-    }).exec();
+//     const archivedRecords = await ArchivedAttendance.find({
+//         user: userId,
+//         timestamp: {
+//             $gte: new Date(startDate),
+//             $lte: new Date(endDate)
+//         }
+//     }).exec();
 
-    const allRecords = currentRecords.concat(archivedRecords);
+//     const allRecords = currentRecords.concat(archivedRecords);
 
-    console.log('All Records:', allRecords);
-}
+//     console.log('All Records:', allRecords);
+// }
 
 //  for restricted-link
 const allowedIPs = ['175.140.45.73', '104.28.242.42', '210.186.48.79', '60.50.17.102', '175.144.217.244'];
