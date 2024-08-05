@@ -1755,8 +1755,8 @@ app
             .toUpperCase();
 
         const emailData = {
-            checkEmail : checkEmail,
-            uuid : randomAlphaNumeric,
+            checkEmail: checkEmail,
+            uuid: randomAlphaNumeric,
         };
 
         console.log(emailData.checkEmail);
@@ -7917,6 +7917,57 @@ app.get('/temp', async (req, res) => {
     }
 });
 
+app.get('/testing', async (req, res) => {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    })
+        .populate('sender')
+        .sort({ timestamp: -1 });
+
+    if (user) {
+        const leaveId = new mongoose.Types.ObjectId('66ab487a9db48ec2da0f9433');
+        const leave = await Leave.findOne(
+            { _id: leaveId },
+        );
+
+        console.log(leave);
+
+        leave.status = 'invalid';
+
+        // Find the index of the last valid approval
+        let lastValidIndex = -1;
+        leave.approvals.forEach((approval, index) => {
+            if (approval.status === 'approved' || approval.status === 'submitted') {
+                lastValidIndex = index;
+            }
+        });
+
+        // Determine the index of the next approval after the last valid approval
+        let nextApprovalIndex = lastValidIndex + 1;
+
+        // Remove the next approval after the last valid approval if it exists and is not a Human Resource approval
+        if (nextApprovalIndex < leave.approvals.length) {
+            const nextApproval = leave.approvals[nextApprovalIndex];
+            if (nextApproval.role !== 'Human Resource') {
+                leave.approvals.splice(nextApprovalIndex, 1);
+            }
+        }
+
+        // Update the leave with the modified approvals list
+        await leave.save();
+
+        res.render('testing', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4(),
+        });
+    }
+});
+
+
 app.post('/search-schedule-temp', async (req, res) => {
     try {
         const { date, location } = req.body;
@@ -7989,7 +8040,7 @@ cron.schedule(
             } else {
                 leave.status = 'invalid';
 
-                // Find the last valid index
+                // Find the index of the last valid approval
                 let lastValidIndex = -1;
                 leave.approvals.forEach((approval, index) => {
                     if (approval.status === 'approved' || approval.status === 'submitted') {
@@ -7997,23 +8048,18 @@ cron.schedule(
                     }
                 });
 
-                // Collect approvals with the role 'Human Resource'
-                const humanResourceApprovals = leave.approvals.filter(
-                    approval => approval.role === 'Human Resource'
-                );
+                // Determine the index of the next approval after the last valid approval
+                let nextApprovalIndex = lastValidIndex + 1;
 
-                // Slice approvals up to the last valid index
-                let filteredApprovals = leave.approvals.slice(0, lastValidIndex + 1);
-
-                // Combine sliced approvals with 'Human Resource' approvals, avoiding duplicates
-                humanResourceApprovals.forEach(hrApproval => {
-                    if (!filteredApprovals.some(approval => approval._id.equals(hrApproval._id))) {
-                        filteredApprovals.push(hrApproval);
+                // Remove the next approval after the last valid approval if it exists and is not a Human Resource approval
+                if (nextApprovalIndex < leave.approvals.length) {
+                    const nextApproval = leave.approvals[nextApprovalIndex];
+                    if (nextApproval.role !== 'Human Resource') {
+                        leave.approvals.splice(nextApprovalIndex, 1);
                     }
-                });
+                }
 
-                leave.approvals = filteredApprovals;
-
+                // Update the leave with the modified approvals list
                 await leave.save();
 
                 // Send notifications
