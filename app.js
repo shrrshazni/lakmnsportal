@@ -2445,16 +2445,12 @@ app
             // leave for the user
             const leave = await Leave.find({ user: user._id });
 
-            console.log(adminHR);
-
             const newDate = {
                 start: moment(startDate).utcOffset(8).toDate(),
                 return: moment(returnDate).utcOffset(8).toDate()
             };
 
             const today = moment().utcOffset(8).startOf('day').toDate();
-
-            const amountDayRequest = calculateBusinessDays(today, startDate);
 
             // Calculate the difference in hours between the two dates
             var numberOfDays = '';
@@ -2463,7 +2459,7 @@ app
             var leaveTaken = '';
             var approvals = [];
 
-            if (type === 'Annual Leave' || type === 'Sick Leave') {
+            if (type === 'Annual Leave') {
                 numberOfDays = calculateBusinessDays(startDate, returnDate);
             } else if (type === 'Half Day Leave') {
                 numberOfDays = calculateBusinessDays(startDate, returnDate) / 2;
@@ -2477,13 +2473,18 @@ app
                 type === 'Hajj Leave' ||
                 type === 'Unpaid Leave' ||
                 type === 'Special Leave' ||
-                type === 'Extended Sick Leave'
+                type === 'Extended Sick Leave' ||
+                type === 'Sick Leave'
             ) {
                 // Convert milliseconds to days
                 numberOfDays = moment(returnDate).diff(moment(startDate), 'days') + 1;
             }
 
             let renderDataError = {};
+            const amountDayRequest = calculateBusinessDays(today, startDate);
+
+            console.log('Amount of day request:', amountDayRequest);
+            console.log(numberOfDays);
 
             // set approval based on role
             if (type === 'Annual Leave') {
@@ -2567,7 +2568,7 @@ app
                 const findFile = await File.find({ uuid: uuid });
 
                 if (leaveBalance >= numberOfDays && numberOfDays > 0) {
-                    if (amountDayRequest >= 0) {
+                    if (amountDayRequest <= 1 && amountDayRequest >= -5) {
                         if (findFile.length > 0) {
                             approvals = generateApprovals(
                                 user,
@@ -2590,12 +2591,12 @@ app
                         }
                     } else {
                         console.log(
-                            'The sick leave request date must be applied today onwards'
+                            'The sick leave request date must be applied today or 5 days before'
                         );
 
                         renderDataError.show = 'show';
                         renderDataError.alert =
-                            'The sick leave request must be applied today onwards';
+                            'The sick leave request must be applied today 5 days before';
                     }
                 } else {
                     console.log(
@@ -2612,7 +2613,7 @@ app
                 const findFile = await File.find({ uuid: uuid });
 
                 if (leaveBalance >= numberOfDays && numberOfDays > 0) {
-                    if (amountDayRequest >= 0) {
+                    if (amountDayRequest <= 1 && amountDayRequest >= -5) {
                         if (findFile.length > 0) {
                             approvals = generateApprovals(
                                 user,
@@ -2650,7 +2651,7 @@ app
             } else if (type === 'Emergency Leave') {
                 const findFile = await File.find({ uuid: uuid });
 
-                if (numberOfDays >= 0) {
+                if (amountDayRequest <= 1 && amountDayRequest >= -5) {
                     if (findFile.length > 0) {
                         approvals = generateApprovals(
                             user,
@@ -2916,7 +2917,7 @@ app
                     numberOfDays > 0 &&
                     leaveTaken <= 10
                 ) {
-                    if (amountDayRequest >= 1) {
+                    if (amountDayRequest <= 1 && amountDayRequest >= -5) {
                         if (findFile.length > 0) {
                             approvals = generateApprovals(
                                 user,
@@ -3042,30 +3043,30 @@ app
                 // });
 
                 let i = 0;
-                // set user id to be send
-                for (const approval of approvals) {
-                    const recipientId = approval.recipient;
+                // // set user id to be send
+                // for (const approval of approvals) {
+                //     const recipientId = approval.recipient;
 
-                    if (i > 0) {
-                        // Add the recipientId to the sendNoti array if not already present
-                        if (!sendNoti.includes(recipientId)) {
-                            sendNoti.push(recipientId);
-                        }
-                    }
+                //     if (i > 0) {
+                //         // Add the recipientId to the sendNoti array if not already present
+                //         if (!sendNoti.includes(recipientId)) {
+                //             sendNoti.push(recipientId);
+                //         }
+                //     }
 
-                    // Fetch the user by recipient ID
-                    const email = await User.findById(recipientId);
+                //     // Fetch the user by recipient ID
+                //     const email = await User.findById(recipientId);
 
-                    // Check if the user is found and has an email
-                    if (email && user.email) {
-                        // Add the user's email to sendEmail
-                        sendEmail.push(email.email);
-                    }
+                //     // Check if the user is found and has an email
+                //     if (email && user.email) {
+                //         // Add the user's email to sendEmail
+                //         sendEmail.push(email.email);
+                //     }
 
-                    i++;
-                }
+                //     i++;
+                // }
 
-                console.log(sendNoti);
+                // console.log(sendNoti);
 
                 const leave = new Leave({
                     fileId: uuid,
@@ -3084,41 +3085,41 @@ app
                 console.log('Leave request submitted');
 
                 // activity
-                const activityUser = new Activity({
-                    user: user._id,
-                    date: moment().utcOffset(8).toDate(),
-                    title: 'Submitted a leave application',
-                    type: 'Leave request',
-                    description:
-                        user.fullname +
-                        ' has submitted ' +
-                        type +
-                        ' between ' +
-                        startDate +
-                        ' and ' +
-                        returnDate
-                });
+                // const activityUser = new Activity({
+                //     user: user._id,
+                //     date: moment().utcOffset(8).toDate(),
+                //     title: 'Submitted a leave application',
+                //     type: 'Leave request',
+                //     description:
+                //         user.fullname +
+                //         ' has submitted ' +
+                //         type +
+                //         ' between ' +
+                //         startDate +
+                //         ' and ' +
+                //         returnDate
+                // });
 
-                activityUser.save();
+                // activityUser.save();
 
-                console.log('New acitivity submitted', activityUser);
+                // console.log('New acitivity submitted', activityUser);
 
-                // notifications save has been turn off
-                if (sendNoti.length > 0) {
-                    for (const recipientId of sendNoti) {
-                        const newNotification = new Notification({
-                            sender: user._id,
-                            recipient: new mongoose.Types.ObjectId(recipientId),
-                            type: 'Leave request',
-                            url: '/leave/details/' + currentLeave._id,
-                            message: 'Leave request needs approval.'
-                        });
+                // // notifications save has been turn off
+                // if (sendNoti.length > 0) {
+                //     for (const recipientId of sendNoti) {
+                //         const newNotification = new Notification({
+                //             sender: user._id,
+                //             recipient: new mongoose.Types.ObjectId(recipientId),
+                //             type: 'Leave request',
+                //             url: '/leave/details/' + currentLeave._id,
+                //             message: 'Leave request needs approval.'
+                //         });
 
-                        newNotification.save();
-                    }
+                //         newNotification.save();
+                //     }
 
-                    console.log('Done send notifications!');
-                }
+                //     console.log('Done send notifications!');
+                // }
 
                 // turn off the email notications
                 // send email to the recipient
@@ -3989,7 +3990,7 @@ app.get('/leave/:approval/:id', async function (req, res) {
                         break;
                 }
 
-                await userLeave.save();
+                // await userLeave.save();
 
                 await Leave.findOneAndUpdate(
                     {
@@ -7984,12 +7985,11 @@ cron.schedule(
             // Check if the user is a Deputy Chief Executive
             if (user.isDeputyChiefExec) {
                 leave.status = 'invalid';
-
                 await leave.save();
             } else {
                 leave.status = 'invalid';
 
-                // Filter approvals up to the last 'approved' or 'submitted' status
+                // Find the last valid index
                 let lastValidIndex = -1;
                 leave.approvals.forEach((approval, index) => {
                     if (approval.status === 'approved' || approval.status === 'submitted') {
@@ -7997,9 +7997,22 @@ cron.schedule(
                     }
                 });
 
-                if (lastValidIndex !== -1) {
-                    leave.approvals = leave.approvals.slice(0, lastValidIndex + 1);
-                }
+                // Collect approvals with the role 'Human Resource'
+                const humanResourceApprovals = leave.approvals.filter(
+                    approval => approval.role === 'Human Resource'
+                );
+
+                // Slice approvals up to the last valid index
+                let filteredApprovals = leave.approvals.slice(0, lastValidIndex + 1);
+
+                // Combine sliced approvals with 'Human Resource' approvals, avoiding duplicates
+                humanResourceApprovals.forEach(hrApproval => {
+                    if (!filteredApprovals.some(approval => approval._id.equals(hrApproval._id))) {
+                        filteredApprovals.push(hrApproval);
+                    }
+                });
+
+                leave.approvals = filteredApprovals;
 
                 await leave.save();
 
@@ -8013,7 +8026,7 @@ cron.schedule(
                             recipient: new mongoose.Types.ObjectId(recipientId),
                             type: 'Leave request',
                             url: '/leave/details/' + leave._id,
-                            message: 'Leave has becomes invalid due to it already past 3 days of approval, please do check the leave request.'
+                            message: 'Leave has become invalid due to it already past 3 days of approval, please do check the leave request.'
                         });
 
                         await newNotification.save();
@@ -8277,7 +8290,9 @@ function calculateBusinessDays(startDateString, endDateString) {
     let start = moment(startDateString).startOf('day');
     let end = moment(endDateString).startOf('day');
 
-    while (start.isSameOrBefore(end)) {
+    const increment = start.isBefore(end) ? 1 : -1;
+
+    while (start.isSameOrBefore(end) || start.isSameOrAfter(end)) {
         const dayOfWeek = start.day();
 
         // Check if the current day is a business day (Monday to Friday) and not a public holiday
@@ -8289,11 +8304,17 @@ function calculateBusinessDays(startDateString, endDateString) {
             count++;
         }
 
-        start.add(1, 'days');
+        if (start.isSame(end)) {
+            break;
+        }
+
+        start.add(increment, 'days');
     }
 
-    return count;
+    // If start is after end, the count should be negative
+    return increment === -1 ? -count : count;
 }
+
 
 function isPublicHoliday(date, allPublicHolidays) {
     return allPublicHolidays.some(holiday => moment(date).isSame(moment(holiday), 'day'));
