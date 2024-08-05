@@ -1754,13 +1754,13 @@ app
             .substring(0, 5)
             .toUpperCase();
 
-        // const emailData = {
-        //     checkEmail : checkEmail,
-        //     uuid : randomAlphaNumeric,
-        // };
+        const emailData = {
+            checkEmail : checkEmail,
+            uuid : randomAlphaNumeric,
+        };
 
-        // console.log(emailData.checkEmail);
-        // console.log(emailData.uuid);
+        console.log(emailData.checkEmail);
+        console.log(emailData.uuid);
 
         const emailHTML = await new Promise((resolve, reject) => {
             app.render('email', { uuid: randomAlphaNumeric, checkEmail: checkEmail }, (err, html) => {
@@ -3043,30 +3043,30 @@ app
                 // });
 
                 let i = 0;
-                // // set user id to be send
-                // for (const approval of approvals) {
-                //     const recipientId = approval.recipient;
+                // set user id to be send
+                for (const approval of approvals) {
+                    const recipientId = approval.recipient;
 
-                //     if (i > 0) {
-                //         // Add the recipientId to the sendNoti array if not already present
-                //         if (!sendNoti.includes(recipientId)) {
-                //             sendNoti.push(recipientId);
-                //         }
-                //     }
+                    if (i > 0) {
+                        // Add the recipientId to the sendNoti array if not already present
+                        if (!sendNoti.includes(recipientId)) {
+                            sendNoti.push(recipientId);
+                        }
+                    }
 
-                //     // Fetch the user by recipient ID
-                //     const email = await User.findById(recipientId);
+                    // Fetch the user by recipient ID
+                    const email = await User.findById(recipientId);
 
-                //     // Check if the user is found and has an email
-                //     if (email && user.email) {
-                //         // Add the user's email to sendEmail
-                //         sendEmail.push(email.email);
-                //     }
+                    // Check if the user is found and has an email
+                    if (email && user.email) {
+                        // Add the user's email to sendEmail
+                        sendEmail.push(email.email);
+                    }
 
-                //     i++;
-                // }
+                    i++;
+                }
 
-                // console.log(sendNoti);
+                console.log(sendNoti);
 
                 const leave = new Leave({
                     fileId: uuid,
@@ -3084,42 +3084,42 @@ app
                 const currentLeave = await Leave.create(leave);
                 console.log('Leave request submitted');
 
-                // activity
-                // const activityUser = new Activity({
-                //     user: user._id,
-                //     date: moment().utcOffset(8).toDate(),
-                //     title: 'Submitted a leave application',
-                //     type: 'Leave request',
-                //     description:
-                //         user.fullname +
-                //         ' has submitted ' +
-                //         type +
-                //         ' between ' +
-                //         startDate +
-                //         ' and ' +
-                //         returnDate
-                // });
+                activity
+                const activityUser = new Activity({
+                    user: user._id,
+                    date: moment().utcOffset(8).toDate(),
+                    title: 'Submitted a leave application',
+                    type: 'Leave request',
+                    description:
+                        user.fullname +
+                        ' has submitted ' +
+                        type +
+                        ' between ' +
+                        startDate +
+                        ' and ' +
+                        returnDate
+                });
 
-                // activityUser.save();
+                activityUser.save();
 
-                // console.log('New acitivity submitted', activityUser);
+                console.log('New acitivity submitted', activityUser);
 
-                // // notifications save has been turn off
-                // if (sendNoti.length > 0) {
-                //     for (const recipientId of sendNoti) {
-                //         const newNotification = new Notification({
-                //             sender: user._id,
-                //             recipient: new mongoose.Types.ObjectId(recipientId),
-                //             type: 'Leave request',
-                //             url: '/leave/details/' + currentLeave._id,
-                //             message: 'Leave request needs approval.'
-                //         });
+                // notifications save has been turn off
+                if (sendNoti.length > 0) {
+                    for (const recipientId of sendNoti) {
+                        const newNotification = new Notification({
+                            sender: user._id,
+                            recipient: new mongoose.Types.ObjectId(recipientId),
+                            type: 'Leave request',
+                            url: '/leave/details/' + currentLeave._id,
+                            message: 'Leave request needs approval.'
+                        });
 
-                //         newNotification.save();
-                //     }
+                        newNotification.save();
+                    }
 
-                //     console.log('Done send notifications!');
-                // }
+                    console.log('Done send notifications!');
+                }
 
                 // turn off the email notications
                 // send email to the recipient
@@ -3990,7 +3990,7 @@ app.get('/leave/:approval/:id', async function (req, res) {
                         break;
                 }
 
-                // await userLeave.save();
+                await userLeave.save();
 
                 await Leave.findOneAndUpdate(
                     {
