@@ -370,6 +370,7 @@ const AttendanceSchema = new mongoose.Schema({
 AttendanceSchema.index({ user: 1, date: 1 }); // Compound index on user and date
 AttendanceSchema.index({ type: 1 }); // Index on type
 AttendanceSchema.index({ status: 1 }); // Index on status
+AttendanceSchema.index({ location: 1 }); // Index on status
 
 const TempAttendanceSchema = new mongoose.Schema({
     user: {
@@ -546,6 +547,7 @@ const Task = userDatabase.model('Task', taskSchema);
 const Leave = leaveDatabase.model('Leave', leaveSchema);
 const File = fileDatabase.model('File', FileSchema);
 const Attendance = attendanceDatabase.model('Attendance', AttendanceSchema);
+const ArchivedAttendance = attendanceDatabase.model('ArchivedAttendance', AttendanceSchema);
 const TempAttendance = attendanceDatabase.model(
     'TempAttendance',
     TempAttendanceSchema
@@ -961,7 +963,9 @@ app.get('/', isAuthenticated, async function (req, res) {
             selectedNames: '',
             info: info,
             show: '',
-            alert: ''
+            alert: '',
+            // addditional data
+            clientIp: req.clientIp
         });
     }
 
@@ -3345,7 +3349,9 @@ app
                     selectedNames: '',
                     show: 'show',
                     alert:
-                        'Leave request submitted, please wait for approval 3 days from now'
+                        'Leave request submitted, please wait for approval 3 days from now',
+                    // addditional data
+                    clientIp: req.clientIp
                 };
 
                 res.render('home', renderDataSuccess);
@@ -6009,9 +6015,15 @@ app.get('/files/delete/:id', async function (req, res) {
     const deleted = await File.findOneAndDelete({ _id: _id });
 
     if (deleted) {
-        const filePath = __dirname + '/public/uploads/' + deleted.name;
-        console.log('File selected is deleted!');
-        await fs.unlink(filePath);
+        const otherFile = await File.find({ name: deleted.name, size: deleted.size });
+
+        if (otherFile.length > 0) {
+            console.log('Only delete the file database');
+        } else {
+            const filePath = __dirname + '/public/uploads/' + deleted.name;
+            console.log('File selected is deleted!');
+            await fs.unlink(filePath);
+        }
 
         res.redirect('/');
     } else {
@@ -6904,8 +6916,6 @@ app.post('/api/data/all-attendance/per-month/department-section', isAuthenticate
         console.error('Error fetching attendance data:', error);
         res.status(500).send('Internal Server Error');
     }
-
-
 }
 );
 
@@ -9095,6 +9105,59 @@ const createPatrolReport = async (dutyHandoverId, location, date, shift, startTi
         throw new Error('Error creating patrol report: ' + error.message);
     }
 };
+
+async function archiveOldData() {
+    const archiveDate = moment().subtract(1, 'months').toDate();
+
+    // Find old records
+    const oldRecords = await Attendance.find({ timestamp: { $lt: archiveDate } }).exec();
+
+    if (oldRecords.length > 0) {
+        // Insert old records into the archive collection
+        await ArchivedAttendance.insertMany(oldRecords);
+
+        // Remove old records from the main collection
+        await Attendance.deleteMany({ timestamp: { $lt: archiveDate } });
+
+        console.log(`Archived ${oldRecords.length} records.`);
+    } else {
+        console.log('No records to archive.');
+    }
+}
+
+async function fetchArchivedData(userId, startDate, endDate) {
+    const archivedRecords = await ArchivedAttendance.find({
+        user: userId,
+        timestamp: {
+            $gte: new Date(startDate),
+            $lte: new Date(endDate)
+        }
+    }).exec();
+
+    console.log('Archived Records:', archivedRecords);
+}
+
+async function fetchAllData(userId, startDate, endDate) {
+    const currentRecords = await Attendance.find({
+        user: userId,
+        timestamp: {
+            $gte: new Date(startDate),
+            $lte: new Date(endDate)
+        }
+    }).exec();
+
+    const archivedRecords = await ArchivedAttendance.find({
+        user: userId,
+        timestamp: {
+            $gte: new Date(startDate),
+            $lte: new Date(endDate)
+        }
+    }).exec();
+
+    const allRecords = currentRecords.concat(archivedRecords);
+
+    console.log('All Records:', allRecords);
+}
 
 //  for restricted-link
 const allowedIPs = ['175.140.45.73', '104.28.242.42', '210.186.48.79', '60.50.17.102', '175.144.217.244'];

@@ -109,13 +109,22 @@
   </script>
 </div>
 
+<% 
+let showSuperAdmin;
+if(user.isSuperAdmin){
+    showSuperAdmin = ''
+}else{
+    showSuperAdmin = 'd-none'
+}
+%>
+
 <div class="row gy-3 mb-3 justify-content-between d-flex mt-0">
   <div class="col-md-9 col-auto">
     <h2 class="mb-2 text-body-emphasis">Dashboard</h2>
     <h5 class="text-body-tertiary fw-semibold">Real-time data visualization for informed decision-making</h5>
   </div>
-  <div class="col-md-3 col-auto row g-3 ms-2 d-none">
-    <div class=" col-12 btn btn-phoenix-secondary my-auto">Announcements</div>
+  <div class="col-md-3 col-auto row g-3 ms-2 <%= showSuperAdmin %>">
+    <div class=" col-12 btn btn-phoenix-primary my-auto"><%= clientIp %></div>
   </div>
 </div>
 
