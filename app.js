@@ -3434,12 +3434,15 @@ app.get('/leave/details/:id', isAuthenticated, async function (req, res) {
         const startDate = leave.date.start;
         const returnDate = leave.date.return;
 
-        var timeDifference = '';
         var daysDifference = '';
 
         // Calculate the difference in hours between the two dates
-        if (leave.type === 'Annual Leave' || leave.type === 'Sick Leave') {
-            daysDifference = calculateBusinessDays(startDate, returnDate);
+        if (leave.type === 'Annual Leave') {
+            if (userReq.isNonOfficeHour) {
+                daysDifference = moment(returnDate).diff(moment(startDate), 'days') + 1;
+            } else {
+                daysDifference = calculateBusinessDays(startDate, returnDate);
+            }
         } else if (leave.type === 'Emergency Leave') {
             daysDifference = calculateBusinessDays(startDate, returnDate);
         } else if (
@@ -3448,7 +3451,8 @@ app.get('/leave/details/:id', isAuthenticated, async function (req, res) {
             leave.type === 'Study Leave' ||
             leave.type === 'Hajj Leave' ||
             leave.type === 'Unpaid Leave' ||
-            leave.type === 'Special Leave'
+            leave.type === 'Special Leave' ||
+            leave.type === 'Sick Leave'
         ) {
             daysDifference = moment(returnDate).diff(moment(startDate), 'days') + 1;
         }
@@ -3931,16 +3935,20 @@ app.get('/leave/:approval/:id', async function (req, res) {
                 const userLeave = await UserLeave.findOne({
                     user: firstRecipientId
                 });
+                const checkUser = await User.findOne({ _id: firstRecipientId });
 
                 const startDate = checkLeave.date.start;
                 const returnDate = checkLeave.date.return;
 
                 // Calculate the difference in hours between the two dates
                 if (
-                    checkLeave.type === 'Annual Leave' ||
-                    checkLeave.type === 'Sick Leave'
+                    checkLeave.type === 'Annual Leave'
                 ) {
-                    daysDifference = calculateBusinessDays(startDate, returnDate);
+                    if (checkUser.isNonOfficeHour) {
+                        daysDifference = moment(returnDate).diff(moment(startDate), 'days') + 1;
+                    } else {
+                        daysDifference = calculateBusinessDays(startDate, returnDate);
+                    }
                 } else if (checkLeave.type === 'Half Day Leave') {
                     numberOfDays = calculateBusinessDays(startDate, returnDate) / 2;
                 } else if (checkLeave.type === 'Emergency Leave') {
@@ -3953,7 +3961,8 @@ app.get('/leave/:approval/:id', async function (req, res) {
                     checkLeave.type === 'Hajj Leave' ||
                     checkLeave.type === 'Unpaid Leave' ||
                     checkLeave.type === 'Special Leave' ||
-                    checkLeave.type === 'Extended Sick Leave'
+                    checkLeave.type === 'Extended Sick Leave' ||
+                    checkLeave.type === 'Sick Leave'
                 ) {
                     daysDifference = moment(returnDate).diff(moment(startDate), 'days') + 1;
                 }
