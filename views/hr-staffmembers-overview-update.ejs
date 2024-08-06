@@ -107,6 +107,8 @@
         let isHeadOfDepartment;
         let isHeadOfSection;
         let isPersonalAssistant;
+        let isDriver;
+        let isTeaLady;
 
         if(otherUser.isAdmin === false){
             isAdmin = "no";
@@ -142,6 +144,12 @@
             isPersonalAssistant = "no";
         } else {
             isPersonalAssistant = "yes";
+        }
+
+        if(otherUser.isDriver === false){
+            isDriver = "no";
+        } else {
+            isDriver = "yes";
         }
         
 
@@ -216,6 +224,18 @@
             </select>
             <div class="invalid-feedback">Please select an option</div>
             <label for="floatingSelectTask">Personal Assistant</label>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-4">
+          <div class="form-floating">
+            <select class="form-select" id="floatingSelectTask" name="isDriver">
+              <option value="<%= isDriver %>" selected><%= isDriver %></option>
+              <option value="yes">Yes</option>
+              <option value="no">No</option>
+            </select>
+            <div class="invalid-feedback">Please select an option</div>
+            <label for="floatingSelectTask">Driver</label>
           </div>
         </div>
 

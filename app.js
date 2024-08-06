@@ -142,6 +142,7 @@ const userSchema = new mongoose.Schema({
     isNonOfficeHour: { type: Boolean, default: false },
     isSuperAdmin: { type: Boolean, default: false },
     isDriver: { type: Boolean, default: false },
+    isTeaLady: { type: Boolean, default: false },
     dateEmployed: { type: Date },
     birthdate: { type: Date }
 });
@@ -2471,6 +2472,8 @@ app
             var leaveTaken = '';
             var approvals = [];
 
+            console.log(adminHR.fullname);
+
             if (type === 'Annual Leave') {
                 numberOfDays = calculateBusinessDays(startDate, returnDate);
             } else if (type === 'Half Day Leave') {
@@ -2535,7 +2538,7 @@ app
 
                     renderDataError.show = 'show';
                     renderDataError.alert =
-                        'Insufficient sick leave balance for the requested duration';
+                        'Insufficient annual leave balance for the requested duration';
                 }
             } else if (type === 'Half Day Leave') {
                 leaveBalance = userLeave.annual.leave - userLeave.annual.taken;
@@ -3041,18 +3044,18 @@ app
                     });
                 }
             } else {
-                // const adminUsers = await User.find({
-                //     isAdmin: true,
-                //     section: 'Human Resource Management Division',
-                //     _id: { $ne: adminHR._id }
-                // });
+                const adminUsers = await User.find({
+                    isAdmin: true,
+                    section: 'Human Resource Management Division',
+                    _id: { $ne: adminHR._id }
+                });
 
-                // // Push the IDs of admin users to sendNoti
-                // adminUsers.forEach(user => {
-                //     if (!sendNoti.includes(user._id)) {
-                //         sendNoti.push(user._id);
-                //     }
-                // });
+                // Push the IDs of admin users to sendNoti
+                adminUsers.forEach(user => {
+                    if (!sendNoti.includes(user._id)) {
+                        sendNoti.push(user._id);
+                    }
+                });
 
                 let i = 0;
                 // set user id to be send
@@ -3096,7 +3099,7 @@ app
                 const currentLeave = await Leave.create(leave);
                 console.log('Leave request submitted');
 
-                activity
+                // activity
                 const activityUser = new Activity({
                     user: user._id,
                     date: moment().utcOffset(8).toDate(),
@@ -4283,7 +4286,7 @@ app.get('/human-resource/staff-members/overview/update/:id', isAuthenticated, as
 
     const {
         fullname, classification, grade, position, department, section, dateEmployed,
-        isOfficer, isAdmin, isHeadOfDepartment, isHeadOfSection, isManagement, isPersonalAssistant
+        isOfficer, isAdmin, isHeadOfDepartment, isHeadOfSection, isManagement, isPersonalAssistant, isDriver
     } = req.body;
 
     // Initialize updatedFields with the extracted values
@@ -4313,6 +4316,7 @@ app.get('/human-resource/staff-members/overview/update/:id', isAuthenticated, as
     nonEmptyUpdatedFields.isHeadOfSection = isFieldTrue(isHeadOfSection);
     nonEmptyUpdatedFields.isManagement = isFieldTrue(isManagement);
     nonEmptyUpdatedFields.isPersonalAssistant = isFieldTrue(isPersonalAssistant);
+    nonEmptyUpdatedFields.isDriver = isFieldTrue(isDriver);
 
     const updatedUser = await User.findOneAndUpdate(
         { _id: userId },
@@ -7888,7 +7892,13 @@ app.get('/super-admin/update', isAuthenticated, async function (req, res) {
     if (user.isSuperAdmin) {
 
         try {
+            const result = await User.updateMany({}, { isTeaLady: false });
 
+            if (result) {
+                console.log('Done update tealady');
+            } else {
+                console.log('Failed update tealady');
+            }
         } catch (error) {
             console.error('Error creating Info documents:', error);
         }
@@ -8045,6 +8055,12 @@ cron.schedule('* * * * *', async () => {
 
         // Remove expired sessions
         const result = await sessions.deleteMany({ expires: { $lt: now } });
+
+        if (result) {
+            console.log('Removed some of the session');
+        } else {
+            console.log('No expired sessions to remove');
+        }
     } catch (error) {
         console.error('Error removing expired sessions:', error);
     }
@@ -8376,9 +8392,20 @@ function calculateBusinessDays(startDateString, endDateString) {
     let start = moment(startDateString).startOf('day');
     let end = moment(endDateString).startOf('day');
 
+    // If start and end dates are the same, return 1 if it's a business day
+    if (start.isSame(end)) {
+        const dayOfWeek = start.day();
+        if (dayOfWeek >= 1 && dayOfWeek <= 5 && !isPublicHoliday(start.toDate(), allPublicHolidays)) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+
     const increment = start.isBefore(end) ? 1 : -1;
 
-    while (start.isSameOrBefore(end) || start.isSameOrAfter(end)) {
+    // Loop through each day between the start and end date
+    while ((increment === 1 && start.isSameOrBefore(end)) || (increment === -1 && start.isSameOrAfter(end))) {
         const dayOfWeek = start.day();
 
         // Check if the current day is a business day (Monday to Friday) and not a public holiday
@@ -8397,7 +8424,7 @@ function calculateBusinessDays(startDateString, endDateString) {
         start.add(increment, 'days');
     }
 
-    // If start is after end, the count should be negative
+    // Adjust the count based on the direction of the increment
     return increment === -1 ? -count : count;
 }
 
