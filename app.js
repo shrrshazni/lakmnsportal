@@ -1424,6 +1424,20 @@ app.get('/search/staff/assignee-relief', isAuthenticated, async function (req, r
                 results = await User.find({
                     $or: [departmentQuery, driver]
                 });
+            } else if (user.isTeaLady) {
+                const departmentQuery = {
+                    department: user.department,
+                    fullname: { $regex: query, $options: 'i' }
+                };
+
+                const teaLady = {
+                    isTeaLady: true,
+                    fullname: { $regex: query, $options: 'i' }
+                };
+
+                results = await User.find({
+                    $or: [departmentQuery, teaLady]
+                });
             } else if (user.isAdmin) {
                 const departmentQuery = {
                     department: user.department,
@@ -4286,7 +4300,7 @@ app.get('/human-resource/staff-members/overview/update/:id', isAuthenticated, as
 
     const {
         fullname, classification, grade, position, department, section, dateEmployed,
-        isOfficer, isAdmin, isHeadOfDepartment, isHeadOfSection, isManagement, isPersonalAssistant, isDriver
+        isOfficer, isAdmin, isHeadOfDepartment, isHeadOfSection, isManagement, isPersonalAssistant, isDriver, isTeaLady
     } = req.body;
 
     // Initialize updatedFields with the extracted values
@@ -4317,6 +4331,7 @@ app.get('/human-resource/staff-members/overview/update/:id', isAuthenticated, as
     nonEmptyUpdatedFields.isManagement = isFieldTrue(isManagement);
     nonEmptyUpdatedFields.isPersonalAssistant = isFieldTrue(isPersonalAssistant);
     nonEmptyUpdatedFields.isDriver = isFieldTrue(isDriver);
+    nonEmptyUpdatedFields.isTeaLady = isFieldTrue(isTeaLady);
 
     const updatedUser = await User.findOneAndUpdate(
         { _id: userId },

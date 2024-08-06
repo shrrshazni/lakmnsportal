@@ -151,6 +151,12 @@
         } else {
             isDriver = "yes";
         }
+
+        if(otherUser.isTeaLady === false){
+            isTeaLady = "no";
+        } else {
+            isTeaLady = "yes";
+        }
         
 
         %>
@@ -236,6 +242,18 @@
             </select>
             <div class="invalid-feedback">Please select an option</div>
             <label for="floatingSelectTask">Driver</label>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-4">
+          <div class="form-floating">
+            <select class="form-select" id="floatingSelectTask" name="isTeaLady">
+              <option value="<%= isTeaLady %>" selected><%= isTeaLady %></option>
+              <option value="yes">Yes</option>
+              <option value="no">No</option>
+            </select>
+            <div class="invalid-feedback">Please select an option</div>
+            <label for="floatingSelectTask">Tea Lady</label>
           </div>
         </div>
 
