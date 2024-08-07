@@ -321,6 +321,11 @@ const leaveSchema = new mongoose.Schema({
     approvals: [approvalSchema]
 });
 leaveSchema.index({ status: 1 });
+leaveSchema.index({ user: 1 });
+leaveSchema.index({ department: 1 });
+leaveSchema.index({ 'date.start': 1 });
+leaveSchema.index({ 'date.return': 1 });
+leaveSchema.index({ timestamp: 1 });
 
 // FILE
 const FileSchema = new mongoose.Schema({
@@ -3493,21 +3498,39 @@ app.get('/leave/:approval/:id', async function (req, res) {
         console.log(checkLeave.approvals[humanResourceIndex].recipient);
 
         if (approval === 'approved') {
-            await Leave.findOneAndUpdate(
-                {
-                    _id: id,
-                    'approvals.recipient': user._id
-                },
-                {
-                    $set: {
-                        'approvals.$.status': 'approved',
-                        'approvals.$.comment': 'The request have been approved',
-                        'approvals.$.timestamp': moment().utcOffset(8).toDate(),
-                        status: 'pending'
-                    }
-                },
-                { new: true }
-            );
+            if (checkLeave.approvals[indexOfRecipient].role === 'Relief Staff') {
+                await Leave.findOneAndUpdate(
+                    {
+                        _id: id,
+                        'approvals.recipient': user._id
+                    },
+                    {
+                        $set: {
+                            'approvals.$.status': 'approved',
+                            'approvals.$.comment': 'The request have been approved by ' + user.fullname,
+                            'approvals.$.timestamp': moment().utcOffset(8).toDate(),
+                            status: 'pending'
+                        }
+                    },
+                    { new: true }
+                );
+            } else {
+                await Leave.findOneAndUpdate(
+                    {
+                        _id: id,
+                        'approvals.recipient': user._id
+                    },
+                    {
+                        $set: {
+                            'approvals.$.status': 'approved',
+                            'approvals.$.comment': 'The request have been approved',
+                            'approvals.$.timestamp': moment().utcOffset(8).toDate(),
+                            status: 'pending'
+                        }
+                    },
+                    { new: true }
+                );
+            }
 
             const nextIndex = indexOfRecipient + 1;
             const nextApprovalRecipientId = checkLeave.approvals[nextIndex].recipient;
@@ -3581,23 +3604,42 @@ app.get('/leave/:approval/:id', async function (req, res) {
             console.log('The leave has been approved');
             res.redirect('/leave/details/' + id);
         } else if (approval === 'denied') {
-            const leave = await Leave.findOneAndUpdate(
-                {
-                    _id: id,
-                    'approvals.recipient': user._id
-                },
-                {
-                    $set: {
-                        status: 'denied',
-                        'approvals.$.status': 'denied',
-                        'approvals.$.comment': 'The request have been denied',
-                        'approvals.$.timestamp': moment().utcOffset(8).toDate()
-                    }
-                },
-                { new: true }
-            );
+            let leaveDenied;
+            if (checkLeave.approvals[indexOfRecipient].role === 'Relief Staff') {
+                leaveDenied = await Leave.findOneAndUpdate(
+                    {
+                        _id: id,
+                        'approvals.recipient': user._id
+                    },
+                    {
+                        $set: {
+                            status: 'denied',
+                            'approvals.$.status': 'denied',
+                            'approvals.$.comment': 'The request have been denied by ' + user.fullname,
+                            'approvals.$.timestamp': moment().utcOffset(8).toDate()
+                        }
+                    },
+                    { new: true }
+                );
+            } else {
+                leaveDenied = await Leave.findOneAndUpdate(
+                    {
+                        _id: id,
+                        'approvals.recipient': user._id
+                    },
+                    {
+                        $set: {
+                            status: 'denied',
+                            'approvals.$.status': 'denied',
+                            'approvals.$.comment': 'The request have been denied',
+                            'approvals.$.timestamp': moment().utcOffset(8).toDate()
+                        }
+                    },
+                    { new: true }
+                );
+            }
 
-            if (leave) {
+            if (leaveDenied) {
                 const firstRecipientId =
                     indexOfRecipient !== -1
                         ? checkLeave.approvals[indexOfRecipient].recipient
@@ -3609,7 +3651,7 @@ app.get('/leave/:approval/:id', async function (req, res) {
 
                 var daysDifference = '';
                 if (checkLeave.type === 'Emergency Leave') {
-                    daysDifference = calculateBusinessDays(startDate, returnDate);
+                    daysDifference = moment(returnDate).diff(moment(startDate), 'days') + 1;
                 }
 
                 switch (checkLeave.type) {
@@ -7927,13 +7969,44 @@ app.get('/super-admin/update', isAuthenticated, async function (req, res) {
     if (user.isSuperAdmin) {
 
         try {
-            const result = await User.updateMany({}, { isTeaLady: false });
+            // const leaveId = '66b312aab345f0a79bfbd8ca'; // The _id of the leave document
+            // const roleToDelete = 'Head of Division'; // The role of the approval to delete
+            // const roleToUpdate = 'Head of Department'; // The role of the approval to update
+            // const newRecipientId = '65e42e0d6e65b53956d47f2b'; // New recipient ID
+            // const newRole = 'Deputy Chief Executive Officer';
 
-            if (result) {
-                console.log('Done update tealady');
-            } else {
-                console.log('Failed update tealady');
-            }
+            // const result = await Leave.findOneAndUpdate(
+            //     { _id: leaveId, 'approvals.role': roleToUpdate },
+            //     {
+            //         $set: {
+            //             'approvals.$.recipient': newRecipientId,
+            //             'approvals.$.role': newRole
+            //         }
+            //     },
+            //     { new: true }
+            // );
+
+            // if (result) {
+            //     console.log('successful');
+            // } else {
+            //     console.log('failed');
+            // }
+
+            // const newNotification = new Notification({
+            //     sender: result.user,
+            //     recipient: new mongoose.Types.ObjectId(newRecipientId),
+            //     type: 'Leave request',
+            //     url: '/leave/details/' + result._id,
+            //     message: 'Previous approval has been submitted, please do check the leave request for approval'
+            // });
+
+            // const noti = await newNotification.save();
+
+            // if (noti) {
+            //     console.log('Done send notifations!');
+            // } else {
+            //     console.log('Failed to send notifications!');
+            // }
         } catch (error) {
             console.error('Error creating Info documents:', error);
         }
@@ -8627,6 +8700,51 @@ generateApprovals = function (
                     timestamp: ''
                 });
             }
+        } else if (user.isHeadOfDepartment) {
+            approvals.push({
+                recipient: user._id,
+                role: 'Staff',
+                status: 'submitted',
+                comment: 'Submitted leave request',
+                timestamp: moment().utcOffset(8).toDate(),
+                estimated: ''
+            });
+
+            if (assignee && assignee.length > 0) {
+                assignee.forEach(assigneeItem => {
+                    approvals.push({
+                        recipient: assigneeItem._id,
+                        role: 'Relief Staff',
+                        status: 'pending',
+                        comment: `Relief Staff for leave by ${assigneeItem.fullname}`,
+                        estimated: moment().utcOffset(8).add(1, 'day').toDate(),
+                        timestamp: ''
+                    });
+                });
+            }
+
+            if (depChiefExec) {
+                approvals.push({
+                    recipient: depChiefExec._id,
+                    role: 'Deputy Chief Executive Officer',
+                    status: 'pending',
+                    comment: 'Leave request needs approval',
+                    estimated: moment().utcOffset(8).add(3, 'days').toDate(),
+                    timestamp: ''
+                });
+            }
+
+
+            if (adminHR) {
+                approvals.push({
+                    recipient: adminHR._id,
+                    role: 'Human Resource',
+                    status: 'pending',
+                    comment: 'Leave request needs to be reviewed',
+                    estimated: moment().utcOffset(8).add(3, 'days').toDate(),
+                    timestamp: ''
+                });
+            }
         } else if (user.isDeputyChiefExec === true) {
             approvals.push({
                 recipient: user._id,
@@ -8789,6 +8907,51 @@ generateApprovals = function (
                     comment: 'Leave request needs approval',
                     estimated: moment().utcOffset(8).add(1, 'day').toDate(),
                     timestamp: ''
+                });
+            }
+
+            if (depChiefExec) {
+                approvals.push({
+                    recipient: depChiefExec._id,
+                    role: 'Deputy Chief Executive Officer',
+                    status: 'pending',
+                    comment: 'Leave request needs approval',
+                    estimated: moment().utcOffset(8).add(3, 'days').toDate(),
+                    timestamp: ''
+                });
+            }
+
+
+            if (adminHR) {
+                approvals.push({
+                    recipient: adminHR._id,
+                    role: 'Human Resource',
+                    status: 'pending',
+                    comment: 'Leave request needs to be reviewed',
+                    estimated: moment().utcOffset(8).add(3, 'days').toDate(),
+                    timestamp: ''
+                });
+            }
+        } else if (user.isHeadOfDepartment) {
+            approvals.push({
+                recipient: user._id,
+                role: 'Staff',
+                status: 'submitted',
+                comment: 'Submitted leave request',
+                timestamp: moment().utcOffset(8).toDate(),
+                estimated: ''
+            });
+
+            if (assignee && assignee.length > 0) {
+                assignee.forEach(assigneeItem => {
+                    approvals.push({
+                        recipient: assigneeItem._id,
+                        role: 'Relief Staff',
+                        status: 'pending',
+                        comment: `Relief Staff for leave by ${assigneeItem.fullname}`,
+                        estimated: moment().utcOffset(8).add(1, 'day').toDate(),
+                        timestamp: ''
+                    });
                 });
             }
 
