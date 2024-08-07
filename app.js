@@ -1686,7 +1686,7 @@ app
             ? moment().utcOffset(8).add(7, 'days').toDate()  // 7 days if rememberMe is checked
             : moment().utcOffset(8).add(1, 'hour').toDate(); // 1 hour otherwise
 
-        const passwordRegex = /^(?:\d+|[a-zA-Z0-9]{4,})/;
+        const passwordRegex = /^(?:\d+|[a-zA-Z0-9]{2,})/;
 
         try {
             const user = await User.findByUsername(username);
@@ -4309,7 +4309,7 @@ app.get('/human-resource/staff-members/overview/update/:id', isAuthenticated, as
 
     const {
         fullname, classification, grade, position, department, section, dateEmployed,
-        isOfficer, isAdmin, isHeadOfDepartment, isHeadOfSection, isManagement, isPersonalAssistant, isDriver, isTeaLady
+        isOfficer, isAdmin, isHeadOfDepartment, isHeadOfSection, isManagement, isPersonalAssistant, isDriver, isTeaLady, isNonOfficeHour
     } = req.body;
 
     // Initialize updatedFields with the extracted values
@@ -4341,6 +4341,8 @@ app.get('/human-resource/staff-members/overview/update/:id', isAuthenticated, as
     nonEmptyUpdatedFields.isPersonalAssistant = isFieldTrue(isPersonalAssistant);
     nonEmptyUpdatedFields.isDriver = isFieldTrue(isDriver);
     nonEmptyUpdatedFields.isTeaLady = isFieldTrue(isTeaLady);
+    nonEmptyUpdatedFields.isNonOfficeHour = isFieldTrue(isNonOfficeHour);
+
 
     const updatedUser = await User.findOneAndUpdate(
         { _id: userId },
@@ -4470,7 +4472,10 @@ app
                 isHeadOfSection: isFieldTrue(req.body.isHeadOfSection),
                 isAdmin: isFieldTrue(req.body.isAdmin),
                 isManagement: isFieldTrue(req.body.isManagement),
-                isPersonalAssistant: isFieldTrue(req.body.isPersonalAssistant)
+                isPersonalAssistant: isFieldTrue(req.body.isPersonalAssistant),
+                isDriver: isFieldTrue(req.body.isDriver),
+                isTealady: isFieldTrue(req.body.isTealady),
+                isNonOfficeHour: isFieldTrue(req.body.isNonOfficeHour),
             });
 
             User.register(newUser, req.body.password, async function (err, user) {

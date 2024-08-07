@@ -109,6 +109,7 @@
         let isPersonalAssistant;
         let isDriver;
         let isTeaLady;
+        let isNonOfficeHour;
 
         if(otherUser.isAdmin === false){
             isAdmin = "no";
@@ -157,7 +158,12 @@
         } else {
             isTeaLady = "yes";
         }
-        
+
+        if(otherUser.isNonOfficeHour === false){
+            isNonOfficeHour = "no";
+        } else {
+            isNonOfficeHour = "yes";
+        }
 
         %>
 
@@ -256,6 +262,18 @@
             <label for="floatingSelectTask">Tea Lady</label>
           </div>
         </div>
+
+        <div class="col-12 col-md-4">
+            <div class="form-floating">
+              <select class="form-select" id="floatingSelectTask" name="isNonOfficeHour">
+                <option value="<%= isNonOfficeHour %>" selected><%= isNonOfficeHour %></option>
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+              </select>
+              <div class="invalid-feedback">Please select an option</div>
+              <label for="floatingSelectTask">Non Officer Hour</label>
+            </div>
+          </div>
 
         <div class="col-12 gy-6">
           <div class="row g-3 justify-content-end">
