@@ -91,7 +91,7 @@ if (leave.status === 'approved' && leave.date.start >= new Date()) {
 
 <div class="row d-flex flex-wrap justify-content-between align-items-end mb-2">
   <div class="col-auto">
-    <h2>Leave Request <a href="/staff/details/<%= userReq._id %>">#<%= userReq.fullname %></a></h2>
+    <h2>Leave Request <a class="notranslate" href="/staff/details/<%= userReq._id %>">#<%= userReq.fullname %></a></h2>
     <p class="text-body-secondary mb-0">Leave request on <br class="d-sm-none"><span class="ms-sm-1"><%= formatCustomDate(leave.timestamp) %></span></p>
   </div>
 

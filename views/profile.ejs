@@ -38,7 +38,7 @@
             const formattedDate = date.toLocaleDateString(date, options);
             %>
             <div class="col-12 col-sm-auto flex-1">
-              <h3><%= user.fullname %></h3>
+              <h3 class="notranslate"><%= user.fullname %></h3>
               <p class="text-body-secondary">Joined since, <%= formattedDate  %></p>
               <p class="text-primary fs-8 fst-italic">"<%= info.status %>"</p>
             </div>
@@ -159,7 +159,7 @@
               <% }); %>
               <% }else{ %>
               <tr>
-                <td colspan="5" class="text-center fw-bold fs-9">No activity detected from <span class="fw-bold text-primary"><%= user.fullname %></span></td>
+                <td colspan="5" class="text-center fw-bold fs-9">No activity detected from <span class="fw-bold text-primary notranslate"><%= user.fullname %></span></td>
               </tr>
               <% } %>
             </tbody>
@@ -264,7 +264,7 @@
                     }
                     
                   %>
-                  <a class="mb-0 fs-9" href="<%= userLink %>"><%= userReliefName %></a>
+                  <a class="mb-0 fs-9 notranslate" href="<%= userLink %>"><%= userReliefName %></a>
                 </td>
                 <td class="align-middle white-space-nowrap startdate text-center ps-3 py-4">
                   <p class="mb-0 fs-9 text-body"><%= formatDate(leaves.date.start) %></p>
@@ -288,7 +288,7 @@
               </tr>
               <%  }); %> <% } else { %>
               <tr>
-                <td colspan="6" class="text-center fw-bold fs-9">No leave detected from <span class="fw-bold text-primary"><%= user.fullname %></span></td>
+                <td colspan="6" class="text-center fw-bold fs-9">No leave detected from <span class="fw-bold text-primary notranslate"><%= user.fullname %></span></td>
               </tr>
               <% } %>
             </tbody>
@@ -407,7 +407,7 @@
               <% }); %>
               <% }else{ %>
               <tr>
-                <td colspan="6" class="text-center fw-bold fs-9">No attendance detected from <span class="fw-bold text-primary"><%= user.fullname %></span></td>
+                <td colspan="6" class="text-center fw-bold fs-9">No attendance detected from <span class="fw-bold text-primary notranslate"><%= user.fullname %></span></td>
               </tr>
               <% } %>
             </tbody>
@@ -480,7 +480,7 @@
                 </div>
               </div>
               <% const userFile = allUser.find(item => item._id.toString() === user._id.toString()); %>
-              <div class="d-flex fs-9 text-body-tertiary mb-2 flex-wrap"><span><%= file.size %></span><span class="text-body-quaternary mx-1">| </span><a href="#!"><%= userFile.fullname %> </a><span class="text-body-quaternary mx-1">| </span><span class="text-nowrap"><%= formatDateFile(file.date) %></span></div><img class="rounded-2" src="<%= file.path %>" alt="" style="max-width:230px" />
+              <div class="d-flex fs-9 text-body-tertiary mb-2 flex-wrap"><span><%= file.size %></span><span class="text-body-quaternary mx-1">| </span><a class="notranslate" href="#!"><%= userFile.fullname %> </a><span class="text-body-quaternary mx-1">| </span><span class="text-nowrap"><%= formatDateFile(file.date) %></span></div><img class="rounded-2" src="<%= file.path %>" alt="" style="max-width:230px" />
             </div>
           </div>
 

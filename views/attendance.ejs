@@ -166,7 +166,7 @@
                     avatarDiv.appendChild(avatarNamePara);
 
                     const nameLink = document.createElement('a');
-                    nameLink.classList.add('mb-0', 'ms-3', 'fw-bold', 'fs-8');
+                    nameLink.classList.add('mb-0', 'ms-3', 'fw-bold', 'fs-8', 'notranslate');
                     nameLink.textContent = entry.user ? entry.user.fullname : 'Unknown';
 
                     avatarNameLinkDiv.appendChild(avatarDiv);
@@ -343,7 +343,7 @@
                 <img class="rounded-circle border border-gray" id="image-placeholder" src="" alt="" />
               </div>
 
-              <p class="mb-1 fs-8 fw-bold text-dark" id="fullname-placeholder"></p>
+              <p class="mb-1 fs-8 fw-bold text-dark notranslate" id="fullname-placeholder"></p>
               <p class="mb-4 fs-8 fw-bold fst-italic text-dark" id="username-placeholder"></p>
               <p class="mb-1 fs-8 fw-bold text-dark" id="position-placeholder"></p>
               <p class="mb-2 fs-8 fw-bold text-dark" id="section-placeholder"></p>

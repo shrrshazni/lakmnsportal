@@ -146,7 +146,7 @@ if(user.isSuperAdmin){
             }
           %>
           <div class="col-12 col-md-6 flex-1">
-            <h3 class="mx-auto white-space-nowrap"><%= user.fullname %></h3>
+            <h3 class="mx-auto white-space-nowrap notranslate"><%= user.fullname %></h3>
             <p class="fw-bold"><%= user.position %><br><span class="fw-normal fst-italic"> <%= user.department %><br><%= showSection %></span></p>
             <p class="mx-auto text-primary fst-italic">"<%= info.status %>"</p>
           </div>
@@ -258,7 +258,7 @@ if(user.isSuperAdmin){
                         <img class="rounded-circle border border-primary" src="<%= notiProfile %>" alt="" />
                       </div>
                       <div class="flex-1 me-sm-3">
-                        <h4 class="fs-9 text-body-emphasis"><%= notification.sender.fullname %></h4>
+                        <h4 class="fs-9 text-body-emphasis notranslate"><%= notification.sender.fullname %></h4>
                         <p class="fs-9 text-body-highlight mb-2 mb-sm-3 fw-normal">
                           <span class='me-1 mt-1 fs-10'>💬</span><%= notification.message %>
                           <span class="text-body-quaternary text-opacity-75 fw-bold fs-10">&nbsp;<%= timeAgo(notification.timestamp) %></span>
@@ -381,9 +381,9 @@ if(user.isSuperAdmin){
               }
               %>
               <div class="avatar avatar-xl <%= showOnline %>">
-                <div class="avatar-name rounded-circle"><span><%= department && department.fullname ? department.fullname[0].toUpperCase() : '' %></span></div>
+                <div class="avatar-name rounded-circle notranslate"><span><%= department && department.fullname ? department.fullname[0].toUpperCase() : '' %></span></div>
               </div>
-              <a class="mb-0 ms-3 py-4 fw-bold fs-8" href="/staff/details/<%= department._id %>"><%= department.fullname %></a>
+              <a class="mb-0 ms-3 py-4 fw-bold fs-8 notranslate" href="/staff/details/<%= department._id %>"><%= department.fullname %></a>
             </td>
             <td class="align-middle white-space-nowrap position ps-3">
               <p class="mb-0 fs-9 text-body-highlight fw-semibold"><%= department.position %></p>
@@ -1077,7 +1077,7 @@ if(user.isSuperAdmin){
                       } else {
                         results.forEach(result => {
                           const resultDiv = $(
-                            '<div class="result btn btn-outline-primary mr-2 mb-2"></div>'
+                            '<div class="result btn btn-outline-primary mr-2 mb-2 notranslate"></div>'
                           ).text(result.fullname);
                           resultsDiv.append(resultDiv);
 
@@ -1275,7 +1275,7 @@ if(user.isSuperAdmin){
                 <div class="col">
                   <div class="timeline-item-content ps-6 ps-md-3">
                     <h5 class="fs-9 lh-sm"><%= activity.title %></h5>
-                    <p class="fs-9">by <a class="fw-semibold" href="#!"><%= activity.user.fullname %></a></p>
+                    <p class="fs-9">by <a class="fw-semibold notranslate" href="#!"><%= activity.user.fullname %></a></p>
                     <p class="fs-9 text-body fst-italic mb-5"><%= activity.description %></p>
                   </div>
                 </div>
@@ -1630,7 +1630,7 @@ if(user.isSuperAdmin){
                   </td>
                   <td class="align-middle white-space-nowrap ps-3 staff py-4">
                     <% const userApproval = allUser.find(userapp => userapp._id.toString() === leaves.user.toString()); %>
-                    <a class="fw-bold fs-8" href="/staff/details/<%= leaves.user %>"><%= userApproval.fullname %></a>
+                    <a class="fw-bold fs-8 notranslate" href="/staff/details/<%= leaves.user %> "><%= userApproval.fullname %></a>
                   </td>
                   <td class="align-middle latestapproval ps-3 py-4">
                     <% const latestApproval = leaves.approvals.reduce((latest, approval) => approval.timestamp > latest.timestamp ? approval : latest, leaves.approvals[0]); %>
@@ -1741,7 +1741,7 @@ if(user.isSuperAdmin){
 
                   <td class="align-middle text-body white-space-nowrap ps-0 staff">
                     <% const staffToday = allUser.find(staff => staff._id.toString() === onLeave.user.toString()); %>
-                    <a class="mb-0 fw-bold fs-8 ps-2 py-4" href="/staff/details/<%= onLeave.user %>"><%= staffToday.fullname %></a>
+                    <a class="mb-0 fw-bold fs-8 ps-2 py-4 notranslate" href="/staff/details/<%= onLeave.user %>"><%= staffToday.fullname %></a>
                   </td>
 
 
@@ -1817,7 +1817,7 @@ if(user.isSuperAdmin){
 
                   <td class="align-middle text-body white-space-nowrap ps-0 staff">
                     <% const staffWeek = allUser.find(staff => staff._id.toString() === onLeave.user.toString()); %>
-                    <a class="mb-0 fw-bold fs-8 ps-2 py-4" href="/staff/details/<%= onLeave.user %>"><%= staffWeek.fullname %></a>
+                    <a class="mb-0 fw-bold fs-8 ps-2 py-4 notranslate" href="/staff/details/<%= onLeave.user %>"><%= staffWeek.fullname %></a>
                   </td>
 
 
@@ -1893,7 +1893,7 @@ if(user.isSuperAdmin){
 
                   <td class="align-middle text-body white-space-nowrap ps-0 staff">
                     <% const staffMonth = allUser.find(staff => staff._id.toString() === onLeave.user.toString());%>
-                    <a class="mb-0 fw-bold fs-8 ps-2 py-4" href="/staff/details/<%= onLeave.user %>"><%= staffMonth.fullname %></a>
+                    <a class="mb-0 fw-bold fs-8 ps-2 py-4 notranslate" href="/staff/details/<%= onLeave.user %>"><%= staffMonth.fullname %></a>
                   </td>
 
 

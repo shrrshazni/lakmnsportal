@@ -4118,7 +4118,7 @@ app.get('/leave/:approval/:id', async function (req, res) {
 });
 
 //ATTENDANCE
-app.get('/attendance', async function (req, res) {
+app.get('/attendance', restrictAccess, async function (req, res) {
     const uniqueIdentifier = generateUniqueIdentifier();
 
     res.render('attendance', {
@@ -7012,10 +7012,16 @@ app.post('/api/qrcode/process-data', isAuthenticated, async function (req, res) 
     var log = '';
     var location = '';
 
-    if (clientIp === '175.140.45.73') {
+    if (clientIp === '175.140.45.73' || clientIp === '104.28.242.42') {
         location = 'BMI';
+    } else if (clientIp === '210.186.48.79') {
+        location = 'JM';
+    } else if (clientIp === '60.50.17.102') {
+        location = 'CM';
+    } else if (clientIp === '175.144.217.244') {
+        location = 'RS';
     } else {
-        location = 'Others';
+        location = 'Invalid';
     }
 
     console.log(location);

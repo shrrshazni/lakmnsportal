@@ -118,7 +118,7 @@
               resultsDiv.append('<p class="text-muted fs-9">No results found</p>');
             } else {
               results.forEach(result => {
-                const resultDiv = $('<div class="result btn btn-outline-primary mr-2 mb-2"></div>').text(result.fullname);
+                const resultDiv = $('<div class="result btn btn-outline-primary mr-2 mb-2 notranslate"></div>').text(result.fullname);
                 resultsDiv.append(resultDiv);
 
                 resultDiv.click(function() {
