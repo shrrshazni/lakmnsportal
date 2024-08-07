@@ -8179,7 +8179,7 @@ cron.schedule('* * * * *', async () => {
                         const userId = session.session.passport.user;
 
                         // Update the Info document for the user
-                        const infoUpdate = await InfoCollection.findOneAndUpdate(
+                        const infoUpdate = await Info.findOneAndUpdate(
                             { user: mongoose.Types.ObjectId(userId) }, // Ensure userId is in ObjectId format
                             { $set: { isOnline: false, lastSeen: now } },
                             { returnOriginal: false } // Ensure new document is returned
