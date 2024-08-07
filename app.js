@@ -54,7 +54,7 @@ const store = new MongoDBSession({
 app.use(
     session({
         secret: 'Our little secrets',
-        resave: true,
+        resave: false,
         saveUninitialized: false,
         store: store,
         cookie: {
@@ -1909,7 +1909,7 @@ app.get('/sign-out/:id', async function (req, res) {
     );
 
     if (updateInfo) {
-        console.log('Is online at ' + moment().utcOffset(8).toDate());
+        console.log('Sign out at ' + moment().utcOffset(8).toDate());
     } else {
         console.log('Failed to update');
     }
@@ -8083,18 +8083,53 @@ cron.schedule('* * * * *', async () => {
     try {
         // Get the current date in Asia/Kuala_Lumpur timezone
         const now = moment().utcOffset(8).toDate();
-        console.log(now);
+        console.log('Current time:', now);
 
         // Ensure you are using the correct database and collection
         const sessions = sessionDatabase.collection('sessions');
 
-        // Remove expired sessions
-        const result = await sessions.deleteMany({ expires: { $lt: now } });
+        // Retrieve all sessions
+        const allSessions = await sessions.find().toArray();
 
-        if (result) {
-            console.log('Removed some of the session');
+        if (allSessions.length > 0) {
+            console.log(`${allSessions.length} sessions found.`);
+
+            // Filter expired sessions
+            const expiredSessions = allSessions.filter(session => session.expires < now);
+
+            if (expiredSessions.length > 0) {
+                console.log(`${expiredSessions.length} expired sessions found.`);
+
+                // Iterate over expired sessions
+                for (const session of expiredSessions) {
+                    if (session.session && session.session.passport && session.session.passport.user) {
+                        const userId = session.session.passport.user;
+
+                        // Update the Info document for the user
+                        const infoUpdate = await InfoCollection.findOneAndUpdate(
+                            { user: mongoose.Types.ObjectId(userId) }, // Ensure userId is in ObjectId format
+                            { $set: { isOnline: false, lastSeen: now } },
+                            { returnOriginal: false } // Ensure new document is returned
+                        );
+
+                        if (infoUpdate.value) {
+                            console.log(`Info updated for user: ${userId}`);
+                        } else {
+                            console.log(`Info not found for user: ${userId}`);
+                        }
+                    } else {
+                        console.log('Session does not contain passport user information:', session._id);
+                    }
+                }
+
+                // Delete all expired sessions
+                const deleteResult = await sessions.deleteMany({ expires: { $lt: now } });
+                console.log(`${deleteResult.deletedCount} expired sessions deleted.`);
+            } else {
+                console.log('No expired sessions found.');
+            }
         } else {
-            console.log('No expired sessions to remove');
+            console.log('No sessions found.');
         }
     } catch (error) {
         console.error('Error removing expired sessions:', error);
