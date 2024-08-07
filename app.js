@@ -8182,7 +8182,7 @@ cron.schedule('* * * * *', async () => {
                         const infoUpdate = await Info.findOneAndUpdate(
                             { user: mongoose.Types.ObjectId(userId) }, // Ensure userId is in ObjectId format
                             { $set: { isOnline: false, lastSeen: now } },
-                            { returnOriginal: false } // Ensure new document is returned
+                            { upsert: true, new: true }
                         );
 
                         if (infoUpdate.value) {
