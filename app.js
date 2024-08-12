@@ -8064,36 +8064,17 @@ app.get('/testing', async (req, res) => {
         .sort({ timestamp: -1 });
 
     if (user) {
-        const leaveId = new mongoose.Types.ObjectId('66ab487a9db48ec2da0f9433');
-        const leave = await Leave.findOne(
-            { _id: leaveId },
-        );
+        // Convert string userId to ObjectId
+        const userId = new mongoose.Types.ObjectId('668cb5db48acb86c658bfe15');
 
-        console.log(leave);
+        // Find the Info document using the userId
+        const info = await Info.findOne({ user: userId });
 
-        leave.status = 'invalid';
-
-        // Find the index of the last valid approval
-        let lastValidIndex = -1;
-        leave.approvals.forEach((approval, index) => {
-            if (approval.status === 'approved' || approval.status === 'submitted') {
-                lastValidIndex = index;
-            }
-        });
-
-        // Determine the index of the next approval after the last valid approval
-        let nextApprovalIndex = lastValidIndex + 1;
-
-        // Remove the next approval after the last valid approval if it exists and is not a Human Resource approval
-        if (nextApprovalIndex < leave.approvals.length) {
-            const nextApproval = leave.approvals[nextApprovalIndex];
-            if (nextApproval.role !== 'Human Resource') {
-                leave.approvals.splice(nextApprovalIndex, 1);
-            }
+        if (info) {
+            console.log('Info document found:', info);
+        } else {
+            console.log('No Info document found for userId:', userId);
         }
-
-        // Update the leave with the modified approvals list
-        await leave.save();
 
         res.render('testing', {
             user: user,
@@ -8178,11 +8159,16 @@ cron.schedule('* * * * *', async () => {
                     if (session.session && session.session.passport && session.session.passport.user) {
                         const userId = session.session.passport.user;
 
+                        console.log(userId);
+
+                        // Ensure userId is in ObjectId format
+                        const objectIdUserId = mongoose.Types.ObjectId(userId);
+
                         // Update the Info document for the user
                         const infoUpdate = await Info.findOneAndUpdate(
-                            { user: mongoose.Types.ObjectId(userId) }, // Ensure userId is in ObjectId format
+                            { user: objectIdUserId }, // Ensure userId is in ObjectId format
                             { $set: { isOnline: false, lastSeen: now } },
-                            { upsert: true, new: true }
+                            { upsert: true }
                         );
 
                         if (infoUpdate.value) {
