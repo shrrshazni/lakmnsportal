@@ -2434,6 +2434,7 @@ app
                 leave: currentLeave,
                 userLeave: userLeave,
                 selectedNames: '',
+                selectedSupervisors: '',
                 // data
                 type: '',
                 startDate: '',
@@ -2469,6 +2470,11 @@ app
             const selectedNames = req.body.selectedNames
                 ? req.body.selectedNames.split(',')
                 : [];
+            const selectedSupervisors = req.body.selectedSupervisors
+                ? req.body.selectedNames.split(',')
+                : [];
+
+            console.log(selectedSupervisors);
 
             // init to submit the leave req
             var leaveBalance = '';
@@ -2495,6 +2501,7 @@ app
                 .exec();
             // find assignee
             const assignee = await User.find({ fullname: { $in: selectedNames } });
+            const supervisors = await User.find({ fullname: { $in: selectedSupervisors } });
             // leave for the user
             const leave = await Leave.find({ user: user._id });
 
@@ -2560,6 +2567,7 @@ app
                             chiefExec,
                             adminHR,
                             assignee,
+                            supervisors,
                             type
                         );
                     } else {
@@ -2598,6 +2606,7 @@ app
                             chiefExec,
                             adminHR,
                             assignee,
+                            supervisors,
                             type
                         );
                     } else {
@@ -2633,6 +2642,7 @@ app
                                 chiefExec,
                                 adminHR,
                                 assignee,
+                                supervisors,
                                 type
                             );
                         } else {
@@ -2678,6 +2688,7 @@ app
                                 chiefExec,
                                 adminHR,
                                 assignee,
+                                supervisors,
                                 type
                             );
                         } else {
@@ -2716,6 +2727,7 @@ app
                             chiefExec,
                             adminHR,
                             assignee,
+                            supervisors,
                             type
                         );
                     } else {
@@ -2747,6 +2759,7 @@ app
                                 chiefExec,
                                 adminHR,
                                 assignee,
+                                supervisors,
                                 type
                             );
                         } else {
@@ -2795,6 +2808,7 @@ app
                                 chiefExec,
                                 adminHR,
                                 assignee,
+                                supervisors,
                                 type
                             );
                         } else {
@@ -2841,6 +2855,7 @@ app
                                 chiefExec,
                                 adminHR,
                                 assignee,
+                                supervisors,
                                 type
                             );
                         } else {
@@ -2888,6 +2903,7 @@ app
                                 chiefExec,
                                 adminHR,
                                 assignee,
+                                supervisors,
                                 type
                             );
                         } else {
@@ -2935,6 +2951,7 @@ app
                                 chiefExec,
                                 adminHR,
                                 assignee,
+                                supervisors,
                                 type
                             );
                         } else {
@@ -2982,6 +2999,7 @@ app
                                 chiefExec,
                                 adminHR,
                                 assignee,
+                                supervisors,
                                 type
                             );
                         } else {
@@ -3017,6 +3035,7 @@ app
                     depChiefExec,
                     chiefExec,
                     adminHR,
+                    supervisors,
                     type
                 );
             }
@@ -4371,12 +4390,12 @@ app.get('/human-resource/staff-members/overview/update/:id', isAuthenticated, as
     const userId = req.params.id;
 
     const {
-        fullname, classification, grade, position, department, section, dateEmployed,
+        fullname, classification, grade, position, department, section, dateEmployed, gender,
         isOfficer, isAdmin, isHeadOfDepartment, isHeadOfSection, isManagement, isPersonalAssistant, isDriver, isTeaLady, isNonOfficeHour
     } = req.body;
 
     // Initialize updatedFields with the extracted values
-    const updatedFields = { fullname, classification, grade, position, department, section, dateEmployed };
+    const updatedFields = { fullname, classification, grade, position, department, section, dateEmployed, gender };
 
     // Function to filter out empty fields
     const filterEmptyFields = (fields) => {
@@ -6025,7 +6044,7 @@ app.get('/vms/list', isAuthenticated, async function (req, res) {
         time_in: visitor.time_in ? moment(visitor.time_in).format('YYYY-MM-DD HH:mm:ss') : '-',
         time_out: visitor.time_out ? moment(visitor.time_out).format('YYYY-MM-DD HH:mm:ss') : '-'
     }));
-    
+
 
     // Calculate visitor counts
     const totalVisitorsToday = await getTotalVisitorsToday();
@@ -8831,6 +8850,7 @@ generateApprovals = function (
     chiefExec,
     adminHR,
     assignee,
+    supervisors,
     type
 ) {
     let approvals = [];
@@ -8845,6 +8865,19 @@ generateApprovals = function (
                 timestamp: moment().utcOffset(8).toDate(),
                 estimated: ''
             });
+
+            if (supervisors && supervisors.length > 0) {
+                supervisors.forEach(supervisorsItem => {
+                    approvals.push({
+                        recipient: supervisorsItem._id,
+                        role: 'Supervisor',
+                        status: 'pending',
+                        comment: `Supervisor for leave by ${supervisorsItem.fullname}`,
+                        estimated: moment().utcOffset(8).add(1, 'day').toDate(),
+                        timestamp: ''
+                    });
+                });
+            }
 
             if (headOfSection) {
                 approvals.push({
@@ -9006,6 +9039,19 @@ generateApprovals = function (
                 estimated: ''
             });
 
+            if (supervisors && supervisors.length > 0) {
+                supervisors.forEach(supervisorsItem => {
+                    approvals.push({
+                        recipient: supervisorsItem._id,
+                        role: 'Supervisor',
+                        status: 'pending',
+                        comment: `Supervisor for leave by ${supervisorsItem.fullname}`,
+                        estimated: moment().utcOffset(8).add(1, 'day').toDate(),
+                        timestamp: ''
+                    });
+                });
+            }
+
             if (headOfSection) {
                 approvals.push({
                     recipient: headOfSection._id,
@@ -9058,6 +9104,19 @@ generateApprovals = function (
                         role: 'Relief Staff',
                         status: 'pending',
                         comment: `Relief Staff for leave by ${assigneeItem.fullname}`,
+                        estimated: moment().utcOffset(8).add(1, 'day').toDate(),
+                        timestamp: ''
+                    });
+                });
+            }
+
+            if (supervisors && supervisors.length > 0) {
+                supervisors.forEach(supervisorsItem => {
+                    approvals.push({
+                        recipient: supervisorsItem._id,
+                        role: 'Supervisor',
+                        status: 'pending',
+                        comment: `Supervisor for leave by ${supervisorsItem.fullname}`,
                         estimated: moment().utcOffset(8).add(1, 'day').toDate(),
                         timestamp: ''
                     });
@@ -9186,6 +9245,16 @@ generateApprovals = function (
                 });
             }
 
+            if (chiefExec) {
+                approvals.push({
+                    recipient: chiefExec._id,
+                    role: 'Chief Executive Officer',
+                    status: 'pending',
+                    comment: 'Leave request needs approval',
+                    estimated: moment().utcOffset(8).add(2, 'days').toDate(),
+                    timestamp: ''
+                });
+            }
 
             if (adminHR) {
                 approvals.push({
@@ -9258,6 +9327,19 @@ generateApprovals = function (
                         role: 'Relief Staff',
                         status: 'pending',
                         comment: `Relief Staff for leave by ${assigneeItem.fullname}`,
+                        estimated: moment().utcOffset(8).add(1, 'day').toDate(),
+                        timestamp: ''
+                    });
+                });
+            }
+
+            if (supervisors && supervisors.length > 0) {
+                supervisors.forEach(supervisorsItem => {
+                    approvals.push({
+                        recipient: supervisorsItem._id,
+                        role: 'Supervisor',
+                        status: 'pending',
+                        comment: `Supervisor for leave by ${supervisorsItem.fullname}`,
                         estimated: moment().utcOffset(8).add(1, 'day').toDate(),
                         timestamp: ''
                     });

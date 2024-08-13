@@ -148,8 +148,29 @@
           <div id="results" class="mt-3 mb-3 col-12"></div>
         </div>
 
-        <input type="hidden" id="selectedNamesInput" name="selectedNames" value="<%= Array.isArray(selectedNames) ? selectedNames.join(',') : '' %>" />
+        <% if(user.section === 'Security Division'){ %>
+        <div class="col-12 gy-0 mt-n5">
+          <hr>
+          <div class="row g-3">
+            <div class="col-12 col-md-8 mb-0">
+              <div id="selectedSupervisors" class="d-flex flex-wrap border border-300 rounded-3 px-2" style="min-height: 3rem"></div>
+            </div>
+            <div class="col-6 col-md-4 mb-3">
+              <div class="form-floating">
+                <input type="text" name="supervisorQuery" id="supervisorQueryInput" class="form-control" placeholder="Search supervisor name" />
+                <label class="form-label" for="supervisorQueryInput">Search Supervisor</label>
+                <div class="invalid-feedback">
+                  Please select a supervisor
+                </div>
+              </div>
+              <div id="supervisorResults" class="mt-3 mb-3 col-12"></div>
+            </div>
+          </div>
+        </div>
+        <% } %>
 
+        <input type="hidden" id="selectedSupervisorsInput" name="selectedSupervisors" value="<%= Array.isArray(selectedSupervisors) ? selectedSupervisors.join(',') : '' %>" />
+        <input type="hidden" id="selectedNamesInput" name="selectedNames" value="<%= Array.isArray(selectedNames) ? selectedNames.join(',') : '' %>" />
 
         <div class="col-12 gy-6">
           <div class="row g-3 justify-content-end">
@@ -192,7 +213,7 @@
           }
 
           // Handle Emergency Leave case
-          if (selectedLeaveType === 'Emergency Leave') {
+          if (selectedLeaveType === 'Emergency Leave' || selectedLeaveType === 'Sick Leave' || selectedLeaveType === 'Extended Sick Leave') {
             document.getElementById('queryInput').value = 'Relief staff not required';
             document.getElementById('queryInput').disabled = true;
           } else {
@@ -292,6 +313,91 @@
 
             // Update the hidden input value with selected names
             $('#selectedNamesInput').val(selectedNames.join(','));
+          }
+        });
+      </script>
+
+      <script>
+        $(document).ready(function() {
+          // Relief Staff Selection: already implemented
+
+          // Supervisor Selection: only if 'security division'
+          const supervisorQueryInput = $('#supervisorQueryInput');
+          const selectedSupervisorsDiv = $('#selectedSupervisors');
+          const selectedSupervisors = [];
+
+          $('#leaveForm input[name="supervisorQuery"]').on('input', function() {
+            const query = $(this).val();
+            if (query.trim() !== '') {
+              $.ajax({
+                url: `/search/staff/auxiliary-police?query=${query}`,
+                method: 'GET',
+                success: function(results) {
+                  displaySupervisorResults(results);
+                },
+                error: function(error) {
+                  console.error(error);
+                }
+              });
+            } else {
+              // Clear results if the search query is empty
+              displaySupervisorResults([]);
+            }
+          });
+
+          function displaySupervisorResults(results) {
+            const resultsDiv = $('#supervisorResults');
+            resultsDiv.empty();
+
+            if (results.length === 0) {
+              resultsDiv.append('<p class="text-muted fs-9">No results found</p>');
+            } else {
+              results.forEach(result => {
+                const resultDiv = $(
+                  '<div class="result btn btn-outline-primary mr-2 mb-2 notranslate"></div>'
+                ).text(result.fullname);
+                resultsDiv.append(resultDiv);
+
+                // Add click event to handle adding and removing names
+                resultDiv.click(function() {
+                  const clickedName = result.fullname;
+
+                  // Check if the name is already selected
+                  const index = selectedSupervisors.indexOf(clickedName);
+                  if (index === -1) {
+                    // If not selected, add it to the array and update the display
+                    selectedSupervisors.push(clickedName);
+                    updateSelectedSupervisorsDisplay();
+                  } else {
+                    // If already selected, remove it from the array and update the display
+                    selectedSupervisors.splice(index, 1);
+                    updateSelectedSupervisorsDisplay();
+                  }
+                });
+              });
+            }
+          }
+
+          function updateSelectedSupervisorsDisplay() {
+            // Update the display with the selected supervisors
+            selectedSupervisorsDiv.empty();
+            selectedSupervisors.forEach(name => {
+              const nameDiv = $(
+                '<div class="selectedName btn btn-outline-secondary mr-2 mb-1 mt-1"></div>'
+              ).text(name);
+              selectedSupervisorsDiv.append(nameDiv);
+
+              // Add click event to remove the name
+              nameDiv.click(function() {
+                const removedName = $(this).text();
+                const index = selectedSupervisors.indexOf(removedName);
+                selectedSupervisors.splice(index, 1);
+                updateSelectedSupervisorsDisplay();
+              });
+            });
+
+            // Update the hidden input value with selected supervisors
+            $('#selectedSupervisorsInput').val(selectedSupervisors.join(','));
           }
         });
       </script>

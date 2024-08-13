@@ -41,7 +41,19 @@
           </div>
         </div>
 
-        <div class="col-12 col-md-4">
+        <div class="col-12 col-md-3">
+          <div class="form-floating">
+            <select class="form-select" id="floatingSelectTask" name="gender">
+              <option selected></option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+            </select>
+            <div class="invalid-feedback">Please select a gender type</div>
+            <label for="floatingSelectTask">Gender</label>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-3">
           <div class="form-floating">
             <select name="classification" class="form-select form-icon-input">
               <option selected></option>
@@ -57,7 +69,7 @@
           </div>
         </div>
 
-        <div class="col-12 col-md-4">
+        <div class="col-12 col-md-3">
           <div class="form-floating">
             <input type="text" name="grade" class="form-control" placeholder="" />
             <label class="form-label" for="grade">Grade</label>
@@ -67,7 +79,7 @@
           </div>
         </div>
 
-        <div class="col-12 col-md-4">
+        <div class="col-12 col-md-3">
           <div class="form-floating">
             <input type="text" name="position" class="form-control" placeholder="" />
             <label class="form-label" for="position">Position</label>
@@ -264,16 +276,16 @@
         </div>
 
         <div class="col-12 col-md-4">
-            <div class="form-floating">
-              <select class="form-select" id="floatingSelectTask" name="isNonOfficeHour">
-                <option value="<%= isNonOfficeHour %>" selected><%= isNonOfficeHour %></option>
-                <option value="yes">Yes</option>
-                <option value="no">No</option>
-              </select>
-              <div class="invalid-feedback">Please select an option</div>
-              <label for="floatingSelectTask">Non Officer Hour</label>
-            </div>
+          <div class="form-floating">
+            <select class="form-select" id="floatingSelectTask" name="isNonOfficeHour">
+              <option value="<%= isNonOfficeHour %>" selected><%= isNonOfficeHour %></option>
+              <option value="yes">Yes</option>
+              <option value="no">No</option>
+            </select>
+            <div class="invalid-feedback">Please select an option</div>
+            <label for="floatingSelectTask">Non Officer Hour</label>
           </div>
+        </div>
 
         <div class="col-12 gy-6">
           <div class="row g-3 justify-content-end">
@@ -336,6 +348,14 @@
                 <p class="text-body-secondary"><%= otherUser.grade %></p>
               </div>
             </div>
+            <div class="">
+                <div class="">
+                  <h5 class="text-body-highlight">Gender</h5>
+                </div>
+                <div class="">
+                  <p class="text-body-secondary"><%= otherUser.gender %></p>
+                </div>
+              </div>
           </div>
 
           <div class="border-top border-dashed pt-4">
