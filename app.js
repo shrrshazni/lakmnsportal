@@ -23,9 +23,23 @@ const { timeStamp, time } = require('console');
 const { type } = require('os');
 const requestIp = require('request-ip');
 const { performance } = require('perf_hooks');
+const webPush = require('web-push');
 
 const mongoURI =
     'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/session';
+
+const generateVAPIDKeys = () => {
+    const vapidKeys = webPush.generateVAPIDKeys();
+    console.log('Public VAPID Key:', vapidKeys.publicKey);
+    console.log('Private VAPID Key:', vapidKeys.privateKey);
+    return vapidKeys;
+};
+
+// Uncomment the line below to generate VAPID keys once
+// const { publicKey, privateKey } = generateVAPIDKeys(); // Uncomment this line to generate keys
+
+const publicVapidKey = 'BIm9U514rYCkeKfBkFzbt2hw7yUyF9TtWCEuz3SXfCCzSwfIDYk_Wh55nHngMr9TqeT6fwxB9KQ-phAVvmcPzKA';
+const privateVapidKey = '_2XQYXRn3GBdELPjlec4d2HHYKUSAs3fJ2cU_lrx1eY';
 
 const app = express();
 
@@ -62,6 +76,9 @@ app.use(
         }
     })
 );
+
+// init web-push
+webPush.setVapidDetails('mailto:protech@lakmns.org', publicVapidKey, privateVapidKey);
 
 //init passport
 app.use(passport.initialize());
@@ -522,6 +539,21 @@ const vmsSchema = new mongoose.Schema({
     build_loc: String
 });
 
+// sucbscription schema
+const subscriptionSchema = new mongoose.Schema({
+    endpoint: { type: String, required: true },
+    expirationTime: { type: Date },
+    keys: {
+        p256dh: { type: String, required: true },
+        auth: { type: String, required: true }
+    },
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Optional: link to a user if needed
+    createdAt: { type: Date, default: Date.now }
+});
+
+// Create an index on the endpoint field for faster lookups
+subscriptionSchema.index({ endpoint: 1 });
+
 // TENDER
 // const tenderSchema = new mongoose.Schema({
 //     id: {
@@ -588,6 +620,7 @@ const PatrolAux = auxPoliceDatabase.model('PatrolAux', patrolSchema);
 const CaseAux = auxPoliceDatabase.model('CaseAux', caseSchema);
 const DutyHandoverAux = auxPoliceDatabase.model('DutyHandoverAux', dutyHandoverSchema);
 const Vms = vmsDatabase.model('Visitors', vmsSchema);
+const Subscriptions = userDatabase.model('Subscriptions', subscriptionSchema);
 // const Tender = tenderDatabase.model('Tender', tenderSchema);
 // const TenderCompany = tenderDatabase.model('TenderCompany', tenderCompanySchema);
 
@@ -6283,6 +6316,69 @@ app.get('/markAllAsRead', isAuthenticated, async function (req, res) {
     }
 });
 
+// Route to Serve VAPID Public Key
+app.get('/vapidPublicKey', (req, res) => {
+    res.send(publicVapidKey);
+});
+
+app.post('/subscribe', async (req, res) => {
+    const { endpoint, expirationTime, keys, userId } = req.body;
+
+    if (!endpoint || !keys.p256dh || !keys.auth) {
+        return res.status(400).json({ error: 'Missing required subscription details.' });
+    }
+
+    try {
+        const subscription = new Subscriptions({
+            endpoint,
+            expirationTime,
+            keys,
+            user: userId
+        });
+
+        await subscription.save();
+        res.status(201).json({ message: 'Subscription saved successfully.' });
+    } catch (error) {
+        console.error('Failed to save subscription:', error);
+        res.status(500).json({ error: 'Failed to save subscription.' });
+    }
+});
+
+// Route to Check if Subscription Exists
+app.post('/check-subscription', async (req, res) => {
+    const subscription = req.body;
+    const existingSubscription = await Subscriptions.findOne({ endpoint: subscription.endpoint });
+
+    const isSubscribed = existingSubscription && existingSubscription.keys.p256dh === subscription.keys.p256dh &&
+        existingSubscription.keys.auth === subscription.keys.auth;
+
+    res.json({ isSubscribed: !!isSubscribed });
+});
+
+// Route to Send Notifications
+app.post('/sendNotification', async (req, res) => {
+    const { recipientId, message, url } = req.body;
+
+    const subscriptions = await Subscriptions.find({ user: recipientId });
+
+    subscriptions.forEach(sub => {
+        const payload = JSON.stringify({ title: 'Notification', message, url });
+        webPush.sendNotification(sub, payload).catch(error => console.error(error));
+    });
+
+    const notification = new Notification({
+        sender: req.user._id,
+        recipient: recipientId,
+        message,
+        type: 'Web Push',
+        url
+    });
+
+    await notification.save();
+    res.status(200).json({ success: true });
+});
+
+
 //FILES
 
 // UPLOAD
@@ -8317,17 +8413,6 @@ app.get('/testing', async (req, res) => {
         .sort({ timestamp: -1 });
 
     if (user) {
-        // Convert string userId to ObjectId
-        const userId = new mongoose.Types.ObjectId('668cb5db48acb86c658bfe15');
-
-        // Find the Info document using the userId
-        const info = await Info.findOne({ user: userId });
-
-        if (info) {
-            console.log('Info document found:', info);
-        } else {
-            console.log('No Info document found for userId:', userId);
-        }
 
         res.render('testing', {
             user: user,
@@ -8414,12 +8499,11 @@ cron.schedule('* * * * *', async () => {
 
                         console.log(userId);
 
-                        // Ensure userId is in ObjectId format
-                        const objectIdUserId = mongoose.Types.ObjectId(userId);
+                        const objectId = mongoose.Types.ObjectId.isValid(userId) ? new mongoose.Types.ObjectId(userId) : userId;
 
                         // Update the Info document for the user
                         const infoUpdate = await Info.findOneAndUpdate(
-                            { user: objectIdUserId }, // Ensure userId is in ObjectId format
+                            { user: objectId }, // Ensure userId is in ObjectId format
                             { $set: { isOnline: false, lastSeen: now } },
                             { upsert: true }
                         );
@@ -9774,7 +9858,7 @@ function handleError(res, error) {
 // }
 
 //  for restricted-link
-const allowedIPs = ['175.140.45.73', '104.28.242.42', '210.186.48.79', '60.50.17.102', '175.144.217.244'];
+const allowedIPs = ['175.140.45.73', '104.28.242.42', '210.186.48.79', '60.50.17.102', '175.144.217.244', '203.106.120.240'];
 
 function restrictAccess(req, res, next) {
     const clientIp = req.clientIp;
