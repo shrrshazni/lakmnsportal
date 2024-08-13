@@ -6025,6 +6025,7 @@ app.get('/vms/list', isAuthenticated, async function (req, res) {
         time_in: visitor.time_in ? moment(visitor.time_in).format('YYYY-MM-DD HH:mm:ss') : '-',
         time_out: visitor.time_out ? moment(visitor.time_out).format('YYYY-MM-DD HH:mm:ss') : '-'
     }));
+    
 
     // Calculate visitor counts
     const totalVisitorsToday = await getTotalVisitorsToday();
