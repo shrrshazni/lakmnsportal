@@ -3094,6 +3094,7 @@ app
                         leave: leave,
                         userLeave: userLeave,
                         selectedNames: '',
+                        selectedSupervisors: '',
                         // data
                         type: '',
                         startDate: startDate,
@@ -3118,6 +3119,7 @@ app
                         leave: leave,
                         userLeave: userLeave,
                         selectedNames: '',
+                        selectedSupervisors: '',
                         // data
                         type: '',
                         startDate: startDate,
