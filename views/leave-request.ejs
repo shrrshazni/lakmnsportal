@@ -81,8 +81,24 @@
                   defaultOptions = 'Select leave type';
                 }else {
                   defaultOptions = type;
-                }  
-              %>
+                }
+                
+                let showMale;
+
+                if(user.gender === 'Male'){
+                    showMale = '';
+                }else{
+                    showMale = 'd-none';
+                }
+
+                let showFemale;
+
+                if(user.gender === 'Female'){
+                    showFemale = '';
+                }else{
+                    showFemale = 'd-none';
+                }
+          %>
           <div class="form-floating">
             <select class="form-select" id="floatingSelectTask" required aria-label="leave selection" name="type">
               <option value="<%= type %>"><%= defaultOptions %></option>
@@ -93,7 +109,8 @@
               <option value="Emergency Leave">Emergency Leave</option>
               <option value="Marriage Leave">Marriage Leave</option>
               <option value="Hajj Leave">Hajj Leave</option>
-              <option value="Paternity Leave">Paternity Leave</option>
+              <option class="<%= showMale %>" value="Paternity Leave">Paternity Leave</option>
+              <option class="<%= showFemale %>"  value="Maternity Leave">Maternity Leave</option>
               <option value="Attend Exam Leave">Attend Exam Leave</option>
               <option value="Unpaid Leave">Unpaid Leave</option>
               <option value="Special Leave">Special Leave</option>
