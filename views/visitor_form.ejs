@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="keyword" content="dashboard cms">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Visitor Form</title>
+<link rel="icon" type="image/logo" href="../../assets/img/pb_vms/logo.png">
+
+<style>
+    /* CSS styles from the original file */
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+    
+    body {
+        font-family: 'Roboto', 'Helvetica', Arial, sans-serif;
+        /* background: url('../../assets/img/pb_vms/green_gradient.gif') no-repeat center center fixed; */
+        background-size: cover;
+        background-color: #f5f7fa;
+        margin: 0;
+        padding: 0;
+    }
+
+    .container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    h2 {
+        text-align: center;
+        font-size: 30px;
+    }
+
+    .logo_lakmns_sec1,
+    .logo_lakmns_sec2 {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 10px;
+    }
+
+    .logo_lakmns_sec1 img,
+    .logo_lakmns_sec2 img {
+        height: 85px;
+        width: 95px;
+        object-fit: cover;
+    }
+
+    form {
+        padding: 20px;
+        border-radius: 8px;
+        width: 50%;
+        margin: 0 auto;
+        /* box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        background-color: rgba(0, 0, 0, 0.7); */
+    }
+
+    form label {
+        font-weight: bold;
+        font-size: 14px;
+        display: block;
+        margin-bottom: 5px;
+        color: #000000;
+        padding-left: 10px;
+    }
+
+    .input-field {
+        margin-bottom: 20px;
+    }
+
+    form label .required {
+        color: #ff0000;
+    }
+
+    form .name-group {
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+    }
+
+    form .name-group .name-container {
+        width: 48%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    form .name-group .name-container input[type="text"] {
+        padding: 10px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        background-color: #ffffff;
+        box-sizing: border-box;
+    }
+
+    form input[type="text"] {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 15px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        background-color: #ffffff;
+        box-sizing: border-box;
+    }
+
+    .submit-button {
+        width: 100px;
+        padding: 10px;
+        margin-top: 25px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        background-color: #4caf50;
+        color: white;
+        cursor: pointer;
+    }
+
+    .reset-button {
+        width: 100px;
+        padding: 10px;
+        margin-top: 25px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        background-color: #292929;
+        color: white;
+        cursor: pointer;
+    }
+
+    .submit-button:hover {
+        background-color: #45a049;
+    }
+
+    .reset-button:hover {
+        background-color: #1F1F1F;
+    }
+
+    div.text-right {
+        text-align: right;
+        margin-top: 10px;
+    }
+
+    textarea {
+        width: 100%;
+        padding: 10px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        background-color: #ffffff;
+        box-sizing: border-box;
+        resize: vertical;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+
+    table th,
+    table td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+    }
+
+    table th {
+        background-color: #f2f2f2;
+    }
+
+    table tr:nth-child(even) {
+        background-color: #f2f2f2;
+    }
+
+    table tr:hover {
+        background-color: #ddd;
+    }
+
+    .thank-you-message {
+        background-color: rgba(255, 255, 255, 0.8);
+        color: black;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        margin: 20px auto;
+        max-width: 80%;
+        text-align: center;
+    }
+
+    .visitor-details {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .visitor-details li {
+        padding: 10px;
+    }
+
+    .visitor-details li:last-child {
+        border-bottom: none;
+    }
+
+    .visitor-details strong {
+        color: #333;
+    }
+
+    .back-button {
+        display: inline-block;
+        padding: 10px 20px;
+        background-color: #292929;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        margin-top: 20px;
+    }
+
+    .back-button:hover {
+        background-color: #1F1F1F;
+    }
+
+    /* New styles for round radio button design */
+    .radio-container {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+        padding: 10px;
+        border: 2px solid #77DD77;
+        border-radius: 8px;
+        background-color: rgba(255, 255, 255, 0.8);
+        position: relative;
+    }
+
+    .radio-container label {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        font-size: 16px;
+    }
+
+    .radio-container span {
+        flex: 1; /* Take available space */
+    }
+
+    .radio-container input[type="radio"] {
+        appearance: none;
+        -webkit-appearance: none;
+        background-color: #fff;
+        border: 2px solid #ccc;
+        border-radius: 50%;
+        width: 30px; /* Size of the radio button */
+        height: 30px; /* Size of the radio button */
+        margin-left: 20px; /* Space between text and radio button */
+        cursor: pointer;
+        position: relative;
+    }
+
+    .radio-container input[type="radio"]:checked::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 15px; /* Inner dot size */
+        height: 15px; /* Inner dot size */
+        background-color: #4caf50;
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+    }
+
+    .radio-container input[type="radio"]:focus {
+        outline: none;
+    }
+
+    .alert {
+        color: #ff3860;
+        padding: 5px;
+        margin-top: 5px;
+        display: none;
+        text-align: left;
+    }
+
+    /* Style for error messages */
+    .error-message {
+        color: #ff3860;
+        font-size: 12px;
+        margin-top: -10px;
+        padding-left: 10px;
+    }
+
+    /* Style for input fields with errors */
+    form .name-group .name-container input.error,
+    form input.error,
+    textarea.error {
+        border: 1px solid #ff3860;
+    }
+
+    /* Style for input fields with correct values */
+    form .name-group .name-container input.valid,
+    form input.valid,
+    textarea.valid {
+        border: 1px solid #09c372;
+    }
+
+    /* Style for input fields without errors (for resetting the border) */
+    form .name-group input, 
+    form input,
+    textarea {
+        border: 1px solid #ccc; 
+    }
+
+    .next-button {
+        width: 100px;
+        padding: 10px;
+        margin-top: 25px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        background-color: #4caf50;
+        color: white;
+        cursor: pointer;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .next-button:hover {
+        background-color: #45a049;
+    }
+
+    /* successful submit icon animation */
+    @keyframes swal2-animate-success-line-tip{
+        0%{
+            top:1.1875em;
+            left:.0625em;
+            width:0;
+        }
+        54%{
+            top:1.0625em;
+            left:.125em;
+            width:0;
+        }
+        70%{
+            top:2.1875em;
+            left:-.375em;
+            width:3.125em;
+        }
+        84%{
+            top:3em;
+            left:1.3125em;
+            width:1.0625em;
+        }
+        100%{
+            top:2.8125em;
+            left:.875em;
+            width:1.5625em;
+        }
+    }
+
+    @keyframes swal2-animate-success-line-long{
+        0%{
+            top:3.375em;
+            right:2.875em;
+            width:0;
+        }
+        65%{
+            top:3.375em;
+            right:2.875em;
+            width:0;
+        }
+        84%{
+            top:2.1875em;
+            right:0;
+            width:3.4375em;
+        }
+        100%{
+            top:2.375em;
+            right:.5em;
+            width:2.9375em;
+        }
+    }
+
+    @keyframes swal2-rotate-success-circular-line{
+        0%{
+            -webkit-transform:rotate(-45deg);
+            transform:rotate(-45deg);
+        }
+        5%{
+            -webkit-transform:rotate(-45deg);
+            transform:rotate(-45deg);
+        }
+        12%{
+            -webkit-transform:rotate(-405deg);
+            transform:rotate(-405deg);
+        }
+        100%{
+            -webkit-transform:rotate(-405deg);
+            transform:rotate(-405deg);
+        }
+    }
+
+    .swal2-icon{
+        position:relative;
+        justify-content:center;
+        width:5em;
+        height:5em;
+        margin:1.25em auto 1.875em;
+        border:.25em solid transparent;
+        border-radius:50%;
+        line-height:5em;
+        cursor:default;
+        box-sizing:content-box;
+        -webkit-user-select:none;
+        -moz-user-select:none;
+        -ms-user-select:none;
+        user-select:none;
+        zoom:normal
+    }
+
+    .swal2-icon.swal2-success{
+        border-color:#a5dc86
+    }
+
+    .swal2-icon.swal2-success [class^=swal2-success-circular-line]{
+        position:absolute;
+        width:3.75em;
+        height:7.5em;
+        -webkit-transform:rotate(45deg);
+        transform:rotate(45deg);
+        border-radius:50%
+    }
+
+    .swal2-icon.swal2-success [class^=swal2-success-circular-line][class$=left]{
+        top:-.4375em;
+        left:-2.0635em;
+        -webkit-transform:rotate(-45deg);
+        transform:rotate(-45deg);
+        -webkit-transform-origin:3.75em 3.75em;
+        transform-origin:3.75em 3.75em;
+        border-radius:7.5em 0 0 7.5em
+    }
+
+    .swal2-icon.swal2-success [class^=swal2-success-circular-line][class$=right]{
+        top:-.6875em;
+        left:1.875em;
+        -webkit-transform:rotate(-45deg);
+        transform:rotate(-45deg);
+        -webkit-transform-origin:0 3.75em;
+        transform-origin:0 3.75em;
+        border-radius:0 7.5em 7.5em 0
+    }
+
+    .swal2-icon.swal2-success .swal2-success-ring{
+        position:absolute;
+        top:-.25em;
+        left:-.25em;
+        width:100%;
+        height:100%;
+        border:.25em solid rgba(165,220,134,.3);
+        border-radius:50%;
+        z-index:2;
+        box-sizing:content-box
+    }
+
+    .swal2-icon.swal2-success .swal2-success-fix{
+        position:absolute;
+        top:.5em;
+        left:1.625em;
+        width:.4375em;
+        height:5.625em;
+        -webkit-transform:rotate(-45deg);
+        transform:rotate(-45deg);
+        z-index:1
+    }
+
+    .swal2-icon.swal2-success [class^=swal2-success-line]{
+        display:block;
+        position:absolute;
+        height:.3125em;
+        border-radius:.125em;
+        background-color:#a5dc86;
+        z-index:2
+    }
+
+    .swal2-icon.swal2-success [class^=swal2-success-line][class$=tip]{
+        top:2.875em;
+        left:.875em;
+        width:1.5625em;
+        -webkit-transform:rotate(45deg);
+        transform:rotate(45deg)
+    }
+
+    .swal2-icon.swal2-success [class^=swal2-success-line][class$=long]{
+        top:2.375em;
+        right:.5em;
+        width:2.9375em;
+        -webkit-transform:rotate(-45deg);
+        transform:rotate(-45deg)
+    }
+
+    .swal2-animate-success-icon .swal2-success-line-tip{
+        -webkit-animation:swal2-animate-success-line-tip .75s;
+        animation:swal2-animate-success-line-tip .75s;
+    }
+
+    .swal2-animate-success-icon .swal2-success-line-long{
+        -webkit-animation:swal2-animate-success-line-long .75s;
+        animation:swal2-animate-success-line-long .75s;
+    }
+
+    .swal2-animate-success-icon .swal2-success-circular-line-right{
+        -webkit-animation:swal2-rotate-success-circular-line 4.25s ease-in;
+        animation:swal2-rotate-success-circular-line 4.25s ease-in;
+    }
+
+    @media (max-width: 768px) {
+        form {
+            width: 90%;
+            padding: 10px;
+        }
+
+        .name-group {
+            flex-wrap: wrap;
+        }
+
+        .name-group input[type="text"] {
+            width: 48%;
+            margin-bottom: 15px;
+        }
+
+        .submit-button,
+        .reset-button {
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .text-right {
+            text-align: center;
+        }
+
+        .thank-you-message {
+            max-width: 100%;
+            margin-top: 200px;
+        }
+    }
+
+    @media (max-width: 450px) {
+        .name-group input[type="text"] {
+            width: 100%;
+        }
+
+        #building-selection {
+            margin-top: 225px;
+        }
+
+        #visitor-form {
+            margin-top: 35px;
+        }
+
+        .thank-you-message {
+            max-width: 100%;
+            margin-top: 150px;
+        }
+    }
+
+    @media (max-width: 380px) {
+        #building-selection {
+            margin-top: 85px;
+        }
+
+        #visitor-form {
+            margin-top: 20px;
+        }
+
+        .thank-you-message {
+            max-width: 100%;
+            margin-top: 55px;
+        }
+    }
+</style>
+</head>
+
+<body>
+<div class="container">
+    <% if (thank_you_message) { %>
+        <div class="thank-you-message">
+            <div class="swal2-icon swal2-success swal2-animate-success-icon" style="display: flex;">
+                <div class="swal2-success-circular-line-left" style="background-color: rgb(255, 255, 255);"></div>
+                <span class="swal2-success-line-tip"></span>
+                <span class="swal2-success-line-long"></span>
+                <div class="swal2-success-ring"></div> 
+                <div class="swal2-success-fix" style="background-color: rgb(255, 255, 255);"></div>
+                <div class="swal2-success-circular-line-right" style="background-color: rgb(255, 255, 255);"></div>
+            </div>
+            <h2><%= thank_you_message %></h2>
+            <p>Here are your details:</p>
+            <ul class="visitor-details">
+                <li><strong>Name:</strong> <%= fields.vis_firstname %> <%= fields.vis_lastname %></li>
+                <li><strong>IC Number:</strong> <%= fields.no_ic %></li>
+                <li><strong>Level:</strong> <%= fields.level %></li>
+                <li><strong>No Pas:</strong> <%= fields.no_pas %></li>
+            </ul>
+            <a href="/visitor_form" class="back-button">Back to Form</a>
+        </div>
+    <% } else { %>
+        <!-- Building Location Selection Section -->
+        <div id="building-selection">
+            <div class="logo_lakmns_sec1">
+                <img src="../../assets/img/pb_vms/icon.png">
+            </div>
+            <form id="building-loc">
+                <h2>Select Building Location</h2>
+                <div class="radio-container" id="bm1-container">
+                    <label>
+                        <span>BaitulMakmur 1</span>
+                        <input type="radio" name="buildLoc" value="baitulmakmur 1">
+                    </label>
+                </div>
+                <div class="radio-container" id="bm2-container">
+                    <label>
+                        <span>BaitulMakmur 2</span>
+                        <input type="radio" name="buildLoc" value="baitulmakmur 2">
+                    </label>
+                </div>
+                <div class="alert" id="building-alert">Please select a building location</div>
+                <button type="button" class="next-button" id="next-button">Next</button>
+            </form>
+        </div>
+
+        <div id="visitor-form" style="display: none;">
+            <div class="logo_lakmns_sec2">
+                <a href="#building-selection"><img src="../../assets/img/pb_vms/icon.png"></a>
+            </div>
+            <form method="POST" action="/submit_visitor_form" onsubmit="return validateForm()">
+                <div class="input-field">
+                    <label for="vis_name">Visitor's Name<span class="required"> *</span></label>
+                    <div class="name-group">
+                        <div class="name-container">
+                            <input type="text" id="vis_firstname" name="vis_firstname" placeholder="<%= fields.vis_firstname || 'First Name' %>" value="<%= fields.vis_firstname %>" required>
+                            <div id="error_firstname" class="error-message"><%= errors.vis_firstname || '' %></div>
+                        </div>
+                        <div class="name-container">
+                            <input type="text" id="vis_lastname" name="vis_lastname" placeholder="<%= fields.vis_lastname || 'Last Name' %>" value="<%= fields.vis_lastname %>">
+                            <div id="error_lastname" class="error-message"><%= errors.vis_lastname || '' %></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="input-field">
+                    <label for="no_ic">Identification Card Number<span class="required"> *</span></label>
+                    <input type="text" id="no_ic" name="no_ic" placeholder="<%= fields.no_ic || 'Identification Card Number' %>" value="<%= fields.no_ic %>" required>
+                    <div id="error_no_ic" class="error-message"><%= errors.no_ic || '' %></div>
+                </div>
+
+                <div class="input-field">
+                    <label for="address">Address<span class="required"> *</span></label>
+                    <input type="text" id="address" name="address" placeholder="<%= fields.address || 'Address' %>" value="<%= fields.address %>" required>
+                    <div id="error_address" class="error-message"><%= errors.address || '' %></div>
+                </div>
+
+                <div class="input-field">
+                    <label for="level">Level<span class="required"> *</span></label>
+                    <input type="text" id="level" name="level" placeholder="<%= fields.level || 'Level' %>" value="<%= fields.level %>" required>
+                    <div id="error_level" class="error-message"><%= errors.level || '' %></div>
+                </div>
+
+                <div class="input-field">
+                    <label for="no_pas">No Pas<span class="required"> *</span></label>
+                    <input type="text" id="no_pas" name="no_pas" placeholder="<%= fields.no_pas || 'No Pas' %>" value="<%= fields.no_pas %>" required>
+                    <div id="error_no_pas" class="error-message"><%= errors.no_pas || '' %></div>
+                </div>
+
+                <div class="input-field">
+                    <label for="no_telephone">Phone Number<span class="required"> *</span></label>
+                    <input type="text" id="no_telephone" name="no_telephone" placeholder="<%= fields.no_telephone || 'Phone Number' %>" value="<%= fields.no_telephone %>" required>
+                    <div id="error_no_telephone" class="error-message"><%= errors.no_telephone || '' %></div>
+                </div>
+
+                <div class="input-field">
+                    <label for="pur_visit">Purpose Of Visit<span class="required"> *</span></label>
+                    <textarea id="pur_visit" name="pur_visit" rows="4" cols="50" placeholder="<%= fields.pur_visit || 'Purpose of Visit' %>" required><%= fields.pur_visit %></textarea>
+                    <div id="error_pur_visit" class="error-message"><%= errors.pur_visit || '' %></div>
+                </div>
+
+                <!-- Hidden input for building location -->
+                <input type="hidden" name="build_loc" id="build_loc" value="">
+
+                <div style="text-align: right;">
+                    <input type="reset" class="reset-button" value="Reset">
+                    <input type="submit" class="submit-button" value="Submit">
+                </div>
+            </form>
+        </div>
+    <% } %>
+</div>
+
+<script>
+    document.getElementById('next-button').addEventListener('click', function () {
+        var selectedBuilding = document.querySelector('input[name="buildLoc"]:checked');
+        var alertMessage = document.getElementById('building-alert');
+        
+        if (selectedBuilding) {
+            document.getElementById('build_loc').value = selectedBuilding.value; // Set the hidden field
+            document.getElementById('building-selection').style.display = 'none';
+            document.getElementById('visitor-form').style.display = 'block';
+        } else {
+            var bm1Container = document.getElementById('bm1-container');
+            var bm2Container = document.getElementById('bm2-container');
+            alertMessage.style.display = 'block';
+
+            bm1Container.style.border = '2px solid #ff3860';
+            bm2Container.style.border = '2px solid #ff3860';
+        }
+    });
+
+    function validateForm() {
+        let valid = true;
+        
+        // Clear previous error messages and styles
+        document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
+        document.querySelectorAll('input, textarea').forEach(el => {
+            el.classList.remove('error', 'valid');
+        });
+
+        // Validate first name
+        let firstname = document.getElementById('vis_firstname').value;
+        if (!/^[a-zA-Z\s]+$/.test(firstname)) {
+            valid = false;
+            document.getElementById('error_firstname').textContent = "Invalid first name format";
+            document.getElementById('vis_firstname').classList.add('error');
+        } else {
+            document.getElementById('vis_firstname').classList.add('valid');
+        }
+
+        // Validate last name
+        let lastname = document.getElementById('vis_lastname').value;
+        if (!/^[a-zA-Z\s]+$/.test(lastname)) {
+            valid = false;
+            document.getElementById('error_lastname').textContent = "Invalid last name format";
+            document.getElementById('vis_lastname').classList.add('error');
+        } else {
+            document.getElementById('vis_lastname').classList.add('valid');
+        }
+
+        // Validate IC number
+        let icNumber = document.getElementById('no_ic').value;
+        if (!/^\d{12}$/.test(icNumber)) {
+            valid = false;
+            document.getElementById('error_no_ic').textContent = "IC number must be 12 digits";
+            document.getElementById('no_ic').classList.add('error');
+        } else {
+            document.getElementById('no_ic').classList.add('valid');
+        }
+
+        // Validate address
+        let address = document.getElementById('address').value;
+        if (address.trim() === "") {
+            valid = false;
+            document.getElementById('error_address').textContent = "Address is required";
+            document.getElementById('address').classList.add('error');
+        } else {
+            document.getElementById('address').classList.add('valid');
+        }
+
+        // Validate level
+        let level = document.getElementById('level').value;
+        if (!/^\d+$/.test(level)) {
+            valid = false;
+            document.getElementById('error_level').textContent = "Level must be a number";
+            document.getElementById('level').classList.add('error');
+        } else {
+            document.getElementById('level').classList.add('valid');
+        }
+
+        // Validate No Pas
+        let noPas = document.getElementById('no_pas').value;
+        if (!/^\d+$/.test(noPas)) {
+            valid = false;
+            document.getElementById('error_no_pas').textContent = "Pas must be a number";
+            document.getElementById('no_pas').classList.add('error');
+        } else {
+            document.getElementById('no_pas').classList.add('valid');
+        }
+
+        // Validate phone number
+        let phoneNumber = document.getElementById('no_telephone').value;
+        if (!/^\d{10,15}$/.test(phoneNumber)) {
+            valid = false;
+            document.getElementById('error_no_telephone').textContent = "Phone number must be between 10 and 15 digits";
+            document.getElementById('no_telephone').classList.add('error');
+        } else {
+            document.getElementById('no_telephone').classList.add('valid');
+        }
+
+        // Validate purpose of visit
+        let purVisit = document.getElementById('pur_visit').value;
+        if (purVisit.trim() === "") {
+            valid = false;
+            document.getElementById('error_pur_visit').textContent = "Purpose of visit is required";
+            document.getElementById('pur_visit').classList.add('error');
+        } else {
+            document.getElementById('pur_visit').classList.add('valid');
+        }
+
+        return valid;
+    }
+</script>
+</body>
+</html>
+

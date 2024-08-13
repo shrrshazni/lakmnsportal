@@ -99,6 +99,11 @@ const auxPoliceDatabase = mongoose.createConnection(
     'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/auxipolice'
 );
 
+// Visiting MAanagement
+const vmsDatabase = mongoose.createConnection(
+    'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/vms'
+);
+
 // SCHEMA INITIALIZATION
 
 // FOR USER DATABASE
@@ -502,6 +507,21 @@ caseSchema.index({ date: 1 }); // Index on date
 caseSchema.index({ location: 1 }); // Index on location
 caseSchema.index({ fullname: 1 }); // Index on fullname
 
+// VMS SCHEMA
+const vmsSchema = new mongoose.Schema({
+    vis_firstname: String,
+    vis_lastname: String,
+    no_ic: String,
+    address: String,
+    level: String,
+    no_pas: String,
+    no_telephone: String,
+    pur_visit: String,
+    time_in: Date,
+    time_out: Date,
+    build_loc: String
+});
+
 // TENDER
 // const tenderSchema = new mongoose.Schema({
 //     id: {
@@ -567,6 +587,7 @@ const ScheduleAux = auxPoliceDatabase.model('ScheduleAux', scheduleAuxSchema);
 const PatrolAux = auxPoliceDatabase.model('PatrolAux', patrolSchema);
 const CaseAux = auxPoliceDatabase.model('CaseAux', caseSchema);
 const DutyHandoverAux = auxPoliceDatabase.model('DutyHandoverAux', dutyHandoverSchema);
+const Vms = vmsDatabase.model('Visitors', vmsSchema);
 // const Tender = tenderDatabase.model('Tender', tenderSchema);
 // const TenderCompany = tenderDatabase.model('TenderCompany', tenderCompanySchema);
 
@@ -5913,6 +5934,219 @@ app.get('/submit-failed', async function (req, res) {
     res.render('submit-failed');
 });
 
+// VMS
+// ROUTE FOR DISPLAYING THE FORM
+app.get('/visitor_form', (req, res) => {
+    res.render('visitor_form', {
+        thank_you_message: null,
+        fields: {
+            vis_firstname: '',
+            vis_lastname: '',
+            no_ic: '',
+            address: '',
+            level: '',
+            no_pas: '',
+            no_telephone: '',
+            pur_visit: ''
+        },
+        errors: {}
+    });
+});
+
+// ROUTE FOR HANDLING FORM SUBMISSION
+app.post('/submit_visitor_form', async (req, res) => {
+    const kualaLumpurTimeZoneOffset1 = 8; // Kuala Lumpur is UTC+8
+    const now1 = moment().utcOffset(kualaLumpurTimeZoneOffset1 * 60); // Convert hours to minutes
+
+    const fields = {
+        vis_firstname: req.body.vis_firstname.trim(),
+        vis_lastname: req.body.vis_lastname.trim(),
+        no_ic: req.body.no_ic.trim(),
+        address: req.body.address.trim(),
+        level: req.body.level.trim(),
+        no_pas: req.body.no_pas.trim(),
+        no_telephone: req.body.no_telephone.trim(),
+        pur_visit: req.body.pur_visit.trim(),
+        time_in: now1.format('YYYY-MM-DD HH:mm:ss'), // Format as 'YYYY-MM-DD HH:mm:ss' for time_in
+        build_loc: req.body.build_loc
+    };
+
+    let errors = {};
+    if (!/^[a-zA-Z\s]+$/.test(fields.vis_firstname)) errors.vis_firstname = "Invalid first name format.";
+    if (!/^[a-zA-Z\s]+$/.test(fields.vis_lastname)) errors.vis_lastname = "Invalid last name format.";
+    if (!/^\d{12}$/.test(fields.no_ic)) errors.no_ic = "IC number must be 12 digits.";
+    if (fields.address === '') errors.address = "Address is required.";
+    if (!/^\d+$/.test(fields.level)) errors.level = "Level must be a number.";
+    if (fields.no_pas === '') errors.no_pas = "No Pas is required.";
+    if (!/^\d{10,15}$/.test(fields.no_telephone)) errors.no_telephone = "Phone number must be between 10 and 15 digits.";
+    if (fields.pur_visit === '') errors.pur_visit = "Purpose of visit is required.";
+
+    if (Object.keys(errors).length === 0) {
+        const newVisitor = new Vms(fields);
+        try {
+            await newVisitor.save();
+            res.render('visitor_form', {
+                thank_you_message: 'Thank you for your submission!',
+                fields: fields,
+                errors: {}
+            });
+        } catch (err) {
+            console.error('Error saving visitor:', err);
+            res.render('visitor_form', {
+                thank_you_message: '',
+                fields: fields,
+                errors: {}
+            });
+        }
+    } else {
+        res.render('visitor_form', {
+            thank_you_message: '',
+            fields: fields,
+            errors: errors
+        });
+    }
+});
+
+// ROUTE FOR DISPLAYING VISITOR LIST
+app.get('/vms/list', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    })
+        .populate('sender')
+        .sort({ timestamp: -1 });
+
+    // Fetch visitor data with formatted dates
+    const visitors = await Vms.find().exec();
+    const formattedVisitors = visitors.map(visitor => ({
+        ...visitor.toObject(),
+        time_in: visitor.time_in ? moment(visitor.time_in).format('YYYY-MM-DD HH:mm:ss') : '-',
+        time_out: visitor.time_out ? moment(visitor.time_out).format('YYYY-MM-DD HH:mm:ss') : '-'
+    }));
+
+    // Calculate visitor counts
+    const totalVisitorsToday = await getTotalVisitorsToday();
+    const timeInVisitorsToday = await getTotalVisitorsTimeInToday();
+    const timeOutVisitorsToday = await getTotalVisitorsTimeOutToday();
+
+    if (user) {
+        res.render('vms-list', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4(),
+            visitors: formattedVisitors,  // Pass formatted visitor data
+            totalVisitorsToday,
+            timeInVisitorsToday,
+            timeOutVisitorsToday
+        });
+    }
+});
+
+// Handle time out action
+app.post('/toggle_status', async (req, res) => {
+    const visitorId = req.body.visitor_id;
+    const kualaLumpurTimeZoneOffset1 = 8;
+    const now1 = moment().utcOffset(kualaLumpurTimeZoneOffset1 * 60);
+    const timeOut = now1.format('YYYY-MM-DD HH:mm:ss');
+
+    try {
+        await Vms.findByIdAndUpdate(visitorId, { time_out: timeOut });
+        res.redirect('/vms/list');
+    } catch (err) {
+        console.error('Error updating visitor time out:', err);
+        res.redirect('/vms/list');
+    }
+});
+
+// Handle delete action
+app.post('/delete_visitor', async (req, res) => {
+    const { visitor_id } = req.body;
+    try {
+        await Vms.findByIdAndDelete(visitor_id);
+        res.redirect('/vms/list');
+    } catch (error) {
+        handleError(res, error);
+    }
+});
+
+// Handle visitor update
+app.post('/update_visitor/:id', async (req, res) => {
+    const visitorId = req.params.id;
+    const updatedData = req.body;
+
+    try {
+        await Vms.findByIdAndUpdate(visitorId, updatedData);
+        res.send('Visitor updated successfully');
+    } catch (error) {
+        console.error('Error updating visitor:', error);
+        res.status(500).send('Error updating visitor');
+    }
+});
+
+// Fetch visitors for AJAX requests
+app.get('/fetch_visitors', async (req, res) => {
+    const { search_name, selected_date, status_filter, build_loc } = req.query;
+    try {
+        const conditions = {};
+        if (search_name) {
+            conditions.$or = [
+                { vis_firstname: new RegExp(search_name, 'i') },
+                { vis_lastname: new RegExp(search_name, 'i') }
+            ];
+        }
+        if (selected_date) {
+            const startDate = moment(selected_date).startOf('day').toDate();
+            const endDate = moment(selected_date).endOf('day').toDate();
+            conditions.time_in = { $gte: startDate, $lte: endDate };
+        }
+        if (status_filter) {
+            if (status_filter === 'checked_in') {
+                conditions.time_in = { $ne: null };
+                conditions.time_out = null;
+            } else if (status_filter === 'checked_out') {
+                conditions.time_out = { $ne: null };
+            }
+        }
+        if (build_loc) {
+            conditions.build_loc = build_loc;
+        }
+        const visitors = await Vms.find(conditions).exec();
+        res.json(visitors);
+    } catch (error) {
+        handleError(res, error);
+    }
+});
+
+// Fetch total visitors for AJAX requests
+app.get('/total_visitors', async (req, res) => {
+    try {
+        const totalVisitors = await getTotalVisitorsToday();
+        res.send(totalVisitors.toString());
+    } catch (error) {
+        handleError(res, error);
+    }
+});
+
+app.get('/total_timein_visitors', async (req, res) => {
+    try {
+        const totalTimeInVisitors = await getTotalVisitorsTimeInToday();
+        res.send(totalTimeInVisitors.toString());
+    } catch (error) {
+        handleError(res, error);
+    }
+});
+
+app.get('/total_timeout_visitors', async (req, res) => {
+    try {
+        const totalTimeOutVisitors = await getTotalVisitorsTimeOutToday();
+        res.send(totalTimeOutVisitors.toString());
+    } catch (error) {
+        handleError(res, error);
+    }
+});
+
 //NOTIFICATIONS
 app.get('/notifications/history', isAuthenticated, async function (req, res) {
     const username = req.user.username;
@@ -6873,7 +7107,6 @@ app.post('/api/data/all-attendance/per-date/department-section', isAuthenticated
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
-
 
 app.post('/api/data/all-attendance/per-month/department-section', isAuthenticated, async function (req, res) {
     const selectedDate = req.body.date;
@@ -9381,6 +9614,28 @@ const createPatrolReport = async (dutyHandoverId, location, date, shift, startTi
         throw new Error('Error creating patrol report: ' + error.message);
     }
 };
+
+// Function to visitor management
+async function getTotalVisitorsToday() {
+    const today = moment().startOf('day').toDate();
+    return await Vms.countDocuments({ time_in: { $gte: today } });
+}
+
+async function getTotalVisitorsTimeInToday() {
+    const today = moment().startOf('day').toDate();
+    return await Vms.countDocuments({ time_in: { $gte: today }, time_out: null });
+}
+
+async function getTotalVisitorsTimeOutToday() {
+    const today = moment().startOf('day').toDate();
+    return await Vms.countDocuments({ time_out: { $gte: today } });
+}
+
+// handle error
+function handleError(res, error) {
+    console.error(error);
+    res.status(500).send('Internal Server Error');
+}
 
 // async function archiveOldData() {
 //     const archiveDate = moment().subtract(1, 'months').toDate();
