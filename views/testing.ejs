@@ -17,7 +17,48 @@
       return Uint8Array.from([...rawData].map(char => char.charCodeAt(0)));
     }
 
-    document.getElementById('subscribeBtn').addEventListener('click', () => {
+    // Function to check if the user is already subscribed
+    async function checkSubscription() {
+      if ('serviceWorker' in navigator && 'PushManager' in window) {
+        const registration = await navigator.serviceWorker.ready;
+        const subscription = await registration.pushManager.getSubscription();
+
+        if (subscription) {
+          const subscriptionJson = {
+            endpoint: subscription.endpoint,
+            expirationTime: subscription.expirationTime,
+            keys: {
+              p256dh: btoa(String.fromCharCode.apply(null, new Uint8Array(subscription.getKey('p256dh')))),
+              auth: btoa(String.fromCharCode.apply(null, new Uint8Array(subscription.getKey('auth'))))
+            },
+            userId: userId
+          };
+
+          return fetch('/check-subscription', {
+              method: 'POST',
+              body: JSON.stringify(subscriptionJson),
+              headers: {
+                'Content-Type': 'application/json'
+              }
+            }).then(res => res.json())
+            .then(data => {
+              return data.isSubscribed;
+            })
+            .catch(err => {
+              console.error('Error checking subscription:', err);
+              return false;
+            });
+        }
+      }
+      return false;
+    }
+
+    document.getElementById('subscribeBtn').addEventListener('click', async () => {
+      if (await checkSubscription()) {
+        console.log('Already subscribed.');
+        return;
+      }
+
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('/service-worker.js')
           .then(registration => {
@@ -66,7 +107,7 @@
           body: JSON.stringify({
             recipientId: '<%= "66b026070e3ea6976ab607aa" %>', // Replace with recipient ID
             message: 'This is a test notification!',
-            url: '/some-url' // URL to navigate to when notification is clicked
+            url: 'https://www.lakmnsportal.com' // URL to navigate to when notification is clicked
           }),
           headers: {
             'Content-Type': 'application/json'
@@ -77,6 +118,7 @@
         .catch(err => console.error('Error sending notification:', err));
     });
   </script>
+
 </div>
 
 <%- include("partials/private-footer.ejs") %>
