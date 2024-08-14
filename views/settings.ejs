@@ -138,8 +138,10 @@
       <%
        var textEmailVerified = '';
        var textPhoneVerified = '';
+       var textSubNoti = '';
        var showVerifyEmail = '';
        var showVerifyPhone = '';
+       var showSubNoti = '';
 
        if(info.emailVerified === false){
          textEmailVerified = 'Email has not yet been verified';
@@ -156,11 +158,23 @@
          textPhoneVerified = 'Phone number has been verified';
          showVerifyPhone = 'd-none';
         }
+
+        if(subscriptions === null){
+         textSubNoti = 'No subcription for push notification for this device';
+         showSubNoti = '';
+        }else{
+         textSubNoti = 'Subscribed for push notification for this device';
+         showSubNoti = 'd-none';
+        }
       %>
 
       <div class="border-bottom border-translucent border-dashed pb-3 mb-4">
         <h5 class="text-body mb-3"><%= textEmailVerified %></h5>
         <a class="btn btn-phoenix-success <%= showVerifyEmail %>" role="button" href="/info/email/verification/<%= user._id %>">Verify Now</a>
+      </div>
+      <div class="border-bottom border-translucent border-dashed pb-3 mb-4">
+        <h5 class="text-body mb-3"><%= textSubNoti %></h5>
+        <a class="btn btn-phoenix-success <%= showSubNoti %>" role="button" id="subscribeBtn">Subscribe Now</a>
       </div>
       <div class="border-bottom border-translucent border-dashed pb-3 mb-4 d-none">
         <h5 class="text-body mb-3"><%= textPhoneVerified %></h5>
@@ -176,6 +190,101 @@
           <label class="form-check-label fs-8" for="permitFollow">Permit users to see you online</label>
         </div>
       </div>
+
+      <script>
+        const userId = '<%= user._id %>'; // Pass the logged-in user's ID
+
+        // Convert VAPID key to Uint8Array
+        function urlBase64ToUint8Array(base64String) {
+          const padding = '='.repeat((4 - base64String.length % 4) % 4);
+          const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+          const rawData = window.atob(base64);
+          return Uint8Array.from([...rawData].map(char => char.charCodeAt(0)));
+        }
+
+        // Function to check if the user is already subscribed
+        async function checkSubscription() {
+          if ('serviceWorker' in navigator && 'PushManager' in window) {
+            const registration = await navigator.serviceWorker.ready;
+            const subscription = await registration.pushManager.getSubscription();
+
+            if (subscription) {
+              const subscriptionJson = {
+                endpoint: subscription.endpoint,
+                expirationTime: subscription.expirationTime,
+                keys: {
+                  p256dh: btoa(String.fromCharCode.apply(null, new Uint8Array(subscription.getKey('p256dh')))),
+                  auth: btoa(String.fromCharCode.apply(null, new Uint8Array(subscription.getKey('auth'))))
+                },
+                userId: userId
+              };
+
+              return fetch('/check-subscription', {
+                  method: 'POST',
+                  body: JSON.stringify(subscriptionJson),
+                  headers: {
+                    'Content-Type': 'application/json'
+                  }
+                }).then(res => res.json())
+                .then(data => {
+                  return data.isSubscribed;
+                })
+                .catch(err => {
+                  console.error('Error checking subscription:', err);
+                  return false;
+                });
+            }
+          }
+          return false;
+        }
+
+        document.getElementById('subscribeBtn').addEventListener('click', async () => {
+          if (await checkSubscription()) {
+            console.log('Already subscribed.');
+            return;
+          }
+
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/service-worker.js')
+              .then(registration => {
+                return fetch('/vapidPublicKey')
+                  .then(res => res.text())
+                  .then(vapidPublicKey => {
+                    const convertedVapidKey = urlBase64ToUint8Array(vapidPublicKey);
+                    return registration.pushManager.subscribe({
+                      userVisibleOnly: true,
+                      applicationServerKey: convertedVapidKey
+                    });
+                  })
+                  .then(subscription => {
+                    // Ensure subscription object is correctly serialized
+                    const subscriptionJson = {
+                      endpoint: subscription.endpoint,
+                      expirationTime: subscription.expirationTime,
+                      keys: {
+                        p256dh: btoa(String.fromCharCode.apply(null, new Uint8Array(subscription.getKey('p256dh')))),
+                        auth: btoa(String.fromCharCode.apply(null, new Uint8Array(subscription.getKey('auth'))))
+                      },
+                      userId: userId
+                    };
+
+                    return fetch('/subscribe', {
+                      method: 'POST',
+                      body: JSON.stringify(subscriptionJson),
+                      headers: {
+                        'Content-Type': 'application/json'
+                      }
+                    });
+                  })
+                  .then(response => response.json())
+                  .then(data => console.log('Subscribed:', data))
+                  .catch(err => console.error('Error subscribing:', err));
+              });
+          } else {
+            console.error('Service workers are not supported by this browser.');
+          }
+        });
+      </script>
     </div>
     <div class="col-12 col-xl-7">
       <form class="border-bottom mb-4" method="post" action="/settings">

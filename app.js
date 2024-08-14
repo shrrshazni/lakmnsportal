@@ -2043,6 +2043,8 @@ app
             .populate('sender')
             .sort({ timestamp: -1 });
         const info = await Info.findOne({ user: user._id });
+        const sub = await Subscriptions.findOne({ user: user._id });
+        console.log(sub);
 
         if (user) {
             res.render('settings', {
@@ -2050,6 +2052,7 @@ app
                 uuid: uuidv4(),
                 notifications: notifications,
                 info: info,
+                subscriptions: sub,
                 show: '',
                 alert: ''
             });
@@ -2065,6 +2068,7 @@ app
             .populate('sender')
             .sort({ timestamp: -1 });
         const info = await Info.findOne({ user: user._id });
+        const sub = await Subscriptions.findOne({ user: user._id });
 
         if (user) {
             const updateFields = {};
@@ -2108,6 +2112,7 @@ app
                     uuid: uuidv4(),
                     notifications: notifications,
                     info: info,
+                    subcriptions: sub,
                     show: 'show',
                     alert: 'Update unsuccessful, there is no input to be updated'
                 });
@@ -2169,6 +2174,7 @@ app
                         uuid: uuidv4(),
                         notifications: notifications,
                         info: info,
+                        subscriptions: sub,
                         show: 'show',
                         alert: 'Update successful. Please check your profile to see the changes.'
                     });
@@ -5275,8 +5281,6 @@ app.get('/auxiliary-police/schedule/add', isAuthenticated, async function (req, 
     }
 });
 
-
-
 // CASE
 
 // VIEW
@@ -6379,7 +6383,6 @@ app.post('/sendNotification', async (req, res) => {
     await notification.save();
     res.status(200).json({ success: true });
 });
-
 
 //FILES
 
