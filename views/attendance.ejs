@@ -1,26 +1,31 @@
 <%- include('partials/public-header') %>
 
 <div class="py-2 px-3 py-lg-5 px-lg-7 min-vh-50 overflow-hidden">
-  <% 
-                              
-    var currentDate = new Date();
-        
-    // Get the day of the week, day of the month, month, and year
-    var dayOfWeek = currentDate.toLocaleDateString('en-US', { weekday: 'long' });
-    var dayOfMonth = currentDate.toLocaleDateString('en-US', { day: '2-digit' });
-    var month = currentDate.toLocaleDateString('en-US', { month: 'long' });
-    var year = currentDate.toLocaleDateString('en-US', { year: 'numeric' });
-        
-    // Construct the formatted date string
-    var formattedDate = dayOfMonth + " " + month + ", " + year;
-        
-    %>
 
   <div class="d-flex justify-content-between text-start mb-3">
 
     <div>
-      <h2 class="fs-6 fs-lg-4"><%= formattedDate %></h2>
+      <h2 class="fs-6 fs-lg-4" id="current-date"></h2>
     </div>
+
+    <script>
+      function updateDate() {
+        const now = new Date();
+        const options = {
+          day: '2-digit',
+          month: 'long',
+          year: 'numeric'
+        };
+        const formattedDate = now.toLocaleDateString('en-US', options);
+        document.getElementById('current-date').innerText = formattedDate;
+      }
+
+      // Update the date initially
+      updateDate();
+
+      // Set an interval to update the date every hour
+      setInterval(updateDate, 60 * 60 * 1000); // 60 minutes * 60 seconds * 1000 milliseconds
+    </script>
 
     <div>
       <h2 class="text-end fs-6 fs-lg-4" id="currentTime"></h2>
