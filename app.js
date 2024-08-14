@@ -2837,7 +2837,7 @@ app
                     leaveTaken <= 6 &&
                     user.gender === 'Male'
                 ) {
-                    if (amountDayRequest >= 1) {
+                    if (amountDayRequest <= 1 && amountDayRequest >= -5) {
                         if (findFile.length > 0) {
                             approvals = generateApprovals(
                                 user,
@@ -2884,34 +2884,24 @@ app
                     numberOfDays > 0 &&
                     user.gender === 'Female'
                 ) {
-                    if (amountDayRequest >= 1) {
-                        if (findFile.length > 0) {
-                            approvals = generateApprovals(
-                                user,
-                                headOfSection,
-                                headOfDepartment,
-                                depChiefExec,
-                                chiefExec,
-                                adminHR,
-                                assignee,
-                                supervisors,
-                                type
-                            );
-                        } else {
-                            console.log('There is no file attached for maternity leave!');
-
-                            renderDataError.show = 'show';
-                            renderDataError.alert =
-                                'There is no file attached for maternity leave!';
-                        }
-                    } else {
-                        console.log(
-                            'The leave date applied must be more than 1 days from today'
+                    if (findFile.length > 0) {
+                        approvals = generateApprovals(
+                            user,
+                            headOfSection,
+                            headOfDepartment,
+                            depChiefExec,
+                            chiefExec,
+                            adminHR,
+                            assignee,
+                            supervisors,
+                            type
                         );
+                    } else {
+                        console.log('There is no file attached for maternity leave!');
 
                         renderDataError.show = 'show';
                         renderDataError.alert =
-                            'The leave date applied must be more than 1 days from today';
+                            'There is no file attached for maternity leave!';
                     }
                 } else {
                     console.log(
@@ -8418,6 +8408,27 @@ app.get('/testing', async (req, res) => {
         .sort({ timestamp: -1 });
 
     if (user) {
+        // Define the timezone offset
+        const today = moment().utcOffset(8).toDate();
+        // Find invalid leaves
+        const invalidLeaves = await Leave.find({
+            status: 'pending'
+        });
+
+        // Update the status of invalid leaves
+        for (const leave of invalidLeaves) {
+
+            const amountDay = calculateBusinessDays(today, leave.timestamp);
+
+            if (amountDay >= -3) {
+                console.log('still valid');
+            } else {
+                console.log('invalid');
+            }
+
+            // const user = await User.findById(leave.user);
+            console.log(amountDay);
+        }
 
         res.render('testing', {
             user: user,
@@ -8510,10 +8521,10 @@ cron.schedule('* * * * *', async () => {
                         const infoUpdate = await Info.findOneAndUpdate(
                             { user: objectId }, // Ensure userId is in ObjectId format
                             { $set: { isOnline: false, lastSeen: now } },
-                            { upsert: true }
+                            { new: true, upsert: true }
                         );
 
-                        if (infoUpdate.value) {
+                        if (infoUpdate) {
                             console.log(`Info updated for user: ${userId}`);
                         } else {
                             console.log(`Info not found for user: ${userId}`);
@@ -8545,67 +8556,72 @@ cron.schedule(
     '0 0 * * *',
     async () => {
 
-        const threeDaysAgo = moment().utcOffset(8).subtract(3, 'days');
-        const threeDaysFromNow = moment().utcOffset(8).add(3, 'days');
+        const today = moment().utcOffset(8).toDate();
 
         // Find invalid leaves
         const invalidLeaves = await Leave.find({
-            timestamp: { $lte: threeDaysAgo.toDate() },
             status: 'pending'
         });
 
-        console.log(invalidLeaves);
-
         // Update the status of invalid leaves
         for (const leave of invalidLeaves) {
-            const user = await User.findById(leave.user);
 
-            // Check if the user is a Deputy Chief Executive
-            if (user.isDeputyChiefExec) {
-                leave.status = 'invalid';
-                await leave.save();
+
+            const amountDay = calculateBusinessDays(today, leave.timestamp);
+
+            if (amountDay >= -3) {
+                console.log('still valid');
             } else {
-                leave.status = 'invalid';
+                console.log('invalid');
+                const user = await User.findById(leave.user);
 
-                // Find the index of the last valid approval
-                let lastValidIndex = -1;
-                leave.approvals.forEach((approval, index) => {
-                    if (approval.status === 'approved' || approval.status === 'submitted') {
-                        lastValidIndex = index;
-                    }
-                });
+                // Check if the user is a Deputy Chief Executive
+                if (user.isDeputyChiefExec) {
+                    leave.status = 'invalid';
+                    await leave.save();
+                } else {
+                    leave.status = 'invalid';
 
-                // Determine the index of the next approval after the last valid approval
-                let nextApprovalIndex = lastValidIndex + 1;
+                    // Find the index of the last valid approval
+                    let lastValidIndex = -1;
+                    leave.approvals.forEach((approval, index) => {
+                        if (approval.status === 'approved' || approval.status === 'submitted') {
+                            lastValidIndex = index;
+                        }
+                    });
 
-                // Remove the next approval after the last valid approval if it exists and is not a Human Resource approval
-                if (nextApprovalIndex < leave.approvals.length) {
-                    const nextApproval = leave.approvals[nextApprovalIndex];
-                    if (nextApproval.role !== 'Human Resource') {
-                        leave.approvals.splice(nextApprovalIndex, 1);
-                    }
-                }
+                    // Determine the index of the next approval after the last valid approval
+                    let nextApprovalIndex = lastValidIndex + 1;
 
-                // Update the leave with the modified approvals list
-                await leave.save();
-
-                // Send notifications
-                const sendNoti = leave.approvals.map(approval => approval.recipient);
-
-                if (sendNoti.length > 0) {
-                    for (const recipientId of sendNoti) {
-                        const newNotification = new Notification({
-                            sender: user._id,
-                            recipient: new mongoose.Types.ObjectId(recipientId),
-                            type: 'Leave request',
-                            url: '/leave/details/' + leave._id,
-                            message: 'Leave has become invalid due to it already past 3 days of approval, please do check the leave request.'
-                        });
-
-                        await newNotification.save();
+                    // Remove the next approval after the last valid approval if it exists and is not a Human Resource approval
+                    if (nextApprovalIndex < leave.approvals.length) {
+                        const nextApproval = leave.approvals[nextApprovalIndex];
+                        if (nextApproval.role !== 'Human Resource') {
+                            leave.approvals.splice(nextApprovalIndex, 1);
+                        }
                     }
 
-                    console.log('Done sending notifications!');
+                    // Update the leave with the modified approvals list
+                    await leave.save();
+
+                    // Send notifications
+                    const sendNoti = leave.approvals.map(approval => approval.recipient);
+
+                    if (sendNoti.length > 0) {
+                        for (const recipientId of sendNoti) {
+                            const newNotification = new Notification({
+                                sender: user._id,
+                                recipient: new mongoose.Types.ObjectId(recipientId),
+                                type: 'Leave request',
+                                url: '/leave/details/' + leave._id,
+                                message: 'Leave has become invalid due to it already past 3 days of approval, please do check the leave request.'
+                            });
+
+                            await newNotification.save();
+                        }
+
+                        console.log('Done sending notifications!');
+                    }
                 }
             }
         }
