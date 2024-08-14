@@ -6341,9 +6341,12 @@ app.post('/subscribe', async (req, res) => {
 });
 
 // Route to Check if Subscription Exists
-app.post('/check-subscription', async (req, res) => {
+app.post('/check-subscription', isAuthenticated, async (req, res) => {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+
     const subscription = req.body;
-    const existingSubscription = await Subscriptions.findOne({ endpoint: subscription.endpoint });
+    const existingSubscription = await Subscriptions.findOne({ endpoint: subscription.endpoint, user: user._id });
 
     const isSubscribed = existingSubscription && existingSubscription.keys.p256dh === subscription.keys.p256dh &&
         existingSubscription.keys.auth === subscription.keys.auth;
@@ -8408,27 +8411,6 @@ app.get('/testing', async (req, res) => {
         .sort({ timestamp: -1 });
 
     if (user) {
-        // Define the timezone offset
-        const today = moment().utcOffset(8).toDate();
-        // Find invalid leaves
-        const invalidLeaves = await Leave.find({
-            status: 'pending'
-        });
-
-        // Update the status of invalid leaves
-        for (const leave of invalidLeaves) {
-
-            const amountDay = calculateBusinessDays(today, leave.timestamp);
-
-            if (amountDay >= -3) {
-                console.log('still valid');
-            } else {
-                console.log('invalid');
-            }
-
-            // const user = await User.findById(leave.user);
-            console.log(amountDay);
-        }
 
         res.render('testing', {
             user: user,
@@ -8565,7 +8547,6 @@ cron.schedule(
 
         // Update the status of invalid leaves
         for (const leave of invalidLeaves) {
-
 
             const amountDay = calculateBusinessDays(today, leave.timestamp);
 

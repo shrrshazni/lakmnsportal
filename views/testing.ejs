@@ -1,25 +1,76 @@
 <%- include("partials/private-header.ejs") %>
 
-<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
-  Launch demo modal
-</button>
+<div class="mb-3">
+  <i class="fa fa-hourglass-3" aria-hidden="true"></i>Web Push Notifications
 
-<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        ...
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary">Save changes</button>
-      </div>
-    </div>
-  </div>
+  <h5 class="text-body mb-3" id="textSub"></h5>
+  <a class="btn btn-phoenix-success" role="button" id="subscribeBtn">Subscribe Now</a>
+
+  <script>
+    const userId = '<%= user._id %>'; // Pass the logged-in user's ID
+
+    // Convert VAPID key to Uint8Array (Not used in this scenario but kept here for completeness)
+    function urlBase64ToUint8Array(base64String) {
+      const padding = '='.repeat((4 - base64String.length % 4) % 4);
+      const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+      const rawData = window.atob(base64);
+      return Uint8Array.from([...rawData].map(char => char.charCodeAt(0)));
+    }
+
+    // Function to check if the user is already subscribed
+    async function checkSubscription() {
+      const textSub = document.getElementById('textSub');
+      const subscribeBtn = document.getElementById('subscribeBtn');
+
+      if ('serviceWorker' in navigator && 'PushManager' in window) {
+        const registration = await navigator.serviceWorker.ready;
+        const subscription = await registration.pushManager.getSubscription();
+
+        if (subscription) {
+          const subscriptionJson = {
+            endpoint: subscription.endpoint,
+            expirationTime: subscription.expirationTime,
+            keys: {
+              p256dh: btoa(String.fromCharCode.apply(null, new Uint8Array(subscription.getKey('p256dh')))),
+              auth: btoa(String.fromCharCode.apply(null, new Uint8Array(subscription.getKey('auth'))))
+            },
+            userId: userId
+          };
+
+          return fetch('/check-subscription', {
+              method: 'POST',
+              body: JSON.stringify(subscriptionJson),
+              headers: {
+                'Content-Type': 'application/json'
+              }
+            }).then(res => res.json())
+            .then(data => {
+              if (data.isSubscribed) {
+                textSub.textContent = 'You are already subscribed to notifications.';
+                subscribeBtn.classList.add('d-none');
+              } else {
+                textSub.textContent = 'You are not subscribed. Click "Subscribe Now" to get notifications.';
+              }
+              return data.isSubscribed;
+            })
+            .catch(err => {
+              console.error('Error checking subscription:', err);
+              textSub.textContent = 'Error checking subscription status.';
+              return false;
+            });
+        } else {
+          textSub.textContent = 'No subscription found. Click "Subscribe Now" to subscribe.';
+          return false;
+        }
+      } else {
+        textSub.textContent = 'Service Workers or Push Manager not supported.';
+        return false;
+      }
+    }
+
+    // Call the subscription check function when the page loads
+    document.addEventListener('DOMContentLoaded', checkSubscription);
+  </script>
 </div>
 
 <%- include("partials/private-footer.ejs") %>

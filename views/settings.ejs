@@ -21,8 +21,6 @@
   <div class="row g-6">
     <div class="col-12 col-xl-5">
 
-
-
       <div class="card mb-6">
         <div class="card-body">
           <div class="border-bottom border-dashed pb-4">
@@ -173,8 +171,8 @@
         <a class="btn btn-phoenix-success <%= showVerifyEmail %>" role="button" href="/info/email/verification/<%= user._id %>">Verify Now</a>
       </div>
       <div class="border-bottom border-translucent border-dashed pb-3 mb-4">
-        <h5 class="text-body mb-3"><%= textSubNoti %></h5>
-        <a class="btn btn-phoenix-success <%= showSubNoti %>" role="button" id="subscribeBtn">Subscribe Now</a>
+        <h5 class="text-body mb-3" id="textSub"></h5>
+        <a class="btn btn-phoenix-success" role="button" id="subscribeBtn">Subscribe Now</a>
       </div>
       <div class="border-bottom border-translucent border-dashed pb-3 mb-4 d-none">
         <h5 class="text-body mb-3"><%= textPhoneVerified %></h5>
@@ -204,6 +202,9 @@
 
         // Function to check if the user is already subscribed
         async function checkSubscription() {
+          const textSub = document.getElementById('textSub');
+          const subscribeBtn = document.getElementById('subscribeBtn');
+
           if ('serviceWorker' in navigator && 'PushManager' in window) {
             const registration = await navigator.serviceWorker.ready;
             const subscription = await registration.pushManager.getSubscription();
@@ -227,64 +228,81 @@
                   }
                 }).then(res => res.json())
                 .then(data => {
+                  if (data.isSubscribed) {
+                    textSub.textContent = 'You are already subscribed to notifications for this device.';
+                    subscribeBtn.classList.add('d-none');
+                  } else {
+                    textSub.textContent = 'You are not subscribed for this device. Click "Subscribe Now" to get notifications.';
+                    subscribeBtn.classList.remove('d-none');
+                  }
                   return data.isSubscribed;
                 })
                 .catch(err => {
                   console.error('Error checking subscription:', err);
+                  textSub.textContent = 'Error checking subscription status.';
                   return false;
                 });
+            } else {
+              textSub.textContent = 'No subscription found. Click "Subscribe Now" to subscribe.';
+              subscribeBtn.classList.remove('d-none');
+              return false;
             }
+          } else {
+            textSub.textContent = 'Service Workers or Push Manager not supported.';
+            return false;
           }
-          return false;
         }
 
-        document.getElementById('subscribeBtn').addEventListener('click', async () => {
-          if (await checkSubscription()) {
-            console.log('Already subscribed.');
-            return;
-          }
-
+        // Function to handle subscription
+        async function handleSubscription() {
           if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/service-worker.js')
-              .then(registration => {
-                return fetch('/vapidPublicKey')
-                  .then(res => res.text())
-                  .then(vapidPublicKey => {
-                    const convertedVapidKey = urlBase64ToUint8Array(vapidPublicKey);
-                    return registration.pushManager.subscribe({
-                      userVisibleOnly: true,
-                      applicationServerKey: convertedVapidKey
-                    });
-                  })
-                  .then(subscription => {
-                    // Ensure subscription object is correctly serialized
-                    const subscriptionJson = {
-                      endpoint: subscription.endpoint,
-                      expirationTime: subscription.expirationTime,
-                      keys: {
-                        p256dh: btoa(String.fromCharCode.apply(null, new Uint8Array(subscription.getKey('p256dh')))),
-                        auth: btoa(String.fromCharCode.apply(null, new Uint8Array(subscription.getKey('auth'))))
-                      },
-                      userId: userId
-                    };
+            try {
+              const registration = await navigator.serviceWorker.register('/service-worker.js');
+              const vapidPublicKey = await fetch('/vapidPublicKey').then(res => res.text());
+              const convertedVapidKey = urlBase64ToUint8Array(vapidPublicKey);
 
-                    return fetch('/subscribe', {
-                      method: 'POST',
-                      body: JSON.stringify(subscriptionJson),
-                      headers: {
-                        'Content-Type': 'application/json'
-                      }
-                    });
-                  })
-                  .then(response => response.json())
-                  .then(data => console.log('Subscribed:', data))
-                  .catch(err => console.error('Error subscribing:', err));
+              const subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: convertedVapidKey
               });
+
+              const subscriptionJson = {
+                endpoint: subscription.endpoint,
+                expirationTime: subscription.expirationTime,
+                keys: {
+                  p256dh: btoa(String.fromCharCode.apply(null, new Uint8Array(subscription.getKey('p256dh')))),
+                  auth: btoa(String.fromCharCode.apply(null, new Uint8Array(subscription.getKey('auth'))))
+                },
+                userId: userId
+              };
+
+              await fetch('/subscribe', {
+                method: 'POST',
+                body: JSON.stringify(subscriptionJson),
+                headers: {
+                  'Content-Type': 'application/json'
+                }
+              });
+
+              document.getElementById('textSub').textContent = 'Successfully subscribed!';
+              document.getElementById('subscribeBtn').classList.add('d-none');
+            } catch (error) {
+              console.error('Error subscribing:', error);
+              document.getElementById('textSub').textContent = 'Error subscribing to notifications.';
+            }
           } else {
             console.error('Service workers are not supported by this browser.');
+            document.getElementById('textSub').textContent = 'Service Workers are not supported.';
           }
-        });
+        }
+
+        // Call the subscription check function when the page loads
+        document.addEventListener('DOMContentLoaded', checkSubscription);
+
+        // Handle click event to subscribe
+        document.getElementById('subscribeBtn').addEventListener('click', handleSubscription);
       </script>
+
     </div>
     <div class="col-12 col-xl-7">
       <form class="border-bottom mb-4" method="post" action="/settings">
