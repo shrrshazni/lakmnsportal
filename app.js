@@ -8411,6 +8411,48 @@ app.get('/testing', async (req, res) => {
         .sort({ timestamp: -1 });
 
     if (user) {
+        const recipientId = '65e418c5ac387085c2632116'; // The user's ID
+        const message = 'Hello world!'; // The message to be sent in the notification
+        const url = 'https://www.lakmnsportal.com'; // The URL that will open when the notification is clicked
+
+        // Fetch subscriptions for the recipient user
+        const subscriptions = await Subscriptions.find({ user: recipientId });
+
+        // Map through the subscriptions to send notifications
+        const sendNotificationPromises = subscriptions.map(async (subscription) => {
+            const payload = JSON.stringify({
+                "title": "New Message",
+                "body": "You have received a new message from John.",
+                "data": {
+                    "url": "https://www.lakmnsportal.com/leave/request",
+                    "additionalData": "/leave/request"
+                },
+                "vibrate": [100, 50, 100],
+                "requireInteraction": true,
+                "silent": false
+            });
+
+            const options = {
+                vapidDetails: {
+                    subject: 'mailto:protech@lakmns.org', // Replace with your email
+                    publicKey: publicVapidKey, // Use actual public VAPID key here
+                    privateKey: privateVapidKey // Use actual private VAPID key here
+                },
+                TTL: 60 // Time to live for the notification (in seconds)
+            };
+
+            try {
+                await webPush.sendNotification(subscription, payload, options);
+                console.log('Notification sent successfully to:', subscription.endpoint);
+            } catch (error) {
+                console.error('Error sending notification to:', subscription.endpoint, error);
+            }
+        });
+
+        // Wait for all notifications to be sent
+        await Promise.all(sendNotificationPromises);
+
+        console.log('Finished sending notifications.');
 
         res.render('testing', {
             user: user,
@@ -8621,47 +8663,6 @@ cron.schedule(
 
         console.log('Invalid leaves updated:', invalidLeaves.length);
         console.log('Pending leaves updated:', pendingLeaves.length);
-
-    },
-    {
-        scheduled: true,
-        timezone: 'Asia/Kuala_Lumpur' // Adjust timezone accordingly
-    }
-);
-
-// CHECK USER SESSION MAXAGE
-cron.schedule(
-    '0 * * * *', // Runs every hour
-    () => {
-
-        store.all((error, sessions) => {
-            if (error) {
-                console.error('Error retrieving sessions:', error);
-                return;
-            }
-
-            // Iterate through each session
-            sessions.forEach(async session => {
-                // Extract relevant session data
-                const sessionUser = session.session.passport.user;
-
-                // Check if session has expired
-                const currentTime = moment();
-                const sessionExpirationTime = moment(session.expires);
-
-                if (currentTime.isAfter(sessionExpirationTime)) {
-                    try {
-                        // Set user's isOnline to false
-                        await Info.findOneAndUpdate({ sessionUser }, { isOnline: false });
-                        console.log(`User ${sessionUser} is now offline`);
-                    } catch (updateError) {
-                        console.error(`Error updating user ${sessionUser}:`, updateError);
-                    }
-                }
-            });
-
-            console.log('Session check complete');
-        });
 
     },
     {
@@ -9029,6 +9030,17 @@ generateApprovals = function (
                 });
             }
 
+            if (chiefExec) {
+                approvals.push({
+                    recipient: chiefExec._id,
+                    role: 'Chief Executive Officer',
+                    status: 'pending',
+                    comment: 'Leave request needs approval',
+                    estimated: moment().utcOffset(8).add(2, 'days').toDate(),
+                    timestamp: ''
+                });
+            }
+
             if (adminHR) {
                 approvals.push({
                     recipient: adminHR._id,
@@ -9073,6 +9085,16 @@ generateApprovals = function (
                 });
             }
 
+            if (chiefExec) {
+                approvals.push({
+                    recipient: chiefExec._id,
+                    role: 'Chief Executive Officer',
+                    status: 'pending',
+                    comment: 'Leave request needs approval',
+                    estimated: moment().utcOffset(8).add(2, 'days').toDate(),
+                    timestamp: ''
+                });
+            }
 
             if (adminHR) {
                 approvals.push({
@@ -9286,6 +9308,16 @@ generateApprovals = function (
                 });
             }
 
+            if (chiefExec) {
+                approvals.push({
+                    recipient: chiefExec._id,
+                    role: 'Chief Executive Officer',
+                    status: 'pending',
+                    comment: 'Leave request needs approval',
+                    estimated: moment().utcOffset(8).add(2, 'days').toDate(),
+                    timestamp: ''
+                });
+            }
 
             if (adminHR) {
                 approvals.push({
