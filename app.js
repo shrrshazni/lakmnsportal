@@ -3134,44 +3134,44 @@ app
                     });
                 }
             } else {
-                const adminUsers = await User.find({
-                    isAdmin: true,
-                    section: 'Human Resource Management Division',
-                    _id: { $ne: adminHR._id }
-                });
+                // const adminUsers = await User.find({
+                //     isAdmin: true,
+                //     section: 'Human Resource Management Division',
+                //     _id: { $ne: adminHR._id }
+                // });
 
-                // Push the IDs of admin users to sendNoti
-                adminUsers.forEach(user => {
-                    if (!sendNoti.includes(user._id)) {
-                        sendNoti.push(user._id);
-                    }
-                });
+                // // Push the IDs of admin users to sendNoti
+                // adminUsers.forEach(user => {
+                //     if (!sendNoti.includes(user._id)) {
+                //         sendNoti.push(user._id);
+                //     }
+                // });
 
-                let i = 0;
-                // set user id to be send
-                for (const approval of approvals) {
-                    const recipientId = approval.recipient;
+                // let i = 0;
+                // // set user id to be send
+                // for (const approval of approvals) {
+                //     const recipientId = approval.recipient;
 
-                    if (i > 0) {
-                        // Add the recipientId to the sendNoti array if not already present
-                        if (!sendNoti.includes(recipientId)) {
-                            sendNoti.push(recipientId);
-                        }
-                    }
+                //     if (i > 0) {
+                //         // Add the recipientId to the sendNoti array if not already present
+                //         if (!sendNoti.includes(recipientId)) {
+                //             sendNoti.push(recipientId);
+                //         }
+                //     }
 
-                    // Fetch the user by recipient ID
-                    const email = await User.findById(recipientId);
+                //     // Fetch the user by recipient ID
+                //     const email = await User.findById(recipientId);
 
-                    // Check if the user is found and has an email
-                    if (email && user.email) {
-                        // Add the user's email to sendEmail
-                        sendEmail.push(email.email);
-                    }
+                //     // Check if the user is found and has an email
+                //     if (email && user.email) {
+                //         // Add the user's email to sendEmail
+                //         sendEmail.push(email.email);
+                //     }
 
-                    i++;
-                }
+                //     i++;
+                // }
 
-                console.log(sendNoti);
+                // console.log(sendNoti);
 
                 const leave = new Leave({
                     fileId: uuid,
@@ -3189,42 +3189,42 @@ app
                 const currentLeave = await Leave.create(leave);
                 console.log('Leave request submitted');
 
-                // activity
-                const activityUser = new Activity({
-                    user: user._id,
-                    date: moment().utcOffset(8).toDate(),
-                    title: 'Submitted a leave application',
-                    type: 'Leave request',
-                    description:
-                        user.fullname +
-                        ' has submitted ' +
-                        type +
-                        ' between ' +
-                        startDate +
-                        ' and ' +
-                        returnDate
-                });
+                // // activity
+                // const activityUser = new Activity({
+                //     user: user._id,
+                //     date: moment().utcOffset(8).toDate(),
+                //     title: 'Submitted a leave application',
+                //     type: 'Leave request',
+                //     description:
+                //         user.fullname +
+                //         ' has submitted ' +
+                //         type +
+                //         ' between ' +
+                //         startDate +
+                //         ' and ' +
+                //         returnDate
+                // });
 
-                activityUser.save();
+                // activityUser.save();
 
-                console.log('New acitivity submitted', activityUser);
+                // console.log('New acitivity submitted', activityUser);
 
-                // notifications save has been turn off
-                if (sendNoti.length > 0) {
-                    for (const recipientId of sendNoti) {
-                        const newNotification = new Notification({
-                            sender: user._id,
-                            recipient: new mongoose.Types.ObjectId(recipientId),
-                            type: 'Leave request',
-                            url: '/leave/details/' + currentLeave._id,
-                            message: 'Leave request needs approval.'
-                        });
+                // // notifications save has been turn off
+                // if (sendNoti.length > 0) {
+                //     for (const recipientId of sendNoti) {
+                //         const newNotification = new Notification({
+                //             sender: user._id,
+                //             recipient: new mongoose.Types.ObjectId(recipientId),
+                //             type: 'Leave request',
+                //             url: '/leave/details/' + currentLeave._id,
+                //             message: 'Leave request needs approval.'
+                //         });
 
-                        newNotification.save();
-                    }
+                //         newNotification.save();
+                //     }
 
-                    console.log('Done send notifications!');
-                }
+                //     console.log('Done send notifications!');
+                // }
 
                 // turn off the email notications
                 // send email to the recipient
@@ -4243,7 +4243,7 @@ app.get('/leave/:approval/:id', async function (req, res) {
 });
 
 //ATTENDANCE
-app.get('/attendance', restrictAccess, async function (req, res) {
+app.get('/attendance', async function (req, res) {
     const uniqueIdentifier = generateUniqueIdentifier();
 
     res.render('attendance', {
@@ -8412,7 +8412,7 @@ app.get('/temp', async (req, res) => {
     }
 });
 
-app.get('/testing', async (req, res) => {
+app.get('/testing', isAuthenticated, async (req, res) => {
     const username = req.user.username;
     const user = await User.findOne({ username: username });
     const notifications = await Notification.find({
@@ -8423,7 +8423,8 @@ app.get('/testing', async (req, res) => {
         .sort({ timestamp: -1 });
 
     if (user) {
-        const recipientId = '65e418c5ac387085c2632116'; // The user's ID
+
+        const recipientId = '65e4309f904086cf0a7e2c34'; // The user's ID
         const message = 'Hello world!'; // The message to be sent in the notification
         const url = 'https://www.lakmnsportal.com'; // The URL that will open when the notification is clicked
 
@@ -8435,10 +8436,7 @@ app.get('/testing', async (req, res) => {
             const payload = JSON.stringify({
                 "title": "New Message",
                 "body": "You have received a new message from John.",
-                "data": {
-                    "url": "https://www.lakmnsportal.com/leave/request",
-                    "additionalData": "/leave/request"
-                },
+                "url": "https://www.lakmnsportal.com/leave/request",
                 "vibrate": [100, 50, 100],
                 "requireInteraction": true,
                 "silent": false
