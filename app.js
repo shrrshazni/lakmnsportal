@@ -3566,127 +3566,138 @@ app.get('/leave/:approval/:id', async function (req, res) {
             approval => approval.role === 'Human Resource'
         );
 
+        const recipientIndices = checkLeave.approvals
+            .map((approval, index) => approval.recipient.equals(user._id) ? index : -1)
+            .filter(index => index !== -1);
+
         console.log(checkLeave.approvals[humanResourceIndex].recipient);
 
         if (approval === 'approved') {
-            if (checkLeave.approvals[indexOfRecipient].role === 'Relief Staff') {
-                await Leave.findOneAndUpdate(
-                    {
-                        _id: id,
-                        'approvals.recipient': user._id
-                    },
-                    {
-                        $set: {
-                            'approvals.$.status': 'approved',
-                            'approvals.$.comment': 'The request have been approved by ' + user.fullname,
-                            'approvals.$.timestamp': moment().utcOffset(8).toDate(),
-                            status: 'pending'
-                        }
-                    },
-                    { new: true }
-                );
-            } else {
-                await Leave.findOneAndUpdate(
-                    {
-                        _id: id,
-                        'approvals.recipient': user._id
-                    },
-                    {
-                        $set: {
-                            'approvals.$.status': 'approved',
-                            'approvals.$.comment': 'The request have been approved',
-                            'approvals.$.timestamp': moment().utcOffset(8).toDate(),
-                            status: 'pending'
-                        }
-                    },
-                    { new: true }
-                );
+            let indexOfRecipient = recipientIndices[0]; // Default to the first found recipient
+
+            // If there are multiple recipients, choose the one with a null timestamp
+            if (recipientIndices.length > 1) {
+                indexOfRecipient = recipientIndices.find(index => checkLeave.approvals[index].timestamp === null);
             }
 
+            const isReliefStaff = checkLeave.approvals[indexOfRecipient].role === 'Relief Staff';
+
+            await Leave.findOneAndUpdate(
+                {
+                    _id: id,
+                    'approvals.recipient': user._id,
+                    'approvals.timestamp': null // Ensure to update the correct approval with null timestamp
+                },
+                {
+                    $set: {
+                        'approvals.$.status': 'approved',
+                        'approvals.$.comment': 'The request has been approved' + (isReliefStaff ? ' by ' + user.fullname : ''),
+                        'approvals.$.timestamp': moment().utcOffset(8).toDate(),
+                        status: 'pending'
+                    }
+                },
+                { new: true }
+            );
+
+            // Determine the next approval recipient for notification
             const nextIndex = indexOfRecipient + 1;
-            const nextApprovalRecipientId = checkLeave.approvals[nextIndex].recipient;
+            const nextApprovalRecipientId = checkLeave.approvals[nextIndex]?.recipient;
 
-            // send noti
-            const newNotification = new Notification({
-                sender: user._id,
-                recipient: new mongoose.Types.ObjectId(nextApprovalRecipientId),
-                type: 'Leave',
-                url: '/leave/details/' + id,
-                message:
-                    'Previous approval has been submitted, please do check the leave request for approval'
-            });
+            if (nextApprovalRecipientId) {
+                // send notification
+                const newNotification = new Notification({
+                    sender: user._id,
+                    recipient: new mongoose.Types.ObjectId(nextApprovalRecipientId),
+                    type: 'Leave',
+                    url: '/leave/details/' + id,
+                    message:
+                        'Previous approval has been submitted, please check the leave request for approval'
+                });
 
-            newNotification.save();
+                await newNotification.save();
 
-            // activity
-            const activityUser = new Activity({
-                user: user._id,
-                date: moment().utcOffset(8).toDate(),
-                title: 'Leave application approved',
-                type: 'Leave request',
-                description: 'Approved a leave request'
-            });
+                // log activity
+                const activityUser = new Activity({
+                    user: user._id,
+                    date: moment().utcOffset(8).toDate(),
+                    title: 'Leave application approved',
+                    type: 'Leave request',
+                    description: 'Approved a leave request'
+                });
 
-            activityUser.save();
+                await activityUser.save();
 
-            const nextApprovalRecipientEmail = await User.findOne({
-                _id: nextApprovalRecipientId
-            });
+                // Fetch next approval recipient's email
+                const nextApprovalRecipientEmail = await User.findOne({ _id: nextApprovalRecipientId });
 
-            // turn off the email notications
-            // send email to the recipient
-            // let mailOptions = {
-            //     from: 'protech@lakmns.org',
-            //     to: nextApprovalRecipientEmail.email,
-            //     subject: 'lakmnsportal - Approval Leave Follow up',
-            //     html: `
-            //       <html>
-            //         <head>
-            //           <style>
-            //             body {
-            //               font-family: 'Arial', sans-serif;
-            //               background-color: #f4f4f4;
-            //               color: #333;
-            //             }
-            //             p {
-            //               margin-bottom: 20px;
-            //             }
-            //             a {
-            //               color: #3498db;
-            //             }
-            //           </style>
-            //         </head>
-            //         <body>
-            //           <h1>Leave Request</h1>
-            //           <p>${user.fullname} has take action of ${type} from, ${startDate} until ${returnDate}.</p>
-            //           <p>Please do check the leave approval at <a href="http://localhost:5002/">lakmnsportal</a></p>
-            //         </body>
-            //       </html>
-            //     `
-            // };
+                // Send email notification to the next recipient (if needed)
+                // Uncomment and customize this part if email notifications are required
+                /*
+                let mailOptions = {
+                    from: 'protech@lakmns.org',
+                    to: nextApprovalRecipientEmail.email,
+                    subject: 'lakmnsportal - Approval Leave Follow up',
+                    html: `
+                      <html>
+                        <head>
+                          <style>
+                            body {
+                              font-family: 'Arial', sans-serif;
+                              background-color: #f4f4f4;
+                              color: #333;
+                            }
+                            p {
+                              margin-bottom: 20px;
+                            }
+                            a {
+                              color: #3498db;
+                            }
+                          </style>
+                        </head>
+                        <body>
+                          <h1>Leave Request</h1>
+                          <p>${user.fullname} has taken action on ${type} from ${startDate} until ${returnDate}.</p>
+                          <p>Please check the leave approval at <a href="http://localhost:5002/">lakmnsportal</a></p>
+                        </body>
+                      </html>
+                    `
+                };
+        
+                transporter.sendMail(mailOptions, (error, info) => {
+                    if (error) {
+                        return console.log(error);
+                    }
+                    console.log('Message %s sent: %s', info.messageId, info.response);
+                });
+                */
 
-            // transporter.sendMail(mailOptions, (error, info) => {
-            //     if (error) {
-            //         return console.log(error);
-            //     }
-            //     console.log('Message %s sent: %s', info.messageId, info.response);
-            // });
+                console.log('The leave has been approved and notification sent to the next recipient.');
+            } else {
+                console.log('The leave has been approved.');
+            }
 
-            console.log('The leave has been approved');
             res.redirect('/leave/details/' + id);
         } else if (approval === 'denied') {
+            let indexOfRecipient = recipientIndices[0]; // Default to the first found recipient
+
+            // If there are multiple recipients, choose the one with a null timestamp
+            if (recipientIndices.length > 1) {
+                indexOfRecipient = recipientIndices.find(index => checkLeave.approvals[index].timestamp === null);
+            }
+
             let leaveDenied;
             if (checkLeave.approvals[indexOfRecipient].role === 'Relief Staff') {
                 leaveDenied = await Leave.findOneAndUpdate(
                     {
                         _id: id,
-                        'approvals.recipient': user._id
+                        'approvals.recipient': user._id,
+                        'approvals.timestamp': null // Ensure to update the correct approval with null timestamp
                     },
                     {
                         $set: {
                             status: 'denied',
                             'approvals.$.status': 'denied',
-                            'approvals.$.comment': 'The request have been denied by ' + user.fullname,
+                            'approvals.$.comment': 'The request has been denied by ' + user.fullname,
                             'approvals.$.timestamp': moment().utcOffset(8).toDate()
                         }
                     },
@@ -3696,13 +3707,14 @@ app.get('/leave/:approval/:id', async function (req, res) {
                 leaveDenied = await Leave.findOneAndUpdate(
                     {
                         _id: id,
-                        'approvals.recipient': user._id
+                        'approvals.recipient': user._id,
+                        'approvals.timestamp': null // Ensure to update the correct approval with null timestamp
                     },
                     {
                         $set: {
                             status: 'denied',
                             'approvals.$.status': 'denied',
-                            'approvals.$.comment': 'The request have been denied',
+                            'approvals.$.comment': 'The request has been denied',
                             'approvals.$.timestamp': moment().utcOffset(8).toDate()
                         }
                     },
@@ -3720,7 +3732,7 @@ app.get('/leave/:approval/:id', async function (req, res) {
                     user: firstRecipientId
                 });
 
-                var daysDifference = '';
+                let daysDifference = '';
                 if (checkLeave.type === 'Emergency Leave') {
                     daysDifference = moment(returnDate).diff(moment(startDate), 'days') + 1;
                 }
@@ -3736,18 +3748,11 @@ app.get('/leave/:approval/:id', async function (req, res) {
                         break;
                 }
 
-                var sendNoti = [];
-                var sendEmail = [];
+                const recipientIds = checkLeave.approvals.map(approval => approval.recipient);
 
-                const recipientIds = checkLeave.approvals.map(
-                    approval => approval.recipient
-                );
+                const sendNoti = recipientIds.filter(recipientId => !recipientId.equals(user._id));
 
-                sendNoti = recipientIds.filter(
-                    recipientId => !recipientId.equals(user._id)
-                );
-
-                // notifications save has been turn off
+                // Sending notifications
                 if (sendNoti.length > 0) {
                     for (const recipientId of sendNoti) {
                         const newNotification = new Notification({
@@ -3758,13 +3763,14 @@ app.get('/leave/:approval/:id', async function (req, res) {
                             message: 'Leave request has been denied.'
                         });
 
-                        // newNotification.save();
+                        // Uncomment the next line to save the notification
+                        // await newNotification.save();
                     }
 
-                    console.log('Done send notifications!');
+                    console.log('Done sending notifications!');
                 }
 
-                // activity
+                // Activity log
                 const activityUser = new Activity({
                     user: user._id,
                     date: moment().utcOffset(8).toDate(),
@@ -3773,52 +3779,54 @@ app.get('/leave/:approval/:id', async function (req, res) {
                     description: 'Denied a leave request'
                 });
 
-                activityUser.save();
+                await activityUser.save();
 
                 const users = await User.find({ _id: { $in: sendNoti } });
-                sendEmail = users.map(user => user.email);
+                const sendEmail = users.map(user => user.email);
                 console.log(sendEmail);
 
-                // turn off the email notications
-                // send email to the recipient
-                // let mailOptions = {
-                //     from: 'protech@lakmns.org',
-                //     to: sendEmail,
-                //     subject: 'lakmnsportal - Approval Leave Request',
-                //     html: `
-                //       <html>
-                //         <head>
-                //           <style>
-                //             body {
-                //               font-family: 'Arial', sans-serif;
-                //               background-color: #f4f4f4;
-                //               color: #333;
-                //             }
-                //             p {
-                //               margin-bottom: 20px;
-                //             }
-                //             a {
-                //               color: #3498db;
-                //             }
-                //           </style>
-                //         </head>
-                //         <body>
-                //           <h1>Leave Request</h1>
-                //           <p>${user.fullname} has requested ${type} from, ${startDate} until ${returnDate}</p>
-                //           <p>Please do check your notification at <a href="http://localhost:5002/">lakmnsportal</a></p>
-                //         </body>
-                //       </html>
-                //     `
-                // };
+                // Sending email notifications (if needed)
+                // Uncomment and customize this part if email notifications are required
+                /*
+                let mailOptions = {
+                    from: 'protech@lakmns.org',
+                    to: sendEmail,
+                    subject: 'lakmnsportal - Leave Request Denied',
+                    html: `
+                      <html>
+                        <head>
+                          <style>
+                            body {
+                              font-family: 'Arial', sans-serif;
+                              background-color: #f4f4f4;
+                              color: #333;
+                            }
+                            p {
+                              margin-bottom: 20px;
+                            }
+                            a {
+                              color: #3498db;
+                            }
+                          </style>
+                        </head>
+                        <body>
+                          <h1>Leave Request Denied</h1>
+                          <p>The leave request by ${user.fullname} has been denied.</p>
+                          <p>Please check your notification at <a href="http://localhost:5002/">lakmnsportal</a></p>
+                        </body>
+                      </html>
+                    `
+                };
+            
+                transporter.sendMail(mailOptions, (error, info) => {
+                    if (error) {
+                        return console.log(error);
+                    }
+                    console.log('Message %s sent: %s', info.messageId, info.response);
+                });
+                */
 
-                // transporter.sendMail(mailOptions, (error, info) => {
-                //     if (error) {
-                //         return console.log(error);
-                //     }
-                //     console.log('Message %s sent: %s', info.messageId, info.response);
-                // });
-
-                console.log('The leave has been approved');
+                console.log('The leave has been denied.');
                 res.redirect('/leave/details/' + id);
             }
         } else if (approval === 'cancelled') {
@@ -4063,9 +4071,13 @@ app.get('/leave/:approval/:id', async function (req, res) {
                         daysDifference = calculateBusinessDays(startDate, returnDate);
                     }
                 } else if (checkLeave.type === 'Half Day Leave') {
-                    numberOfDays = calculateBusinessDays(startDate, returnDate) / 2;
+                    if (checkUser.isNonOfficeHour) {
+                        daysDifference = (moment(returnDate).diff(moment(startDate), 'days') + 1) / 2;
+                    } else {
+                        daysDifference = (calculateBusinessDays(startDate, returnDate)) / 2;
+                    }
                 } else if (checkLeave.type === 'Emergency Leave') {
-                    daysDifference = calculateBusinessDays(startDate, moment().utcOffset(8).startOf('day').toDate());
+                    daysDifference = moment(returnDate).diff(moment(startDate), 'days') + 1;
                 } else if (
                     checkLeave.type === 'Marriage Leave' ||
                     checkLeave.type === 'Paternity Leave' ||
@@ -9017,28 +9029,17 @@ generateApprovals = function (
                     estimated: moment().utcOffset(8).add(1, 'day').toDate(),
                     timestamp: ''
                 });
-            }
-
-            if (depChiefExec) {
-                approvals.push({
-                    recipient: depChiefExec._id,
-                    role: 'Deputy Chief Executive Officer',
-                    status: 'pending',
-                    comment: 'Leave request needs approval',
-                    estimated: moment().utcOffset(8).add(3, 'days').toDate(),
-                    timestamp: ''
-                });
-            }
-
-            if (chiefExec) {
-                approvals.push({
-                    recipient: chiefExec._id,
-                    role: 'Chief Executive Officer',
-                    status: 'pending',
-                    comment: 'Leave request needs approval',
-                    estimated: moment().utcOffset(8).add(2, 'days').toDate(),
-                    timestamp: ''
-                });
+            } else {
+                if (depChiefExec) {
+                    approvals.push({
+                        recipient: depChiefExec._id,
+                        role: 'Deputy Chief Executive Officer',
+                        status: 'pending',
+                        comment: 'Leave request needs approval',
+                        estimated: moment().utcOffset(8).add(3, 'days').toDate(),
+                        timestamp: ''
+                    });
+                }
             }
 
             if (adminHR) {
@@ -9295,28 +9296,17 @@ generateApprovals = function (
                     estimated: moment().utcOffset(8).add(1, 'day').toDate(),
                     timestamp: ''
                 });
-            }
-
-            if (depChiefExec) {
-                approvals.push({
-                    recipient: depChiefExec._id,
-                    role: 'Deputy Chief Executive Officer',
-                    status: 'pending',
-                    comment: 'Leave request needs approval',
-                    estimated: moment().utcOffset(8).add(3, 'days').toDate(),
-                    timestamp: ''
-                });
-            }
-
-            if (chiefExec) {
-                approvals.push({
-                    recipient: chiefExec._id,
-                    role: 'Chief Executive Officer',
-                    status: 'pending',
-                    comment: 'Leave request needs approval',
-                    estimated: moment().utcOffset(8).add(2, 'days').toDate(),
-                    timestamp: ''
-                });
+            } else {
+                if (depChiefExec) {
+                    approvals.push({
+                        recipient: depChiefExec._id,
+                        role: 'Deputy Chief Executive Officer',
+                        status: 'pending',
+                        comment: 'Leave request needs approval',
+                        estimated: moment().utcOffset(8).add(3, 'days').toDate(),
+                        timestamp: ''
+                    });
+                }
             }
 
             if (adminHR) {

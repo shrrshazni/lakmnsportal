@@ -20,45 +20,45 @@
     });
 }
 
-var showAcknowledge = 'd-none';
 var showApproval = 'd-none';
+var showAcknowledge = 'd-none';
 var showCancel = 'd-none';
 
-// Check if all other approvals are approved
-const allOtherApprovalsApproved = approvals
-    .slice(0, approvals.length - 1) // Exclude the last approval
-    .slice(1) // Exclude the first approval
-    .every(approval => approval.status === 'approved');
+// Determine user's position in the approval process
+const userApprovals = approvals.filter(approval => approval.recipient.equals(user._id));
 
-// Handle acknowledge button visibility for admin HR
-if (allOtherApprovalsApproved) {
-    if (user.isAdmin) {
-        if (leave.status === 'approved' || leave.status === 'denied') {
-            showAcknowledge = 'd-none';
-        } else {
-            showAcknowledge = '';
-        }
-    } else {
-        showAcknowledge = 'd-none';
-    }
-} else {
-    // Handle approval button visibility for general approvals
-    if (approvals && approvals.length > 0) {
-        const userApprovalIndex = approvals.findIndex(approval => approval.recipient.equals(user._id));
-        const isUserLeaveOwner = user._id.toString() === leave.user.toString(); // Correct comparison with leave.user
+if (userApprovals.length > 0) {
+    // Assuming user is not the leave owner
+    const isUserLeaveOwner = user._id.toString() === leave.user.toString(); // Correct comparison with leave.user
 
-        if (userApprovalIndex !== -1 && !isUserLeaveOwner && leave.status !== 'approved' && leave.status !== 'denied' && leave.status !== 'cancelled') {
-            const previousApprovalEntries = approvals[userApprovalIndex - 1];
+    if (!isUserLeaveOwner && leave.status !== 'approved' && leave.status !== 'denied' && leave.status !== 'cancelled') {
+        const latestUserApproval = userApprovals[userApprovals.length - 1]; // Get the latest approval entry for the user
+        
+        // Find index of latest user approval
+        const userApprovalIndex = approvals.findIndex(approval => approval._id.equals(latestUserApproval._id));
 
-            if (previousApprovalEntries && 
-                (previousApprovalEntries.status === 'approved' || previousApprovalEntries.status === 'submitted') &&
-                !(approvals[approvals.length - 1].status === 'approved' || approvals[approvals.length - 1].status === 'denied' ||
-                approvals[userApprovalIndex].status === 'approved' || approvals[userApprovalIndex].status === 'denied')) {
-                showApproval = '';
-            }
+        // Check previous approval entries
+        const previousApprovalEntries = approvals.slice(0, userApprovalIndex);
+
+        const allPreviousApproved = previousApprovalEntries.every(approval => 
+            approval.status === 'approved' || approval.status === 'submitted'
+        );
+
+        if (allPreviousApproved && latestUserApproval.status === 'pending') {
+            showApproval = ''; // Show the approval button if all previous approvals are handled
         }
     }
 }
+
+// Handle acknowledge button visibility for admin HR (if applicable)
+const allApprovalsBeforeHRApproved = approvals
+    .slice(0, approvals.length - 1) // Exclude the last approval
+    .every(approval => approval.status === 'approved');
+
+if (allApprovalsBeforeHRApproved && user.isAdmin) {
+    showAcknowledge = (leave.status === 'approved' || leave.status === 'denied') ? 'd-none' : '';
+}
+
 
 // Handle cancel button visibility
 const headDepartmentApprovalIndex = approvals.findIndex(approval => approval.role === 'Head of Department');
