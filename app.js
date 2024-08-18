@@ -3134,44 +3134,22 @@ app
                     });
                 }
             } else {
-                // const adminUsers = await User.find({
-                //     isAdmin: true,
-                //     section: 'Human Resource Management Division',
-                //     _id: { $ne: adminHR._id }
-                // });
+                const adminUsers = await User.find({
+                    isAdmin: true,
+                    section: 'Human Resource Management Division',
+                    _id: { $ne: adminHR._id }
+                });
 
-                // // Push the IDs of admin users to sendNoti
-                // adminUsers.forEach(user => {
-                //     if (!sendNoti.includes(user._id)) {
-                //         sendNoti.push(user._id);
-                //     }
-                // });
+                // Push the IDs of admin users to sendNoti
+                adminUsers.forEach(user => {
+                    if (!sendNoti.includes(user._id)) {
+                        sendNoti.push(user._id);
+                    }
+                });
 
-                // let i = 0;
-                // // set user id to be send
-                // for (const approval of approvals) {
-                //     const recipientId = approval.recipient;
-
-                //     if (i > 0) {
-                //         // Add the recipientId to the sendNoti array if not already present
-                //         if (!sendNoti.includes(recipientId)) {
-                //             sendNoti.push(recipientId);
-                //         }
-                //     }
-
-                //     // Fetch the user by recipient ID
-                //     const email = await User.findById(recipientId);
-
-                //     // Check if the user is found and has an email
-                //     if (email && user.email) {
-                //         // Add the user's email to sendEmail
-                //         sendEmail.push(email.email);
-                //     }
-
-                //     i++;
-                // }
-
-                // console.log(sendNoti);
+                const nextRecipient = approvals[1].recipient;
+                sendNoti.push(nextRecipient);
+                console.log(sendNoti);
 
                 const leave = new Leave({
                     fileId: uuid,
@@ -3189,81 +3167,111 @@ app
                 const currentLeave = await Leave.create(leave);
                 console.log('Leave request submitted');
 
-                // // activity
-                // const activityUser = new Activity({
-                //     user: user._id,
-                //     date: moment().utcOffset(8).toDate(),
-                //     title: 'Submitted a leave application',
-                //     type: 'Leave request',
-                //     description:
-                //         user.fullname +
-                //         ' has submitted ' +
-                //         type +
-                //         ' between ' +
-                //         startDate +
-                //         ' and ' +
-                //         returnDate
-                // });
+                // activity
+                const activityUser = new Activity({
+                    user: user._id,
+                    date: moment().utcOffset(8).toDate(),
+                    title: 'Submitted a leave application',
+                    type: 'Leave request',
+                    description:
+                        user.fullname +
+                        ' has submitted ' +
+                        type +
+                        ' between ' +
+                        startDate +
+                        ' and ' +
+                        returnDate
+                });
 
-                // activityUser.save();
+                activityUser.save();
 
-                // console.log('New acitivity submitted', activityUser);
+                console.log('New acitivity submitted', activityUser);
 
-                // // notifications save has been turn off
-                // if (sendNoti.length > 0) {
-                //     for (const recipientId of sendNoti) {
-                //         const newNotification = new Notification({
-                //             sender: user._id,
-                //             recipient: new mongoose.Types.ObjectId(recipientId),
-                //             type: 'Leave request',
-                //             url: '/leave/details/' + currentLeave._id,
-                //             message: 'Leave request needs approval.'
-                //         });
+                // notifications save has been turn off
+                if (sendNoti.length > 0) {
+                    for (const recipientId of sendNoti) {
+                        const newNotification = new Notification({
+                            sender: user._id,
+                            recipient: new mongoose.Types.ObjectId(recipientId),
+                            type: 'Leave request',
+                            url: '/leave/details/' + currentLeave._id,
+                            message: 'Leave request needs approval.'
+                        });
 
-                //         newNotification.save();
-                //     }
+                        newNotification.save();
 
-                //     console.log('Done send notifications!');
-                // }
+                        // Fetch subscriptions for the recipient user
+                        const subscriptions = await Subscriptions.find({ user: recipientId });
 
-                // turn off the email notications
-                // send email to the recipient
-                // let mailOptions = {
-                //     from: 'protech@lakmns.org',
-                //     to: sendEmail,
-                //     subject: 'lakmnsportal - Approval Leave Request',
-                //     html: `
-                //       <html>
-                //         <head>
-                //           <style>
-                //             body {
-                //               font-family: 'Arial', sans-serif;
-                //               background-color: #f4f4f4;
-                //               color: #333;
-                //             }
-                //             p {
-                //               margin-bottom: 20px;
-                //             }
-                //             a {
-                //               color: #3498db;
-                //             }
-                //           </style>
-                //         </head>
-                //         <body>
-                //           <h1>Leave Request</h1>
-                //           <p>${user.fullname} has requested ${type} from, ${startDate} until ${returnDate}</p>
-                //           <p>Please do check your notification at <a href="http://localhost:5002/">lakmnsportal</a></p>
-                //         </body>
-                //       </html>
-                //     `
-                // };
+                        if (subscriptions) {
+                            // Map through the subscriptions to send notifications
+                            const sendNotificationPromises = subscriptions.map(async (subscription) => {
+                                const payload = JSON.stringify({
+                                    "title": "Leave request",
+                                    "body": "Leave request need your attention and approval.",
+                                    "url": "https://www.lakmnsportal.com/leave/request/" + currentLeave._id,
+                                    "vibrate": [100, 50, 100],
+                                    "requireInteraction": true,
+                                    "silent": false
+                                });
 
-                // transporter.sendMail(mailOptions, (error, info) => {
-                //     if (error) {
-                //         return console.log(error);
-                //     }
-                //     console.log('Message %s sent: %s', info.messageId, info.response);
-                // });
+                                const options = {
+                                    vapidDetails: {
+                                        subject: 'mailto:protech@lakmns.org', // Replace with your email
+                                        publicKey: publicVapidKey, // Use actual public VAPID key here
+                                        privateKey: privateVapidKey // Use actual private VAPID key here
+                                    },
+                                    TTL: 60 // Time to live for the notification (in seconds)
+                                };
+
+                                try {
+                                    await webPush.sendNotification(subscription, payload, options);
+                                    console.log('Push notification sent successfully to:', subscription.endpoint);
+                                } catch (error) {
+                                    console.error('Error sending notification to:', subscription.endpoint, error);
+                                }
+                            });
+
+                            // Wait for all notifications to be sent
+                            await Promise.all(sendNotificationPromises);
+                        } else {
+                            console.log('The user doesnt subscribe for push notifications');
+                        }
+
+                    }
+
+                    console.log('Done send notifications!');
+                }
+
+                // send via email
+                const emailData = {
+                    content: 'The leave request has been submitted by ' + user.fullname + ' with work ID ' + user.username + ' , please click the button above to open the leave details.',
+                    id: currentLeave._id,
+                };
+
+                const emailHTML = await new Promise((resolve, reject) => {
+                    app.render('email-leave', { emailData: emailData }, (err, html) => {
+                        if (err) reject(err);
+                        else resolve(html);
+                    });
+                });
+
+                console.log(emailHTML);
+
+                let mailOptions = {
+                    from: 'protech@lakmns.org',
+                    to: sendEmail,
+                    subject: 'lakmnsportal - Leave Request Approval',
+                    html: emailHTML,
+                };
+
+                transporter.sendMail(mailOptions, (error, info) => {
+                    if (error) {
+                        console.log(error);
+                    }
+
+                    console.log('Message %s sent: %s', info.messageId, info.response);
+                });
 
                 // for home dashboard
                 const allUser = await User.find().sort({ timestamp: -1 });
@@ -3616,6 +3624,44 @@ app.get('/leave/:approval/:id', async function (req, res) {
 
                 await newNotification.save();
 
+                // Fetch subscriptions for the recipient user
+                const subscriptions = await Subscriptions.find({ user: nextApprovalRecipientId });
+
+                if (subscriptions) {
+                    // Map through the subscriptions to send notifications
+                    const sendNotificationPromises = subscriptions.map(async (subscription) => {
+                        const payload = JSON.stringify({
+                            "title": "Leave request",
+                            "body": "Leave request need your attention and approval.",
+                            "url": "https://www.lakmnsportal.com/leave/request/" + checkLeave._id,
+                            "vibrate": [100, 50, 100],
+                            "requireInteraction": true,
+                            "silent": false
+                        });
+
+                        const options = {
+                            vapidDetails: {
+                                subject: 'mailto:protech@lakmns.org', // Replace with your email
+                                publicKey: publicVapidKey, // Use actual public VAPID key here
+                                privateKey: privateVapidKey // Use actual private VAPID key here
+                            },
+                            TTL: 60 // Time to live for the notification (in seconds)
+                        };
+
+                        try {
+                            await webPush.sendNotification(subscription, payload, options);
+                            console.log('Push notification sent successfully to:', subscription.endpoint);
+                        } catch (error) {
+                            console.error('Error sending notification to:', subscription.endpoint, error);
+                        }
+                    });
+
+                    // Wait for all notifications to be sent
+                    await Promise.all(sendNotificationPromises);
+                } else {
+                    console.log('The user doesnt subscribe for push notifications');
+                }
+
                 // log activity
                 const activityUser = new Activity({
                     user: user._id,
@@ -3630,46 +3676,35 @@ app.get('/leave/:approval/:id', async function (req, res) {
                 // Fetch next approval recipient's email
                 const nextApprovalRecipientEmail = await User.findOne({ _id: nextApprovalRecipientId });
 
-                // Send email notification to the next recipient (if needed)
-                // Uncomment and customize this part if email notifications are required
-                /*
+                // send via email
+                const emailData = {
+                    content: 'The leave request has been approved by ' + user.fullname + ' with work ID ' + user.username + ' , please click the button above to open the leave details.',
+                    id: checkLeave._id,
+                };
+
+                const emailHTML = await new Promise((resolve, reject) => {
+                    app.render('email-leave', { emailData: emailData }, (err, html) => {
+                        if (err) reject(err);
+                        else resolve(html);
+                    });
+                });
+
+                console.log(emailHTML);
+
                 let mailOptions = {
                     from: 'protech@lakmns.org',
-                    to: nextApprovalRecipientEmail.email,
-                    subject: 'lakmnsportal - Approval Leave Follow up',
-                    html: `
-                      <html>
-                        <head>
-                          <style>
-                            body {
-                              font-family: 'Arial', sans-serif;
-                              background-color: #f4f4f4;
-                              color: #333;
-                            }
-                            p {
-                              margin-bottom: 20px;
-                            }
-                            a {
-                              color: #3498db;
-                            }
-                          </style>
-                        </head>
-                        <body>
-                          <h1>Leave Request</h1>
-                          <p>${user.fullname} has taken action on ${type} from ${startDate} until ${returnDate}.</p>
-                          <p>Please check the leave approval at <a href="http://localhost:5002/">lakmnsportal</a></p>
-                        </body>
-                      </html>
-                    `
+                    to: nextApprovalRecipientEmail,
+                    subject: 'lakmnsportal - Leave Request Approval',
+                    html: emailHTML,
                 };
-        
+
                 transporter.sendMail(mailOptions, (error, info) => {
                     if (error) {
-                        return console.log(error);
+                        console.log(error);
                     }
+
                     console.log('Message %s sent: %s', info.messageId, info.response);
                 });
-                */
 
                 console.log('The leave has been approved and notification sent to the next recipient.');
             } else {
@@ -3763,8 +3798,46 @@ app.get('/leave/:approval/:id', async function (req, res) {
                             message: 'Leave request has been denied.'
                         });
 
-                        // Uncomment the next line to save the notification
-                        // await newNotification.save();
+                        await newNotification.save();
+
+                        // Fetch subscriptions for the recipient user
+                        const subscriptions = await Subscriptions.find({ user: recipientId });
+
+                        if (subscriptions) {
+                            // Map through the subscriptions to send notifications
+                            const sendNotificationPromises = subscriptions.map(async (subscription) => {
+                                const payload = JSON.stringify({
+                                    "title": "Leave request",
+                                    "body": "Leave request has been denied.",
+                                    "url": "https://www.lakmnsportal.com/leave/request/" + checkLeave._id,
+                                    "vibrate": [100, 50, 100],
+                                    "requireInteraction": true,
+                                    "silent": false
+                                });
+
+                                const options = {
+                                    vapidDetails: {
+                                        subject: 'mailto:protech@lakmns.org', // Replace with your email
+                                        publicKey: publicVapidKey, // Use actual public VAPID key here
+                                        privateKey: privateVapidKey // Use actual private VAPID key here
+                                    },
+                                    TTL: 60 // Time to live for the notification (in seconds)
+                                };
+
+                                try {
+                                    await webPush.sendNotification(subscription, payload, options);
+                                    console.log('Push notification sent successfully to:', subscription.endpoint);
+                                } catch (error) {
+                                    console.error('Error sending notification to:', subscription.endpoint, error);
+                                }
+                            });
+
+                            // Wait for all notifications to be sent
+                            await Promise.all(sendNotificationPromises);
+                        } else {
+                            console.log('The user doesnt subscribe for push notifications');
+                        }
+
                     }
 
                     console.log('Done sending notifications!');
@@ -3785,46 +3858,35 @@ app.get('/leave/:approval/:id', async function (req, res) {
                 const sendEmail = users.map(user => user.email);
                 console.log(sendEmail);
 
-                // Sending email notifications (if needed)
-                // Uncomment and customize this part if email notifications are required
-                /*
+                // send via email
+                const emailData = {
+                    content: 'The leave request has been denied by ' + user.fullname + ' with work ID ' + user.username + ' , please click the button above to open the leave details.',
+                    id: checkLeave._id,
+                };
+
+                const emailHTML = await new Promise((resolve, reject) => {
+                    app.render('email-leave', { emailData: emailData }, (err, html) => {
+                        if (err) reject(err);
+                        else resolve(html);
+                    });
+                });
+
+                console.log(emailHTML);
+
                 let mailOptions = {
                     from: 'protech@lakmns.org',
                     to: sendEmail,
-                    subject: 'lakmnsportal - Leave Request Denied',
-                    html: `
-                      <html>
-                        <head>
-                          <style>
-                            body {
-                              font-family: 'Arial', sans-serif;
-                              background-color: #f4f4f4;
-                              color: #333;
-                            }
-                            p {
-                              margin-bottom: 20px;
-                            }
-                            a {
-                              color: #3498db;
-                            }
-                          </style>
-                        </head>
-                        <body>
-                          <h1>Leave Request Denied</h1>
-                          <p>The leave request by ${user.fullname} has been denied.</p>
-                          <p>Please check your notification at <a href="http://localhost:5002/">lakmnsportal</a></p>
-                        </body>
-                      </html>
-                    `
+                    subject: 'lakmnsportal - Leave Request Approval',
+                    html: emailHTML,
                 };
-            
+
                 transporter.sendMail(mailOptions, (error, info) => {
                     if (error) {
-                        return console.log(error);
+                        console.log(error);
                     }
+
                     console.log('Message %s sent: %s', info.messageId, info.response);
                 });
-                */
 
                 console.log('The leave has been denied.');
                 res.redirect('/leave/details/' + id);
@@ -3967,6 +4029,44 @@ app.get('/leave/:approval/:id', async function (req, res) {
             newNotification1.save();
             newNotification2.save();
 
+            // Fetch subscriptions for the recipient user
+            const subscriptions = await Subscriptions.find({ user: firstRecipientId });
+
+            if (subscriptions) {
+                // Map through the subscriptions to send notifications
+                const sendNotificationPromises = subscriptions.map(async (subscription) => {
+                    const payload = JSON.stringify({
+                        "title": "Leave request",
+                        "body": "Leave request has been denied.",
+                        "url": "https://www.lakmnsportal.com/leave/request/" + checkLeave._id,
+                        "vibrate": [100, 50, 100],
+                        "requireInteraction": true,
+                        "silent": false
+                    });
+
+                    const options = {
+                        vapidDetails: {
+                            subject: 'mailto:protech@lakmns.org', // Replace with your email
+                            publicKey: publicVapidKey, // Use actual public VAPID key here
+                            privateKey: privateVapidKey // Use actual private VAPID key here
+                        },
+                        TTL: 60 // Time to live for the notification (in seconds)
+                    };
+
+                    try {
+                        await webPush.sendNotification(subscription, payload, options);
+                        console.log('Push notification sent successfully to:', subscription.endpoint);
+                    } catch (error) {
+                        console.error('Error sending notification to:', subscription.endpoint, error);
+                    }
+                });
+
+                // Wait for all notifications to be sent
+                await Promise.all(sendNotificationPromises);
+            } else {
+                console.log('The user doesnt subscribe for push notifications');
+            }
+
             // activity
             const activityUser = new Activity({
                 user: user._id,
@@ -3982,44 +4082,35 @@ app.get('/leave/:approval/:id', async function (req, res) {
                 _id: firstRecipientId
             });
 
-            // turn off the email notications
-            // send email to the recipient
-            // let mailOptions = {
-            //     from: 'protech@lakmns.org',
-            //     to: firstlRecipientEmail.email,
-            //     subject: 'lakmnsportal - Approval Leave Follow up',
-            //     html: `
-            //       <html>
-            //         <head>
-            //           <style>
-            //             body {
-            //               font-family: 'Arial', sans-serif;
-            //               background-color: #f4f4f4;
-            //               color: #333;
-            //             }
-            //             p {
-            //               margin-bottom: 20px;
-            //             }
-            //             a {
-            //               color: #3498db;
-            //             }
-            //           </style>
-            //         </head>
-            //         <body>
-            //           <h1>Leave Request</h1>
-            //           <p>${user.fullname} has take action of ${type} from, ${startDate} until ${returnDate}.</p>
-            //           <p>Please do check the leave approval at <a href="http://localhost:5002/">lakmnsportal</a></p>
-            //         </body>
-            //       </html>
-            //     `
-            // };
+            // send via email
+            const emailData = {
+                content: 'The leave request has been cancelled by ' + user.fullname + ' with work ID ' + user.username + ' , please click the button above to open the leave details.',
+                id: checkLeave._id,
+            };
 
-            // transporter.sendMail(mailOptions, (error, info) => {
-            //     if (error) {
-            //         return console.log(error);
-            //     }
-            //     console.log('Message %s sent: %s', info.messageId, info.response);
-            // });
+            const emailHTML = await new Promise((resolve, reject) => {
+                app.render('email-leave', { emailData: emailData }, (err, html) => {
+                    if (err) reject(err);
+                    else resolve(html);
+                });
+            });
+
+            console.log(emailHTML);
+
+            let mailOptions = {
+                from: 'protech@lakmns.org',
+                to: firstRecipientEmail,
+                subject: 'lakmnsportal - Leave Request Approval',
+                html: emailHTML,
+            };
+
+            transporter.sendMail(mailOptions, (error, info) => {
+                if (error) {
+                    console.log(error);
+                }
+
+                console.log('Message %s sent: %s', info.messageId, info.response);
+            });
 
             console.log('The leave has been officially cancelled');
             res.redirect('/leave/details/' + id);
@@ -4169,7 +4260,7 @@ app.get('/leave/:approval/:id', async function (req, res) {
                     { new: true }
                 );
 
-                // // send noti
+                // send noti
                 const newNotification = new Notification({
                     sender: user._id,
                     recipient: new mongoose.Types.ObjectId(firstRecipientId),
@@ -4179,6 +4270,44 @@ app.get('/leave/:approval/:id', async function (req, res) {
                 });
 
                 newNotification.save();
+
+                // Fetch subscriptions for the recipient user
+                const subscriptions = await Subscriptions.find({ user: firstRecipientId });
+
+                if (subscriptions) {
+                    // Map through the subscriptions to send notifications
+                    const sendNotificationPromises = subscriptions.map(async (subscription) => {
+                        const payload = JSON.stringify({
+                            "title": "Leave request",
+                            "body": "Leave request has been approved",
+                            "url": "https://www.lakmnsportal.com/leave/request/" + checkLeave._id,
+                            "vibrate": [100, 50, 100],
+                            "requireInteraction": true,
+                            "silent": false
+                        });
+
+                        const options = {
+                            vapidDetails: {
+                                subject: 'mailto:protech@lakmns.org', // Replace with your email
+                                publicKey: publicVapidKey, // Use actual public VAPID key here
+                                privateKey: privateVapidKey // Use actual private VAPID key here
+                            },
+                            TTL: 60 // Time to live for the notification (in seconds)
+                        };
+
+                        try {
+                            await webPush.sendNotification(subscription, payload, options);
+                            console.log('Push notification sent successfully to:', subscription.endpoint);
+                        } catch (error) {
+                            console.error('Error sending notification to:', subscription.endpoint, error);
+                        }
+                    });
+
+                    // Wait for all notifications to be sent
+                    await Promise.all(sendNotificationPromises);
+                } else {
+                    console.log('The user doesnt subscribe for push notifications');
+                }
 
                 // activity
                 const activityUser = new Activity({
@@ -4195,42 +4324,35 @@ app.get('/leave/:approval/:id', async function (req, res) {
                     _id: firstRecipientId
                 });
 
-                // let mailOptions = {
-                //     from: 'protech@lakmns.org',
-                //     to: firstRecipientEmail.email,
-                //     subject: 'lakmnsportal - Approval Leave Follow up',
-                //     html: `
-                //       <html>
-                //         <head>
-                //           <style>
-                //             body {
-                //               font-family: 'Arial', sans-serif;
-                //               background-color: #f4f4f4;
-                //               color: #333;
-                //             }
-                //             p {
-                //               margin-bottom: 20px;
-                //             }
-                //             a {
-                //               color: #3498db;
-                //             }
-                //           </style>
-                //         </head>
-                //         <body>
-                //           <h1>Leave Request</h1>
-                //           <p>${user.fullname} has take action of ${type} from, ${startDate} until ${returnDate}.</p>
-                //           <p>Please do check the leave approval at <a href="http://localhost:5002/">lakmnsportal</a></p>
-                //         </body>
-                //       </html>
-                //     `
-                // };
+                // send via email
+                const emailData = {
+                    content: 'The leave request has been approved by the Human Resource, please click the button above to open the leave details.',
+                    id: checkLeave._id,
+                };
 
-                // transporter.sendMail(mailOptions, (error, info) => {
-                //     if (error) {
-                //         return console.log(error);
-                //     }
-                //     console.log('Message %s sent: %s', info.messageId, info.response);
-                // });
+                const emailHTML = await new Promise((resolve, reject) => {
+                    app.render('email-leave', { emailData: emailData }, (err, html) => {
+                        if (err) reject(err);
+                        else resolve(html);
+                    });
+                });
+
+                console.log(emailHTML);
+
+                let mailOptions = {
+                    from: 'protech@lakmns.org',
+                    to: firstRecipientEmail,
+                    subject: 'lakmnsportal - Leave Request Approval',
+                    html: emailHTML,
+                };
+
+                transporter.sendMail(mailOptions, (error, info) => {
+                    if (error) {
+                        console.log(error);
+                    }
+
+                    console.log('Message %s sent: %s', info.messageId, info.response);
+                });
 
                 console.log('The leave has been officially approved');
             } else {
@@ -5733,7 +5855,7 @@ app.post('/remarks/update/:id', isAuthenticated, async function (req, res) {
 app.get(
     '/patrol-unit/checkpoint-submit/:checkpointName/:longitude/:latitude',
     async function (req, res) {
-        const dateToday = dateLocal.getDate();
+        const dateToday = moment().utcOffset(8).toDate();
         const kualaLumpurTimeZoneOffset1 = 8; // Kuala Lumpur is UTC+8
         const now1 = moment().utcOffset(kualaLumpurTimeZoneOffset1 * 60); // Convert hours to minutes
 
@@ -8423,46 +8545,65 @@ app.get('/testing', isAuthenticated, async (req, res) => {
         .sort({ timestamp: -1 });
 
     if (user) {
+        const leaveId = '66bd5987ba0d83c5f088653e';
+        const roleToExclude = 'Deputy Chief Executive Officer';
 
-        const recipientId = '65e4309f904086cf0a7e2c34'; // The user's ID
-        const message = 'Hello world!'; // The message to be sent in the notification
-        const url = 'https://www.lakmnsportal.com'; // The URL that will open when the notification is clicked
+        const leave = await Leave.findOne({ _id: leaveId });
 
-        // Fetch subscriptions for the recipient user
-        const subscriptions = await Subscriptions.find({ user: recipientId });
+        // Filter out approvals with the specified role
+        const updatedApprovals = leave.approvals.filter(approval => approval.role !== roleToExclude);
 
-        // Map through the subscriptions to send notifications
-        const sendNotificationPromises = subscriptions.map(async (subscription) => {
-            const payload = JSON.stringify({
-                "title": "New Message",
-                "body": "You have received a new message from John.",
-                "url": "https://www.lakmnsportal.com/leave/request",
-                "vibrate": [100, 50, 100],
-                "requireInteraction": true,
-                "silent": false
-            });
+        // Update the leave document with the filtered approvals
+        const update = await Leave.updateOne(
+            { _id: leaveId },
+            { $set: { approvals: updatedApprovals } }
+        );
 
-            const options = {
-                vapidDetails: {
-                    subject: 'mailto:protech@lakmns.org', // Replace with your email
-                    publicKey: publicVapidKey, // Use actual public VAPID key here
-                    privateKey: privateVapidKey // Use actual private VAPID key here
-                },
-                TTL: 60 // Time to live for the notification (in seconds)
-            };
+        if (update) {
+            console.log('done update');
+        } else {
+            console.log('failed update');
+        }
 
-            try {
-                await webPush.sendNotification(subscription, payload, options);
-                console.log('Notification sent successfully to:', subscription.endpoint);
-            } catch (error) {
-                console.error('Error sending notification to:', subscription.endpoint, error);
-            }
-        });
+        // const recipientId = '65e4309f904086cf0a7e2c34'; // The user's ID
+        // const message = 'Hello world!'; // The message to be sent in the notification
+        // const url = 'https://www.lakmnsportal.com'; // The URL that will open when the notification is clicked
 
-        // Wait for all notifications to be sent
-        await Promise.all(sendNotificationPromises);
+        // // Fetch subscriptions for the recipient user
+        // const subscriptions = await Subscriptions.find({ user: recipientId });
 
-        console.log('Finished sending notifications.');
+        // // Map through the subscriptions to send notifications
+        // const sendNotificationPromises = subscriptions.map(async (subscription) => {
+        //     const payload = JSON.stringify({
+        //         "title": "New Message",
+        //         "body": "You have received a new message from John.",
+        //         "url": "https://www.lakmnsportal.com/leave/request",
+        //         "vibrate": [100, 50, 100],
+        //         "requireInteraction": true,
+        //         "silent": false
+        //     });
+
+        //     const options = {
+        //         vapidDetails: {
+        //             subject: 'mailto:protech@lakmns.org', // Replace with your email
+        //             publicKey: publicVapidKey, // Use actual public VAPID key here
+        //             privateKey: privateVapidKey // Use actual private VAPID key here
+        //         },
+        //         TTL: 60 // Time to live for the notification (in seconds)
+        //     };
+
+        //     try {
+        //         await webPush.sendNotification(subscription, payload, options);
+        //         console.log('Notification sent successfully to:', subscription.endpoint);
+        //     } catch (error) {
+        //         console.error('Error sending notification to:', subscription.endpoint, error);
+        //     }
+        // });
+
+        // // Wait for all notifications to be sent
+        // await Promise.all(sendNotificationPromises);
+
+        // console.log('Finished sending notifications.');
 
         res.render('testing', {
             user: user,
@@ -8651,6 +8792,44 @@ cron.schedule(
                             });
 
                             await newNotification.save();
+                        }
+
+                        // Fetch subscriptions for the recipient user
+                        const subscriptions = await Subscriptions.find({ user: recipientId });
+
+                        if (subscriptions) {
+                            // Map through the subscriptions to send notifications
+                            const sendNotificationPromises = subscriptions.map(async (subscription) => {
+                                const payload = JSON.stringify({
+                                    "title": "Leave request",
+                                    "body": "Leave request need your attention and approval.",
+                                    "url": "https://www.lakmnsportal.com/leave/request/" + currentLeave._id,
+                                    "vibrate": [100, 50, 100],
+                                    "requireInteraction": true,
+                                    "silent": false
+                                });
+
+                                const options = {
+                                    vapidDetails: {
+                                        subject: 'mailto:protech@lakmns.org', // Replace with your email
+                                        publicKey: publicVapidKey, // Use actual public VAPID key here
+                                        privateKey: privateVapidKey // Use actual private VAPID key here
+                                    },
+                                    TTL: 60 // Time to live for the notification (in seconds)
+                                };
+
+                                try {
+                                    await webPush.sendNotification(subscription, payload, options);
+                                    console.log('Push notification sent successfully to:', subscription.endpoint);
+                                } catch (error) {
+                                    console.error('Error sending notification to:', subscription.endpoint, error);
+                                }
+                            });
+
+                            // Wait for all notifications to be sent
+                            await Promise.all(sendNotificationPromises);
+                        } else {
+                            console.log('The user doesnt subscribe for push notifications');
                         }
 
                         console.log('Done sending notifications!');
