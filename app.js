@@ -2205,7 +2205,7 @@ app.post('/settings/change-password', isAuthenticated, async function (req, res)
         .sort({ timestamp: -1 });
     const info = await Info.findOne({ user: user._id });
     const sub = await Subscriptions.findOne({ user: user._id });
-    console.log(sub);
+        console.log(sub);
 
     if (user) {
 
@@ -4419,7 +4419,7 @@ app.get('/leave/:approval/:id', async function (req, res) {
 });
 
 //ATTENDANCE
-app.get('/attendance', restrictAccess, async function (req, res) {
+app.get('/attendance', async function (req, res) {
     const uniqueIdentifier = generateUniqueIdentifier();
 
     res.render('attendance', {
@@ -9172,7 +9172,7 @@ setOrCheckTodayHolidayOrWeekend = function () {
 };
 
 // GENERATES APPROVALS
-generateApprovals = async function (
+generateApprovals = function (
     user,
     headOfSection,
     headOfDepartment,
@@ -9646,116 +9646,6 @@ generateApprovals = async function (
                     status: 'pending',
                     comment: 'Leave request needs to be reviewed',
                     estimated: moment().utcOffset(8).add(3, 'days').toDate(),
-                    timestamp: ''
-                });
-            }
-        } else if (user.username === 'P549') {
-
-            const headofDivisionCurrent = await User.findOne({ section: 'Administration and Communication Division' });
-            const headofDepartmentCurrent = await User.findOne({ section: 'Management and Services Department' });
-
-            approvals.push({
-                recipient: user._id,
-                role: 'Staff',
-                status: 'submitted',
-                comment: 'Submitted leave request',
-                timestamp: moment().utcOffset(8).toDate(),
-                estimated: ''
-            });
-
-            if (assignee && assignee.length > 0) {
-                assignee.forEach(assigneeItem => {
-                    approvals.push({
-                        recipient: assigneeItem._id,
-                        role: 'Relief Staff',
-                        status: 'pending',
-                        comment: `Relief Staff for leave by ${assigneeItem.fullname}`,
-                        estimated: moment().utcOffset(8).add(1, 'day').toDate(),
-                        timestamp: ''
-                    });
-                });
-            }
-
-            approvals.push({
-                recipient: headofDivisionCurrent._id,
-                role: 'Head of Division',
-                status: 'pending',
-                comment: 'Leave request needs approval',
-                estimated: moment().utcOffset(8).add(1, 'day').toDate(),
-                timestamp: ''
-            });
-
-            approvals.push({
-                recipient: headofDepartmentCurrent._id,
-                role: 'Head of Department',
-                status: 'pending',
-                comment: 'Leave request needs approval',
-                estimated: moment().utcOffset(8).add(1, 'day').toDate(),
-                timestamp: ''
-            });
-
-            if (depChiefExec) {
-                approvals.push({
-                    recipient: depChiefExec._id,
-                    role: 'Deputy Chief Executive Officer',
-                    status: 'pending',
-                    comment: 'Leave request needs approval',
-                    estimated: moment().utcOffset(8).add(3, 'days').toDate(),
-                    timestamp: ''
-                });
-            }
-        } else if (user.username === 'P548') {
-
-            const headofDivisionCurrent = await User.findOne({ section: 'Administration and Communication Division' });
-            const headofDepartmentCurrent = await User.findOne({ section: 'Management and Services Department' });
-
-            approvals.push({
-                recipient: user._id,
-                role: 'Staff',
-                status: 'submitted',
-                comment: 'Submitted leave request',
-                timestamp: moment().utcOffset(8).toDate(),
-                estimated: ''
-            });
-
-            if (assignee && assignee.length > 0) {
-                assignee.forEach(assigneeItem => {
-                    approvals.push({
-                        recipient: assigneeItem._id,
-                        role: 'Relief Staff',
-                        status: 'pending',
-                        comment: `Relief Staff for leave by ${assigneeItem.fullname}`,
-                        estimated: moment().utcOffset(8).add(1, 'day').toDate(),
-                        timestamp: ''
-                    });
-                });
-            }
-
-            approvals.push({
-                recipient: headofDivisionCurrent._id,
-                role: 'Head of Division',
-                status: 'pending',
-                comment: 'Leave request needs approval',
-                estimated: moment().utcOffset(8).add(1, 'day').toDate(),
-                timestamp: ''
-            });
-
-            approvals.push({
-                recipient: headofDepartmentCurrent._id,
-                role: 'Head of Department',
-                status: 'pending',
-                comment: 'Leave request needs approval',
-                estimated: moment().utcOffset(8).add(1, 'day').toDate(),
-                timestamp: ''
-            });
-
-            if (chiefExec) {
-                approvals.push({
-                    recipient: chiefExec._id,
-                    role: 'Chief Executive Officer',
-                    status: 'pending',
-                    comment: 'Leave request needs approval',
-                    estimated: moment().utcOffset(8).add(2, 'days').toDate(),
                     timestamp: ''
                 });
             }
