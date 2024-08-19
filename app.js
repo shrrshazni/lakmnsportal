@@ -3151,6 +3151,23 @@ app
                 sendNoti.push(nextRecipient);
                 console.log(sendNoti);
 
+                let i = 0;
+                // set user id to be send
+                for (const approval of approvals) {
+                    const recipientId = approval.recipient;
+
+                    // Fetch the user by recipient ID
+                    const email = await User.findById(recipientId);
+
+                    // Check if the user is found and has an email
+                    if (email && user.email) {
+                        // Add the user's email to sendEmail
+                        sendEmail.push(email.email);
+                    }
+
+                    i++;
+                }
+
                 const leave = new Leave({
                     fileId: uuid,
                     user: user._id,
@@ -3265,13 +3282,19 @@ app
                     html: emailHTML,
                 };
 
-                transporter.sendMail(mailOptions, (error, info) => {
+                const sendEmailTo = transporter.sendMail(mailOptions, (error, info) => {
                     if (error) {
                         console.log(error);
                     }
 
                     console.log('Message %s sent: %s', info.messageId, info.response);
                 });
+
+                if (sendEmailTo) {
+                    console.log('Email sent successfully to:', sendEmail);
+                } else {
+                    console.log('Email sending failed');
+                }
 
                 // for home dashboard
                 const allUser = await User.find().sort({ timestamp: -1 });
@@ -3693,18 +3716,24 @@ app.get('/leave/:approval/:id', async function (req, res) {
 
                 let mailOptions = {
                     from: 'protech@lakmns.org',
-                    to: nextApprovalRecipientEmail,
+                    to: nextApprovalRecipientEmail.email,
                     subject: 'lakmnsportal - Leave Request Approval',
                     html: emailHTML,
                 };
 
-                transporter.sendMail(mailOptions, (error, info) => {
+                const sendEmailTo = transporter.sendMail(mailOptions, (error, info) => {
                     if (error) {
                         console.log(error);
                     }
 
                     console.log('Message %s sent: %s', info.messageId, info.response);
                 });
+
+                if (sendEmailTo) {
+                    console.log('Email sent successfully to:', sendEmail);
+                } else {
+                    console.log('Email sending failed');
+                }
 
                 console.log('The leave has been approved and notification sent to the next recipient.');
             } else {
@@ -3880,13 +3909,19 @@ app.get('/leave/:approval/:id', async function (req, res) {
                     html: emailHTML,
                 };
 
-                transporter.sendMail(mailOptions, (error, info) => {
+                const sendEmailTo = transporter.sendMail(mailOptions, (error, info) => {
                     if (error) {
                         console.log(error);
                     }
 
                     console.log('Message %s sent: %s', info.messageId, info.response);
                 });
+
+                if (sendEmailTo) {
+                    console.log('Email sent successfully to:', sendEmail);
+                } else {
+                    console.log('Email sending failed');
+                }
 
                 console.log('The leave has been denied.');
                 res.redirect('/leave/details/' + id);
@@ -4099,18 +4134,24 @@ app.get('/leave/:approval/:id', async function (req, res) {
 
             let mailOptions = {
                 from: 'protech@lakmns.org',
-                to: firstRecipientEmail,
+                to: firstRecipientEmail.email,
                 subject: 'lakmnsportal - Leave Request Approval',
                 html: emailHTML,
             };
 
-            transporter.sendMail(mailOptions, (error, info) => {
+            const sendEmailTo = transporter.sendMail(mailOptions, (error, info) => {
                 if (error) {
                     console.log(error);
                 }
 
                 console.log('Message %s sent: %s', info.messageId, info.response);
             });
+
+            if (sendEmailTo) {
+                console.log('Email sent successfully to:', sendEmail);
+            } else {
+                console.log('Email sending failed');
+            }
 
             console.log('The leave has been officially cancelled');
             res.redirect('/leave/details/' + id);
@@ -4341,18 +4382,24 @@ app.get('/leave/:approval/:id', async function (req, res) {
 
                 let mailOptions = {
                     from: 'protech@lakmns.org',
-                    to: firstRecipientEmail,
+                    to: firstRecipientEmail.email,
                     subject: 'lakmnsportal - Leave Request Approval',
                     html: emailHTML,
                 };
 
-                transporter.sendMail(mailOptions, (error, info) => {
+                const sendEmailTo = transporter.sendMail(mailOptions, (error, info) => {
                     if (error) {
                         console.log(error);
                     }
 
                     console.log('Message %s sent: %s', info.messageId, info.response);
                 });
+
+                if (sendEmailTo) {
+                    console.log('Email sent successfully to:', sendEmail);
+                } else {
+                    console.log('Email sending failed');
+                }
 
                 console.log('The leave has been officially approved');
             } else {
