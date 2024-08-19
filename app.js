@@ -2581,9 +2581,17 @@ app
             var approvals = [];
 
             if (type === 'Annual Leave') {
-                numberOfDays = calculateBusinessDays(startDate, returnDate);
+                if (user.isNonOfficeHour) {
+                    numberOfDays = moment(returnDate).diff(moment(startDate), 'days') + 1;
+                } else {
+                    numberOfDays = calculateBusinessDays(startDate, returnDate);
+                }
             } else if (type === 'Half Day Leave') {
-                numberOfDays = calculateBusinessDays(startDate, returnDate) / 2;
+                if (user.isNonOfficeHour) {
+                    numberOfDays = (moment(returnDate).diff(moment(startDate), 'days') + 1) / 2;
+                } else {
+                    numberOfDays = calculateBusinessDays(startDate, returnDate) / 2;
+                }
             } else if (type === 'Emergency Leave') {
                 numberOfDays = calculateBusinessDays(startDate, today);
             } else if (
@@ -2597,7 +2605,6 @@ app
                 type === 'Extended Sick Leave' ||
                 type === 'Sick Leave'
             ) {
-                // Convert milliseconds to days
                 numberOfDays = moment(returnDate).diff(moment(startDate), 'days') + 1;
             }
 
@@ -9371,26 +9378,6 @@ generateApprovals = function (
                     timestamp: ''
                 });
             }
-
-            if (adminHR) {
-                approvals.push({
-                    recipient: adminHR._id,
-                    role: 'Human Resource',
-                    status: 'pending',
-                    comment: 'Leave request needs to be reviewed',
-                    estimated: moment().utcOffset(8).add(3, 'days').toDate(),
-                    timestamp: ''
-                });
-            }
-        } else if (user.isChiefExec) {
-            approvals.push({
-                recipient: user._id,
-                role: 'Staff',
-                status: 'submitted',
-                comment: 'Submitted leave request',
-                timestamp: moment().utcOffset(8).toDate(),
-                estimated: ''
-            });
 
             if (adminHR) {
                 approvals.push({
