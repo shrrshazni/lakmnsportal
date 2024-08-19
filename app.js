@@ -2593,7 +2593,7 @@ app
                     numberOfDays = calculateBusinessDays(startDate, returnDate) / 2;
                 }
             } else if (type === 'Emergency Leave') {
-                numberOfDays = calculateBusinessDays(startDate, today);
+                numberOfDays = moment(returnDate).diff(moment(startDate), 'days') + 1
             } else if (
                 type === 'Marriage Leave' ||
                 type === 'Paternity Leave' ||
