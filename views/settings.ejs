@@ -229,26 +229,26 @@
                 }).then(res => res.json())
                 .then(data => {
                   if (data.isSubscribed) {
-                    textSub.textContent = 'You are already subscribed to notifications for this device.';
+                    textSub.textContent = 'Subscribed on this device.';
                     subscribeBtn.classList.add('d-none');
                   } else {
-                    textSub.textContent = 'You are not subscribed for this device. Click "Subscribe Now" to get notifications.';
+                    textSub.textContent = 'No push notification on this device.';
                     subscribeBtn.classList.remove('d-none');
                   }
                   return data.isSubscribed;
                 })
                 .catch(err => {
                   console.error('Error checking subscription:', err);
-                  textSub.textContent = 'Error checking subscription status.';
+                  textSub.textContent = 'Subscription status checking error.';
                   return false;
                 });
             } else {
-              textSub.textContent = 'No subscription found. Click "Subscribe Now" to subscribe.';
+              textSub.textContent = 'No subscription found.';
               subscribeBtn.classList.remove('d-none');
               return false;
             }
           } else {
-            textSub.textContent = 'Service Workers or Push Manager not supported.';
+            textSub.textContent = 'Push notifications not supported.';
             return false;
           }
         }

@@ -1002,35 +1002,40 @@ app.get('/', isAuthenticated, async function (req, res) {
     logTime('Unique Collections', startUniqueCollections);
 
     if (user) {
-        res.render('home', {
-            user: user,
-            notifications: notifications,
-            uuid: uuidv4(),
-            userTeamMembers: userTeamMembers,
-            otherTasks: otherTask,
-            otherActivities: otherActivities,
-            todayLeaves: todayLeaves,
-            weekLeaves: weekLeaves,
-            monthLeaves: monthLeaves,
-            filteredApprovalLeaves: filteredApprovalLeaves,
-            departments: departments,
-            sections: sections,
-            allUser: allUser,
-            allUserLeave: allUserLeave,
-            allLeave: allLeave,
-            allInfo: allInfo,
-            userLeave: userLeave,
-            leave: leave,
-            tasks: task,
-            files: file,
-            activities: activities,
-            selectedNames: '',
-            info: info,
-            show: '',
-            alert: '',
-            // addditional data
-            clientIp: req.clientIp
-        });
+        try {
+            res.render('home', {
+                user: user,
+                notifications: notifications,
+                uuid: uuidv4(),
+                userTeamMembers: userTeamMembers,
+                otherTasks: otherTask,
+                otherActivities: otherActivities,
+                todayLeaves: todayLeaves,
+                weekLeaves: weekLeaves,
+                monthLeaves: monthLeaves,
+                filteredApprovalLeaves: filteredApprovalLeaves,
+                departments: departments,
+                sections: sections,
+                allUser: allUser,
+                allUserLeave: allUserLeave,
+                allLeave: allLeave,
+                allInfo: allInfo,
+                userLeave: userLeave,
+                leave: leave,
+                tasks: task,
+                files: file,
+                activities: activities,
+                selectedNames: '',
+                info: info,
+                show: '',
+                alert: '',
+                // addditional data
+                clientIp: req.clientIp
+            });
+        } catch (renderError) {
+            console.error('Rendering Error:', renderError);
+            next(renderError);
+        }
     }
 
     logTime('Total', startTotal);
@@ -1069,19 +1074,24 @@ app.get('/staff/details/:id', isAuthenticated, async function (req, res) {
     });
 
     if (user) {
-        res.render('staff-details', {
-            user: user,
-            notifications: notifications,
-            // other data
-            otherUser: otherUser,
-            tasks: task,
-            files: file,
-            allUser: allUser,
-            activities: activities,
-            leave: leave,
-            attendance: attendance,
-            info: info
-        });
+        try {
+            res.render('staff-details', {
+                user: user,
+                notifications: notifications,
+                // other data
+                otherUser: otherUser,
+                tasks: task,
+                files: file,
+                allUser: allUser,
+                activities: activities,
+                leave: leave,
+                attendance: attendance,
+                info: info
+            });
+        } catch (renderError) {
+            console.error('Rendering Error:', renderError);
+            next(renderError);
+        }
     }
 });
 
@@ -1628,7 +1638,12 @@ app.get('/search/staff/auxiliary-police', isAuthenticated, async function (req, 
 
 //LANDINGPAGE
 app.get('/landing', async function (req, res) {
-    res.render('landing-page');
+    try {
+        res.render('landing-page');
+    } catch (renderError) {
+        console.error('Rendering Error:', renderError);
+        next(renderError);
+    }
 });
 
 //AUTH
@@ -1636,10 +1651,15 @@ app.get('/landing', async function (req, res) {
 //SIGNUP
 app
     .get('/sign-up', function (req, res) {
-        res.render('sign-up', {
-            show: '',
-            alert: ''
-        });
+        try {
+            res.render('sign-up', {
+                show: '',
+                alert: ''
+            });
+        } catch (renderError) {
+            console.error('Rendering Error:', renderError);
+            next(renderError);
+        }
     })
     .post('/sign-up', function (req, res) {
         // Check if the required fields are present in the request body
@@ -1722,17 +1742,22 @@ app
 //SIGNIN
 app
     .get('/sign-in', async function (req, res) {
-        res.render('sign-in', {
-            // validation
-            validationUsername: '',
-            validationPassword: '',
-            // input value
-            username: '',
-            password: '',
-            // toast
-            toastShow: '',
-            toastMsg: ''
-        });
+        try {
+            res.render('sign-in', {
+                // validation
+                validationUsername: '',
+                validationPassword: '',
+                // input value
+                username: '',
+                password: '',
+                // toast
+                toastShow: '',
+                toastMsg: ''
+            });
+        } catch (renderError) {
+            console.error('Rendering Error:', renderError);
+            next(renderError);
+        }
     })
     .post('/sign-in', async function (req, res) {
         const { username, password, rememberMe } = req.body;
@@ -1825,10 +1850,15 @@ app
 
 app
     .get('/forgot-password', async function (req, res) {
-        res.render('forgot-password', {
-            show: '',
-            alert: ''
-        });
+        try {
+            res.render('forgot-password', {
+                show: '',
+                alert: ''
+            });
+        } catch (renderError) {
+            console.error('Rendering Error:', renderError);
+            next(renderError);
+        }
     })
     .post('/forgot-password', async function (req, res) {
         const email = req.body.email;
@@ -1879,17 +1909,27 @@ app
                 console.log('Message %s sent: %s', info.messageId, info.response);
             });
 
-            res.render('forgot-password', {
-                show: 'show',
-                alert:
-                    'We have seen reset password link and 5 alpha-numeric code to your email, please do check it.'
-            });
+            try {
+                res.render('forgot-password', {
+                    show: 'show',
+                    alert:
+                        'We have seen reset password link and 5 alpha-numeric code to your email, please do check it.'
+                });
+            } catch (renderError) {
+                console.error('Rendering Error:', renderError);
+                next(renderError);
+            }
         } else {
-            res.render('forgot-password', {
-                show: 'show',
-                alert:
-                    'The email address you have entered are not registered in lakmnsportal, please do check your email again.'
-            });
+            try {
+                res.render('forgot-password', {
+                    show: 'show',
+                    alert:
+                        'The email address you have entered are not registered in lakmnsportal, please do check your email again.'
+                });
+            } catch (renderError) {
+                console.error('Rendering Error:', renderError);
+                next(renderError);
+            }
         }
     });
 
@@ -1897,11 +1937,16 @@ app.get('/reset-password/:id', async function (req, res) {
     const id = req.params.id;
     console.log(id);
 
-    res.render('reset-password', {
-        id: id,
-        show: '',
-        alert: ''
-    });
+    try {
+        res.render('reset-password', {
+            id: id,
+            show: '',
+            alert: ''
+        });
+    } catch (renderError) {
+        console.error('Rendering Error:', renderError);
+        next(renderError);
+    }
 
 }).post('/reset-password/:id', async function (req, res) {
     const id = req.params.id;
@@ -1912,32 +1957,45 @@ app.get('/reset-password/:id', async function (req, res) {
         const updatePassword = await user.save();
 
         if (updatePassword) {
-
-            res.render('sign-in', {
-                validationUsername: '',
-                validationPassword: '',
-                // input value
-                username: '',
-                password: '',
-                // toast
-                toastShow: 'show',
-                toastMsg: 'Reset password successful!'
-            });
+            try {
+                res.render('sign-in', {
+                    validationUsername: '',
+                    validationPassword: '',
+                    // input value
+                    username: '',
+                    password: '',
+                    // toast
+                    toastShow: 'show',
+                    toastMsg: 'Reset password successful!'
+                });
+            } catch (renderError) {
+                console.error('Rendering Error:', renderError);
+                next(renderError);
+            }
 
         } else {
-
+            try {
+                res.render('reset-password', {
+                    id: id,
+                    show: 'show',
+                    alert: 'Update password failed!'
+                });
+            } catch (renderError) {
+                console.error('Rendering Error:', renderError);
+                next(renderError);
+            }
+        }
+    } else {
+        try {
             res.render('reset-password', {
                 id: id,
                 show: 'show',
-                alert: 'Update password failed!'
+                alert: 'New password and confirm password is not a match!'
             });
+        } catch (renderError) {
+            console.error('Rendering Error:', renderError);
+            next(renderError);
         }
-    } else {
-        res.render('reset-password', {
-            id: id,
-            show: 'show',
-            alert: 'New password and confirm password is not a match!'
-        });
     }
 
 
@@ -2015,19 +2073,23 @@ app.get('/profile', isAuthenticated, async function (req, res) {
     if (user && update) {
         // find info
         const info = await Info.findOne({ user: user._id });
-
-        res.render('profile', {
-            user: user,
-            notifications: notifications,
-            leave: leave,
-            userLeave: userLeave,
-            activities: activities,
-            info: info,
-            today: date,
-            allUser: allUser,
-            files: file,
-            attendance: attendance
-        });
+        try {
+            res.render('profile', {
+                user: user,
+                notifications: notifications,
+                leave: leave,
+                userLeave: userLeave,
+                activities: activities,
+                info: info,
+                today: date,
+                allUser: allUser,
+                files: file,
+                attendance: attendance
+            });
+        } catch (renderError) {
+            console.error('Rendering Error:', renderError);
+            next(renderError);
+        }
     }
 });
 
@@ -2047,15 +2109,20 @@ app
         console.log(sub);
 
         if (user) {
-            res.render('settings', {
-                user: user,
-                uuid: uuidv4(),
-                notifications: notifications,
-                info: info,
-                subscriptions: sub,
-                show: '',
-                alert: ''
-            });
+            try {
+                res.render('settings', {
+                    user: user,
+                    uuid: uuidv4(),
+                    notifications: notifications,
+                    info: info,
+                    subscriptions: sub,
+                    show: '',
+                    alert: ''
+                });
+            } catch (renderError) {
+                console.error('Rendering Error:', renderError);
+                next(renderError);
+            }
         }
     })
     .post('/settings', isAuthenticated, async function (req, res) {
@@ -2107,15 +2174,20 @@ app
             console.log('Update fields:', updateFields);
 
             if (Object.keys(updateFields).length === 0) {
-                res.render('settings', {
-                    user: user,
-                    uuid: uuidv4(),
-                    notifications: notifications,
-                    info: info,
-                    subcriptions: sub,
-                    show: 'show',
-                    alert: 'Update unsuccessful, there is no input to be updated'
-                });
+                try {
+                    res.render('settings', {
+                        user: user,
+                        uuid: uuidv4(),
+                        notifications: notifications,
+                        info: info,
+                        subcriptions: sub,
+                        show: 'show',
+                        alert: 'Update unsuccessful, there is no input to be updated'
+                    });
+                } catch (renderError) {
+                    console.error('Rendering Error:', renderError);
+                    next(renderError);
+                }
             } else {
                 // Check if email already exists
                 if (updateFields.email) {
@@ -2168,26 +2240,34 @@ app
 
                     await activityUser.save();
                     console.log('New activity submitted:', activityUser);
-
-                    res.render('settings', {
-                        user: user,
-                        uuid: uuidv4(),
-                        notifications: notifications,
-                        info: info,
-                        subscriptions: sub,
-                        show: 'show',
-                        alert: 'Update successful. Please check your profile to see the changes.'
-                    });
+                    try {
+                        res.render('settings', {
+                            user: user,
+                            uuid: uuidv4(),
+                            notifications: notifications,
+                            info: info,
+                            subscriptions: sub,
+                            show: 'show',
+                            alert: 'Update successful. Please check your profile to see the changes.'
+                        });
+                    } catch (renderError) {
+                        console.error('Rendering Error:', renderError);
+                        next(renderError);
+                    }
                 } else {
-                    console.log('Update unsuccessful');
-                    res.render('settings', {
-                        user: user,
-                        uuid: uuidv4(),
-                        notifications: notifications,
-                        info: info,
-                        show: 'show',
-                        alert: 'Update unsuccessful. Please check your profile to see the changes.'
-                    });
+                    console.log('Update unsuccessful'); try {
+                        res.render('settings', {
+                            user: user,
+                            uuid: uuidv4(),
+                            notifications: notifications,
+                            info: info,
+                            show: 'show',
+                            alert: 'Update unsuccessful. Please check your profile to see the changes.'
+                        });
+                    } catch (renderError) {
+                        console.error('Rendering Error:', renderError);
+                        next(renderError);
+                    }
                 }
             }
         }
@@ -2213,32 +2293,23 @@ app.post('/settings/change-password', isAuthenticated, async function (req, res)
         const newPasswordMatch = req.body.newPassword === req.body.newPassword2;
 
         if (isPasswordValid.user === false) {
-            res.render('settings', {
-                user: user,
-                uuid: uuidv4(),
-                notifications: notifications,
-                info: info,
-                subscriptions: sub,
-                show: 'show',
-                alert:
-                    'Update unsuccessful, maybe you entered a wrong current password'
-            });
+            try {
+                res.render('settings', {
+                    user: user,
+                    uuid: uuidv4(),
+                    notifications: notifications,
+                    info: info,
+                    subscriptions: sub,
+                    show: 'show',
+                    alert:
+                        'Update unsuccessful, maybe you entered a wrong current password'
+                });
+            } catch (renderError) {
+                console.error('Rendering Error:', renderError);
+                next(renderError);
+            }
         } else if (newPasswordMatch === false) {
-            res.render('settings', {
-                user: user,
-                uuid: uuidv4(),
-                notifications: notifications,
-                subscriptions: sub,
-                info: info,
-                show: 'show',
-                alert:
-                    'Update unsuccessful, new password and confirm pasword are not match'
-            });
-        } else {
-            await user.setPassword(req.body.newPassword);
-            const updatePassword = await user.save();
-
-            if (updatePassword) {
+            try {
                 res.render('settings', {
                     user: user,
                     uuid: uuidv4(),
@@ -2246,8 +2317,32 @@ app.post('/settings/change-password', isAuthenticated, async function (req, res)
                     subscriptions: sub,
                     info: info,
                     show: 'show',
-                    alert: 'Update successful on new password, you can use it onwards'
+                    alert:
+                        'Update unsuccessful, new password and confirm pasword are not match'
                 });
+            } catch (renderError) {
+                console.error('Rendering Error:', renderError);
+                next(renderError);
+            }
+        } else {
+            await user.setPassword(req.body.newPassword);
+            const updatePassword = await user.save();
+
+            if (updatePassword) {
+                try {
+                    res.render('settings', {
+                        user: user,
+                        uuid: uuidv4(),
+                        notifications: notifications,
+                        subscriptions: sub,
+                        info: info,
+                        show: 'show',
+                        alert: 'Update successful on new password, you can use it onwards'
+                    });
+                } catch (renderError) {
+                    console.error('Rendering Error:', renderError);
+                    next(renderError);
+                }
             }
         }
 
@@ -2355,16 +2450,20 @@ app.get('/info/:type/:method/:id', async function (req, res) {
 
                 console.log('Message %s sent: %s', info.messageId, info.response);
             });
-
-            res.render('settings', {
-                user: user,
-                uuid: uuidv4(),
-                notifications: notifications,
-                subscriptions: sub,
-                info: info,
-                show: 'show',
-                alert: 'We already send email verification towards your email'
-            });
+            try {
+                res.render('settings', {
+                    user: user,
+                    uuid: uuidv4(),
+                    notifications: notifications,
+                    subscriptions: sub,
+                    info: info,
+                    show: 'show',
+                    alert: 'We already send email verification towards your email'
+                });
+            } catch (renderError) {
+                console.error('Rendering Error:', renderError);
+                next(renderError);
+            }
         } else if (type === 'email' && method === 'confirm') {
             const updateEmail = await Info.findOneAndUpdate(
                 {
@@ -2409,11 +2508,16 @@ app.get('/guide', isAuthenticated, async function (req, res) {
         .sort({ timestamp: -1 });
 
     if (user) {
-        res.render('guide', {
-            user: user,
-            notifications: notifications,
-            uuid: uuidv4()
-        });
+        try {
+            res.render('guide', {
+                user: user,
+                notifications: notifications,
+                uuid: uuidv4()
+            });
+        } catch (renderError) {
+            console.error('Rendering Error:', renderError);
+            next(renderError);
+        }
     }
 });
 
@@ -2429,11 +2533,16 @@ app.get('/changelog', isAuthenticated, async function (req, res) {
         .sort({ timestamp: -1 });
 
     if (user) {
-        res.render('changelog', {
-            user: user,
-            notifications: notifications,
-            uuid: uuidv4()
-        });
+        try {
+            res.render('changelog', {
+                user: user,
+                notifications: notifications,
+                uuid: uuidv4()
+            });
+        } catch (renderError) {
+            console.error('Rendering Error:', renderError);
+            next(renderError);
+        }
     }
 });
 
@@ -2448,11 +2557,15 @@ app.get('/calendar', isAuthenticated, async function (req, res) {
     })
         .populate('sender')
         .sort({ timestamp: -1 });
-
-    res.render('calendar', {
-        user: user,
-        notifications: notifications
-    });
+    try {
+        res.render('calendar', {
+            user: user,
+            notifications: notifications
+        });
+    } catch (renderError) {
+        console.error('Rendering Error:', renderError);
+        next(renderError);
+    }
 });
 
 //LEAVE
@@ -2473,30 +2586,35 @@ app
                 .populate('user')
                 .exec();
 
-            res.render('leave-request', {
-                user: user,
-                uuid: uuidv4(),
-                notifications: notifications,
-                leave: currentLeave,
-                userLeave: userLeave,
-                selectedNames: '',
-                selectedSupervisors: '',
-                // data
-                type: '',
-                startDate: '',
-                returnDate: '',
-                purpose: '',
-                // validation
-                validationType: '',
-                validationStartDate: '',
-                validationReturnDate: '',
-                validitionPurpose: '',
-                startDateFeedback: 'Please select a start date',
-                returnDateFeedback: 'Please select a return date',
-                // toast
-                show: '',
-                alert: ''
-            });
+            try {
+                res.render('leave-request', {
+                    user: user,
+                    uuid: uuidv4(),
+                    notifications: notifications,
+                    leave: currentLeave,
+                    userLeave: userLeave,
+                    selectedNames: '',
+                    selectedSupervisors: '',
+                    // data
+                    type: '',
+                    startDate: '',
+                    returnDate: '',
+                    purpose: '',
+                    // validation
+                    validationType: '',
+                    validationStartDate: '',
+                    validationReturnDate: '',
+                    validitionPurpose: '',
+                    startDateFeedback: 'Please select a start date',
+                    returnDateFeedback: 'Please select a return date',
+                    // toast
+                    show: '',
+                    alert: ''
+                });
+            } catch (renderError) {
+                console.error('Rendering Error:', renderError);
+                next(renderError);
+            }
         }
     })
     .post('/leave/request', isAuthenticated, async function (req, res) {
@@ -3109,56 +3227,65 @@ app
                         const filePath = __dirname + '/public/uploads/' + deletedFile.name;
                         await fs.unlink(filePath);
                     }
-
-                    res.render('leave-request', {
-                        user: user,
-                        uuid: uuid,
-                        notifications: notifications,
-                        leave: leave,
-                        userLeave: userLeave,
-                        selectedNames: '',
-                        selectedSupervisors: '',
-                        // data
-                        type: '',
-                        startDate: startDate,
-                        returnDate: returnDate,
-                        purpose: purpose,
-                        // validation
-                        validationType: 'is-invalid',
-                        validationStartDate: 'is-invalid',
-                        validationReturnDate: 'is-invalid',
-                        validationPurpose: '',
-                        startDateFeedback: 'Please enter a valid start date',
-                        returnDateFeedback: 'Please select valid return date',
-                        // toast
-                        show: renderDataError.show,
-                        alert: renderDataError.alert
-                    });
+                    try {
+                        res.render('leave-request', {
+                            user: user,
+                            uuid: uuid,
+                            notifications: notifications,
+                            leave: leave,
+                            userLeave: userLeave,
+                            selectedNames: '',
+                            selectedSupervisors: '',
+                            // data
+                            type: '',
+                            startDate: startDate,
+                            returnDate: returnDate,
+                            purpose: purpose,
+                            // validation
+                            validationType: 'is-invalid',
+                            validationStartDate: 'is-invalid',
+                            validationReturnDate: 'is-invalid',
+                            validationPurpose: '',
+                            startDateFeedback: 'Please enter a valid start date',
+                            returnDateFeedback: 'Please select valid return date',
+                            // toast
+                            show: renderDataError.show,
+                            alert: renderDataError.alert
+                        });
+                    } catch (renderError) {
+                        console.error('Rendering Error:', renderError);
+                        next(renderError);
+                    }
                 } else {
-                    res.render('leave-request', {
-                        user: user,
-                        uuid: uuid,
-                        notifications: notifications,
-                        leave: leave,
-                        userLeave: userLeave,
-                        selectedNames: '',
-                        selectedSupervisors: '',
-                        // data
-                        type: '',
-                        startDate: startDate,
-                        returnDate: returnDate,
-                        purpose: purpose,
-                        // validation
-                        validationType: 'is-invalid',
-                        validationStartDate: '',
-                        validationReturnDate: '',
-                        validationPurpose: '',
-                        startDateFeedback: 'Please select a start date',
-                        returnDateFeedback: 'Please select a return date',
-                        // toast
-                        show: renderDataError.show,
-                        alert: renderDataError.alert
-                    });
+                    try {
+                        res.render('leave-request', {
+                            user: user,
+                            uuid: uuid,
+                            notifications: notifications,
+                            leave: leave,
+                            userLeave: userLeave,
+                            selectedNames: '',
+                            selectedSupervisors: '',
+                            // data
+                            type: '',
+                            startDate: startDate,
+                            returnDate: returnDate,
+                            purpose: purpose,
+                            // validation
+                            validationType: 'is-invalid',
+                            validationStartDate: '',
+                            validationReturnDate: '',
+                            validationPurpose: '',
+                            startDateFeedback: 'Please select a start date',
+                            returnDateFeedback: 'Please select a return date',
+                            // toast
+                            show: renderDataError.show,
+                            alert: renderDataError.alert
+                        });
+                    } catch (renderError) {
+                        console.error('Rendering Error:', renderError);
+                        next(renderError);
+                    }
                 }
             } else {
                 const adminUsers = await User.find({
@@ -3513,7 +3640,12 @@ app
                     clientIp: req.clientIp
                 };
 
-                res.render('home', renderDataSuccess);
+                try {
+                    res.render('home', renderDataSuccess);
+                } catch (renderError) {
+                    console.error('Rendering Error:', renderError);
+                    next(renderError);
+                }
             }
         }
     });
@@ -3536,13 +3668,17 @@ app.get('/leave/history', isAuthenticated, async function (req, res) {
         const userLeave = await UserLeave.findOne({ user: user._id })
             .populate('user')
             .exec();
-
-        res.render('leave-history', {
-            user: user,
-            notifications: notifications,
-            leave: leave,
-            userLeave: userLeave
-        });
+        try {
+            res.render('leave-history', {
+                user: user,
+                notifications: notifications,
+                leave: leave,
+                userLeave: userLeave
+            });
+        } catch (renderError) {
+            console.error('Rendering Error:', renderError);
+            next(renderError);
+        }
     }
 });
 
@@ -3593,18 +3729,22 @@ app.get('/leave/details/:id', isAuthenticated, async function (req, res) {
 
         //find file from leave
         const file = await File.find({ uuid: leave.fileId });
-
-        res.render('leave-details', {
-            user: user,
-            notifications: notifications,
-            userReq: userReq,
-            leave: leave,
-            approvals: leave.approvals,
-            userLeave: userLeave,
-            files: file,
-            // data
-            leaveDays: daysDifference
-        });
+        try {
+            res.render('leave-details', {
+                user: user,
+                notifications: notifications,
+                userReq: userReq,
+                leave: leave,
+                approvals: leave.approvals,
+                userLeave: userLeave,
+                files: file,
+                // data
+                leaveDays: daysDifference
+            });
+        } catch (renderError) {
+            console.error('Rendering Error:', renderError);
+            next(renderError);
+        }
     }
 });
 
@@ -4439,13 +4579,17 @@ app.get('/leave/:approval/:id', async function (req, res) {
 });
 
 //ATTENDANCE
-app.get('/attendance', async function (req, res) {
+app.get('/attendance', restrictAccess, async function (req, res) {
     const uniqueIdentifier = generateUniqueIdentifier();
-
-    res.render('attendance', {
-        uuid: uuidv4(),
-        uniqueIdentifier: uniqueIdentifier
-    });
+    try {
+        res.render('attendance', {
+            uuid: uuidv4(),
+            uniqueIdentifier: uniqueIdentifier
+        });
+    } catch (renderError) {
+        console.error('Rendering Error:', renderError);
+        next(renderError);
+    }
 });
 
 // UPDATE REMARKS ATTENDANCE
@@ -4531,11 +4675,16 @@ app.get('/scan-qr', isAuthenticated, async function (req, res) {
         .sort({ timestamp: -1 });
 
     if (user) {
-        res.render('scan', {
-            user: user,
-            notifications: notifications,
-            uuid: uuidv4()
-        });
+        try {
+            res.render('scan', {
+                user: user,
+                notifications: notifications,
+                uuid: uuidv4()
+            });
+        } catch (renderError) {
+            console.error('Rendering Error:', renderError);
+            next(renderError);
+        }
     }
 });
 
@@ -4551,11 +4700,16 @@ app.get('/attendance/today/department/section', isAuthenticated, async function 
         .sort({ timestamp: -1 });
 
     if (user) {
-        res.render('attendance-records', {
-            user: user,
-            notifications: notifications,
-            uuid: uuidv4()
-        });
+        try {
+            res.render('attendance-records', {
+                user: user,
+                notifications: notifications,
+                uuid: uuidv4()
+            });
+        } catch (renderError) {
+            console.error('Rendering Error:', renderError);
+            next(renderError);
+        }
     }
 }
 );
@@ -4589,17 +4743,22 @@ app.get('/human-resource/staff-members/overview', isAuthenticated, async functio
     const sections = Array.from(uniqueSection);
 
     if (user) {
-        res.render('hr-staffmembers-overview', {
-            user: user,
-            notifications: notifications,
-            uuid: uuidv4(),
-            departments: departments,
-            sections: sections,
-            // all data
-            allUser: allUser,
-            show: '',
-            alert: ''
-        });
+        try {
+            res.render('hr-staffmembers-overview', {
+                user: user,
+                notifications: notifications,
+                uuid: uuidv4(),
+                departments: departments,
+                sections: sections,
+                // all data
+                allUser: allUser,
+                show: '',
+                alert: ''
+            });
+        } catch (renderError) {
+            console.error('Rendering Error:', renderError);
+            next(renderError);
+        }
     }
 }
 );
@@ -4616,14 +4775,18 @@ app.get('/human-resource/staff-members/overview/update/:id', isAuthenticated, as
 
     if (user) {
         const otherUser = await User.findOne({ _id: userId });
-
-        res.render('hr-staffmembers-overview-update', {
-            user: user,
-            notifications: notifications,
-            uuid: uuidv4(),
-            // data
-            otherUser: otherUser
-        });
+        try {
+            res.render('hr-staffmembers-overview-update', {
+                user: user,
+                notifications: notifications,
+                uuid: uuidv4(),
+                // data
+                otherUser: otherUser
+            });
+        } catch (renderError) {
+            console.error('Rendering Error:', renderError);
+            next(renderError);
+        }
     }
 }).post('/human-resource/staff-members/overview/update/:id', isAuthenticated, async function (req, res) {
     const userId = req.params.id;
@@ -4706,14 +4869,19 @@ app
         }).populate('sender');
 
         if (user) {
-            res.render('hr-staffmembers-addstaff', {
-                user: user,
-                notifications: notifications,
-                uuid: uuidv4(),
-                // all data
-                show: '',
-                alert: ''
-            });
+            try {
+                res.render('hr-staffmembers-addstaff', {
+                    user: user,
+                    notifications: notifications,
+                    uuid: uuidv4(),
+                    // all data
+                    show: '',
+                    alert: ''
+                });
+            } catch (renderError) {
+                console.error('Rendering Error:', renderError);
+                next(renderError);
+            }
         }
     }
     )
@@ -4756,13 +4924,18 @@ app
                 !req.body.department ||
                 !req.body.gender
             ) {
-                res.render('hr-staffmembers-addstaff', {
-                    user: user1,
-                    notifications: notifications,
-                    uuid: uuidv4(),
-                    show: 'show',
-                    alert: 'Sign up unsuccessful'
-                });
+                try {
+                    res.render('hr-staffmembers-addstaff', {
+                        user: user1,
+                        notifications: notifications,
+                        uuid: uuidv4(),
+                        show: 'show',
+                        alert: 'Sign up unsuccessful'
+                    });
+                } catch (renderError) {
+                    console.error('Rendering Error:', renderError);
+                    next(renderError);
+                }
             }
 
             // Process boolean fields
@@ -4890,14 +5063,19 @@ app.get('/human-resource/leave/overview', isAuthenticated, async function (req, 
     const allUser = await User.find();
 
     if (user) {
-        res.render('hr-leave-overview', {
-            user: user,
-            notifications: notifications,
-            uuid: uuidv4(),
-            // all data
-            allLeave: allLeave,
-            allUser: allUser
-        });
+        try {
+            res.render('hr-leave-overview', {
+                user: user,
+                notifications: notifications,
+                uuid: uuidv4(),
+                // all data
+                allLeave: allLeave,
+                allUser: allUser
+            });
+        } catch (renderError) {
+            console.error('Rendering Error:', renderError);
+            next(renderError);
+        }
     }
 }
 );
@@ -4914,17 +5092,21 @@ app.get('/human-resource/leave/balances', isAuthenticated, async function (req, 
     const allUser = await User.find();
 
     if (user) {
-
-        res.render('hr-leave-balances', {
-            user: user,
-            notifications: notifications,
-            uuid: uuidv4(),
-            // all data
-            allUserLeave: allUserLeave,
-            allUser: allUser,
-            show: '',
-            alert: ''
-        });
+        try {
+            res.render('hr-leave-balances', {
+                user: user,
+                notifications: notifications,
+                uuid: uuidv4(),
+                // all data
+                allUserLeave: allUserLeave,
+                allUser: allUser,
+                show: '',
+                alert: ''
+            });
+        } catch (renderError) {
+            console.error('Rendering Error:', renderError);
+            next(renderError);
+        }
     }
 }
 );
@@ -4943,13 +5125,17 @@ app.get('/human-resource/leave/balances/update/:id', isAuthenticated, async func
         const userLeave = await UserLeave.findOne({ user: checkUser })
             .populate('user')
             .exec();
-
-        res.render('hr-leave-balances-update', {
-            user: user,
-            notifications: notifications,
-            uuid: uuidv4(),
-            userLeave: userLeave,
-        });
+        try {
+            res.render('hr-leave-balances-update', {
+                user: user,
+                notifications: notifications,
+                uuid: uuidv4(),
+                userLeave: userLeave,
+            });
+        } catch (renderError) {
+            console.error('Rendering Error:', renderError);
+            next(renderError);
+        }
     }
 }).post('/human-resource/leave/balances/update/:id', isAuthenticated, async function (req, res) {
     const username = req.user.username;
@@ -5030,15 +5216,20 @@ app.get('/human-resource/leave/balances/update/:id', isAuthenticated, async func
 
         res.redirect('/human-resource/leave/balances/update/' + userId);
     } catch (err) {
-        res.render('hr-leave-balances', {
-            user: user,
-            notifications: notifications,
-            uuid: uuidv4(),
-            allUserLeave: allUserLeave,
-            allUser: allUser,
-            show: 'show',
-            alert: userLeave.user.fullname + ' leave balances update failed!'
-        });
+        try {
+            res.render('hr-leave-balances', {
+                user: user,
+                notifications: notifications,
+                uuid: uuidv4(),
+                allUserLeave: allUserLeave,
+                allUser: allUser,
+                show: 'show',
+                alert: userLeave.user.fullname + ' leave balances update failed!'
+            });
+        } catch (renderError) {
+            console.error('Rendering Error:', renderError);
+            next(renderError);
+        }
     }
 });
 
@@ -5061,14 +5252,18 @@ app.get('/human-resource/attendance/overview', isAuthenticated, async function (
         }).sort({ timestamp: -1 });
 
         const allUser = await User.find();
-
-        res.render('hr-attendance-overview', {
-            user: user,
-            notifications: notifications,
-            uuid: uuidv4(),
-            allUser: allUser,
-            attendance: attendance
-        });
+        try {
+            res.render('hr-attendance-overview', {
+                user: user,
+                notifications: notifications,
+                uuid: uuidv4(),
+                allUser: allUser,
+                attendance: attendance
+            });
+        } catch (renderError) {
+            console.error('Rendering Error:', renderError);
+            next(renderError);
+        }
     }
 }
 );
@@ -5089,11 +5284,16 @@ app.get('/procurement/tender/register', isAuthenticated, async function (req, re
         .sort({ timestamp: -1 });
 
     if (user) {
-        res.render('procurement-tender-register', {
-            user: user,
-            notifications: notifications,
-            uuid: uuidv4(),
-        })
+        try {
+            res.render('procurement-tender-register', {
+                user: user,
+                notifications: notifications,
+                uuid: uuidv4(),
+            });
+        } catch (renderError) {
+            console.error('Rendering Error:', renderError);
+            next(renderError);
+        }
     }
 });
 
@@ -5109,11 +5309,16 @@ app.get('/procurement/tender/register', isAuthenticated, async function (req, re
         .sort({ timestamp: -1 });
 
     if (user) {
-        res.render('procurement-tender-list', {
-            user: user,
-            notifications: notifications,
-            uuid: uuidv4(),
-        })
+        try {
+            res.render('procurement-tender-list', {
+                user: user,
+                notifications: notifications,
+                uuid: uuidv4(),
+            });
+        } catch (renderError) {
+            console.error('Rendering Error:', renderError);
+            next(renderError);
+        }
     }
 });
 
@@ -5131,13 +5336,18 @@ app.get('/auxiliary-police/duty-handover/submit', isAuthenticated, async functio
         .sort({ timestamp: -1 });
 
     if (user) {
-        res.render('auxiliarypolice-dutyhandover-submit', {
-            user: user,
-            notifications: notifications,
-            uuid: uuidv4(),
-            show: '',
-            alert: '',
-        });
+        try {
+            res.render('auxiliarypolice-dutyhandover-submit', {
+                user: user,
+                notifications: notifications,
+                uuid: uuidv4(),
+                show: '',
+                alert: '',
+            });
+        } catch (renderError) {
+            console.error('Rendering Error:', renderError);
+            next(renderError);
+        }
     }
 
 }).post('/auxiliary-police/duty-handover/submit', isAuthenticated, async function (req, res) {
@@ -5168,14 +5378,18 @@ app.get('/auxiliary-police/duty-handover/submit', isAuthenticated, async functio
             dutyHandover.timestamp = moment().utcOffset(8).toDate();
 
             await dutyHandover.save();
-            console.log('Exisitng handover updated');
-            res.render('auxiliarypolice-dutyhandover-submit', {
-                user: user,
-                notifications: notifications,
-                uuid: uuidv4(),
-                show: 'show',
-                alert: 'Existing handover updated',
-            });
+            console.log('Exisitng handover updated'); try {
+                res.render('auxiliarypolice-dutyhandover-submit', {
+                    user: user,
+                    notifications: notifications,
+                    uuid: uuidv4(),
+                    show: 'show',
+                    alert: 'Existing handover updated',
+                });
+            } catch (renderError) {
+                console.error('Rendering Error:', renderError);
+                next(renderError);
+            }
         } else {
             // update duty handover based on id
             await DutyHandoverAux.findByIdAndUpdate(
@@ -5200,14 +5414,18 @@ app.get('/auxiliary-police/duty-handover/submit', isAuthenticated, async functio
             const create = await dutyHandover.save();
             const newReport = await createPatrolReport(dutyHandoverId, location, date, shift, time, shiftStaff);
 
-            console.log('New duty handover and patrol report created', create, newReport);
-            res.render('auxiliarypolice-dutyhandover-submit', {
-                user: user,
-                notifications: notifications,
-                uuid: uuidv4(),
-                show: 'show',
-                alert: 'New duty handover and patrol report created',
-            });
+            console.log('New duty handover and patrol report created', create, newReport); try {
+                res.render('auxiliarypolice-dutyhandover-submit', {
+                    user: user,
+                    notifications: notifications,
+                    uuid: uuidv4(),
+                    show: 'show',
+                    alert: 'New duty handover and patrol report created',
+                });
+            } catch (renderError) {
+                console.error('Rendering Error:', renderError);
+                next(renderError);
+            }
         }
     } catch (error) {
         console.error('Error updating duty handover:', error);
@@ -5245,17 +5463,21 @@ app.get('/auxiliary-police/duty-handover/view', isAuthenticated, async function 
         const rs = await DutyHandoverAux.find({
             location: 'Raudhatul Sakinah',
         }).sort({ date: -1 });
-
-        res.render('auxiliarypolice-dutyhandover-view', {
-            user: user,
-            notifications: notifications,
-            uuid: uuidv4(),
-            bmi: bmi,
-            bmii: bmii,
-            jm: jm,
-            cm: cm,
-            rs: rs
-        });
+        try {
+            res.render('auxiliarypolice-dutyhandover-view', {
+                user: user,
+                notifications: notifications,
+                uuid: uuidv4(),
+                bmi: bmi,
+                bmii: bmii,
+                jm: jm,
+                cm: cm,
+                rs: rs
+            });
+        } catch (renderError) {
+            console.error('Rendering Error:', renderError);
+            next(renderError);
+        }
     }
 
 });
@@ -5310,11 +5532,16 @@ app.get('/auxiliary-police/schedule/view', isAuthenticated, async function (req,
         .sort({ timestamp: -1 });
 
     if (user) {
-        res.render('auxiliarypolice-schedule-view', {
-            user: user,
-            notifications: notifications,
-            uuid: uuidv4(),
-        });
+        try {
+            res.render('auxiliarypolice-schedule-view', {
+                user: user,
+                notifications: notifications,
+                uuid: uuidv4(),
+            });
+        } catch (renderError) {
+            console.error('Rendering Error:', renderError);
+            next(renderError);
+        }
     }
 });
 
@@ -5330,14 +5557,18 @@ app.get('/auxiliary-police/schedule/add', isAuthenticated, async function (req, 
         .sort({ timestamp: -1 });
 
     if (user) {
-
-        res.render('auxiliarypolice-schedule-add', {
-            user: user,
-            notifications: notifications,
-            uuid: uuidv4(),
-            show: '',
-            alert: ''
-        });
+        try {
+            res.render('auxiliarypolice-schedule-add', {
+                user: user,
+                notifications: notifications,
+                uuid: uuidv4(),
+                show: '',
+                alert: ''
+            });
+        } catch (renderError) {
+            console.error('Rendering Error:', renderError);
+            next(renderError);
+        }
     }
 }).post('/auxiliary-police/schedule/add', isAuthenticated, async function (req, res) {
     const username = req.user.username;
@@ -5379,14 +5610,18 @@ app.get('/auxiliary-police/schedule/add', isAuthenticated, async function (req, 
         });
 
         if (!location || !date || !selectedNames1 || !selectedNames2 || !selectedNames3 || time1 === 'Select shift time' || time2 === 'Select shift time' || time3 === 'Select shift time' || (selectedNames4 && time4 === 'Select shift time')) {
-            console.log('Failed to add auxiliary police schedule');
-            res.render('auxiliarypolice-schedule-add', {
-                user: user,
-                notifications: notifications,
-                uuid: uuidv4(),
-                show: 'show',
-                alert: 'All form must be filled, there is an empty input'
-            });
+            console.log('Failed to add auxiliary police schedule'); try {
+                res.render('auxiliarypolice-schedule-add', {
+                    user: user,
+                    notifications: notifications,
+                    uuid: uuidv4(),
+                    show: 'show',
+                    alert: 'All form must be filled, there is an empty input'
+                });
+            } catch (renderError) {
+                console.error('Rendering Error:', renderError);
+                next(renderError);
+            }
         } else {
             // Ensure the selected names are split into arrays
             const selectedNames1Array = selectedNames1 ? selectedNames1.split(',') : [];
@@ -5436,13 +5671,18 @@ app.get('/auxiliary-police/schedule/add', isAuthenticated, async function (req, 
 
                 if (updateSchedule) {
                     console.log('Successfully updated auxiliary police schedule');
-                    res.render('auxiliarypolice-schedule-add', {
-                        user: user,
-                        notifications: notifications,
-                        uuid: uuidv4(),
-                        show: 'show',
-                        alert: 'Successfully updated auxiliary police schedule on'
-                    });
+                    try {
+                        res.render('auxiliarypolice-schedule-add', {
+                            user: user,
+                            notifications: notifications,
+                            uuid: uuidv4(),
+                            show: 'show',
+                            alert: 'Successfully updated auxiliary police schedule on'
+                        });
+                    } catch (renderError) {
+                        console.error('Rendering Error:', renderError);
+                        next(renderError);
+                    }
                 }
             } else {
                 const newSchedule = new ScheduleAux({
@@ -5457,22 +5697,32 @@ app.get('/auxiliary-police/schedule/add', isAuthenticated, async function (req, 
 
                 if (saveSchedule) {
                     console.log('Successfully added auxiliary police schedule on ' + date);
-                    res.render('auxiliarypolice-schedule-add', {
-                        user: user,
-                        notifications: notifications,
-                        uuid: uuidv4(),
-                        show: 'show',
-                        alert: 'Successfully added auxiliary police schedule on ' + date
-                    });
+                    try {
+                        res.render('auxiliarypolice-schedule-add', {
+                            user: user,
+                            notifications: notifications,
+                            uuid: uuidv4(),
+                            show: 'show',
+                            alert: 'Successfully added auxiliary police schedule on ' + date
+                        });
+                    } catch (renderError) {
+                        console.error('Rendering Error:', renderError);
+                        next(renderError);
+                    }
                 } else {
                     console.log('Failed to add auxiliary police schedule on ' + date);
-                    res.render('auxiliarypolice-schedule-add', {
-                        user: user,
-                        notifications: notifications,
-                        uuid: uuidv4(),
-                        show: 'show',
-                        alert: 'Failed to add auxiliary police schedule on ' + date
-                    });
+                    try {
+                        res.render('auxiliarypolice-schedule-add', {
+                            user: user,
+                            notifications: notifications,
+                            uuid: uuidv4(),
+                            show: 'show',
+                            alert: 'Failed to add auxiliary police schedule on ' + date
+                        });
+                    } catch (renderError) {
+                        console.error('Rendering Error:', renderError);
+                        next(renderError);
+                    }
                 }
             }
         }
@@ -5494,13 +5744,17 @@ app.get('/auxiliary-police/case/view', isAuthenticated, async function (req, res
 
     if (user) {
         const caseReport = await CaseAux.find().sort({ date: -1 });
-
-        res.render('auxiliarypolice-case-view', {
-            user: user,
-            notifications: notifications,
-            uuid: uuidv4(),
-            caseReport: caseReport
-        });
+        try {
+            res.render('auxiliarypolice-case-view', {
+                user: user,
+                notifications: notifications,
+                uuid: uuidv4(),
+                caseReport: caseReport
+            });
+        } catch (renderError) {
+            console.error('Rendering Error:', renderError);
+            next(renderError);
+        }
     }
 });
 
@@ -5518,13 +5772,17 @@ app.get('/auxiliary-police/case/details/:id', isAuthenticated, async function (r
     if (user) {
         const id = req.params.id;
         const caseReport = await CaseAux.findOne({ _id: id });
-
-        res.render('auxiliarypolice-case-detail', {
-            user: user,
-            notifications: notifications,
-            uuid: uuidv4(),
-            caseReport: caseReport
-        });
+        try {
+            res.render('auxiliarypolice-case-detail', {
+                user: user,
+                notifications: notifications,
+                uuid: uuidv4(),
+                caseReport: caseReport
+            });
+        } catch (renderError) {
+            console.error('Rendering Error:', renderError);
+            next(renderError);
+        }
     }
 });
 
@@ -5540,13 +5798,18 @@ app.get('/auxiliary-police/case/add', isAuthenticated, async function (req, res)
         .sort({ timestamp: -1 });
 
     if (user) {
-        res.render('auxiliarypolice-case-add', {
-            user: user,
-            notifications: notifications,
-            uuid: uuidv4(),
-            show: '',
-            alert: ''
-        });
+        try {
+            res.render('auxiliarypolice-case-add', {
+                user: user,
+                notifications: notifications,
+                uuid: uuidv4(),
+                show: '',
+                alert: ''
+            });
+        } catch (renderError) {
+            console.error('Rendering Error:', renderError);
+            next(renderError);
+        }
     }
 }).post('/auxiliary-police/schedule/add', isAuthenticated, async function (req, res) {
     const username = req.user.username;
@@ -5574,13 +5837,18 @@ app.get('/auxiliary-police/case/add', isAuthenticated, async function (req, res)
 
         if (!location || !date || !selectedNames1 || !selectedNames2 || !selectedNames3 || time1 === 'Select shift time' || time2 === 'Select shift time' || time3 === 'Select shift time' || (selectedNames4 && time4 === 'Select shift time')) {
             console.log('Failed to add auxiliary police schedule');
-            res.render('auxiliarypolice-schedule-add', {
-                user: user,
-                notifications: notifications,
-                uuid: uuidv4(),
-                show: 'show',
-                alert: 'All form must be filled, there is an empty input'
-            });
+            try {
+                res.render('auxiliarypolice-schedule-add', {
+                    user: user,
+                    notifications: notifications,
+                    uuid: uuidv4(),
+                    show: 'show',
+                    alert: 'All form must be filled, there is an empty input'
+                });
+            } catch (renderError) {
+                console.error('Rendering Error:', renderError);
+                next(renderError);
+            }
         } else {
             // Ensure the selected names are split into arrays
             const selectedNames1Array = selectedNames1 ? selectedNames1.split(',') : [];
@@ -5621,13 +5889,18 @@ app.get('/auxiliary-police/case/add', isAuthenticated, async function (req, res)
 
                 if (updateSchedule) {
                     console.log('Successfully updated auxiliary police schedule');
-                    res.render('auxiliarypolice-schedule-add', {
-                        user: user,
-                        notifications: notifications,
-                        uuid: uuidv4(),
-                        show: 'show',
-                        alert: 'Successfully updated auxiliary police schedule on'
-                    });
+                    try {
+                        res.render('auxiliarypolice-schedule-add', {
+                            user: user,
+                            notifications: notifications,
+                            uuid: uuidv4(),
+                            show: 'show',
+                            alert: 'Successfully updated auxiliary police schedule on'
+                        });
+                    } catch (renderError) {
+                        console.error('Rendering Error:', renderError);
+                        next(renderError);
+                    }
                 }
             } else {
 
@@ -5643,22 +5916,32 @@ app.get('/auxiliary-police/case/add', isAuthenticated, async function (req, res)
 
                 if (saveSchedule) {
                     console.log('Successfully added auxiliary police schedule on ' + date);
-                    res.render('auxiliarypolice-schedule-add', {
-                        user: user,
-                        notifications: notifications,
-                        uuid: uuidv4(),
-                        show: 'show',
-                        alert: 'Successfully added auxiliary police schedule on ' + date
-                    });
+                    try {
+                        res.render('auxiliarypolice-schedule-add', {
+                            user: user,
+                            notifications: notifications,
+                            uuid: uuidv4(),
+                            show: 'show',
+                            alert: 'Successfully added auxiliary police schedule on ' + date
+                        });
+                    } catch (renderError) {
+                        console.error('Rendering Error:', renderError);
+                        next(renderError);
+                    }
                 } else {
                     console.log('Failed to add auxiliary police schedule on ' + date);
-                    res.render('auxiliarypolice-schedule-add', {
-                        user: user,
-                        notifications: notifications,
-                        uuid: uuidv4(),
-                        show: 'show',
-                        alert: 'Failed to add auxiliary police schedule on ' + date
-                    });
+                    try {
+                        res.render('auxiliarypolice-schedule-add', {
+                            user: user,
+                            notifications: notifications,
+                            uuid: uuidv4(),
+                            show: 'show',
+                            alert: 'Failed to add auxiliary police schedule on ' + date
+                        });
+                    } catch (renderError) {
+                        console.error('Rendering Error:', renderError);
+                        next(renderError);
+                    }
                 }
             }
         }
@@ -5704,16 +5987,21 @@ app.get('/auxiliary-police/patrol/shift-member-location/view', async function (r
             type: 'Shift Member Location'
         }).sort({ date: -1 });
 
-        res.render('auxiliarypolice-patrol-shiftmemberlocation-view', {
-            user: user,
-            notifications: notifications,
-            uuid: uuidv4(),
-            bmi: bmi,
-            bmii: bmii,
-            jm: jm,
-            cm: cm,
-            rs: rs
-        });
+        try {
+            res.render('auxiliarypolice-patrol-shiftmemberlocation-view', {
+                user: user,
+                notifications: notifications,
+                uuid: uuidv4(),
+                bmi: bmi,
+                bmii: bmii,
+                jm: jm,
+                cm: cm,
+                rs: rs
+            });
+        } catch (renderError) {
+            console.error('Rendering Error:', renderError);
+            next(renderError);
+        }
     }
 });
 
@@ -5814,17 +6102,22 @@ app.get('/auxiliary-police/patrol/shift-member-location/details/:id', isAuthenti
         console.log('Current time slot', currentTimeSlot);
         console.log('Percentage', percentageTimesWithValuesInShift.toFixed(0));
 
-        res.render('auxiliarypolice-patrol-shiftmemberlocation-detail', {
-            user: user,
-            notifications: notifications,
-            uuid: uuidv4(),
-            // data extracted
-            patrolReport: checkReport,
-            reportId: id,
-            cycle: shiftMemberCycles,
-            currentTimeSlot: currentTimeSlot,
-            progressReport: percentageTimesWithValuesInShift.toFixed(0),
-        });
+        try {
+            res.render('auxiliarypolice-patrol-shiftmemberlocation-detail', {
+                user: user,
+                notifications: notifications,
+                uuid: uuidv4(),
+                // data extracted
+                patrolReport: checkReport,
+                reportId: id,
+                cycle: shiftMemberCycles,
+                currentTimeSlot: currentTimeSlot,
+                progressReport: percentageTimesWithValuesInShift.toFixed(0),
+            });
+        } catch (renderError) {
+            console.error('Rendering Error:', renderError);
+            next(renderError);
+        }
     }
 });
 
@@ -5845,12 +6138,17 @@ app.get('/auxiliary-police/patrol/patrol-unit/view', isAuthenticated, async func
             type: 'Patrol Unit'
         }).sort({ date: -1 });
 
-        res.render('auxiliarypolice-patrol-patrolunit-view', {
-            user: user,
-            notifications: notifications,
-            uuid: uuidv4(),
-            patrolUnit: patrolUnit
-        });
+        try {
+            res.render('auxiliarypolice-patrol-patrolunit-view', {
+                user: user,
+                notifications: notifications,
+                uuid: uuidv4(),
+                patrolUnit: patrolUnit
+            });
+        } catch (renderError) {
+            console.error('Rendering Error:', renderError);
+            next(renderError);
+        }
 
     }
 });
@@ -5890,15 +6188,20 @@ app.get('/auxiliary-police/patrol/patrol-unit/details/:id', isAuthenticated, asy
             (nonEmptyTimeCount / totalPatrolUnits) * 100;
 
 
-        res.render('auxiliarypolice-patrol-patrolunit-detail', {
-            user: user,
-            notifications: notifications,
-            uuid: uuidv4(),
-            // patrol report
-            patrolReport: checkReport,
-            percentage: percentageNonEmptyTime.toString(),
-            reportId: reportId,
-        });
+        try {
+            res.render('auxiliarypolice-patrol-patrolunit-detail', {
+                user: user,
+                notifications: notifications,
+                uuid: uuidv4(),
+                // patrol report
+                patrolReport: checkReport,
+                percentage: percentageNonEmptyTime.toString(),
+                reportId: reportId,
+            });
+        } catch (renderError) {
+            console.error('Rendering Error:', renderError);
+            next(renderError);
+        }
     }
 });
 
@@ -5979,10 +6282,16 @@ app.get(
                 'Successfully update on patrol unit for at ' +
                 checkpointName
             );
-            res.render('submit-success');
+            try { res.render('submit-success'); } catch (renderError) {
+                console.error('Rendering Error:', renderError);
+                next(renderError);
+            }
         } else {
             console.log('Unsuccessful update the qr data due to closed status!');
-            res.render('submit-failed');
+            try { res.render('submit-failed'); } catch (renderError) {
+                console.error('Rendering Error:', renderError);
+                next(renderError);
+            }
         }
     }
 );
@@ -6045,11 +6354,16 @@ app.get(
 
             console.log(filteredReports1);
 
-            res.render('shift-member-submit', {
-                patrolReport: filteredReports1,
-                location: location,
-                checkpointName: checkpointName
-            });
+            try {
+                res.render('shift-member-submit', {
+                    patrolReport: filteredReports1,
+                    location: location,
+                    checkpointName: checkpointName
+                });
+            } catch (renderError) {
+                console.error('Rendering Error:', renderError);
+                next(renderError);
+            }
         } else {
             const filteredReports2 = await PatrolAux.findOne({
                 location: location,
@@ -6060,11 +6374,16 @@ app.get(
 
             console.log(filteredReports2);
 
-            res.render('shift-member-submit', {
-                patrolReport: filteredReports2,
-                location: location,
-                checkpointName: checkpointName
-            });
+            try {
+                res.render('shift-member-submit', {
+                    patrolReport: filteredReports2,
+                    location: location,
+                    checkpointName: checkpointName
+                });
+            } catch (renderError) {
+                console.error('Rendering Error:', renderError);
+                next(renderError);
+            }
         }
     }
 );
@@ -6161,20 +6480,32 @@ app.get(
 
                         console.log('Successful update using QR scanner!');
 
-                        res.render('submit-success');
+                        try { res.render('submit-success'); } catch (renderError) {
+                            console.error('Rendering Error:', renderError);
+                            next(renderError);
+                        }
                     } else {
                         console.log('Checkpoint not found in the cycle.');
-                        res.render('submit-failed');
+                        try { res.render('submit-failed'); } catch (renderError) {
+                            console.error('Rendering Error:', renderError);
+                            next(renderError);
+                        }
                     }
                 } else {
                     console.log('Cycle not found.');
-                    res.render('submit-failed');
+                    try { res.render('submit-failed'); } catch (renderError) {
+                        console.error('Rendering Error:', renderError);
+                        next(renderError);
+                    }
                 }
             } else {
                 console.log(
                     'No patrol report found for the user or the patrol report is already closed.'
                 );
-                res.render('submit-failed');
+                try { res.render('submit-failed'); } catch (renderError) {
+                    console.error('Rendering Error:', renderError);
+                    next(renderError);
+                }
             }
         }
     }
@@ -6183,30 +6514,46 @@ app.get(
 // SUBMIT SUCCESS
 
 app.get('/submit-success', async function (req, res) {
-    res.render('submit-success');
+    try { res.render('submit-success'); } catch (renderError) {
+        console.error('Rendering Error:', renderError);
+        next(renderError);
+    }
 });
 
 app.get('/submit-failed', async function (req, res) {
-    res.render('submit-failed');
+    try { res.render('submit-failed'); } catch (renderError) {
+        console.error('Rendering Error:', renderError);
+        next(renderError);
+    }
 });
 
 // VMS
 // ROUTE FOR DISPLAYING THE FORM
 app.get('/visitor_form', (req, res) => {
-    res.render('visitor_form', {
-        thank_you_message: null,
-        fields: {
-            vis_firstname: '',
-            vis_lastname: '',
-            no_ic: '',
-            address: '',
-            level: '',
-            no_pas: '',
-            no_telephone: '',
-            pur_visit: ''
-        },
-        errors: {}
-    });
+    try {
+        try {
+            res.render('visitor_form', {
+                thank_you_message: null,
+                fields: {
+                    vis_firstname: '',
+                    vis_lastname: '',
+                    no_ic: '',
+                    address: '',
+                    level: '',
+                    no_pas: '',
+                    no_telephone: '',
+                    pur_visit: ''
+                },
+                errors: {}
+            });
+        } catch (renderError) {
+            console.error('Rendering Error:', renderError);
+            next(renderError);
+        }
+    } catch (renderError) {
+        console.error('Rendering Error:', renderError);
+        next(renderError);
+    }
 });
 
 // ROUTE FOR HANDLING FORM SUBMISSION
@@ -6241,25 +6588,40 @@ app.post('/submit_visitor_form', async (req, res) => {
         const newVisitor = new Vms(fields);
         try {
             await newVisitor.save();
-            res.render('visitor_form', {
-                thank_you_message: 'Thank you for your submission!',
-                fields: fields,
-                errors: {}
-            });
+            try {
+                res.render('visitor_form', {
+                    thank_you_message: 'Thank you for your submission!',
+                    fields: fields,
+                    errors: {}
+                });
+            } catch (renderError) {
+                console.error('Rendering Error:', renderError);
+                next(renderError);
+            }
         } catch (err) {
             console.error('Error saving visitor:', err);
+            try {
+                res.render('visitor_form', {
+                    thank_you_message: '',
+                    fields: fields,
+                    errors: {}
+                });
+            } catch (renderError) {
+                console.error('Rendering Error:', renderError);
+                next(renderError);
+            }
+        }
+    } else {
+        try {
             res.render('visitor_form', {
                 thank_you_message: '',
                 fields: fields,
-                errors: {}
+                errors: errors
             });
+        } catch (renderError) {
+            console.error('Rendering Error:', renderError);
+            next(renderError);
         }
-    } else {
-        res.render('visitor_form', {
-            thank_you_message: '',
-            fields: fields,
-            errors: errors
-        });
     }
 });
 
@@ -6289,15 +6651,20 @@ app.get('/vms/list', isAuthenticated, async function (req, res) {
     const timeOutVisitorsToday = await getTotalVisitorsTimeOutToday();
 
     if (user) {
-        res.render('vms-list', {
-            user: user,
-            notifications: notifications,
-            uuid: uuidv4(),
-            visitors: formattedVisitors,  // Pass formatted visitor data
-            totalVisitorsToday,
-            timeInVisitorsToday,
-            timeOutVisitorsToday
-        });
+        try {
+            res.render('vms-list', {
+                user: user,
+                notifications: notifications,
+                uuid: uuidv4(),
+                visitors: formattedVisitors,  // Pass formatted visitor data
+                totalVisitorsToday,
+                timeInVisitorsToday,
+                timeOutVisitorsToday
+            });
+        } catch (renderError) {
+            console.error('Rendering Error:', renderError);
+            next(renderError);
+        }
     }
 });
 
@@ -6467,14 +6834,19 @@ app.get('/notifications/history', isAuthenticated, async function (req, res) {
         .sort({ timestamp: -1, read: -1 });
 
     if (user) {
-        res.render('notifications', {
-            user: user,
-            notifications: notifications,
-            notificationsToday: notificationsToday,
-            notificationsYesterday: notificationsYesterday,
-            notificationsThisWeek: notificationsThisWeek,
-            notificationsThisMonth: notificationsThisMonth
-        });
+        try {
+            res.render('notifications', {
+                user: user,
+                notifications: notifications,
+                notificationsToday: notificationsToday,
+                notificationsYesterday: notificationsYesterday,
+                notificationsThisWeek: notificationsThisWeek,
+                notificationsThisMonth: notificationsThisMonth
+            });
+        } catch (renderError) {
+            console.error('Rendering Error:', renderError);
+            next(renderError);
+        }
     }
 });
 
@@ -8509,11 +8881,16 @@ app.get('/email', isAuthenticated, async function (req, res) {
         read: false
     }).populate('sender');
 
-    res.render('email', {
-        user: user,
-        notifications: notifications,
-        uuid: uuidv4(),
-    });
+    try {
+        res.render('email', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4(),
+        });
+    } catch (renderError) {
+        console.error('Rendering Error:', renderError);
+        next(renderError);
+    }
 });
 
 //SUPER ADMIN
@@ -8600,11 +8977,16 @@ app.get('/temp', async (req, res) => {
         .sort({ timestamp: -1 });
 
     if (user) {
-        res.render('temp', {
-            user: user,
-            notifications: notifications,
-            uuid: uuidv4(),
-        });
+        try {
+            res.render('temp', {
+                user: user,
+                notifications: notifications,
+                uuid: uuidv4(),
+            });
+        } catch (renderError) {
+            console.error('Rendering Error:', renderError);
+            next(renderError);
+        }
     }
 });
 
@@ -8619,15 +9001,19 @@ app.get('/testing', isAuthenticated, async (req, res) => {
         .sort({ timestamp: -1 });
 
     if (user) {
-
-        res.render('email-leave', {
-            user: user,
-            notifications: notifications,
-            uuid: uuidv4(),
-        });
+        try {
+            res.render('email-leave', {
+                user: user,
+                notifications: notifications,
+                uuid: uuidv4(),
+            });
+        } catch (renderError) {
+            // Log the error and pass it to the error-handling middleware
+            console.error('Rendering Error:', renderError);
+            next(renderError);
+        }
     }
 });
-
 
 app.post('/search-schedule-temp', async (req, res) => {
     try {
@@ -10166,12 +10552,6 @@ async function getTotalVisitorsTimeOutToday() {
     return await Vms.countDocuments({ time_out: { $gte: today } });
 }
 
-// handle error
-function handleError(res, error) {
-    console.error(error);
-    res.status(500).send('Internal Server Error');
-}
-
 // async function archiveOldData() {
 //     const archiveDate = moment().subtract(1, 'months').toDate();
 
@@ -10236,6 +10616,12 @@ function restrictAccess(req, res, next) {
         res.render('error');
     }
 }
+
+// handle error
+app.use((err, req, res, next) => {
+    console.error('Global Error Handler:', err);
+    res.status(500).render('global-error', { errorMessage: 'Something went wrong!' });
+});
 
 // PORT INITIALIZATION ON CLOUD OR LOCAL (5001)
 const PORT = process.env.PORT || 5002;
