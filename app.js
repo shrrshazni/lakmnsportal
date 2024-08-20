@@ -8619,67 +8619,8 @@ app.get('/testing', isAuthenticated, async (req, res) => {
         .sort({ timestamp: -1 });
 
     if (user) {
-        const leaveId = '66bd5987ba0d83c5f088653e';
-        const roleToExclude = 'Deputy Chief Executive Officer';
 
-        const leave = await Leave.findOne({ _id: leaveId });
-
-        // Filter out approvals with the specified role
-        const updatedApprovals = leave.approvals.filter(approval => approval.role !== roleToExclude);
-
-        // Update the leave document with the filtered approvals
-        const update = await Leave.updateOne(
-            { _id: leaveId },
-            { $set: { approvals: updatedApprovals } }
-        );
-
-        if (update) {
-            console.log('done update');
-        } else {
-            console.log('failed update');
-        }
-
-        // const recipientId = '65e4309f904086cf0a7e2c34'; // The user's ID
-        // const message = 'Hello world!'; // The message to be sent in the notification
-        // const url = 'https://www.lakmnsportal.com'; // The URL that will open when the notification is clicked
-
-        // // Fetch subscriptions for the recipient user
-        // const subscriptions = await Subscriptions.find({ user: recipientId });
-
-        // // Map through the subscriptions to send notifications
-        // const sendNotificationPromises = subscriptions.map(async (subscription) => {
-        //     const payload = JSON.stringify({
-        //         "title": "New Message",
-        //         "body": "You have received a new message from John.",
-        //         "url": "https://www.lakmnsportal.com/leave/request",
-        //         "vibrate": [100, 50, 100],
-        //         "requireInteraction": true,
-        //         "silent": false
-        //     });
-
-        //     const options = {
-        //         vapidDetails: {
-        //             subject: 'mailto:protech@lakmns.org', // Replace with your email
-        //             publicKey: publicVapidKey, // Use actual public VAPID key here
-        //             privateKey: privateVapidKey // Use actual private VAPID key here
-        //         },
-        //         TTL: 60 // Time to live for the notification (in seconds)
-        //     };
-
-        //     try {
-        //         await webPush.sendNotification(subscription, payload, options);
-        //         console.log('Notification sent successfully to:', subscription.endpoint);
-        //     } catch (error) {
-        //         console.error('Error sending notification to:', subscription.endpoint, error);
-        //     }
-        // });
-
-        // // Wait for all notifications to be sent
-        // await Promise.all(sendNotificationPromises);
-
-        // console.log('Finished sending notifications.');
-
-        res.render('testing', {
+        res.render('email-leave', {
             user: user,
             notifications: notifications,
             uuid: uuidv4(),
