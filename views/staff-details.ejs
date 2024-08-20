@@ -209,6 +209,13 @@
                             hajj = 0;
                           }
 
+                          var umrah = '';
+                          if (fetchLeaveTypeData.umrah.taken > 0) {
+                            umrah = 40;
+                          } else {
+                            umrah = 0;
+                          }
+
                           var special = '';
                           if (fetchLeaveTypeData.special.taken > 7) {
                             special = 3;
@@ -217,7 +224,7 @@
                           }
 
                           var leaveTypeData = {
-                            labels: ['Annual Leave', 'Sick Leave', 'Sick Extended Leave', 'Emergency Leave Taken', 'Marriage Leave', 'Paternity Leave', 'Maternity Leave', 'Attend Exam Leave', 'Hajj Leave', 'Unpaid Leave Taken', 'Special Leave'],
+                            labels: ['Annual Leave', 'Sick Leave', 'Sick Extended Leave', 'Emergency Leave Taken', 'Marriage Leave', 'Paternity Leave', 'Maternity Leave', 'Attend Exam Leave', 'Hajj Leave', 'Umrah Leave', 'Unpaid Leave Taken', 'Special Leave'],
                             data: [
                               fetchLeaveTypeData.annual.leave - fetchLeaveTypeData.annual.taken,
                               fetchLeaveTypeData.sick.leave - fetchLeaveTypeData.sick.taken,
@@ -228,6 +235,7 @@
                               fetchLeaveTypeData.maternity.leave - genderFemale,
                               fetchLeaveTypeData.attendExam.leave - fetchLeaveTypeData.attendExam.taken,
                               fetchLeaveTypeData.hajj.leave - hajj,
+                              fetchLeaveTypeData.umrah.leave - umrah,
                               fetchLeaveTypeData.unpaid.taken,
                               fetchLeaveTypeData.special.leave - special,
                             ],
@@ -243,7 +251,7 @@
                           var option = {
                             color: [getColor('bg-info-light', 'background-color'), getColor('bg-warning-darker', 'background-color'),
                               getColor('bg-warning-light', 'background-color'), getColor('bg-danger-light', 'background-color'), getColor('bg-danger-dark', 'background-color'), getColor('bg-success-light', 'background-color'),
-                              getColor('bg-success-dark', 'background-color'), getColor('bg-info-dark', 'background-color'), getColor('bg-info-lighter', 'background-color'), getColor('bg-primary', 'background-color'), getColor('bg-warning-lighter', 'background-color')
+                              getColor('bg-success-dark', 'background-color'), getColor('bg-info-dark', 'background-color'), getColor('bg-info-lighter', 'background-color'), getColor('bg-success-lighter', 'background-color'), getColor('bg-primary', 'background-color'), getColor('bg-warning-lighter', 'background-color')
                             ],
                             series: [{
                               name: 'Tasks assigned to me',
