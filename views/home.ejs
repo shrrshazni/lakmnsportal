@@ -1327,6 +1327,13 @@ if(user.isSuperAdmin){
           hajj = '';
         }
 
+        var umrah = '';
+        if (userLeave.umrah.taken > 0) {
+          umrah = 'd-none';
+        } else {
+          umrah = '';
+        }
+
         var special = '';
         if (userLeave.special.taken > 7) {
           special = 'd-none';
@@ -1369,11 +1376,15 @@ if(user.isSuperAdmin){
         </div>
         <div class="d-flex align-items-center mb-1"><span class="d-inline-block bg-info-dark bullet-item me-2"></span>
           <p class="mb-0 fw-semibold text-body lh-sm flex-1">Attend Exam Leave</p>
-          <h5 class="mb-0 text-body"><%= userLeave.attendExam.leave %></h5>
+          <h5 class="mb-0 text-body"><%= userLeave.attendExam.leave - userLeave.attendExam.taken %></h5>
         </div>
         <div class="d-flex align-items-center mb-1 <%= hajj %>"><span class="d-inline-block bg-info-lighter bullet-item me-2"></span>
           <p class="mb-0 fw-semibold text-body lh-sm flex-1">Hajj Leave</p>
-          <h5 class="mb-0 text-body"><%= userLeave.hajj.leave %></h5>
+          <h5 class="mb-0 text-body"><%= userLeave.hajj.leave - userLeave.hajj.taken %></h5>
+        </div>
+        <div class="d-flex align-items-center mb-1 <%= umrah %>"><span class="d-inline-block bg-info-lighter bullet-item me-2"></span>
+          <p class="mb-0 fw-semibold text-body lh-sm flex-1">Hajj Leave</p>
+          <h5 class="mb-0 text-body"><%= userLeave.umrah.leave - userLeave.umrah.taken %></h5>
         </div>
         <div class="d-flex align-items-center mb-1 <%= special %>"><span class="d-inline-block bg-warning-lighter bullet-item me-2"></span>
           <p class="mb-0 fw-semibold text-body lh-sm flex-1">Special Leave</p>
@@ -1437,6 +1448,12 @@ if(user.isSuperAdmin){
         } else {
           hajj = 0;
         }
+        var umrah = '';
+        if (fetchLeaveTypeData.umrah.taken > 0) {
+          umrah = 40;
+        } else {
+          umrah = 0;
+        }
 
         var special = '';
         if (fetchLeaveTypeData.special.taken > 7) {
@@ -1446,7 +1463,7 @@ if(user.isSuperAdmin){
         }
 
         var leaveTypeData = {
-          labels: ['Annual Leave', 'Sick Leave', 'Sick Extended Leave', 'Emergency Leave Taken', 'Marriage Leave', 'Paternity Leave', 'Maternity Leave', 'Attend Exam Leave', 'Hajj Leave', 'Unpaid Leave Taken', 'Special Leave'],
+          labels: ['Annual Leave', 'Sick Leave', 'Sick Extended Leave', 'Emergency Leave Taken', 'Marriage Leave', 'Paternity Leave', 'Maternity Leave', 'Attend Exam Leave', 'Hajj Leave', 'Umrah Leave', 'Unpaid Leave Taken', 'Special Leave'],
           data: [
             fetchLeaveTypeData.annual.leave - fetchLeaveTypeData.annual.taken,
             fetchLeaveTypeData.sick.leave - fetchLeaveTypeData.sick.taken,
@@ -1457,6 +1474,7 @@ if(user.isSuperAdmin){
             fetchLeaveTypeData.maternity.leave - genderFemale,
             fetchLeaveTypeData.attendExam.leave - fetchLeaveTypeData.attendExam.taken,
             fetchLeaveTypeData.hajj.leave - hajj,
+            fetchLeaveTypeData.umrah.leave - umrah,
             fetchLeaveTypeData.unpaid.taken,
             fetchLeaveTypeData.special.leave - special,
           ],
@@ -1472,7 +1490,7 @@ if(user.isSuperAdmin){
         var option = {
           color: [getColor('bg-info-light', 'background-color'), getColor('bg-warning-darker', 'background-color'),
             getColor('bg-warning-light', 'background-color'), getColor('bg-danger-light', 'background-color'), getColor('bg-danger-dark', 'background-color'), getColor('bg-success-light', 'background-color'),
-            getColor('bg-success-dark', 'background-color'), getColor('bg-info-dark', 'background-color'), getColor('bg-info-lighter', 'background-color'), getColor('bg-primary', 'background-color'), getColor('bg-warning-lighter', 'background-color')
+            getColor('bg-success-dark', 'background-color'), getColor('bg-info-dark', 'background-color'), getColor('bg-info-lighter', 'background-color'), getColor('bg-success-lighter', 'background-color'), getColor('bg-primary', 'background-color'), getColor('bg-warning-lighter', 'background-color')
           ],
           series: [{
             name: 'Tasks assigned to me',

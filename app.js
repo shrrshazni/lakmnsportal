@@ -218,6 +218,10 @@ const userLeaveSchema = new mongoose.Schema({
         leave: { type: Number, default: 40 },
         taken: { type: Number, default: 0 }
     },
+    umrah: {
+        leave: { type: Number, default: 7 },
+        taken: { type: Number, default: 0 }
+    },
     unpaid: {
         taken: { type: Number, default: 0 }
     },
@@ -2721,7 +2725,8 @@ app
                 type === 'Unpaid Leave' ||
                 type === 'Special Leave' ||
                 type === 'Extended Sick Leave' ||
-                type === 'Sick Leave'
+                type === 'Sick Leave' ||
+                type === 'Umrah Leave'
             ) {
                 numberOfDays = moment(returnDate).diff(moment(startDate), 'days') + 1;
             }
@@ -3152,6 +3157,54 @@ app
                     renderDataError.show = 'show';
                     renderDataError.alert =
                         'Insufficient hajj leave balance for the requested duration with maximum taken up to 1 only';
+                }
+            } else if (type === 'Umrah Leave') {
+                leaveBalance = userLeave.umrah.leave;
+                leaveTaken = userLeave.umrah.taken;
+                const findFile = await File.find({ uuid: uuid });
+
+                if (
+                    leaveBalance >= numberOfDays &&
+                    numberOfDays > 0 &&
+                    leaveTaken <= 1
+                ) {
+                    if (amountDayRequest >= 3) {
+                        if (findFile.length > 0) {
+                            approvals = generateApprovals(
+                                user,
+                                headOfSection,
+                                headOfDepartment,
+                                depChiefExec,
+                                chiefExec,
+                                adminHR,
+                                assignee,
+                                supervisors,
+                                type
+                            );
+                        } else {
+                            console.log('There is no file attached for umrah leave!');
+
+                            renderDataError.show = 'show';
+                            renderDataError.alert =
+                                'There is no file attached for umrah leave!';
+                        }
+                    } else {
+                        console.log(
+                            'The leave date applied must be more than 3 days from today'
+                        );
+
+                        renderDataError.show = 'show';
+                        renderDataError.alert =
+                            'The leave date applied must be more than 3 days from today';
+                    }
+                } else {
+                    console.log(
+                        'Insufficient umrah balance for the requested duration'
+                    );
+
+                    renderDataError.show = 'show';
+                    renderDataError.alert =
+                        'Insufficient umrah leave balance for the requested duration with maximum taken up to 1 only';
                 }
             } else if (type === 'Special Leave') {
                 leaveBalance = userLeave.special.leave;
@@ -3663,7 +3716,7 @@ app.get('/leave/history', isAuthenticated, async function (req, res) {
 
     if (user) {
         const leave = await Leave.find({ user: user._id }).sort({
-            'date.start': -1
+            'timestamp': -1
         });
         const userLeave = await UserLeave.findOne({ user: user._id })
             .populate('user')
@@ -3769,6 +3822,8 @@ app.get('/leave/:approval/:id', async function (req, res) {
             .filter(index => index !== -1);
 
         console.log(checkLeave.approvals[humanResourceIndex].recipient);
+
+        const userOnLeave = await User.findOne({ _id: checkLeave.approvals[0].recipient });
 
         if (approval === 'approved') {
             let indexOfRecipient = recipientIndices[0]; // Default to the first found recipient
@@ -4104,14 +4159,21 @@ app.get('/leave/:approval/:id', async function (req, res) {
 
                 // Calculate the difference in hours between the two dates
                 if (
-                    checkLeave.type === 'Annual Leave' ||
-                    checkLeave.type === 'Sick Leave'
+                    checkLeave.type === 'Annual Leave'
                 ) {
-                    daysDifference = calculateBusinessDays(startDate, returnDate);
+                    if (userOnLeave.isNonOfficeHour) {
+                        numberOfDays = moment(returnDate).diff(moment(startDate), 'days') + 1;
+                    } else {
+                        numberOfDays = calculateBusinessDays(startDate, returnDate);
+                    }
                 } else if (checkLeave.type === 'Half Day Leave') {
-                    numberOfDays = calculateBusinessDays(startDate, returnDate) / 2;
+                    if (userOnLeave.isNonOfficeHour) {
+                        numberOfDays = (moment(returnDate).diff(moment(startDate), 'days') + 1) / 2;
+                    } else {
+                        numberOfDays = calculateBusinessDays(startDate, returnDate) / 2;
+                    }
                 } else if (checkLeave.type === 'Emergency Leave') {
-                    daysDifference = calculateBusinessDays(startDate, moment().utcOffset(8).startOf('day').toDate());
+                    daysDifference = moment(returnDate).diff(moment(startDate), 'days') + 1;
                 } else if (
                     checkLeave.type === 'Marriage Leave' ||
                     checkLeave.type === 'Paternity Leave' ||
@@ -4120,7 +4182,8 @@ app.get('/leave/:approval/:id', async function (req, res) {
                     checkLeave.type === 'Hajj Leave' ||
                     checkLeave.type === 'Unpaid Leave' ||
                     checkLeave.type === 'Special Leave' ||
-                    checkLeave.type === 'Extended Sick Leave'
+                    checkLeave.type === 'Extended Sick Leave' ||
+                    checkLeave.type === 'Sick Leave'
                 ) {
                     daysDifference = moment(returnDate).diff(moment(startDate), 'days') + 1;
                 }
@@ -8901,44 +8964,44 @@ app.get('/super-admin/update', isAuthenticated, async function (req, res) {
     if (user.isSuperAdmin) {
 
         try {
-            // const leaveId = '66b312aab345f0a79bfbd8ca'; // The _id of the leave document
-            // const roleToDelete = 'Head of Division'; // The role of the approval to delete
-            // const roleToUpdate = 'Head of Department'; // The role of the approval to update
-            // const newRecipientId = '65e42e0d6e65b53956d47f2b'; // New recipient ID
-            // const newRole = 'Deputy Chief Executive Officer';
+            const users = await User.find();
 
-            // const result = await Leave.findOneAndUpdate(
-            //     { _id: leaveId, 'approvals.role': roleToUpdate },
-            //     {
-            //         $set: {
-            //             'approvals.$.recipient': newRecipientId,
-            //             'approvals.$.role': newRole
-            //         }
-            //     },
-            //     { new: true }
-            // );
+            // Loop through each user and update their leave
+            for (let user of users) {
+                const userLeave = await UserLeave.findOne({ user: user._id });
 
-            // if (result) {
-            //     console.log('successful');
-            // } else {
-            //     console.log('failed');
-            // }
+                if (userLeave) {
+                    // Update existing userLeave with new Umrah leave
+                    userLeave.umrah = {
+                        leave: 7,
+                        taken: 0
+                    };
+                    await userLeave.save();
+                } else {
+                    // If no userLeave found, create a new one
+                    const newUserLeave = new UserLeave({
+                        user: user._id,
+                        annual: { leave: 14, taken: 0 },
+                        sick: { leave: 14, taken: 0 },
+                        sickExtended: { leave: 60, taken: 0 },
+                        emergency: { leave: 0, taken: 0 },
+                        paternity: { leave: 3, taken: 0 },
+                        maternity: { leave: 60, taken: 0 },
+                        bereavement: { leave: 3, taken: 0 },
+                        study: { leave: 3, taken: 0 },
+                        marriage: { leave: 3, taken: 0 },
+                        attendExam: { leave: 5, taken: 0 },
+                        hajj: { leave: 40, taken: 0 },
+                        umrah: { leave: 7, taken: 0 }, // new Umrah leave
+                        unpaid: { taken: 0 },
+                        special: { leave: 3, taken: 0 }
+                    });
+                    await newUserLeave.save();
+                }
+            }
 
-            // const newNotification = new Notification({
-            //     sender: result.user,
-            //     recipient: new mongoose.Types.ObjectId(newRecipientId),
-            //     type: 'Leave request',
-            //     url: '/leave/details/' + result._id,
-            //     message: 'Previous approval has been submitted, please do check the leave request for approval'
-            // });
+            console.log('User leaves updated successfully');
 
-            // const noti = await newNotification.save();
-
-            // if (noti) {
-            //     console.log('Done send notifations!');
-            // } else {
-            //     console.log('Failed to send notifications!');
-            // }
         } catch (error) {
             console.error('Error creating Info documents:', error);
         }

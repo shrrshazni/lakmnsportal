@@ -143,6 +143,16 @@ function formatDate(inputDate) {
 
         <div class="col-12 col-md-4">
           <div class="form-floating">
+            <input type="text" name="umrah" class="form-control" placeholder="" />
+            <label class="form-label" for="umrah">Umrah Leave Taken</label>
+            <div class="invalid-feedback">
+              Please enter umrah leave taken
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-4">
+          <div class="form-floating">
             <input type="text" name="unpaid" class="form-control" placeholder="" />
             <label class="form-label" for="unpaid">Unpaid Leave Taken</label>
             <div class="invalid-feedback">
@@ -261,6 +271,13 @@ function formatDate(inputDate) {
                 hajj = 0;
               }
 
+              var umrah = '';
+              if (fetchLeaveTypeData.umrah.taken > 0) {
+                umrah = 40;
+              } else {
+                umrah = 0;
+              }
+
               var special = '';
               if (fetchLeaveTypeData.special.taken > 7) {
                 special = 3;
@@ -269,7 +286,7 @@ function formatDate(inputDate) {
               }
 
               var leaveTypeData = {
-                labels: ['Annual Leave', 'Sick Leave', 'Sick Extended Leave', 'Emergency Leave Taken', 'Marriage Leave', 'Paternity Leave', 'Maternity Leave', 'Attend Exam Leave', 'Hajj Leave', 'Unpaid Leave Taken', 'Special Leave'],
+                labels: ['Annual Leave', 'Sick Leave', 'Sick Extended Leave', 'Emergency Leave Taken', 'Marriage Leave', 'Paternity Leave', 'Maternity Leave', 'Attend Exam Leave', 'Hajj Leave', 'Umrah Leave', 'Unpaid Leave Taken', 'Special Leave'],
                 data: [
                   fetchLeaveTypeData.annual.leave - fetchLeaveTypeData.annual.taken,
                   fetchLeaveTypeData.sick.leave - fetchLeaveTypeData.sick.taken,
@@ -280,6 +297,7 @@ function formatDate(inputDate) {
                   fetchLeaveTypeData.maternity.leave - genderFemale,
                   fetchLeaveTypeData.attendExam.leave - fetchLeaveTypeData.attendExam.taken,
                   fetchLeaveTypeData.hajj.leave - hajj,
+                  fetchLeaveTypeData.umrah.leave - umrah,
                   fetchLeaveTypeData.unpaid.taken,
                   fetchLeaveTypeData.special.leave - special,
                 ],
@@ -295,7 +313,7 @@ function formatDate(inputDate) {
               var option = {
                 color: [getColor('bg-info-light', 'background-color'), getColor('bg-warning-darker', 'background-color'),
                   getColor('bg-warning-light', 'background-color'), getColor('bg-danger-light', 'background-color'), getColor('bg-danger-dark', 'background-color'), getColor('bg-success-light', 'background-color'),
-                  getColor('bg-success-dark', 'background-color'), getColor('bg-info-dark', 'background-color'), getColor('bg-info-lighter', 'background-color'), getColor('bg-primary', 'background-color'), getColor('bg-warning-lighter', 'background-color')
+                  getColor('bg-success-dark', 'background-color'), getColor('bg-info-dark', 'background-color'), getColor('bg-info-lighter', 'background-color'), getColor('bg-success-lighter', 'background-color'), getColor('bg-primary', 'background-color'), getColor('bg-warning-lighter', 'background-color')
                 ],
                 series: [{
                   name: 'Tasks assigned to me',
@@ -404,6 +422,12 @@ function formatDate(inputDate) {
              showHajj = 'd-none';
             }else{
              showHajj = '';
+            }
+
+            if(userLeave.umrah.taken > 0){
+             showUmrah = 'd-none';
+            }else{
+             showUmrah = '';
             }
 
             if(userLeave.special.taken > 7){
@@ -573,11 +597,11 @@ function formatDate(inputDate) {
 
           </div>
 
-          <div class="align-items-center justify-content-between d-flex mb-0 <%= showSpecial %>">
+          <div class="align-items-center justify-content-between d-flex mb-0 mt-n2 <%= showUmrah %>">
 
             <div class="d-flex align-items-center mb-1">
-              <span class="d-inline-block bg-warning-lighter bullet-item me-2"></span>
-              <p class="mb-0 fw-semibold text-body lh-sm flex-1">Special Leave</p>
+              <span class="d-inline-block bg-success-lighter bullet-item me-2"></span>
+              <p class="mb-0 fw-semibold text-body lh-sm flex-1">Umrah Leave</p>
             </div>
 
             <div style="position: relative;">
@@ -587,7 +611,7 @@ function formatDate(inputDate) {
                   <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
                 </svg>
               </div>
-              <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.special.leave %></span>
+              <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.umrah.leave %></span>
             </div>
 
           </div>
@@ -626,6 +650,25 @@ function formatDate(inputDate) {
                 </svg>
               </div>
               <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.unpaid.taken %></span>
+            </div>
+
+          </div>
+
+          <div class="align-items-center justify-content-between d-flex mb-0 <%= showSpecial %>">
+
+            <div class="d-flex align-items-center mb-1">
+              <span class="d-inline-block bg-warning-lighter bullet-item me-2"></span>
+              <p class="mb-0 fw-semibold text-body lh-sm flex-1">Special Leave</p>
+            </div>
+
+            <div style="position: relative;">
+              <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:100">
+                <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
+                  <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
+                  <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
+                </svg>
+              </div>
+              <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.special.leave %></span>
             </div>
 
           </div>

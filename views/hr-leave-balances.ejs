@@ -7,7 +7,7 @@
   </div>
 
   <div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis pt-7 pb-3 border-y mb-6">
-    <div id="all-staff" data-list='{"valueNames":["staff","annual","sick","sickextended","emergency" ,"marriage","paternity","maternity","attendexam","hajj","special","unpaid"],"page":10,"pagination":true}'>
+    <div id="all-staff" data-list='{"valueNames":["staff","annual","sick","sickextended","emergency" ,"marriage","paternity","maternity","attendexam","hajj","umrah","special","unpaid"],"page":10,"pagination":true}'>
 
       <div class="row align-items-end justify-content-between pb-4 g-3">
 
@@ -40,6 +40,7 @@
               <th class="sort align-middle ps-3" scope="col" data-sort="maternity" style="width:auto;">MATERNITY</th>
               <th class="sort align-middle ps-3" scope="col" data-sort="attendexam" style="width:auto;">ATTEND EXAM</th>
               <th class="sort align-middle ps-3" scope="col" data-sort="hajj" style="width:auto;">HAJJ</th>
+              <th class="sort align-middle ps-3" scope="col" data-sort="umrah" style="width:auto;">UMRAH</th>
               <th class="sort align-middle ps-3" scope="col" data-sort="special" style="width:auto;">SPECIAL</th>
               <th class="sort align-middle ps-3" scope="col" data-sort="unpaid" style="width:auto;">UNPAID</th>
               <th class="sort align-middle text-end" scope="col" style="width:5%;"></th>
@@ -62,7 +63,6 @@
                 <p class="mb-0 fs-8">User not found</p>
                 <% } %>
               </td>
-
 
               <td class="align-middle text-body text-center white-space-nowrap ps-0 annual">
                 <p class="mb-0 fs-8 fw-bold"><%= leave.annual.leave - leave.annual.taken %></p>
@@ -93,11 +93,15 @@
               </td>
 
               <td class="align-middle text-body text-center white-space-nowrap ps-0 attendexam">
-                <p class="mb-0 fs-8 fw-bold"><%= leave.attendExam.taken %></p>
+                <p class="mb-0 fs-8 fw-bold"><%= leave.attendExam.leave - leave.attendExam.taken %></p>
               </td>
 
               <td class="align-middle text-body text-center white-space-nowrap ps-0 hajj">
-                <p class="mb-0 fs-8 fw-bold"><%= leave.hajj.taken %></p>
+                <p class="mb-0 fs-8 fw-bold"><%= leave.hajj.leave - leave.hajj.taken %></p>
+              </td>
+
+              <td class="align-middle text-body text-center white-space-nowrap ps-0 hajj">
+                <p class="mb-0 fs-8 fw-bold"><%=leave.umrah.leave - leave.umrah.taken %></p>
               </td>
 
               <td class="align-middle text-body text-center white-space-nowrap ps-0 special">
