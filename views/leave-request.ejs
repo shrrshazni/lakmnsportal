@@ -267,10 +267,11 @@
                 url: `/search/staff/assignee-relief?query=${query}`,
                 method: 'GET',
                 success: function(results) {
-                  displayResults(results);
+                    console.log('Relief Staff Results:', results);
+                    displayResults(results);
                 },
                 error: function(error) {
-                  console.error(error);
+                    console.error(error);
                 }
               });
             } else {
@@ -282,11 +283,13 @@
           function displayResults(results) {
             const resultsDiv = $('#results');
             resultsDiv.empty();
+            console.log('Display Relief Staff Results:', results);
 
             if (results.length === 0) {
               resultsDiv.append('<p class="text-muted fs-9">No results found</p>');
             } else {
               results.forEach(result => {
+                console.log('Relief Staff Result:', result);
                 const resultDiv = $(
                   '<div class="result btn btn-outline-primary mr-2 mb-2 notranslate"></div>'
                 ).text(result.fullname);
@@ -314,6 +317,7 @@
 
           function updateSelectedNamesDisplay() {
             // Update the display with the selected names
+            console.log('Selected Names:', selectedNames);
             selectedNamesDiv.empty();
             selectedNames.forEach(name => {
               const nameDiv = $(
@@ -352,10 +356,11 @@
                 url: `/search/staff/auxiliary-police?query=${query}`,
                 method: 'GET',
                 success: function(results) {
-                  displaySupervisorResults(results);
+                    console.log('Supervisor Results:', results);
+                    displaySupervisorResults(results);
                 },
                 error: function(error) {
-                  console.error(error);
+                    console.error(error);
                 }
               });
             } else {
@@ -367,11 +372,13 @@
           function displaySupervisorResults(results) {
             const resultsDiv = $('#supervisorResults');
             resultsDiv.empty();
+            console.log('Display Supervisor Results:', results);
 
             if (results.length === 0) {
               resultsDiv.append('<p class="text-muted fs-9">No results found</p>');
             } else {
               results.forEach(result => {
+                console.log('Supervisor Result:', result);
                 const resultDiv = $(
                   '<div class="result btn btn-outline-primary mr-2 mb-2 notranslate"></div>'
                 ).text(result.fullname);
@@ -398,6 +405,7 @@
           }
 
           function updateSelectedSupervisorsDisplay() {
+            console.log('Selected Supervisors:', selectedSupervisors);
             // Update the display with the selected supervisors
             selectedSupervisorsDiv.empty();
             selectedSupervisors.forEach(name => {

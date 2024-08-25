@@ -38,7 +38,7 @@ if (userApprovals.length > 0) {
             (approval.role === 'Head of Division') ||
             (approval.role === 'Human Resource') ||
             (approval.role === 'Deputy Chief Executive Officer') ||
-            (approval.role === 'Supervisors') ||
+            (approval.role === 'Supervisor') ||
             (approval.role === 'Chief Executive Officer') 
         );
 
@@ -71,15 +71,14 @@ if (allApprovalsBeforeHRApproved && user.section === 'Human Resource Management 
     showAcknowledge = (leave.status === 'approved' || leave.status === 'denied') ? 'd-none' : '';
 }
 
-
-
 // Handle cancel button visibility
 const headDepartmentApprovalIndex = approvals.findIndex(approval => approval.role === 'Head of Department');
 const headSectionApprovalIndex = approvals.findIndex(approval => approval.role === 'Head of Section');
 const deputyChiefApprovalIndex = approvals.findIndex(approval => approval.role === 'Deputy Chief Executive Officer');
+const supervisorIndex = approvals.findIndex(approval => approval.role === 'Supervisor');
 const chiefApprovalIndex = approvals.findIndex(approval => approval.role === 'Chief Executive Officer');
 
-const anyApprovalIndex = [headDepartmentApprovalIndex, headSectionApprovalIndex, deputyChiefApprovalIndex, chiefApprovalIndex]
+const anyApprovalIndex = [headDepartmentApprovalIndex, headSectionApprovalIndex, deputyChiefApprovalIndex, supervisorIndex, chiefApprovalIndex]
     .findIndex(index => index !== -1 && approvals[index] && approvals[index].recipient.toString() === user._id.toString());
 
 if (leave.status === 'approved' && leave.date.start >= new Date()) {

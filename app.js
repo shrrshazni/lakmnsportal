@@ -3834,6 +3834,8 @@ app.get('/leave/:approval/:id', async function (req, res) {
             }
 
             const isReliefStaff = checkLeave.approvals[indexOfRecipient].role === 'Relief Staff';
+            const isSupervisor = checkLeave.approvals[indexOfRecipient].role === 'Supervisor';
+
 
             await Leave.findOneAndUpdate(
                 {
@@ -3845,6 +3847,7 @@ app.get('/leave/:approval/:id', async function (req, res) {
                     $set: {
                         'approvals.$.status': 'approved',
                         'approvals.$.comment': 'The request has been approved' + (isReliefStaff ? ' by ' + user.fullname : ''),
+                        'approvals.$.comment': 'The request has been approved' + (isSupervisor ? ' by ' + user.fullname : ''),
                         'approvals.$.timestamp': moment().utcOffset(8).toDate(),
                         status: 'pending'
                     }
@@ -6592,7 +6595,7 @@ app.get('/submit-failed', async function (req, res) {
 
 // VMS
 // ROUTE FOR DISPLAYING THE FORM
-app.get('/visitor_form', (req, res) => {
+app.get('/visitor/submit', (req, res) => {
     try {
         try {
             res.render('visitor_form', {
@@ -6617,10 +6620,7 @@ app.get('/visitor_form', (req, res) => {
         console.error('Rendering Error:', renderError);
         next(renderError);
     }
-});
-
-// ROUTE FOR HANDLING FORM SUBMISSION
-app.post('/submit_visitor_form', async (req, res) => {
+}).post('/visitor/submit', async (req, res) => {
     const kualaLumpurTimeZoneOffset1 = 8; // Kuala Lumpur is UTC+8
     const now1 = moment().utcOffset(kualaLumpurTimeZoneOffset1 * 60); // Convert hours to minutes
 
@@ -6687,6 +6687,9 @@ app.post('/submit_visitor_form', async (req, res) => {
         }
     }
 });
+
+// ROUTE FOR HANDLING FORM SUBMISSION
+
 
 // ROUTE FOR DISPLAYING VISITOR LIST
 app.get('/vms/list', isAuthenticated, async function (req, res) {
@@ -9902,6 +9905,7 @@ generateApprovals = function (
 
             if (assignee && assignee.length > 0) {
                 assignee.forEach(assigneeItem => {
+                    console.log('Adding Relief Staff:', assigneeItem);
                     approvals.push({
                         recipient: assigneeItem._id,
                         role: 'Relief Staff',
@@ -9915,6 +9919,7 @@ generateApprovals = function (
 
             if (supervisors && supervisors.length > 0) {
                 supervisors.forEach(supervisorsItem => {
+                    console.log('Adding Supervisor:', supervisorsItem);
                     approvals.push({
                         recipient: supervisorsItem._id,
                         role: 'Supervisor',
