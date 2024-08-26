@@ -4154,7 +4154,12 @@ app.get('/leave/:approval/:id', async function (req, res) {
                 res.redirect('/leave/details/' + id);
             }
         } else if (approval === 'cancelled') {
+
             if (checkLeave.status === 'approved') {
+                const firstRecipientId = checkLeave.approvals[0].recipient;
+                const lastRecipientId =
+                    checkLeave.approvals[checkLeave.approvals.length - 1].recipient;
+
                 const userLeave = await UserLeave.findOne({
                     user: firstRecipientId
                 });
@@ -4273,10 +4278,6 @@ app.get('/leave/:approval/:id', async function (req, res) {
                 },
                 { new: true }
             );
-
-            const firstRecipientId = checkLeave.approvals[0].recipient;
-            const lastRecipientId =
-                checkLeave.approvals[checkLeave.approvals.length - 1].recipient;
 
             // send noti
             const newNotification1 = new Notification({
