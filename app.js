@@ -4154,11 +4154,11 @@ app.get('/leave/:approval/:id', async function (req, res) {
                 res.redirect('/leave/details/' + id);
             }
         } else if (approval === 'cancelled') {
+            const firstRecipientId = checkLeave.approvals[0].recipient;
+            const lastRecipientId =
+                checkLeave.approvals[checkLeave.approvals.length - 1].recipient;
 
             if (checkLeave.status === 'approved') {
-                const firstRecipientId = checkLeave.approvals[0].recipient;
-                const lastRecipientId =
-                    checkLeave.approvals[checkLeave.approvals.length - 1].recipient;
 
                 const userLeave = await UserLeave.findOne({
                     user: firstRecipientId
@@ -4167,20 +4167,22 @@ app.get('/leave/:approval/:id', async function (req, res) {
                 const startDate = checkLeave.date.start;
                 const returnDate = checkLeave.date.return;
 
+                var daysDifference = '';
+
                 // Calculate the difference in hours between the two dates
                 if (
                     checkLeave.type === 'Annual Leave'
                 ) {
                     if (userOnLeave.isNonOfficeHour) {
-                        numberOfDays = moment(returnDate).diff(moment(startDate), 'days') + 1;
+                        daysDifference = moment(returnDate).diff(moment(startDate), 'days') + 1;
                     } else {
-                        numberOfDays = calculateBusinessDays(startDate, returnDate);
+                        daysDifference = calculateBusinessDays(startDate, returnDate);
                     }
                 } else if (checkLeave.type === 'Half Day Leave') {
                     if (userOnLeave.isNonOfficeHour) {
-                        numberOfDays = (moment(returnDate).diff(moment(startDate), 'days') + 1) / 2;
+                        daysDifference = (moment(returnDate).diff(moment(startDate), 'days') + 1) / 2;
                     } else {
-                        numberOfDays = calculateBusinessDays(startDate, returnDate) / 2;
+                        daysDifference = calculateBusinessDays(startDate, returnDate) / 2;
                     }
                 } else if (checkLeave.type === 'Emergency Leave') {
                     daysDifference = moment(returnDate).diff(moment(startDate), 'days') + 1;
