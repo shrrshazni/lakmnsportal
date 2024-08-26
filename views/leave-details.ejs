@@ -61,11 +61,9 @@ if (userApprovals.length > 0) {
     }
 }
 
-const approvalsBeforeHR = approvals.slice(1, approvals.length - 1); // Exclude first and last approvals
-console.log('Approvals before HR:', approvalsBeforeHR);
+const approvalsBeforeHR = approvals.slice(1, approvals.length - 1); 
 
 const allApprovalsBeforeHRApproved = approvalsBeforeHR.every(approval => approval.status === 'approved');
-console.log('All Approvals Before HR Approved:', allApprovalsBeforeHRApproved);
 
 if (allApprovalsBeforeHRApproved && user.section === 'Human Resource Management Division') {
     showAcknowledge = (leave.status === 'approved' || leave.status === 'denied') ? 'd-none' : '';
@@ -82,7 +80,13 @@ const staffReq = approvals.findIndex(approval => approval.role === 'Staff');
 const anyApprovalIndex = [headDepartmentApprovalIndex, headSectionApprovalIndex, deputyChiefApprovalIndex, supervisorIndex, chiefApprovalIndex, staffReq]
     .findIndex(index => index !== -1 && approvals[index] && approvals[index].recipient.toString() === user._id.toString());
 
-if (leave.status === 'approved' && leave.date.start > new Date()) {
+const leaveStartDate = new Date(leave.date.start);
+const leaveStartDateUTCPlus8 = new Date(leaveStartDate.getTime() + (32 * 60 * 60 * 1000));
+
+console.log(anyApprovalIndex);
+console.log(leaveStartDateUTCPlus8);
+
+if (leave.status === 'approved' && leaveStartDateUTCPlus8 > new Date()) {
     if (leave.user.toString() === user._id.toString() || anyApprovalIndex !== -1) {
         showCancel = '';
     }
@@ -91,6 +95,8 @@ if (leave.status === 'approved' && leave.date.start > new Date()) {
         showCancel = '';
     }
 }
+
+console.log(showCancel);
 
 %>
 
