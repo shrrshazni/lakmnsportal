@@ -77,11 +77,12 @@ const headSectionApprovalIndex = approvals.findIndex(approval => approval.role =
 const deputyChiefApprovalIndex = approvals.findIndex(approval => approval.role === 'Deputy Chief Executive Officer');
 const supervisorIndex = approvals.findIndex(approval => approval.role === 'Supervisor');
 const chiefApprovalIndex = approvals.findIndex(approval => approval.role === 'Chief Executive Officer');
+const staffReq = approvals.findIndex(approval => approval.role === 'Staff');
 
-const anyApprovalIndex = [headDepartmentApprovalIndex, headSectionApprovalIndex, deputyChiefApprovalIndex, supervisorIndex, chiefApprovalIndex]
+const anyApprovalIndex = [headDepartmentApprovalIndex, headSectionApprovalIndex, deputyChiefApprovalIndex, supervisorIndex, chiefApprovalIndex, staffReq]
     .findIndex(index => index !== -1 && approvals[index] && approvals[index].recipient.toString() === user._id.toString());
 
-if (leave.status === 'approved' && leave.date.start >= new Date()) {
+if (leave.status === 'approved' && leave.date.start > new Date()) {
     if (leave.user.toString() === user._id.toString() || anyApprovalIndex !== -1) {
         showCancel = '';
     }

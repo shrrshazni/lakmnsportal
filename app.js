@@ -860,7 +860,7 @@ let transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
         user: 'protech@lakmns.org',
-        pass: 'lxiwvlgvibxcbsxy'
+        pass: 'qlnnmsaexggkkyco'
     }
 });
 
@@ -2686,6 +2686,8 @@ app
             // find assignee
             const assignee = await User.find({ fullname: { $in: selectedNames } });
             const supervisors = await User.find({ fullname: { $in: selectedSupervisors } });
+
+            console.log('supervisors: ', supervisors);
             // leave for the user
             const leave = await Leave.find({ user: user._id });
 
@@ -4266,7 +4268,7 @@ app.get('/leave/:approval/:id', async function (req, res) {
                         status: 'cancelled',
                         comment:
                             'The request has been cancelled by the ' +
-                            checkLeave.approvals[indexOfRecipient].role
+                            checkLeave.approvals[indexOfRecipient].role + ' ' + user.username
                     }
                 },
                 { new: true }
@@ -9597,6 +9599,8 @@ generateApprovals = function (
     type
 ) {
     let approvals = [];
+
+    console.log(supervisors);
 
     if (type === 'Emergency Leave') {
         if (user.isOfficer === true) {
