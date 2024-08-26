@@ -25,538 +25,20 @@ const requestIp = require('request-ip');
 const { performance } = require('perf_hooks');
 const webPush = require('web-push');
 
-const mongoURI =
-    'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/session';
+const app = express();
 
-const generateVAPIDKeys = () => {
-    const vapidKeys = webPush.generateVAPIDKeys();
-    console.log('Public VAPID Key:', vapidKeys.publicKey);
-    console.log('Private VAPID Key:', vapidKeys.privateKey);
-    return vapidKeys;
-};
+// ============================
+// Extra comment
+// ============================
+// const generateVAPIDKeys = () => {
+//     const vapidKeys = webPush.generateVAPIDKeys();
+//     console.log('Public VAPID Key:', vapidKeys.publicKey);
+//     console.log('Private VAPID Key:', vapidKeys.privateKey);
+//     return vapidKeys;
+// };
 
 // Uncomment the line below to generate VAPID keys once
 // const { publicKey, privateKey } = generateVAPIDKeys(); // Uncomment this line to generate keys
-
-const publicVapidKey = 'BIm9U514rYCkeKfBkFzbt2hw7yUyF9TtWCEuz3SXfCCzSwfIDYk_Wh55nHngMr9TqeT6fwxB9KQ-phAVvmcPzKA';
-const privateVapidKey = '_2XQYXRn3GBdELPjlec4d2HHYKUSAs3fJ2cU_lrx1eY';
-
-const app = express();
-
-app.use(fileUpload());
-app.use(bodyParser.json());
-app.set('view engine', 'ejs');
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static('public'));
-app.use(requestIp.mw());
-app.set('trust proxy', true);
-
-// Sessions Database
-const sessionDatabase = mongoose.createConnection('mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/session');
-
-// mongoose session option
-const store = new MongoDBSession({
-    uri: mongoURI,
-    collection: 'sessions',
-    stringify: false,
-    connection: sessionDatabase
-    // autoRemove: 'interval',
-    // autoRemoveInterval: 1
-});
-
-//init session
-app.use(
-    session({
-        secret: 'Our little secrets',
-        resave: false,
-        saveUninitialized: false,
-        store: store,
-        cookie: {
-            maxAge: 7 * 60 * 60 * 1000
-        }
-    })
-);
-
-// init web-push
-webPush.setVapidDetails('mailto:protech@lakmns.org', publicVapidKey, privateVapidKey);
-
-//init passport
-app.use(passport.initialize());
-app.use(passport.session());
-
-// DATABASE INITIALIZATION
-
-// Users Database
-const userDatabase = mongoose.createConnection(
-    'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/user'
-);
-
-// Leave Database
-const leaveDatabase = mongoose.createConnection(
-    'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/leave'
-);
-
-// File Database
-const fileDatabase = mongoose.createConnection(
-    'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/file'
-);
-
-// Attendance Database
-const attendanceDatabase = mongoose.createConnection(
-    'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/attendance'
-);
-
-// Tender Database
-const tenderDatabase = mongoose.createConnection(
-    'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/tender'
-);
-
-// Auxiliary Police
-const auxPoliceDatabase = mongoose.createConnection(
-    'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/auxipolice'
-);
-
-// Visiting MAanagement
-const vmsDatabase = mongoose.createConnection(
-    'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/vms'
-);
-
-// SCHEMA INITIALIZATION
-
-// FOR USER DATABASE
-
-// USER
-const userSchema = new mongoose.Schema({
-    fullname: { type: String, required: true },
-    username: { type: String, required: true, unique: true, index: true }, // Add index here
-    email: { type: String, required: true, unique: true, index: true },
-    nric: { type: String },
-    phone: String,
-    officePhone: String,
-    profile: String,
-    age: { type: Number, min: 0 },
-    address: String,
-    gender: String,
-    education: String,
-    department: String,
-    section: String,
-    position: String,
-    grade: { type: Number, default: 5 },
-    classification: {
-        type: String,
-        enum: ['permanent', 'contract', 'intern', 'trainee'],
-        default: 'trainee'
-    },
-    marital: {
-        type: String,
-        enum: ['single', 'married', 'divorced', 'widowed', 'separated'],
-        default: 'single'
-    },
-    children: { type: Number, default: 0 },
-    isChiefExec: { type: Boolean, default: false },
-    isDeputyChiefExec: { type: Boolean, default: false },
-    isHeadOfDepartment: { type: Boolean, default: false },
-    isHeadOfSection: { type: Boolean, default: false },
-    isAdmin: { type: Boolean, default: false },
-    isOfficer: { type: Boolean, default: false },
-    isManagement: { type: Boolean, default: false },
-    isPersonalAssistant: { type: Boolean, default: false },
-    isNonOfficeHour: { type: Boolean, default: false },
-    isSuperAdmin: { type: Boolean, default: false },
-    isDriver: { type: Boolean, default: false },
-    isTeaLady: { type: Boolean, default: false },
-    dateEmployed: { type: Date },
-    birthdate: { type: Date }
-});
-userSchema.index({ username: 1 });
-userSchema.index({ email: 1 });
-
-// USER LEAVE
-const userLeaveSchema = new mongoose.Schema({
-    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    annual: {
-        leave: { type: Number, default: 14 },
-        taken: { type: Number, default: 0 }
-    },
-    sick: {
-        leave: { type: Number, default: 14 },
-        taken: { type: Number, default: 0 }
-    },
-    sickExtended: {
-        leave: { type: Number, default: 60 },
-        taken: { type: Number, default: 0 }
-    },
-    emergency: {
-        leave: { type: Number, default: 0 },
-        taken: { type: Number, default: 0 }
-    },
-    paternity: {
-        leave: { type: Number, default: 3 },
-        taken: { type: Number, default: 0 }
-    },
-    maternity: {
-        leave: { type: Number, default: 60 },
-        taken: { type: Number, default: 0 }
-    },
-    bereavement: {
-        leave: { type: Number, default: 3 },
-        taken: { type: Number, default: 0 }
-    }, // will be removed later
-    study: {
-        leave: { type: Number, default: 3 },
-        taken: { type: Number, default: 0 }
-    }, // will be removed later
-    marriage: {
-        leave: { type: Number, default: 3 },
-        taken: { type: Number, default: 0 }
-    },
-    attendExam: {
-        leave: { type: Number, default: 5 },
-        taken: { type: Number, default: 0 }
-    },
-    hajj: {
-        leave: { type: Number, default: 40 },
-        taken: { type: Number, default: 0 }
-    },
-    umrah: {
-        leave: { type: Number, default: 7 },
-        taken: { type: Number, default: 0 }
-    },
-    unpaid: {
-        taken: { type: Number, default: 0 }
-    },
-    special: {
-        leave: { type: Number, default: 3 },
-        taken: { type: Number, default: 0 }
-    }
-});
-
-// NOTIFICATIONS
-const notificationSchema = new mongoose.Schema({
-    sender: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    recipient: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
-    },
-    message: { type: String, required: true },
-    type: { type: String },
-    url: { type: String },
-    timestamp: { type: Date, default: Date.now },
-    read: { type: Boolean, default: false }
-});
-notificationSchema.index({ recipient: 1, read: 1 });
-
-// ACTIVITY
-const activitySchema = new mongoose.Schema({
-    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    date: { type: Date, default: Date.now },
-    title: { type: String },
-    type: { type: String },
-    description: { type: String }
-});
-activitySchema.index({ user: 1, date: -1 });
-
-// TASK
-const taskSchema = new mongoose.Schema({
-    owner: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
-    },
-    name: { type: String, required: true },
-    timestamp: { type: Date, required: true, default: Date.now },
-    due: { type: Date },
-    description: { type: String },
-    status: {
-        type: String,
-        enum: ['process', 'urgent', 'done', 'cancelled'],
-        default: 'process'
-    },
-    fileId: { type: String },
-    subtask: [
-        {
-            name: { type: String }
-        }
-    ],
-    assignee: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-    reminder: { type: Date }
-});
-
-// USER'S INFORMATION
-const infoSchema = new mongoose.Schema({
-    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    status: { type: String },
-    emailVerified: { type: Boolean, default: false },
-    phoneVerified: { type: Boolean, default: false },
-    isOnline: { type: Boolean, default: false },
-    lastSeen: { type: Date }
-});
-infoSchema.index({ user: 1 }); // Index on user
-infoSchema.index({ status: 1 }); // Index on status
-infoSchema.index({ isOnline: 1 }); // Index on isOnline
-
-// LEAVE
-
-const approvalSchema = new mongoose.Schema({
-    recipient: { type: mongoose.Schema.Types.ObjectId, required: true },
-    role: { type: String },
-    status: {
-        type: String,
-        enum: ['pending', 'approved', 'denied', 'submitted'],
-        default: 'pending'
-    },
-    comment: String,
-    timestamp: { type: Date },
-    estimated: { type: Date }
-});
-
-const leaveSchema = new mongoose.Schema({
-    user: { type: mongoose.Schema.Types.ObjectId, required: true },
-    grade: { type: String, required: true },
-    department: { type: String },
-    fileId: { type: String, unique: true },
-    type: { type: String },
-    assignee: [{ type: mongoose.Schema.Types.ObjectId }],
-    date: {
-        start: { type: Date },
-        return: { type: Date }
-    },
-    purpose: String,
-    status: {
-        type: String,
-        enum: [
-            'pending',
-            'approved',
-            'denied',
-            'submitted',
-            'invalid',
-            'cancelled'
-        ],
-        default: 'pending'
-    },
-    comment: String,
-    timestamp: { type: Date, default: Date.now },
-    estimated: {
-        type: Date,
-        default: () => {
-            const currentDate = moment().utcOffset(8).add(3, 'days').toDate();
-            return currentDate;
-        }
-    },
-    approvals: [approvalSchema]
-});
-leaveSchema.index({ status: 1 });
-leaveSchema.index({ user: 1 });
-leaveSchema.index({ department: 1 });
-leaveSchema.index({ 'date.start': 1 });
-leaveSchema.index({ 'date.return': 1 });
-leaveSchema.index({ timestamp: 1 });
-
-// FILE
-const FileSchema = new mongoose.Schema({
-    uuid: String,
-    user: { type: mongoose.Schema.Types.ObjectId },
-    name: String,
-    path: String,
-    date: { type: Date },
-    type: String,
-    origin: String,
-    size: String
-});
-FileSchema.index({ user: 1 }); // Index on user
-FileSchema.index({ date: -1 });
-
-// ATTENDANCE
-const AttendanceSchema = new mongoose.Schema({
-    user: {
-        type: mongoose.Schema.Types.ObjectId,
-        required: true
-    },
-    type: {
-        type: String,
-        enum: ['sign in', 'sign out', 'manual add', 'event', 'meeting', 'invalid', 'weekend', 'public holiday', 'acknowledged'],
-        default: 'invalid'
-    },
-    date: {
-        signInTime: {
-            type: Date,
-            default: null
-        },
-        signOutTime: {
-            type: Date,
-            default: null
-        }
-    },
-    status: {
-        type: String,
-        enum: ['Present', 'Absent', 'Late', 'Invalid', 'Leave', 'Non Working Day'],
-        default: 'Present'
-    },
-    location: {
-        signIn: { type: String, default: 'tbd' },
-        signOut: { type: String, default: 'tbd' }
-    },
-    remarks: {
-        type: String
-    },
-    timestamp: { type: Date, default: null }
-});
-// Add indexes
-AttendanceSchema.index({ user: 1, date: 1 }); // Compound index on user and date
-AttendanceSchema.index({ type: 1 }); // Index on type
-AttendanceSchema.index({ status: 1 }); // Index on status
-AttendanceSchema.index({ location: 1 }); // Index on status
-
-const TempAttendanceSchema = new mongoose.Schema({
-    user: {
-        type: mongoose.Schema.Types.ObjectId,
-        required: true
-    },
-    type: {
-        type: String,
-        enum: ['sign in', 'sign out', 'manual add', 'event', 'meeting', 'invalid'],
-        default: 'invalid'
-    },
-    timestamp: { type: Date }
-});
-
-const qrCodeSchema = new mongoose.Schema({
-    uniqueId: {
-        type: String,
-        required: true
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now,
-        required: true
-    }
-});
-qrCodeSchema.index({ uniqueId: 1 });
-
-// AUXILIARY POLICE
-
-// PATROL REPORT 
-const checkpoint = {
-    latitude: Number,
-    longitude: Number,
-    checkpointName: String,
-    time: String,
-    logReport: String,
-    fullName: String,
-    username: String
-};
-
-const cycleAmount = {
-    cycleSeq: Number,
-    timeSlot: String,
-    checkpoint: [checkpoint]
-};
-
-const shiftMember = {
-    cycle: [cycleAmount]
-};
-
-// PATROL SCHEMA
-const patrolSchema = new mongoose.Schema({
-    reportId: String,
-    shift: String,
-    type: String,
-    date: Date,
-    location: String,
-    status: String,
-    startShift: String,
-    endShift: String,
-    remarks: String,
-    staff: [],
-    shiftMember: shiftMember,
-    patrolUnit: [checkpoint],
-    timestamp: { type: Date }
-});
-patrolSchema.index({ reportId: 1 }); // Index on reportId
-patrolSchema.index({ shift: 1 }); // Index on shift
-patrolSchema.index({ date: 1 }); // Index on date
-patrolSchema.index({ location: 1 }); // Index on location
-patrolSchema.index({ status: 1 }); // Index on status
-
-// SCHEDULE
-const scheduleAuxSchema = new mongoose.Schema({
-    date: { type: Date, required: true },
-    location: { type: String },
-    shift: [],
-    staffRaisedFlag: [],
-    staffLoweredFlag: []
-});
-scheduleAuxSchema.index({ date: 1 }); // Index on date
-scheduleAuxSchema.index({ location: 1 }); // Index on location
-
-// DUTY HANDOVER
-
-const dutyHandoverSchema = new mongoose.Schema({
-    headShift: String,
-    date: Date,
-    time: String,
-    location: String,
-    remarks: String,
-    status: {
-        type: String,
-        enum: ['completed', 'pending'],
-        default: 'pending'
-    },
-    shift: String,
-    staff: [String],
-    timestamp: { type: Date }
-});
-dutyHandoverSchema.index({ date: 1 }); // Index on date
-dutyHandoverSchema.index({ location: 1 }); // Index on location
-dutyHandoverSchema.index({ status: 1 }); // Index on status
-dutyHandoverSchema.index({ shift: 1 }); // Index on shift
-
-// CASE SCHEMA
-const caseSchema = new mongoose.Schema({
-    fullname: String,
-    time: String,
-    date: Date,
-    location: String,
-    summary: String,
-    actionTaken: String,
-    eventSummary: String,
-    staffOnDuty: [],
-    remarks: String
-});
-caseSchema.index({ date: 1 }); // Index on date
-caseSchema.index({ location: 1 }); // Index on location
-caseSchema.index({ fullname: 1 }); // Index on fullname
-
-// VMS SCHEMA
-const vmsSchema = new mongoose.Schema({
-    vis_firstname: String,
-    vis_lastname: String,
-    no_ic: String,
-    address: String,
-    level: String,
-    no_pas: String,
-    no_telephone: String,
-    pur_visit: String,
-    time_in: Date,
-    time_out: Date,
-    build_loc: String
-});
-
-// sucbscription schema
-const subscriptionSchema = new mongoose.Schema({
-    endpoint: { type: String, required: true },
-    expirationTime: { type: Date },
-    keys: {
-        p256dh: { type: String, required: true },
-        auth: { type: String, required: true }
-    },
-    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Optional: link to a user if needed
-    createdAt: { type: Date, default: Date.now }
-});
-
-// Create an index on the endpoint field for faster lookups
-subscriptionSchema.index({ endpoint: 1 });
 
 // TENDER
 // const tenderSchema = new mongoose.Schema({
@@ -598,12 +80,680 @@ subscriptionSchema.index({ endpoint: 1 });
 //         }
 //     ]
 // });
+// const tenderDatabase = mongoose.createConnection(
+//     'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/tender'
+// );
+// const Tender = tenderDatabase.model('Tender', tenderSchema);
+// const TenderCompany = tenderDatabase.model('TenderCompany', tenderCompanySchema);
+
+// async function createAllIndexes() {
+//     try {
+//         await User.createIndexes();
+//         await UserLeave.createIndexes();
+//         await Notification.createIndexes();
+//         await Activity.createIndexes();
+//         await Task.createIndexes();
+//         await Info.createIndexes();
+//         await Leave.createIndexes();
+//         await File.createIndexes();
+//         await Attendance.createIndexes();
+//         await TempAttendance.createIndexes();
+//         await QRCode.createIndexes();
+//         await PatrolAux.createIndexes();
+//         await ScheduleAux.createIndexes();
+//         await DutyHandoverAux.createIndexes();
+//         await CaseAux.createIndexes();
+
+//         console.log('All indexes created successfully');
+//     } catch (err) {
+//         console.error('Error creating indexes:', err);
+//     }
+// }
+// // createAllIndexes();
+
+// // Deleted all indexes
+// async function deleteAllIndexes(collection) {
+//     try {
+//         const indexes = await collection.indexes();
+//         const indexNames = indexes
+//             .filter(index => index.name !== '_id_') // Avoid dropping the default _id index
+//             .map(index => index.name);
+
+//         for (const indexName of indexNames) {
+//             await collection.dropIndex(indexName);
+//             console.log(`Dropped index: ${indexName}`);
+//         }
+//     } catch (err) {
+//         console.error('Error deleting indexes:', err);
+//     }
+// }
+// async function deleteAllIndexesFromCollections() {
+//     try {
+//         // Define the collections
+//         const collections = [
+//             User.collection,
+//             UserLeave.collection,
+//             Notification.collection,
+//             Activity.collection,
+//             Task.collection,
+//             Info.collection,
+//             Leave.collection,
+//             File.collection,
+//             Attendance.collection,
+//             TempAttendance.collection,
+//             QRCode.collection,
+//             PatrolAux.collection,
+//             ScheduleAux.collection,
+//             DutyHandoverAux.collection,
+//             CaseAux.collection
+//         ];
+
+//         for (const collection of collections) {
+//             await deleteAllIndexes(collection);
+//         }
+
+//         console.log('All indexes deleted successfully');
+//     } catch (err) {
+//         console.error('Error deleting indexes from collections:', err);
+//     }
+// }
+// // deleteAllIndexesFromCollections();
+
+// // Update mongo indexes
+// async function updateIndex(collection, indexName, indexSpec) {
+//     try {
+//         // Drop existing index if it exists
+//         const existingIndexes = await collection.indexes();
+//         const indexExists = existingIndexes.some(index => index.name === indexName);
+
+//         if (indexExists) {
+//             await collection.dropIndex(indexName);
+//         }
+
+//         // Create the new index
+//         await collection.createIndex(indexSpec.key, {
+//             name: indexSpec.name,
+//             unique: indexSpec.unique || false,
+//             background: true
+//         });
+
+//         console.log(`Index updated: ${indexSpec.name}`);
+//     } catch (err) {
+//         console.error(`Error updating index ${indexSpec.name}:`, err);
+//     }
+// }
+// async function updateAllIndexes() {
+//     try {
+//         // User Collection
+//         await updateIndex(User.collection, 'username_1', { key: { username: 1 }, name: 'username_1', unique: true });
+//         await updateIndex(User.collection, 'email_1', { key: { email: 1 }, name: 'email_1', unique: true });
+
+//         // UserLeave Collection
+//         await updateIndex(UserLeave.collection, 'user_1', { key: { user: 1 }, name: 'user_1' });
+//         await updateIndex(UserLeave.collection, 'date_start_1', { key: { 'date.start': 1 }, name: 'date_start_1' });
+
+//         // Notification Collection
+//         await updateIndex(Notification.collection, 'user_1', { key: { user: 1 }, name: 'user_1' });
+//         await updateIndex(Notification.collection, 'timestamp_1', { key: { timestamp: 1 }, name: 'timestamp_1' });
+
+//         // Activity Collection
+//         await updateIndex(Activity.collection, 'user_1', { key: { user: 1 }, name: 'user_1' });
+//         await updateIndex(Activity.collection, 'timestamp_1', { key: { timestamp: 1 }, name: 'timestamp_1' });
+
+//         // Task Collection
+//         await updateIndex(Task.collection, 'user_1', { key: { user: 1 }, name: 'user_1' });
+//         await updateIndex(Task.collection, 'status_1', { key: { status: 1 }, name: 'status_1' });
+
+//         // Info Collection
+//         await updateIndex(Info.collection, 'type_1', { key: { type: 1 }, name: 'type_1' });
+//         await updateIndex(Info.collection, 'timestamp_1', { key: { timestamp: 1 }, name: 'timestamp_1' });
+
+//         // Leave Collection
+//         await updateIndex(Leave.collection, 'user_1', { key: { user: 1 }, name: 'user_1' });
+//         await updateIndex(Leave.collection, 'status_1', { key: { status: 1 }, name: 'status_1' });
+
+//         // File Collection
+//         await updateIndex(File.collection, 'fileId_1', { key: { fileId: 1 }, name: 'fileId_1', unique: true });
+
+//         // Attendance Collection
+//         await updateIndex(Attendance.collection, 'user_1', { key: { user: 1 }, name: 'user_1' });
+//         await updateIndex(Attendance.collection, 'date_signIn_1', { key: { 'date.signInTime': 1 }, name: 'date_signIn_1' });
+
+//         // TempAttendance Collection
+//         await updateIndex(TempAttendance.collection, 'user_1', { key: { user: 1 }, name: 'user_1' });
+//         await updateIndex(TempAttendance.collection, 'timestamp_1', { key: { timestamp: 1 }, name: 'timestamp_1' });
+
+//         // QRCode Collection
+//         await updateIndex(QRCode.collection, 'code_1', { key: { code: 1 }, name: 'code_1', unique: true });
+
+//         // PatrolAux Collection
+//         await updateIndex(PatrolAux.collection, 'date_1', { key: { date: 1 }, name: 'date_1' });
+//         await updateIndex(PatrolAux.collection, 'location_1', { key: { location: 1 }, name: 'location_1' });
+
+//         // ScheduleAux Collection
+//         await updateIndex(ScheduleAux.collection, 'date_1', { key: { date: 1 }, name: 'date_1' });
+//         await updateIndex(ScheduleAux.collection, 'location_1', { key: { location: 1 }, name: 'location_1' });
+
+//         // DutyHandoverAux Collection
+//         await updateIndex(DutyHandoverAux.collection, 'date_1', { key: { date: 1 }, name: 'date_1' });
+//         await updateIndex(DutyHandoverAux.collection, 'location_1', { key: { location: 1 }, name: 'location_1' });
+
+//         // CaseAux Collection
+//         await updateIndex(CaseAux.collection, 'date_1', { key: { date: 1 }, name: 'date_1' });
+//         await updateIndex(CaseAux.collection, 'location_1', { key: { location: 1 }, name: 'location_1' });
+
+//         console.log('All indexes updated successfully');
+//     } catch (err) {
+//         console.error('Error updating indexes:', err);
+//     }
+// }
+// // updateAllIndexes();
+
+// async function listIndexes(collection) {
+//     try {
+//         const indexes = await collection.indexes();
+//         console.log(`Indexes for ${collection.collectionName}:`, indexes);
+//     } catch (err) {
+//         console.error(`Error listing indexes for ${collection.collectionName}:`, err);
+//     }
+// }
+// // Check indexes for all collections
+// async function checkIndexes() {
+//     try {
+//         await listIndexes(User.collection);
+//         await listIndexes(UserLeave.collection);
+//         await listIndexes(Notification.collection);
+//         await listIndexes(Activity.collection);
+//         await listIndexes(Task.collection);
+//         await listIndexes(Info.collection);
+//         await listIndexes(Leave.collection);
+//         await listIndexes(File.collection);
+//         await listIndexes(Attendance.collection);
+//         await listIndexes(TempAttendance.collection);
+//         await listIndexes(QRCode.collection);
+//         await listIndexes(PatrolAux.collection);
+//         await listIndexes(ScheduleAux.collection);
+//         await listIndexes(DutyHandoverAux.collection);
+//         await listIndexes(CaseAux.collection);
+
+//         console.log('All indexes listed successfully');
+//     } catch (err) {
+//         console.error('Error listing indexes:', err);
+//     }
+// }
+// // checkIndexes();
 
 
-//mongoose passport-local
+// ============================
+// Set Up Middleware
+// ============================
+app.use(fileUpload());
+app.use(bodyParser.json());
+app.set('view engine', 'ejs');
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.static('public'));
+app.use(requestIp.mw());
+app.set('trust proxy', true);
+
+// ============================
+// Set Up Express Session
+// ============================
+const sessionDatabase = mongoose.createConnection('mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/session');
+const mongoURI = 'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/session';
+const store = new MongoDBSession({
+    uri: mongoURI,
+    collection: 'sessions',
+    stringify: false,
+    connection: sessionDatabase
+});
+app.use(
+    session({
+        secret: 'Our little secrets',
+        resave: false,
+        saveUninitialized: false,
+        store: store,
+        cookie: {
+            maxAge: 7 * 60 * 60 * 1000
+        }
+    })
+);
+
+// ============================
+// Initialize Web Push 
+// ============================
+const publicVapidKey = 'BIm9U514rYCkeKfBkFzbt2hw7yUyF9TtWCEuz3SXfCCzSwfIDYk_Wh55nHngMr9TqeT6fwxB9KQ-phAVvmcPzKA';
+const privateVapidKey = '_2XQYXRn3GBdELPjlec4d2HHYKUSAs3fJ2cU_lrx1eY';
+webPush.setVapidDetails('mailto:protech@lakmns.org', publicVapidKey, privateVapidKey);
+
+// ============================
+// Initialize Passport and Session
+// ============================
+app.use(passport.initialize());
+app.use(passport.session());
+
+// ============================
+// Connect to MongoDB
+// ============================
+const userDatabase = mongoose.createConnection(
+    'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/user'
+);
+const leaveDatabase = mongoose.createConnection(
+    'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/leave'
+);
+const fileDatabase = mongoose.createConnection(
+    'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/file'
+);
+const attendanceDatabase = mongoose.createConnection(
+    'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/attendance'
+);
+const auxPoliceDatabase = mongoose.createConnection(
+    'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/auxipolice'
+);
+const vmsDatabase = mongoose.createConnection(
+    'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/vms'
+);
+
+// ============================
+// Define Mongoose Schema and Model
+// ============================
+const userSchema = new mongoose.Schema({
+    fullname: { type: String, required: true },
+    username: { type: String, required: true, unique: true, index: true },
+    email: { type: String, required: true, unique: true, index: true },
+    nric: { type: String },
+    phone: { type: String },
+    officePhone: { type: String },
+    profile: { type: String },
+    age: { type: Number, min: 0 },
+    address: { type: String },
+    gender: { type: String },
+    education: { type: String },
+    department: { type: String },
+    section: { type: String },
+    position: { type: String },
+    grade: { type: Number, default: 5 },
+    classification: {
+        type: String,
+        enum: ['permanent', 'contract', 'intern', 'trainee'],
+        default: 'trainee'
+    },
+    marital: {
+        type: String,
+        enum: ['single', 'married', 'divorced', 'widowed', 'separated'],
+        default: 'single'
+    },
+    children: { type: Number, default: 0 },
+    isChiefExec: { type: Boolean, default: false },
+    isDeputyChiefExec: { type: Boolean, default: false },
+    isHeadOfDepartment: { type: Boolean, default: false },
+    isHeadOfSection: { type: Boolean, default: false },
+    isAdmin: { type: Boolean, default: false },
+    isOfficer: { type: Boolean, default: false },
+    isManagement: { type: Boolean, default: false },
+    isPersonalAssistant: { type: Boolean, default: false },
+    isNonOfficeHour: { type: Boolean, default: false },
+    isSuperAdmin: { type: Boolean, default: false },
+    isDriver: { type: Boolean, default: false },
+    isTeaLady: { type: Boolean, default: false },
+    dateEmployed: { type: Date },
+    birthdate: { type: Date }
+}, { timestamps: true });
+userSchema.index({ username: 1 });
+userSchema.index({ email: 1 });
+
+const userLeaveSchema = new mongoose.Schema({
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    annual: {
+        leave: { type: Number, default: 14 },
+        taken: { type: Number, default: 0 }
+    },
+    sick: {
+        leave: { type: Number, default: 14 },
+        taken: { type: Number, default: 0 }
+    },
+    sickExtended: {
+        leave: { type: Number, default: 60 },
+        taken: { type: Number, default: 0 }
+    },
+    emergency: {
+        leave: { type: Number, default: 0 },
+        taken: { type: Number, default: 0 }
+    },
+    paternity: {
+        leave: { type: Number, default: 3 },
+        taken: { type: Number, default: 0 }
+    },
+    maternity: {
+        leave: { type: Number, default: 60 },
+        taken: { type: Number, default: 0 }
+    },
+    bereavement: {
+        leave: { type: Number, default: 3 },
+        taken: { type: Number, default: 0 }
+    },
+    study: {
+        leave: { type: Number, default: 3 },
+        taken: { type: Number, default: 0 }
+    },
+    marriage: {
+        leave: { type: Number, default: 3 },
+        taken: { type: Number, default: 0 }
+    },
+    attendExam: {
+        leave: { type: Number, default: 5 },
+        taken: { type: Number, default: 0 }
+    },
+    hajj: {
+        leave: { type: Number, default: 40 },
+        taken: { type: Number, default: 0 }
+    },
+    umrah: {
+        leave: { type: Number, default: 7 },
+        taken: { type: Number, default: 0 }
+    },
+    unpaid: {
+        taken: { type: Number, default: 0 }
+    },
+    special: {
+        leave: { type: Number, default: 3 },
+        taken: { type: Number, default: 0 }
+    }
+}, { timestamps: true });
+userLeaveSchema.index({ user: 1 });
+
+const notificationSchema = new mongoose.Schema({
+    sender: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    recipient: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    message: { type: String, required: true },
+    type: { type: String },
+    url: { type: String },
+    timestamp: { type: Date, default: Date.now },
+    read: { type: Boolean, default: false }
+}, { timestamps: true });
+notificationSchema.index({ recipient: 1, read: 1 });
+
+const activitySchema = new mongoose.Schema({
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    date: { type: Date, default: Date.now },
+    title: { type: String },
+    type: { type: String },
+    description: { type: String }
+}, { timestamps: true });
+activitySchema.index({ user: 1, date: -1 });
+
+const taskSchema = new mongoose.Schema({
+    owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    name: { type: String, required: true },
+    timestamp: { type: Date, required: true, default: Date.now },
+    due: { type: Date },
+    description: { type: String },
+    status: {
+        type: String,
+        enum: ['process', 'urgent', 'done', 'cancelled'],
+        default: 'process'
+    },
+    fileId: { type: String },
+    subtask: [{ name: { type: String } }],
+    assignee: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    reminder: { type: Date }
+}, { timestamps: true });
+taskSchema.index({ owner: 1, timestamp: -1 });
+
+const infoSchema = new mongoose.Schema({
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    status: { type: String },
+    emailVerified: { type: Boolean, default: false },
+    phoneVerified: { type: Boolean, default: false },
+    isOnline: { type: Boolean, default: false },
+    lastSeen: { type: Date }
+}, { timestamps: true });
+infoSchema.index({ user: 1 });
+infoSchema.index({ status: 1 });
+infoSchema.index({ isOnline: 1 });
+
+const approvalSchema = new mongoose.Schema({
+    recipient: { type: mongoose.Schema.Types.ObjectId, required: true },
+    role: { type: String },
+    status: {
+        type: String,
+        enum: ['pending', 'approved', 'denied', 'submitted'],
+        default: 'pending'
+    },
+    comment: { type: String },
+    timestamp: { type: Date },
+    estimated: { type: Date }
+}, { timestamps: true });
+
+const leaveSchema = new mongoose.Schema({
+    user: { type: mongoose.Schema.Types.ObjectId, required: true },
+    grade: { type: String, required: true },
+    department: { type: String },
+    fileId: { type: String, unique: true },
+    type: { type: String },
+    assignee: [{ type: mongoose.Schema.Types.ObjectId }],
+    date: {
+        start: { type: Date },
+        return: { type: Date }
+    },
+    purpose: { type: String },
+    status: {
+        type: String,
+        enum: ['pending', 'approved', 'denied', 'submitted', 'invalid', 'cancelled'],
+        default: 'pending'
+    },
+    comment: { type: String },
+    timestamp: { type: Date, default: Date.now },
+    estimated: {
+        type: Date,
+        default: () => {
+            return moment().utcOffset(8).add(3, 'days').toDate();
+        }
+    },
+    approvals: [approvalSchema]
+}, { timestamps: true });
+leaveSchema.index({ status: 1 });
+leaveSchema.index({ user: 1 });
+leaveSchema.index({ department: 1 });
+leaveSchema.index({ 'date.start': 1 });
+leaveSchema.index({ 'date.return': 1 });
+leaveSchema.index({ timestamp: 1 });
+
+const fileSchema = new mongoose.Schema({
+    uuid: { type: String },
+    user: { type: mongoose.Schema.Types.ObjectId },
+    name: { type: String },
+    path: { type: String },
+    date: { type: Date },
+    type: { type: String },
+    origin: { type: String },
+    size: { type: String }
+}, { timestamps: true });
+fileSchema.index({ user: 1 });
+fileSchema.index({ date: -1 });
+
+const attendanceSchema = new mongoose.Schema({
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true
+    },
+    type: {
+        type: String,
+        enum: ['sign in', 'sign out', 'manual add', 'event', 'meeting', 'invalid', 'weekend', 'public holiday', 'acknowledged'],
+        default: 'invalid'
+    },
+    date: {
+        signInTime: {
+            type: Date,
+            default: null
+        },
+        signOutTime: {
+            type: Date,
+            default: null
+        }
+    },
+    status: {
+        type: String,
+        enum: ['Present', 'Absent', 'Late', 'Invalid', 'Leave', 'Non Working Day'],
+        default: 'Present'
+    },
+    location: {
+        signIn: { type: String, default: 'tbd' },
+        signOut: { type: String, default: 'tbd' }
+    },
+    remarks: {
+        type: String
+    },
+    timestamp: { type: Date, default: null }
+});
+attendanceSchema.index({ user: 1, date: 1 });
+attendanceSchema.index({ type: 1 });
+attendanceSchema.index({ status: 1 });
+attendanceSchema.index({ location: 1 });
+
+const tempAttendanceSchema = new mongoose.Schema({
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true
+    },
+    type: {
+        type: String,
+        enum: ['sign in', 'sign out', 'manual add', 'event', 'meeting', 'invalid'],
+        default: 'invalid'
+    },
+    timestamp: { type: Date }
+});
+tempAttendanceSchema.index({ user: 1, timestamp: 1 });
+
+const qrCodeSchema = new mongoose.Schema({
+    uniqueId: {
+        type: String,
+        required: true
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now,
+        required: true
+    }
+});
+qrCodeSchema.index({ uniqueId: 1 });
+
+const checkpointSchema = new mongoose.Schema({
+    latitude: { type: Number, required: true },
+    longitude: { type: Number, required: true },
+    checkpointName: { type: String, required: true },
+    time: { type: String, required: true },
+    logReport: { type: String, required: true },
+    fullName: { type: String, required: true },
+    username: { type: String, required: true }
+}, { _id: false });
+
+const cycleAmountSchema = new mongoose.Schema({
+    cycleSeq: { type: Number, required: true },
+    timeSlot: { type: String, required: true },
+    checkpoint: [checkpointSchema]
+}, { _id: false });
+
+const shiftMemberSchema = new mongoose.Schema({
+    cycle: [cycleAmountSchema]
+}, { _id: false });
+
+const patrolSchema = new mongoose.Schema({
+    reportId: { type: String, required: true },
+    shift: { type: String, required: true },
+    type: { type: String, required: true },
+    date: { type: Date, required: true },
+    location: { type: String, required: true },
+    status: { type: String, required: true },
+    startShift: { type: String, required: true },
+    endShift: { type: String, required: true },
+    remarks: { type: String },
+    staff: [{ type: String }],
+    shiftMember: shiftMemberSchema,
+    patrolUnit: [checkpointSchema],
+    timestamp: { type: Date, default: Date.now }
+});
+patrolSchema.index({ reportId: 1 });
+patrolSchema.index({ shift: 1 });
+patrolSchema.index({ date: 1 });
+patrolSchema.index({ location: 1 });
+patrolSchema.index({ status: 1 });
+
+const scheduleAuxSchema = new mongoose.Schema({
+    date: { type: Date, required: true },
+    location: { type: String },
+    shift: [],
+    staffRaisedFlag: [],
+    staffLoweredFlag: []
+});
+scheduleAuxSchema.index({ date: 1 });
+scheduleAuxSchema.index({ location: 1 });
+
+const dutyHandoverSchema = new mongoose.Schema({
+    headShift: String,
+    date: Date,
+    time: String,
+    location: String,
+    remarks: String,
+    status: {
+        type: String,
+        enum: ['completed', 'pending'],
+        default: 'pending'
+    },
+    shift: String,
+    staff: [String],
+    timestamp: { type: Date }
+});
+dutyHandoverSchema.index({ date: 1 });
+dutyHandoverSchema.index({ location: 1 });
+dutyHandoverSchema.index({ status: 1 });
+dutyHandoverSchema.index({ shift: 1 });
+
+const caseSchema = new mongoose.Schema({
+    fullname: String,
+    time: String,
+    date: Date,
+    location: String,
+    summary: String,
+    actionTaken: String,
+    eventSummary: String,
+    staffOnDuty: [],
+    remarks: String
+});
+caseSchema.index({ date: 1 });
+caseSchema.index({ location: 1 });
+caseSchema.index({ fullname: 1 });
+
+const vmsSchema = new mongoose.Schema({
+    vis_firstname: String,
+    vis_lastname: String,
+    no_ic: String,
+    address: String,
+    level: String,
+    no_pas: String,
+    no_telephone: String,
+    pur_visit: String,
+    time_in: Date,
+    time_out: Date,
+    build_loc: String
+});
+
+const subscriptionSchema = new mongoose.Schema({
+    endpoint: { type: String, required: true },
+    expirationTime: { type: Date },
+    keys: {
+        p256dh: { type: String, required: true },
+        auth: { type: String, required: true }
+    },
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    createdAt: { type: Date, default: Date.now }
+});
+subscriptionSchema.index({ endpoint: 1 });
+
+// Integrate passport-local-mongoose and findOrCreate plugins
 userSchema.plugin(passportLocalMongoose);
 userSchema.plugin(findOrCreate);
 
+// Initialize Schema
 const User = userDatabase.model('User', userSchema);
 const Activity = userDatabase.model('Activity', activitySchema);
 const Info = userDatabase.model('Info', infoSchema);
@@ -611,13 +761,9 @@ const UserLeave = userDatabase.model('Leave', userLeaveSchema);
 const Notification = userDatabase.model('Notification', notificationSchema);
 const Task = userDatabase.model('Task', taskSchema);
 const Leave = leaveDatabase.model('Leave', leaveSchema);
-const File = fileDatabase.model('File', FileSchema);
-const Attendance = attendanceDatabase.model('Attendance', AttendanceSchema);
-const ArchivedAttendance = attendanceDatabase.model('ArchivedAttendance', AttendanceSchema);
-const TempAttendance = attendanceDatabase.model(
-    'TempAttendance',
-    TempAttendanceSchema
-);
+const File = fileDatabase.model('File', fileSchema);
+const Attendance = attendanceDatabase.model('Attendance', attendanceSchema);
+const TempAttendance = attendanceDatabase.model('TempAttendance', tempAttendanceSchema);
 const QRCode = attendanceDatabase.model('QRCode', qrCodeSchema);
 const ScheduleAux = auxPoliceDatabase.model('ScheduleAux', scheduleAuxSchema);
 const PatrolAux = auxPoliceDatabase.model('PatrolAux', patrolSchema);
@@ -625,424 +771,884 @@ const CaseAux = auxPoliceDatabase.model('CaseAux', caseSchema);
 const DutyHandoverAux = auxPoliceDatabase.model('DutyHandoverAux', dutyHandoverSchema);
 const Vms = vmsDatabase.model('Visitors', vmsSchema);
 const Subscriptions = userDatabase.model('Subscriptions', subscriptionSchema);
-// const Tender = tenderDatabase.model('Tender', tenderSchema);
-// const TenderCompany = tenderDatabase.model('TenderCompany', tenderCompanySchema);
 
-// Create mongo indexes query for efficiently
-// Create all indexes
-async function createAllIndexes() {
-    try {
-        await User.createIndexes();
-        await UserLeave.createIndexes();
-        await Notification.createIndexes();
-        await Activity.createIndexes();
-        await Task.createIndexes();
-        await Info.createIndexes();
-        await Leave.createIndexes();
-        await File.createIndexes();
-        await Attendance.createIndexes();
-        await TempAttendance.createIndexes();
-        await QRCode.createIndexes();
-        await PatrolAux.createIndexes();
-        await ScheduleAux.createIndexes();
-        await DutyHandoverAux.createIndexes();
-        await CaseAux.createIndexes();
-
-        console.log('All indexes created successfully');
-    } catch (err) {
-        console.error('Error creating indexes:', err);
-    }
-}
-// createAllIndexes();
-
-// Deleted all indexes
-async function deleteAllIndexes(collection) {
-    try {
-        const indexes = await collection.indexes();
-        const indexNames = indexes
-            .filter(index => index.name !== '_id_') // Avoid dropping the default _id index
-            .map(index => index.name);
-
-        for (const indexName of indexNames) {
-            await collection.dropIndex(indexName);
-            console.log(`Dropped index: ${indexName}`);
-        }
-    } catch (err) {
-        console.error('Error deleting indexes:', err);
-    }
-}
-async function deleteAllIndexesFromCollections() {
-    try {
-        // Define the collections
-        const collections = [
-            User.collection,
-            UserLeave.collection,
-            Notification.collection,
-            Activity.collection,
-            Task.collection,
-            Info.collection,
-            Leave.collection,
-            File.collection,
-            Attendance.collection,
-            TempAttendance.collection,
-            QRCode.collection,
-            PatrolAux.collection,
-            ScheduleAux.collection,
-            DutyHandoverAux.collection,
-            CaseAux.collection
-        ];
-
-        for (const collection of collections) {
-            await deleteAllIndexes(collection);
-        }
-
-        console.log('All indexes deleted successfully');
-    } catch (err) {
-        console.error('Error deleting indexes from collections:', err);
-    }
-}
-// deleteAllIndexesFromCollections();
-
-// Update mongo indexes
-async function updateIndex(collection, indexName, indexSpec) {
-    try {
-        // Drop existing index if it exists
-        const existingIndexes = await collection.indexes();
-        const indexExists = existingIndexes.some(index => index.name === indexName);
-
-        if (indexExists) {
-            await collection.dropIndex(indexName);
-        }
-
-        // Create the new index
-        await collection.createIndex(indexSpec.key, {
-            name: indexSpec.name,
-            unique: indexSpec.unique || false,
-            background: true
-        });
-
-        console.log(`Index updated: ${indexSpec.name}`);
-    } catch (err) {
-        console.error(`Error updating index ${indexSpec.name}:`, err);
-    }
-}
-async function updateAllIndexes() {
-    try {
-        // User Collection
-        await updateIndex(User.collection, 'username_1', { key: { username: 1 }, name: 'username_1', unique: true });
-        await updateIndex(User.collection, 'email_1', { key: { email: 1 }, name: 'email_1', unique: true });
-
-        // UserLeave Collection
-        await updateIndex(UserLeave.collection, 'user_1', { key: { user: 1 }, name: 'user_1' });
-        await updateIndex(UserLeave.collection, 'date_start_1', { key: { 'date.start': 1 }, name: 'date_start_1' });
-
-        // Notification Collection
-        await updateIndex(Notification.collection, 'user_1', { key: { user: 1 }, name: 'user_1' });
-        await updateIndex(Notification.collection, 'timestamp_1', { key: { timestamp: 1 }, name: 'timestamp_1' });
-
-        // Activity Collection
-        await updateIndex(Activity.collection, 'user_1', { key: { user: 1 }, name: 'user_1' });
-        await updateIndex(Activity.collection, 'timestamp_1', { key: { timestamp: 1 }, name: 'timestamp_1' });
-
-        // Task Collection
-        await updateIndex(Task.collection, 'user_1', { key: { user: 1 }, name: 'user_1' });
-        await updateIndex(Task.collection, 'status_1', { key: { status: 1 }, name: 'status_1' });
-
-        // Info Collection
-        await updateIndex(Info.collection, 'type_1', { key: { type: 1 }, name: 'type_1' });
-        await updateIndex(Info.collection, 'timestamp_1', { key: { timestamp: 1 }, name: 'timestamp_1' });
-
-        // Leave Collection
-        await updateIndex(Leave.collection, 'user_1', { key: { user: 1 }, name: 'user_1' });
-        await updateIndex(Leave.collection, 'status_1', { key: { status: 1 }, name: 'status_1' });
-
-        // File Collection
-        await updateIndex(File.collection, 'fileId_1', { key: { fileId: 1 }, name: 'fileId_1', unique: true });
-
-        // Attendance Collection
-        await updateIndex(Attendance.collection, 'user_1', { key: { user: 1 }, name: 'user_1' });
-        await updateIndex(Attendance.collection, 'date_signIn_1', { key: { 'date.signInTime': 1 }, name: 'date_signIn_1' });
-
-        // TempAttendance Collection
-        await updateIndex(TempAttendance.collection, 'user_1', { key: { user: 1 }, name: 'user_1' });
-        await updateIndex(TempAttendance.collection, 'timestamp_1', { key: { timestamp: 1 }, name: 'timestamp_1' });
-
-        // QRCode Collection
-        await updateIndex(QRCode.collection, 'code_1', { key: { code: 1 }, name: 'code_1', unique: true });
-
-        // PatrolAux Collection
-        await updateIndex(PatrolAux.collection, 'date_1', { key: { date: 1 }, name: 'date_1' });
-        await updateIndex(PatrolAux.collection, 'location_1', { key: { location: 1 }, name: 'location_1' });
-
-        // ScheduleAux Collection
-        await updateIndex(ScheduleAux.collection, 'date_1', { key: { date: 1 }, name: 'date_1' });
-        await updateIndex(ScheduleAux.collection, 'location_1', { key: { location: 1 }, name: 'location_1' });
-
-        // DutyHandoverAux Collection
-        await updateIndex(DutyHandoverAux.collection, 'date_1', { key: { date: 1 }, name: 'date_1' });
-        await updateIndex(DutyHandoverAux.collection, 'location_1', { key: { location: 1 }, name: 'location_1' });
-
-        // CaseAux Collection
-        await updateIndex(CaseAux.collection, 'date_1', { key: { date: 1 }, name: 'date_1' });
-        await updateIndex(CaseAux.collection, 'location_1', { key: { location: 1 }, name: 'location_1' });
-
-        console.log('All indexes updated successfully');
-    } catch (err) {
-        console.error('Error updating indexes:', err);
-    }
-}
-// updateAllIndexes();
-
-async function listIndexes(collection) {
-    try {
-        const indexes = await collection.indexes();
-        console.log(`Indexes for ${collection.collectionName}:`, indexes);
-    } catch (err) {
-        console.error(`Error listing indexes for ${collection.collectionName}:`, err);
-    }
-}
-// Check indexes for all collections
-async function checkIndexes() {
-    try {
-        await listIndexes(User.collection);
-        await listIndexes(UserLeave.collection);
-        await listIndexes(Notification.collection);
-        await listIndexes(Activity.collection);
-        await listIndexes(Task.collection);
-        await listIndexes(Info.collection);
-        await listIndexes(Leave.collection);
-        await listIndexes(File.collection);
-        await listIndexes(Attendance.collection);
-        await listIndexes(TempAttendance.collection);
-        await listIndexes(QRCode.collection);
-        await listIndexes(PatrolAux.collection);
-        await listIndexes(ScheduleAux.collection);
-        await listIndexes(DutyHandoverAux.collection);
-        await listIndexes(CaseAux.collection);
-
-        console.log('All indexes listed successfully');
-    } catch (err) {
-        console.error('Error listing indexes:', err);
-    }
-}
-// checkIndexes();
-
+// ============================
+// Configure Passport Local Strategy
+// ============================
 passport.use(new LocalStrategy(User.authenticate()));
 
+// Serialize user information into the session
 passport.serializeUser(function (user, done) {
     done(null, user.id);
 });
 
+// Deserialize user information from the session
 passport.deserializeUser(async function (id, done) {
     try {
         const user = await User.findById(id);
-
         if (!user) {
-            done(null, false);
-        } else {
-            done(null, user);
+            return done(null, false); // No user found
         }
+        return done(null, user); // User found
     } catch (err) {
-        done(err, false);
+        return done(err, false); // Error during retrieval
     }
 });
 
-//CHECK AUTH USER
-const isAuthenticated = (req, res, next) => {
-    if (req.isAuthenticated()) {
-        return next();
-    }
-    res.redirect('/landing'); // Redirect to the login page if not authenticated
-};
-
-//EMAIL TRANSPORTER
+// Configure Nodemailer transporter for sending emails
 let transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
         user: 'protech@lakmns.org',
-        pass: 'qlnnmsaexggkkyco'
+        pass: 'qlnnmsaexggkkyco' // Consider using environment variables for sensitive information
     }
 });
 
-// BASIC USER PART
+// Global error handler middleware
+app.use((err, req, res, next) => {
+    // Log the error details to the console
+    console.error('Global Error Handler:', err);
 
-//HOME
-app.get('/', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
+    // Respond with a 500 status and render the global error page
+    res.status(500).render('global-error', {
+        errorMessage: 'Something went wrong!'
+    });
+});
+
+// ============================
+// Routes
+// ============================
+
+// Landing page route
+app.get('/landing', async (req, res, next) => {
+    try {
+        // Render the landing page
+        res.render('landing-page');
+    } catch (renderError) {
+        // Log any errors that occur during rendering
+        console.error('Rendering Error:', renderError);
+
+        // Pass the error to the global error handler middleware
+        next(renderError);
+    }
+});
+
+// ============================
+// Authentication
+// ============================
+
+// Middleware to check if user is authenticated
+const isAuthenticated = async (req, res, next) => {
+    if (req.isAuthenticated()) {
+        try {
+            const user = await User.findOne({ username: req.user.username });
+            const notifications = await Notification.find({
+                recipient: user._id,
+                read: false
+            }).populate('sender').sort({ timestamp: -1 });
+
+            req.user = user; // Attach user to req object
+            req.notifications = notifications; // Attach notifications to req object
+
+            return next(); // User is authenticated, proceed to the next middleware
+        } catch (error) {
+            console.error('Error in isAuthenticated middleware:', error);
+            return res.redirect('/landing'); // Handle error and redirect if necessary
+        }
+    }
+    res.redirect('/landing'); // Redirect to the landing page if not authenticated
+};
+
+// Sign in routes
+app
+    // GET /sign-in - Render the sign-in page
+    .get('/sign-in', async (req, res, next) => {
+        try {
+            res.render('sign-in', {
+                // Initial validation states
+                validationUsername: '',
+                validationPassword: '',
+                // Input values
+                username: '',
+                password: '',
+                // Toast notification
+                toastShow: '',
+                toastMsg: ''
+            });
+        } catch (renderError) {
+            // Log rendering errors and pass to global error handler
+            console.error('Rendering Error:', renderError);
+            next(renderError);
+        }
+    })
+
+    // POST /sign-in - Handle sign-in form submission
+    .post('/sign-in', async (req, res, next) => {
+        const { username, password, rememberMe } = req.body;
+
+        // Start measuring sign-in process time
+        console.time('Sign-in Process');
+
+        // Calculate expiration date based on rememberMe checkbox
+        const expirationDate = rememberMe
+            ? moment().utcOffset(8).add(7, 'days').toDate()  // 7 days if rememberMe is checked
+            : moment().utcOffset(8).add(1, 'hour').toDate(); // 1 hour otherwise
+
+        const passwordRegex = /^(?:\d+|[a-zA-Z0-9]{2,})/; // Password validation regex
+
+        try {
+            // Find user by username
+            const user = await User.findByUsername(username);
+
+            // Validate username and password
+            const validationUsername = username && user ? 'is-valid' : 'is-invalid';
+            const validationPassword = password && passwordRegex.test(password) ? 'is-valid' : 'is-invalid';
+
+            // Check if both username and password are valid
+            if (validationUsername === 'is-valid' && validationPassword === 'is-valid') {
+                user.authenticate(password, async (err, authenticatedUser) => {
+                    if (err || !authenticatedUser) {
+                        // End timing and log for invalid authentication
+                        console.timeEnd('Sign-in Process');
+
+                        return res.render('sign-in', {
+                            validationUsername,
+                            validationPassword: 'is-invalid',
+                            username,
+                            password,
+                            toastShow: 'show',
+                            toastMsg: 'Incorrect password'
+                        });
+                    }
+
+                    // Password is correct, log in the user
+                    req.logIn(authenticatedUser, async err => {
+                        if (err) {
+                            // End timing and log for login error
+                            console.timeEnd('Sign-in Process');
+                            return next(err);
+                        }
+
+                        // Update user info
+                        await Info.findOneAndUpdate(
+                            { user: user._id },
+                            { isOnline: true, lastSeen: moment().utcOffset(8).toDate() },
+                            { new: true }
+                        );
+
+                        // Set session expiration date
+                        req.session.cookie.expires = expirationDate;
+                        console.log(`Current Session expires: ${req.session.cookie.expires}`);
+
+                        // End timing and redirect to home
+                        console.timeEnd('Sign-in Process');
+                        return res.redirect('/');
+                    });
+                });
+            } else {
+                // End timing and render sign-in page with validation errors
+                console.timeEnd('Sign-in Process');
+
+                res.render('sign-in', {
+                    validationUsername,
+                    validationPassword,
+                    username,
+                    password,
+                    toastShow: 'show',
+                    toastMsg: 'There is an error, please check your input'
+                });
+            }
+        } catch (error) {
+            // End timing and handle unexpected errors
+            console.timeEnd('Sign-in Process');
+            console.error('Sign-in Error:', error);
+            res.status(500).send('Internal Server Error');
+        }
+    });
+
+// Forgot password routes
+app
+    // GET /forgot-password - Render the forgot password page
+    .get('/forgot-password', async (req, res, next) => {
+        try {
+            res.render('forgot-password', {
+                show: '',
+                alert: ''
+            });
+        } catch (renderError) {
+            // Log rendering errors and pass to global error handler
+            console.error('Rendering Error:', renderError);
+            next(renderError);
+        }
+    })
+
+    // POST /forgot-password - Handle forgot password form submission
+    .post('/forgot-password', async (req, res, next) => {
+        const email = req.body.email;
+
+        // Find the user by email
+        const checkEmail = await User.findOne({ email });
+
+        // Generate a random alphanumeric code for the reset link
+        const randomUUID = uuidv4();
+        const randomAlphaNumeric = randomUUID
+            .replace(/-/g, '')
+            .substring(0, 5)
+            .toUpperCase();
+
+        const emailData = {
+            checkEmail,
+            uuid: randomAlphaNumeric,
+        };
+
+        console.log('User Email:', emailData.checkEmail);
+        console.log('Generated Code:', emailData.uuid);
+
+        // Render the email HTML content
+        const emailHTML = await new Promise((resolve, reject) => {
+            app.render('email', { uuid: randomAlphaNumeric, checkEmail }, (err, html) => {
+                if (err) reject(err);
+                else resolve(html);
+            });
+        });
+
+        console.log('Email HTML:', emailHTML);
+
+        if (checkEmail) {
+            // Define mail options
+            const mailOptions = {
+                from: 'protech@lakmns.org',
+                to: checkEmail.email,
+                subject: 'lakmnsportal - Reset Password',
+                html: emailHTML,
+            };
+
+            // Send the reset password email
+            transporter.sendMail(mailOptions, (error, info) => {
+                if (error) {
+                    console.error('Email Send Error:', error);
+
+                    // Render forgot password page with error alert
+                    return res.render('forgot-password', {
+                        show: 'show',
+                        alert: 'The email you submitted is invalid or does not belong to any user in our web app.'
+                    });
+                }
+
+                console.log('Message sent:', info.messageId, info.response);
+
+                // Render forgot password page with success alert
+                return res.render('forgot-password', {
+                    show: 'show',
+                    alert: 'We have sent a reset password link and a 5-character alpha-numeric code to your email. Please check it.'
+                });
+            });
+        } else {
+            // Render forgot password page with email not found alert
+            return res.render('forgot-password', {
+                show: 'show',
+                alert: 'The email address you entered is not registered in lakmnsportal. Please check your email again.'
+            });
+        }
+    });
+
+// Reset password routes
+app
+    // GET /reset-password/:id - Render the reset password page
+    .get('/reset-password/:id', async (req, res, next) => {
+        const id = req.params.id;
+        console.log('Reset Password ID:', id);
+
+        try {
+            res.render('reset-password', {
+                id,
+                show: '',
+                alert: ''
+            });
+        } catch (renderError) {
+            // Log rendering errors and pass to global error handler
+            console.error('Rendering Error:', renderError);
+            next(renderError);
+        }
+    })
+
+    // POST /reset-password/:id - Handle the password reset form submission
+    .post('/reset-password/:id', async (req, res, next) => {
+        const id = req.params.id;
+        const { password, confirmPassword } = req.body;
+
+        // Find the user by ID
+        const user = await User.findOne({ _id: id });
+
+        if (!user) {
+            // If the user is not found, render the page with an error message
+            return res.render('reset-password', {
+                id,
+                show: 'show',
+                alert: 'User not found!'
+            });
+        }
+
+        if (password === confirmPassword) {
+            try {
+                // Set the new password and save the user
+                await user.setPassword(password);
+                const updatePassword = await user.save();
+
+                if (updatePassword) {
+                    // Render the sign-in page with a success message
+                    return res.render('sign-in', {
+                        validationUsername: '',
+                        validationPassword: '',
+                        username: '',
+                        password: '',
+                        toastShow: 'show',
+                        toastMsg: 'Reset password successful!'
+                    });
+                } else {
+                    // Render the reset password page with an error message
+                    return res.render('reset-password', {
+                        id,
+                        show: 'show',
+                        alert: 'Update password failed!'
+                    });
+                }
+            } catch (renderError) {
+                // Log errors during password update and rendering
+                console.error('Rendering Error:', renderError);
+                next(renderError);
+            }
+        } else {
+            // Render the reset password page with a mismatch alert
+            return res.render('reset-password', {
+                id,
+                show: 'show',
+                alert: 'New password and confirm password do not match!'
+            });
+        }
+    });
+
+// Sign out route
+app.get('/sign-out/:id', async (req, res, next) => {
+    try {
+        const userId = req.params.id;
+
+        // Find the user by ID
+        const user = await User.findOne({ _id: userId });
+
+        if (!user) {
+            // If user is not found, handle the error (could also redirect to an error page)
+            return res.redirect('/');
+        }
+
+        // Update user info to mark as offline
+        const updateInfo = await Info.findOneAndUpdate(
+            { user: user._id },
+            { isOnline: false, lastSeen: moment().utcOffset(8).toDate() },
+            { new: true }
+        );
+
+        // Log the sign-out time or failure message
+        if (updateInfo) {
+            console.log('Sign out at ' + moment().utcOffset(8).toDate());
+        } else {
+            console.log('Failed to update user info');
+        }
+
+        // Destroy the session and redirect to home
+        req.session.destroy((err) => {
+            if (err) {
+                // Pass any session destruction errors to the global error handler
+                return next(err);
+            }
+            res.redirect('/');
+        });
+    } catch (error) {
+        // Handle any unexpected errors
+        console.error('Sign-out Error:', error);
+        next(error);
+    }
+});
+
+// ============================
+// Main
+// ============================
+
+// Dashboard route
+app.get('/', isAuthenticated, async (req, res, next) => {
+    const user = req.user; // User data from the middleware
+    const notifications = req.notifications; // Notifications data from the middleware
+
     const startTotal = performance.now();
 
-    // Logging execution time for each query
+    // Helper function to log execution time
     const logTime = (label, start) => {
         const end = performance.now();
         console.log(`${label} took ${end - start}ms`);
     };
 
-    const startUserQuery = performance.now();
-    const user = await User.findOne({ username: username });
-    logTime('User Query', startUserQuery);
+    try {
+        // Remove notifications older than one month
+        const oneMonthAgo = moment().subtract(1, 'months').toDate();
+        await Notification.deleteMany({ createdAt: { $lt: oneMonthAgo } });
 
-    const oneMonthAgo = moment().subtract(1, 'months').toDate();
-    // Delete notifications older than one month
-    await Notification.deleteMany({ createdAt: { $lt: oneMonthAgo } });
+        // Start fetching data in parallel
+        const [
+            allUser,
+            allLeave,
+            allUserLeave,
+            allInfo,
+            userLeave,
+            leave,
+            task,
+            file,
+            info,
+            otherTask,
+            otherActivities,
+            staffOnLeave,
+            userTeamMembers,
+            activities
+        ] = await Promise.all([
+            User.find().sort({ timestamp: -1 }),
+            Leave.find().sort({ timestamp: -1 }),
+            UserLeave.find().sort({ timestamp: -1 }),
+            Info.find(),
+            UserLeave.findOne({ user: user._id }).populate('user').exec(),
+            Leave.find({ user: user._id }),
+            Task.find({ assignee: { $in: [user._id] } })
+                .sort({ timestamp: -1 })
+                .populate('assignee')
+                .exec(),
+            File.find(),
+            Info.findOne({ user: user._id }),
+            Task.find({ assignee: { $ne: [user._id] } }),
+            Activity.find(),
+            user.isAdmin || user.isChiefExec || user.isDeputyChiefExec
+                ? Leave.find({ status: 'approved' })
+                : Leave.find({ status: 'approved', department: user.department }),
+            user.isChiefExec || user.isDeputyChiefExec
+                ? User.find({ isManagement: true, _id: { $ne: user._id } })
+                : user.isHeadOfDepartment
+                    ? User.find({ department: user.department, _id: { $ne: user._id } })
+                    : User.find({ section: user.section, _id: { $ne: user._id } }),
+            Activity.find({ date: { $gte: moment().utcOffset(8).startOf('day').clone().subtract(7, 'days') } })
+                .populate({ path: 'user' })
+                .sort({ date: -1 })
+                .exec()
+        ]);
 
-    const startNotificationsQuery = performance.now();
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    })
-        .populate('sender')
-        .sort({ timestamp: -1 });
-    logTime('Notifications Query', startNotificationsQuery);
+        // Process leave data
+        const startLeaveProcessing = performance.now();
+        let todayLeaves = [];
+        let weekLeaves = [];
+        let monthLeaves = [];
+        const today = moment().utcOffset(8).startOf('day');
+        const firstDayOfWeek = today.clone().startOf('isoWeek');
+        const lastDayOfWeek = today.clone().endOf('isoWeek');
+        const firstDayOfMonth = today.clone().startOf('month');
+        const lastDayOfMonth = today.clone().endOf('month');
 
-    // Run queries in parallel
-    const [
-        allUser,
-        allLeave,
-        allUserLeave,
-        allInfo,
-        userLeave,
-        leave,
-        task,
-        file,
-        info,
-        otherTask,
-        otherActivities,
-        staffOnLeave,
-        userTeamMembers,
-        activities
-    ] = await Promise.all([
-        User.find().sort({ timestamp: -1 }),
-        Leave.find().sort({ timestamp: -1 }),
-        UserLeave.find().sort({ timestamp: -1 }),
-        Info.find(),
-        UserLeave.findOne({ user: user._id }).populate('user').exec(),
-        Leave.find({ user: user._id }),
-        Task.find({ assignee: { $in: [user._id] } })
-            .sort({ timestamp: -1 })
-            .populate('assignee')
-            .exec(),
-        File.find(),
-        Info.findOne({ user: user._id }),
-        Task.find({ assignee: { $ne: [user._id] } }),
-        Activity.find(),
-        user.isAdmin || user.isChiefExec || user.isDeputyChiefExec
-            ? Leave.find({ status: 'approved' })
-            : Leave.find({ status: 'approved', department: user.department }),
-        user.isChiefExec || user.isDeputyChiefExec
-            ? User.find({ isManagement: true, _id: { $ne: user._id } })
-            : user.isHeadOfDepartment
-                ? User.find({ department: user.department, _id: { $ne: user._id } })
-                : User.find({ section: user.section, _id: { $ne: user._id } }),
-        Activity.find({ date: { $gte: moment().utcOffset(8).startOf('day').clone().subtract(7, 'days') } })
-            .populate({ path: 'user' })
-            .sort({ date: -1 })
-            .exec()
-    ]);
-
-    const startLeaveProcessing = performance.now();
-    let todayLeaves = [];
-    let weekLeaves = [];
-    let monthLeaves = [];
-    const today = moment().utcOffset(8).startOf('day');
-    const sevenDaysAgo = today.clone().subtract(7, 'days');
-    const firstDayOfWeek = today.clone().startOf('isoWeek');
-    const lastDayOfWeek = today.clone().endOf('isoWeek');
-    const firstDayOfMonth = today.clone().startOf('month');
-    const lastDayOfMonth = today.clone().endOf('month');
-
-    staffOnLeave.forEach(leave => {
-        if (isDateInRange(leave.date.start, leave.date.return)) {
-            todayLeaves.push(leave);
-        }
-
-        if (
-            leave.date.start <= lastDayOfWeek &&
-            leave.date.return >= firstDayOfWeek
-        ) {
-            weekLeaves.push(leave);
-        }
-
-        if (
-            leave.date.start <= lastDayOfMonth &&
-            leave.date.return >= firstDayOfMonth
-        ) {
-            monthLeaves.push(leave);
-        }
-    });
-    logTime('Leave Processing', startLeaveProcessing);
-
-    const startLeaveApprovals = performance.now();
-    let filteredApprovalLeaves;
-    if (user.isAdmin) {
-        filteredApprovalLeaves = allLeave.filter(
-            leave => leave.status !== 'approved' && leave.status !== 'denied'
-        );
-    } else {
-        filteredApprovalLeaves = allLeave.filter(leave => {
-            return (
-                leave.user.toString() !== user._id.toString() &&
-                leave.approvals.some(
-                    approval =>
-                        approval.recipient.toString() === user._id.toString() &&
-                        leave.status !== 'approved' &&
-                        leave.status !== 'denied'
-                )
-            );
+        staffOnLeave.forEach(leave => {
+            if (isDateInRange(leave.date.start, leave.date.return)) {
+                todayLeaves.push(leave);
+            }
+            if (leave.date.start <= lastDayOfWeek && leave.date.return >= firstDayOfWeek) {
+                weekLeaves.push(leave);
+            }
+            if (leave.date.start <= lastDayOfMonth && leave.date.return >= firstDayOfMonth) {
+                monthLeaves.push(leave);
+            }
         });
-    }
-    logTime('Leave Approvals', startLeaveApprovals);
+        logTime('Leave Processing', startLeaveProcessing);
 
-    const startUniqueCollections = performance.now();
-    const uniqueDepartments = new Set();
-    const uniqueSections = new Set();
-
-    allUser.forEach(user => {
-        if (user.department) uniqueDepartments.add(user.department);
-        if (user.section) uniqueSections.add(user.section);
-    });
-
-    const departments = Array.from(uniqueDepartments);
-    const sections = Array.from(uniqueSections);
-    logTime('Unique Collections', startUniqueCollections);
-
-    if (user) {
-        try {
-            res.render('home', {
-                user: user,
-                notifications: notifications,
-                uuid: uuidv4(),
-                userTeamMembers: userTeamMembers,
-                otherTasks: otherTask,
-                otherActivities: otherActivities,
-                todayLeaves: todayLeaves,
-                weekLeaves: weekLeaves,
-                monthLeaves: monthLeaves,
-                filteredApprovalLeaves: filteredApprovalLeaves,
-                departments: departments,
-                sections: sections,
-                allUser: allUser,
-                allUserLeave: allUserLeave,
-                allLeave: allLeave,
-                allInfo: allInfo,
-                userLeave: userLeave,
-                leave: leave,
-                tasks: task,
-                files: file,
-                activities: activities,
-                selectedNames: '',
-                info: info,
-                show: '',
-                alert: '',
-                // addditional data
-                clientIp: req.clientIp
+        // Filter approval leaves based on user role
+        const startLeaveApprovals = performance.now();
+        let filteredApprovalLeaves;
+        if (user.isAdmin) {
+            filteredApprovalLeaves = allLeave.filter(
+                leave => leave.status !== 'approved' && leave.status !== 'denied'
+            );
+        } else {
+            filteredApprovalLeaves = allLeave.filter(leave => {
+                return (
+                    leave.user.toString() !== user._id.toString() &&
+                    leave.approvals.some(
+                        approval =>
+                            approval.recipient.toString() === user._id.toString() &&
+                            leave.status !== 'approved' &&
+                            leave.status !== 'denied'
+                    )
+                );
             });
-        } catch (renderError) {
-            console.error('Rendering Error:', renderError);
-            next(renderError);
         }
-    }
+        logTime('Leave Approvals', startLeaveApprovals);
 
-    logTime('Total', startTotal);
+        // Collect unique departments and sections
+        const startUniqueCollections = performance.now();
+        const uniqueDepartments = new Set();
+        const uniqueSections = new Set();
+
+        allUser.forEach(user => {
+            if (user.department) uniqueDepartments.add(user.department);
+            if (user.section) uniqueSections.add(user.section);
+        });
+
+        const departments = Array.from(uniqueDepartments);
+        const sections = Array.from(uniqueSections);
+        logTime('Unique Collections', startUniqueCollections);
+
+        // Render the home page
+        res.render('home', {
+            user,
+            notifications,
+            uuid: uuidv4(),
+            userTeamMembers,
+            otherTasks: otherTask,
+            otherActivities,
+            todayLeaves,
+            weekLeaves,
+            monthLeaves,
+            filteredApprovalLeaves,
+            departments,
+            sections,
+            allUser,
+            allUserLeave,
+            allLeave,
+            allInfo,
+            userLeave,
+            leave,
+            tasks: task,
+            files: file,
+            activities,
+            selectedNames: '',
+            info,
+            show: '',
+            alert: '',
+            clientIp: req.clientIp // Assuming clientIp middleware is in use
+        });
+
+        logTime('Total', startTotal);
+    } catch (error) {
+        // Pass any unexpected errors to the global error handler middleware
+        console.error('Route Error:', error);
+        next(error);
+    }
+});
+
+// PROFILE ROUTE
+app.get('/profile', isAuthenticated, async (req, res, next) => {
+    try {
+        const user = req.user;
+        const notifications = req.notifications;
+
+        const userLeave = await UserLeave.find({ user: user._id });
+        const leave = await Leave.find({
+            user: user._id,
+            status: { $nin: ['denied', 'cancelled'] }
+        }).sort({ timestamp: -1 });
+
+        const activities = await Activity.find({ user: user._id }).sort({ date: -1 });
+        const allUser = await User.find();
+        const file = await File.find({ type: { $ne: 'leave' } }).sort({ date: -1 });
+        const attendance = await Attendance.find({ user: user._id }).sort({ timestamp: -1 });
+
+        // Calculate user's age and update if needed
+        const date = getDateFormat2();
+        const age = calculateAge(user.birthdate);
+        await User.updateOne(
+            { username: user.username },
+            { $set: { age } }
+        );
+
+        // Fetch additional info
+        const info = await Info.findOne({ user: user._id });
+
+        res.render('profile', {
+            user,
+            notifications,
+            leave,
+            userLeave,
+            activities,
+            info,
+            today: date,
+            allUser,
+            files: file,
+            attendance
+        });
+    } catch (error) {
+        console.error('Route Error:', error);
+        next(error);
+    }
+});
+
+// SETTINGS ROUTE - GET
+app.get('/settings', isAuthenticated, async (req, res, next) => {
+    try {
+        const user = req.user;
+        const notifications = req.notifications;
+        const info = await Info.findOne({ user: user._id });
+        const sub = await Subscriptions.findOne({ user: user._id });
+
+        res.render('settings', {
+            user,
+            uuid: uuidv4(),
+            notifications,
+            info,
+            subscriptions: sub,
+            show: '',
+            alert: ''
+        });
+    } catch (renderError) {
+        console.error('Rendering Error:', renderError);
+        next(renderError);
+    }
+});
+
+// SETTINGS ROUTE - POST
+app.post('/settings', isAuthenticated, async (req, res, next) => {
+    try {
+        const user = req.user;
+        const notifications = req.notifications;
+        const info = await Info.findOne({ user: user._id });
+        const sub = await Subscriptions.findOne({ user: user._id });
+
+        // Collect fields to update from request body
+        const updateFields = {};
+        if (req.body.officenumber) updateFields.officenumber = req.body.officenumber;
+        if (req.body.email) updateFields.email = req.body.email;
+        if (req.body.phone) updateFields.phone = req.body.phone;
+        if (req.body.dateEmployed) updateFields.dateEmployed = moment(req.body.dateEmployed).utcOffset(8).toDate();
+        if (req.body.birthdate) updateFields.birthdate = moment(req.body.birthdate).utcOffset(8).toDate();
+        if (req.body.nric) updateFields.nric = req.body.nric;
+        if (req.body.marital && req.body.marital !== 'Select your marital status') updateFields.marital = req.body.marital;
+        if (req.body.education && req.body.education !== 'Select your highest education') updateFields.education = req.body.education;
+        if (req.body.address) updateFields.address = req.body.address;
+        if (req.body.children && req.body.children !== 'Select your number of children') updateFields.children = parseInt(req.body.children);
+
+        // Handle cases with no updates
+        if (Object.keys(updateFields).length === 0) {
+            res.render('settings', {
+                user,
+                uuid: uuidv4(),
+                notifications,
+                info,
+                subscriptions: sub,
+                show: 'show',
+                alert: 'Update unsuccessful, there is no input to be updated'
+            });
+            return;
+        }
+
+        // Check if email already exists
+        if (updateFields.email) {
+            const emailExists = await User.findOne({ email: updateFields.email });
+            if (emailExists && emailExists._id.toString() !== user._id.toString()) {
+                res.render('settings', {
+                    user,
+                    uuid: uuidv4(),
+                    notifications,
+                    info,
+                    subscriptions: sub,
+                    show: 'show',
+                    alert: 'The email address is already in use by another account.'
+                });
+                return;
+            }
+        }
+
+        // Update user fields
+        const updateUser = await User.findOneAndUpdate(
+            { _id: user._id },
+            { $set: updateFields },
+            { upsert: true, new: true }
+        );
+
+        if (updateUser) {
+            // Update info fields if email or phone are changed
+            const updateInfoFields = {};
+            if (updateFields.phone) updateInfoFields.phoneVerified = false;
+            if (updateFields.email) updateInfoFields.emailVerified = false;
+
+            if (Object.keys(updateInfoFields).length > 0) {
+                await Info.findOneAndUpdate(
+                    { user: user._id },
+                    { $set: updateInfoFields },
+                    { upsert: true, new: true }
+                );
+            }
+
+            // Log the activity
+            const activityUser = new Activity({
+                user: user._id,
+                date: moment().utcOffset(8).toDate(),
+                title: 'Update profile',
+                type: 'Profile',
+                description: `${user.fullname} has updated their profile on ${moment().format('YYYY-MM-DD')}`
+            });
+            await activityUser.save();
+
+            res.render('settings', {
+                user,
+                uuid: uuidv4(),
+                notifications,
+                info,
+                subscriptions: sub,
+                show: 'show',
+                alert: 'Update successful. Please check your profile to see the changes.'
+            });
+        } else {
+            res.render('settings', {
+                user,
+                uuid: uuidv4(),
+                notifications,
+                info,
+                subscriptions: sub,
+                show: 'show',
+                alert: 'Update unsuccessful. Please check your profile to see the changes.'
+            });
+        }
+    } catch (error) {
+        console.error('Route Error:', error);
+        next(error);
+    }
+});
+
+// CHANGE PASSWORD ROUTE
+app.post('/settings/change-password', isAuthenticated, async (req, res, next) => {
+    try {
+        const user = req.user;
+        const notifications = req.notifications;
+        const info = await Info.findOne({ user: user._id });
+        const sub = await Subscriptions.findOne({ user: user._id });
+
+        // Validate old password and new password
+        const isPasswordValid = await user.authenticate(req.body.oldPassword);
+        const newPasswordMatch = req.body.newPassword === req.body.newPassword2;
+
+        if (!isPasswordValid.user) {
+            res.render('settings', {
+                user,
+                uuid: uuidv4(),
+                notifications,
+                info,
+                subscriptions: sub,
+                show: 'show',
+                alert: 'Update unsuccessful, maybe you entered a wrong current password'
+            });
+            return;
+        }
+
+        if (!newPasswordMatch) {
+            res.render('settings', {
+                user,
+                uuid: uuidv4(),
+                notifications,
+                info,
+                subscriptions: sub,
+                show: 'show',
+                alert: 'Update unsuccessful, new password and confirm password do not match'
+            });
+            return;
+        }
+
+        // Set and save new password
+        await user.setPassword(req.body.newPassword);
+        await user.save();
+
+        res.render('settings', {
+            user,
+            uuid: uuidv4(),
+            notifications,
+            info,
+            subscriptions: sub,
+            show: 'show',
+            alert: 'Update successful on new password, you can use it onwards'
+        });
+    } catch (error) {
+        console.error('Route Error:', error);
+        next(error);
+    }
+});
+
+// UPLOAD PROFILE IMAGE ROUTE
+app.post('/settings/upload/profile-image', isAuthenticated, async (req, res, next) => {
+    try {
+        const user = req.user;
+        if (!req.files || Object.keys(req.files).length === 0) {
+            console.log('No files selected');
+            return res.redirect('/settings');
+        }
+
+        for (const file of Object.values(req.files)) {
+            const uploadPath = __dirname + '/public/uploads/' + file.name;
+            const pathUpload = '/uploads/' + file.name;
+            const today = moment().utcOffset(8).startOf('day').toDate();
+
+            await file.mv(uploadPath);
+
+            // Log the activity
+            const activityUser = new Activity({
+                user: user._id,
+                date: moment().utcOffset(8).toDate(),
+                title: 'Update profile',
+                type: 'Profile',
+                description: `${user.fullname} has updated their profile at ${getDateFormat2(today)}`
+            });
+            await activityUser.save();
+
+            await User.findOneAndUpdate(
+                { username: user.username },
+                { profile: pathUpload },
+                { upsert: true, new: true }
+            );
+        }
+
+        res.redirect('/settings');
+    } catch (error) {
+        console.error('Route Error:', error);
+        next(error);
+    }
+});
+
+// INFO ROUTE
+app.get('/info/:type/:method/:id', async (req, res, next) => {
+    try {
+        const user = req.user;
+        const notifications = req.notifications;
+        const type = req.params.type;
+        const method = req.params.method;
+        const id = req.params.id;
+
+        const info = await Info.findOne({ user: user._id });
+        const sub = await Subscriptions.findOne({ user: user._id });
+
+        // Fetch requested info based on type and method
+        let requestedInfo = [];
+        if (type === 'info') {
+            if (method === 'admin') {
+                requestedInfo = await Info.find();
+            } else if (method === 'personal') {
+                requestedInfo = await Info.find({ user: id });
+            }
+        } else if (type === 'subscription') {
+            if (method === 'admin') {
+                requestedInfo = await Subscriptions.find();
+            } else if (method === 'personal') {
+                requestedInfo = await Subscriptions.find({ user: id });
+            }
+        }
+
+        res.render('info', {
+            user,
+            notifications,
+            info,
+            subscriptions: sub,
+            requestedInfo
+        });
+    } catch (error) {
+        console.error('Route Error:', error);
+        next(error);
+    }
 });
 
 //STAFF DETAILS
@@ -1640,866 +2246,6 @@ app.get('/search/staff/auxiliary-police', isAuthenticated, async function (req, 
 }
 );
 
-//LANDINGPAGE
-app.get('/landing', async function (req, res) {
-    try {
-        res.render('landing-page');
-    } catch (renderError) {
-        console.error('Rendering Error:', renderError);
-        next(renderError);
-    }
-});
-
-//AUTH
-
-//SIGNUP
-app
-    .get('/sign-up', function (req, res) {
-        try {
-            res.render('sign-up', {
-                show: '',
-                alert: ''
-            });
-        } catch (renderError) {
-            console.error('Rendering Error:', renderError);
-            next(renderError);
-        }
-    })
-    .post('/sign-up', function (req, res) {
-        // Check if the required fields are present in the request body
-        if (
-            !req.body.fullname ||
-            !req.body.username ||
-            !req.body.email ||
-            !req.body.password ||
-            !req.body.position ||
-            !req.body.grade ||
-            !req.body.department ||
-            !req.body.gender
-        ) {
-            return res.status(400).json({ error: 'All fields are required.' });
-        }
-
-        const newUser = new User({
-            fullname: req.body.fullname,
-            username: req.body.username,
-            email: req.body.email,
-            nric: '',
-            phone: '',
-            profile: '',
-            age: 0,
-            address: '',
-            dateEmployed: '1974-07-04T00:00:00.000+00:00',
-            birthdate: '1974-07-04T00:00:00.000+00:00',
-            department: req.body.department,
-            section: req.body.section,
-            gender: req.body.gender,
-            grade: req.body.grade,
-            position: req.body.position,
-            education: '',
-            marital: 'single',
-            classification: req.body.class,
-            isChiefExec: false,
-            isDeputyChiefExec: false,
-            isHeadOfDepartment: false,
-            isHeadOfSection: false,
-            isAdmin: false,
-            isManagement: false
-        });
-
-        User.register(newUser, req.body.password, function (err, user) {
-            if (err) {
-                console.log(err);
-                res.render('sign-up', {
-                    show: 'show',
-                    alert: 'Sign up unsuccessful'
-                });
-            } else {
-                const newUserLeave = new UserLeave({
-                    user: user._id,
-                    annual: { leave: 14, taken: 0 },
-                    sick: { leave: 14, taken: 0 },
-                    sickExtended: { leave: 60, taken: 0 },
-                    emergency: { leave: 0, taken: 0 },
-                    paternity: { leave: 3, taken: 0 },
-                    maternity: { leave: 60, taken: 0 },
-                    bereavement: { leave: 3, taken: 0 },
-                    study: { leave: 3, taken: 0 },
-                    marriage: { leave: 3, taken: 0 },
-                    attendExam: { leave: 5, taken: 0 },
-                    hajj: { leave: 40, taken: 0 },
-                    unpaid: { taken: 0 },
-                    special: { leave: 3, taken: 0 }
-                });
-                newUserLeave.save();
-
-                passport.authenticate('local')(req, res, function () {
-                    res.render('sign-up', {
-                        show: 'show',
-                        alert: 'Sign up successful'
-                    });
-                });
-            }
-        });
-    });
-
-//SIGNIN
-app
-    .get('/sign-in', async function (req, res) {
-        try {
-            res.render('sign-in', {
-                // validation
-                validationUsername: '',
-                validationPassword: '',
-                // input value
-                username: '',
-                password: '',
-                // toast
-                toastShow: '',
-                toastMsg: ''
-            });
-        } catch (renderError) {
-            console.error('Rendering Error:', renderError);
-            next(renderError);
-        }
-    })
-    .post('/sign-in', async function (req, res) {
-        const { username, password, rememberMe } = req.body;
-
-        // Start measuring time
-        console.time('Sign-in Process');
-
-        // Calculate the expiration date based on the 'rememberMe' checkbox
-        const expirationDate = rememberMe
-            ? moment().utcOffset(8).add(7, 'days').toDate()  // 7 days if rememberMe is checked
-            : moment().utcOffset(8).add(1, 'hour').toDate(); // 1 hour otherwise
-
-        const passwordRegex = /^(?:\d+|[a-zA-Z0-9]{2,})/;
-
-        try {
-            const user = await User.findByUsername(username);
-
-            // validation username
-            let validationUsername = username && user ? 'is-valid' : 'is-invalid';
-
-            // validation password
-            let validationPassword = password && passwordRegex.test(password) ? 'is-valid' : 'is-invalid';
-
-            if (validationUsername === 'is-valid' && validationPassword === 'is-valid') {
-                user.authenticate(password, async (err, authenticatedUser) => {
-                    if (err || !authenticatedUser) {
-                        // End timing and log
-                        console.timeEnd('Sign-in Process');
-
-                        return res.render('sign-in', {
-                            // validation
-                            validationUsername,
-                            validationPassword: 'is-invalid',
-                            // input value
-                            username,
-                            password,
-                            toastShow: 'show',
-                            toastMsg: 'Incorrect password'
-                        });
-                    }
-
-                    // Password is correct, log in the user
-                    req.logIn(authenticatedUser, async err => {
-                        if (err) {
-                            // End timing and log
-                            console.timeEnd('Sign-in Process');
-
-                            return next(err);
-                        }
-
-                        await Info.findOneAndUpdate(
-                            { user: user._id },
-                            { isOnline: true, lastSeen: moment().utcOffset(8).toDate() },
-                            { new: true }
-                        );
-
-                        req.session.cookie.expires = expirationDate;
-
-                        console.log(`Current Session expires: ${req.session.cookie.expires}`);
-
-                        // End timing and log
-                        console.timeEnd('Sign-in Process');
-
-                        return res.redirect('/');
-                    });
-                });
-            } else {
-                // End timing and log
-                console.timeEnd('Sign-in Process');
-
-                res.render('sign-in', {
-                    // validation
-                    validationUsername,
-                    validationPassword,
-                    // input value
-                    username,
-                    password,
-                    toastShow: 'show',
-                    toastMsg: 'There is an error, please do check your input'
-                });
-            }
-        } catch (error) {
-            // End timing and log
-            console.timeEnd('Sign-in Process');
-
-            console.error(error);
-            res.status(500).send('Internal Server Error');
-        }
-    });
-
-app
-    .get('/forgot-password', async function (req, res) {
-        try {
-            res.render('forgot-password', {
-                show: '',
-                alert: ''
-            });
-        } catch (renderError) {
-            console.error('Rendering Error:', renderError);
-            next(renderError);
-        }
-    })
-    .post('/forgot-password', async function (req, res) {
-        const email = req.body.email;
-        const checkEmail = await User.findOne({ email: email });
-
-        const randomUUID = uuidv4();
-        const randomAlphaNumeric = randomUUID
-            .replace(/-/g, '')
-            .substring(0, 5)
-            .toUpperCase();
-
-        const emailData = {
-            checkEmail: checkEmail,
-            uuid: randomAlphaNumeric,
-        };
-
-        console.log(emailData.checkEmail);
-        console.log(emailData.uuid);
-
-        const emailHTML = await new Promise((resolve, reject) => {
-            app.render('email', { uuid: randomAlphaNumeric, checkEmail: checkEmail }, (err, html) => {
-                if (err) reject(err);
-                else resolve(html);
-            });
-        });
-
-        console.log(emailHTML);
-
-        if (checkEmail) {
-            let mailOptions = {
-                from: 'protech@lakmns.org',
-                to: checkEmail.email,
-                subject: 'lakmnsportal - Reset Password',
-                html: emailHTML,
-            };
-
-            transporter.sendMail(mailOptions, (error, info) => {
-                if (error) {
-                    console.log(error);
-
-                    res.render('forgot-password', {
-                        show: 'show',
-                        alert:
-                            'The email you submitted is invalid or does not belong to any user in our web app.'
-                    });
-                }
-
-                console.log('Message %s sent: %s', info.messageId, info.response);
-            });
-
-            try {
-                res.render('forgot-password', {
-                    show: 'show',
-                    alert:
-                        'We have seen reset password link and 5 alpha-numeric code to your email, please do check it.'
-                });
-            } catch (renderError) {
-                console.error('Rendering Error:', renderError);
-                next(renderError);
-            }
-        } else {
-            try {
-                res.render('forgot-password', {
-                    show: 'show',
-                    alert:
-                        'The email address you have entered are not registered in lakmnsportal, please do check your email again.'
-                });
-            } catch (renderError) {
-                console.error('Rendering Error:', renderError);
-                next(renderError);
-            }
-        }
-    });
-
-app.get('/reset-password/:id', async function (req, res) {
-    const id = req.params.id;
-    console.log(id);
-
-    try {
-        res.render('reset-password', {
-            id: id,
-            show: '',
-            alert: ''
-        });
-    } catch (renderError) {
-        console.error('Rendering Error:', renderError);
-        next(renderError);
-    }
-
-}).post('/reset-password/:id', async function (req, res) {
-    const id = req.params.id;
-    const user = await User.findOne({ _id: id });
-
-    if (req.body.confirmPassword === req.body.password) {
-        await user.setPassword(req.body.password);
-        const updatePassword = await user.save();
-
-        if (updatePassword) {
-            try {
-                res.render('sign-in', {
-                    validationUsername: '',
-                    validationPassword: '',
-                    // input value
-                    username: '',
-                    password: '',
-                    // toast
-                    toastShow: 'show',
-                    toastMsg: 'Reset password successful!'
-                });
-            } catch (renderError) {
-                console.error('Rendering Error:', renderError);
-                next(renderError);
-            }
-
-        } else {
-            try {
-                res.render('reset-password', {
-                    id: id,
-                    show: 'show',
-                    alert: 'Update password failed!'
-                });
-            } catch (renderError) {
-                console.error('Rendering Error:', renderError);
-                next(renderError);
-            }
-        }
-    } else {
-        try {
-            res.render('reset-password', {
-                id: id,
-                show: 'show',
-                alert: 'New password and confirm password is not a match!'
-            });
-        } catch (renderError) {
-            console.error('Rendering Error:', renderError);
-            next(renderError);
-        }
-    }
-
-
-});
-
-//SIGNOUT
-app.get('/sign-out/:id', async function (req, res) {
-    req.session.destroy(function (err) {
-        if (err) {
-            return next(err);
-        }
-        res.redirect('/');
-    });
-
-    const user = await User.findOne({ _id: req.params.id });
-
-    const updateInfo = await Info.findOneAndUpdate(
-        {
-            user: user._id
-        },
-        {
-            isOnline: false,
-            lastSeen: moment().utcOffset(8).toDate()
-        },
-        {
-            new: true
-        }
-    );
-
-    if (updateInfo) {
-        console.log('Sign out at ' + moment().utcOffset(8).toDate());
-    } else {
-        console.log('Failed to update');
-    }
-});
-
-//PROFILE
-app.get('/profile', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    })
-        .populate('sender')
-        .sort({ timestamp: -1 });
-    const userLeave = await UserLeave.find({ user: user._id });
-    const leave = await Leave.find({
-        user: user._id,
-        status: { $nin: ['denied', 'cancelled'] }
-    }).sort({ timestamp: -1 });
-    const activities = await Activity.find({ user: user._id }).sort({ date: -1 });
-    const allUser = await User.find();
-    const file = await File.find({ type: { $ne: 'leave' } }).sort({ date: -1 });
-    const attendance = await Attendance.find({ user: user._id }).sort({
-        timestamp: -1
-    });
-
-    const date = getDateFormat2();
-
-    // calculate user's age
-    const age = calculateAge(user.birthdate);
-
-    const newData = {
-        age: age
-    };
-
-    // update age
-    const update = await User.updateOne(
-        { username: username },
-        { $set: newData }
-    );
-
-    // check find user successful or not
-    if (user && update) {
-        // find info
-        const info = await Info.findOne({ user: user._id });
-        try {
-            res.render('profile', {
-                user: user,
-                notifications: notifications,
-                leave: leave,
-                userLeave: userLeave,
-                activities: activities,
-                info: info,
-                today: date,
-                allUser: allUser,
-                files: file,
-                attendance: attendance
-            });
-        } catch (renderError) {
-            console.error('Rendering Error:', renderError);
-            next(renderError);
-        }
-    }
-});
-
-//SETTINGS
-app
-    .get('/settings', isAuthenticated, async function (req, res) {
-        const username = req.user.username;
-        const user = await User.findOne({ username: username });
-        const notifications = await Notification.find({
-            recipient: user._id,
-            read: false
-        })
-            .populate('sender')
-            .sort({ timestamp: -1 });
-        const info = await Info.findOne({ user: user._id });
-        const sub = await Subscriptions.findOne({ user: user._id });
-        console.log(sub);
-
-        if (user) {
-            try {
-                res.render('settings', {
-                    user: user,
-                    uuid: uuidv4(),
-                    notifications: notifications,
-                    info: info,
-                    subscriptions: sub,
-                    show: '',
-                    alert: ''
-                });
-            } catch (renderError) {
-                console.error('Rendering Error:', renderError);
-                next(renderError);
-            }
-        }
-    })
-    .post('/settings', isAuthenticated, async function (req, res) {
-        const username = req.user.username;
-        const user = await User.findOne({ username: username });
-        const notifications = await Notification.find({
-            recipient: user._id,
-            read: false
-        })
-            .populate('sender')
-            .sort({ timestamp: -1 });
-        const info = await Info.findOne({ user: user._id });
-        const sub = await Subscriptions.findOne({ user: user._id });
-
-        if (user) {
-            const updateFields = {};
-            // Add fields from req.body to the updateFields object if they are present
-            if (req.body.officenumber) {
-                updateFields.officenumber = req.body.officenumber;
-            }
-            if (req.body.email) {
-                updateFields.email = req.body.email;
-            }
-            if (req.body.phone) {
-                updateFields.phone = req.body.phone;
-            }
-            if (req.body.dateEmployed) {
-                updateFields.dateEmployed = moment(req.body.dateEmployed).utcOffset(8).toDate();
-            }
-            if (req.body.birthdate) {
-                updateFields.birthdate = moment(req.body.birthdate).utcOffset(8).toDate();
-            }
-            if (req.body.nric) {
-                updateFields.nric = req.body.nric;
-            }
-            if (req.body.marital && req.body.marital !== 'Select your marital status') {
-                updateFields.marital = req.body.marital;
-            }
-            if (req.body.education && req.body.education !== 'Select your highest education') {
-                updateFields.education = req.body.education;
-            }
-            if (req.body.address) {
-                updateFields.address = req.body.address;
-            }
-            if (req.body.children && req.body.children !== 'Select your number of children') {
-                updateFields.children = parseInt(req.body.children);
-            }
-
-            console.log('Update fields:', updateFields);
-
-            if (Object.keys(updateFields).length === 0) {
-                try {
-                    res.render('settings', {
-                        user: user,
-                        uuid: uuidv4(),
-                        notifications: notifications,
-                        info: info,
-                        subcriptions: sub,
-                        show: 'show',
-                        alert: 'Update unsuccessful, there is no input to be updated'
-                    });
-                } catch (renderError) {
-                    console.error('Rendering Error:', renderError);
-                    next(renderError);
-                }
-            } else {
-                // Check if email already exists
-                if (updateFields.email) {
-                    const emailExists = await User.findOne({ email: updateFields.email });
-                    if (emailExists && emailExists._id.toString() !== user._id.toString()) {
-                        return res.render('settings', {
-                            user: user,
-                            uuid: uuidv4(),
-                            notifications: notifications,
-                            info: info,
-                            show: 'show',
-                            alert: 'The email address is already in use by another account.'
-                        });
-                    }
-                }
-
-                const updateUser = await User.findOneAndUpdate(
-                    { _id: user._id },
-                    { $set: updateFields },
-                    { upsert: true, new: true }
-                );
-
-                if (updateUser) {
-                    // If email or phone are updated, set verification fields to false
-                    const updateInfoFields = {};
-                    if (updateFields.phone) {
-                        updateInfoFields.phoneVerified = false;
-                    }
-                    if (updateFields.email) {
-                        updateInfoFields.emailVerified = false;
-                    }
-
-                    if (Object.keys(updateInfoFields).length > 0) {
-                        await Info.findOneAndUpdate(
-                            { user: user._id },
-                            { $set: updateInfoFields },
-                            { upsert: true, new: true }
-                        );
-                    }
-
-                    console.log('Update successful:', updateUser);
-
-                    const activityUser = new Activity({
-                        user: user._id,
-                        date: moment().utcOffset(8).toDate(),
-                        title: 'Update profile',
-                        type: 'Profile',
-                        description: `${user.fullname} has updated their profile on ${moment().format('YYYY-MM-DD')}`
-                    });
-
-                    await activityUser.save();
-                    console.log('New activity submitted:', activityUser);
-                    try {
-                        res.render('settings', {
-                            user: user,
-                            uuid: uuidv4(),
-                            notifications: notifications,
-                            info: info,
-                            subscriptions: sub,
-                            show: 'show',
-                            alert: 'Update successful. Please check your profile to see the changes.'
-                        });
-                    } catch (renderError) {
-                        console.error('Rendering Error:', renderError);
-                        next(renderError);
-                    }
-                } else {
-                    console.log('Update unsuccessful'); try {
-                        res.render('settings', {
-                            user: user,
-                            uuid: uuidv4(),
-                            notifications: notifications,
-                            info: info,
-                            show: 'show',
-                            alert: 'Update unsuccessful. Please check your profile to see the changes.'
-                        });
-                    } catch (renderError) {
-                        console.error('Rendering Error:', renderError);
-                        next(renderError);
-                    }
-                }
-            }
-        }
-    });
-
-
-app.post('/settings/change-password', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    })
-        .populate('sender')
-        .sort({ timestamp: -1 });
-    const info = await Info.findOne({ user: user._id });
-    const sub = await Subscriptions.findOne({ user: user._id });
-    console.log(sub);
-
-    if (user) {
-
-        const isPasswordValid = await user.authenticate(req.body.oldPassword);
-        const newPasswordMatch = req.body.newPassword === req.body.newPassword2;
-
-        if (isPasswordValid.user === false) {
-            try {
-                res.render('settings', {
-                    user: user,
-                    uuid: uuidv4(),
-                    notifications: notifications,
-                    info: info,
-                    subscriptions: sub,
-                    show: 'show',
-                    alert:
-                        'Update unsuccessful, maybe you entered a wrong current password'
-                });
-            } catch (renderError) {
-                console.error('Rendering Error:', renderError);
-                next(renderError);
-            }
-        } else if (newPasswordMatch === false) {
-            try {
-                res.render('settings', {
-                    user: user,
-                    uuid: uuidv4(),
-                    notifications: notifications,
-                    subscriptions: sub,
-                    info: info,
-                    show: 'show',
-                    alert:
-                        'Update unsuccessful, new password and confirm pasword are not match'
-                });
-            } catch (renderError) {
-                console.error('Rendering Error:', renderError);
-                next(renderError);
-            }
-        } else {
-            await user.setPassword(req.body.newPassword);
-            const updatePassword = await user.save();
-
-            if (updatePassword) {
-                try {
-                    res.render('settings', {
-                        user: user,
-                        uuid: uuidv4(),
-                        notifications: notifications,
-                        subscriptions: sub,
-                        info: info,
-                        show: 'show',
-                        alert: 'Update successful on new password, you can use it onwards'
-                    });
-                } catch (renderError) {
-                    console.error('Rendering Error:', renderError);
-                    next(renderError);
-                }
-            }
-        }
-
-    }
-});
-
-app.post('/settings/upload/profile-image', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-
-    if (!user) {
-        console.log('User not found');
-        return res.redirect('/settings');
-    }
-
-    if (!req.files || Object.keys(req.files).length === 0) {
-        console.log('There are no files selected');
-        return res.redirect('/settings');
-    }
-
-    console.log('Files to be uploaded');
-
-    for (const file of Object.values(req.files)) {
-        const upload = __dirname + '/public/uploads/' + file.name;
-        const pathUpload = '/uploads/' + file.name;
-        const today = moment().utcOffset(8).startOf('day').toDate();
-        const type = path.extname(file.name);
-
-        await file.mv(upload);
-
-        const fileSizeInBytes = (await fs.stat(upload)).size;
-        const fileSizeInMB = fileSizeInBytes / (1024 * 1024);
-
-        console.log(fileSizeInMB);
-
-        await User.findOneAndUpdate(
-            { username: username },
-            { profile: pathUpload },
-            { upsert: true, new: true }
-        );
-    }
-
-    const activityUser = new Activity({
-        user: user._id, // Ensure this is the correct reference
-        date: moment().utcOffset(8).toDate(),
-        title: 'Update profile',
-        type: 'Profile',
-        description: `${user.fullname} has updated their profile at ${getDateFormat2(moment().utcOffset(8).toDate())}`
-    });
-
-    await activityUser.save();
-
-    console.log('New activity submitted', activityUser);
-    console.log('Done uploading files!');
-
-    res.redirect('/settings');
-});
-
-
-app.get('/info/:type/:method/:id', async function (req, res) {
-    const id = req.params.id;
-    const user = await User.findOne({ _id: id });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    })
-        .populate('sender')
-        .sort({ timestamp: -1 });
-    const info = await Info.findOne({ user: user._id });
-    const sub = await Subscriptions.findOne({ user: user._id });
-
-    if (user) {
-        var type = req.params.type;
-        var method = req.params.method;
-
-        if (type === 'email' && method === 'verification') {
-            const emailHTML = await new Promise((resolve, reject) => {
-                app.render('email-verified', { user: user }, (err, html) => {
-                    if (err) reject(err);
-                    else resolve(html);
-                });
-            });
-            let mailOptions = {
-                from: 'protech@lakmns.org',
-                to: user.email,
-                subject: 'lakmnsportal - Email Verification',
-                html: emailHTML
-            };
-
-            console.log(mailOptions);
-
-            transporter.sendMail(mailOptions, (error, info) => {
-                if (error) {
-                    console.log(error);
-
-                    res.render('settings', {
-                        user: user,
-                        uuid: uuidv4(),
-                        notifications: notifications,
-                        info: info,
-                        show: 'show',
-                        alert: 'The email you submitted here is invalid'
-                    });
-                }
-
-                console.log('Message %s sent: %s', info.messageId, info.response);
-            });
-            try {
-                res.render('settings', {
-                    user: user,
-                    uuid: uuidv4(),
-                    notifications: notifications,
-                    subscriptions: sub,
-                    info: info,
-                    show: 'show',
-                    alert: 'We already send email verification towards your email'
-                });
-            } catch (renderError) {
-                console.error('Rendering Error:', renderError);
-                next(renderError);
-            }
-        } else if (type === 'email' && method === 'confirm') {
-            const updateEmail = await Info.findOneAndUpdate(
-                {
-                    user: user._id
-                },
-                {
-                    emailVerified: true
-                },
-                { upsert: true, new: true }
-            );
-
-            if (updateEmail) {
-                console.log('Email is verified');
-                res.redirect('/');
-            } else {
-                console.log('There is error');
-                res.redirect('/');
-            }
-        }
-        // else if (type === 'phone' && method === 'verification') {
-        //     const tac = generateTAC();
-        //     const phone = '+6' + user.phone;
-
-        //     await client.messages.create({
-        //         body: `Your TAC is: ${tac}`,
-        //         from: 'YOUR_TWILIO_PHONE_NUMBER',
-        //         to: phone
-        //     });
-        // }
-    }
-});
-
 // TUTORIAL
 app.get('/guide', isAuthenticated, async function (req, res) {
     const username = req.user.username;
@@ -2685,8 +2431,6 @@ app
             const assignee = await User.find({ fullname: { $in: selectedNames } });
             const supervisors = await User.find({ fullname: { $in: selectedSupervisors } });
 
-            console.log('supervisors: ', supervisors);
-            console.log('assignee: ', assignee);
             // leave for the user
             const leave = await Leave.find({ user: user._id });
 
@@ -10690,12 +10434,6 @@ function restrictAccess(req, res, next) {
         res.render('error');
     }
 }
-
-// handle error
-app.use((err, req, res, next) => {
-    console.error('Global Error Handler:', err);
-    res.status(500).render('global-error', { errorMessage: 'Something went wrong!' });
-});
 
 // PORT INITIALIZATION ON CLOUD OR LOCAL (5001)
 const PORT = process.env.PORT || 5002;
