@@ -2639,10 +2639,8 @@ app
                 ? req.body.selectedNames.split(',')
                 : [];
             const selectedSupervisors = req.body.selectedSupervisors
-                ? req.body.selectedNames.split(',')
+                ? req.body.selectedSupervisors.split(',')
                 : [];
-
-            console.log(selectedSupervisors);
 
             // init to submit the leave req
             var leaveBalance = '';
@@ -2688,6 +2686,7 @@ app
             const supervisors = await User.find({ fullname: { $in: selectedSupervisors } });
 
             console.log('supervisors: ', supervisors);
+            console.log('assignee: ', assignee);
             // leave for the user
             const leave = await Leave.find({ user: user._id });
 
