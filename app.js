@@ -282,6 +282,66 @@ const app = express();
 //     }
 // }
 // // checkIndexes();
+// ============================
+// Procurement
+// ============================
+
+// To be settled later after auxiliary police/itary
+
+// //PROCUREMENT
+
+// //TENDER 
+
+// //TENDER REGISTER
+// app.get('/procurement/tender/register', isAuthenticated, async function (req, res) {
+//     const username = req.user.username;
+//     const user = await User.findOne({ username: username });
+//     const notifications = await Notification.find({
+//         recipient: user._id,
+//         read: false
+//     })
+//         .populate('sender')
+//         .sort({ timestamp: -1 });
+
+//     if (user) {
+//         try {
+//             res.render('procurement-tender-register', {
+//                 user: user,
+//                 notifications: notifications,
+//                 uuid: uuidv4(),
+//             });
+//         } catch (renderError) {
+//             console.error('Rendering Error:', renderError);
+//             next(renderError);
+//         }
+//     }
+// });
+
+// //TENDER LIST
+// app.get('/procurement/tender/register', isAuthenticated, async function (req, res) {
+//     const username = req.user.username;
+//     const user = await User.findOne({ username: username });
+//     const notifications = await Notification.find({
+//         recipient: user._id,
+//         read: false
+//     })
+//         .populate('sender')
+//         .sort({ timestamp: -1 });
+
+//     if (user) {
+//         try {
+//             res.render('procurement-tender-list', {
+//                 user: user,
+//                 notifications: notifications,
+//                 uuid: uuidv4(),
+//             });
+//         } catch (renderError) {
+//             console.error('Rendering Error:', renderError);
+//             next(renderError);
+//         }
+//     }
+// });
+
 
 
 // ============================
@@ -638,18 +698,18 @@ const qrCodeSchema = new mongoose.Schema({
 qrCodeSchema.index({ uniqueId: 1 });
 
 const checkpointSchema = new mongoose.Schema({
-    latitude: { type: Number, required: true },
-    longitude: { type: Number, required: true },
-    checkpointName: { type: String, required: true },
-    time: { type: String, required: true },
+    latitude: { type: Number },
+    longitude: { type: Number },
+    checkpointName: { type: String },
+    time: { type: String },
     logReport: { type: String, required: true },
     fullName: { type: String, required: true },
-    username: { type: String, required: true }
+    username: { type: String }
 }, { _id: false });
 
 const cycleAmountSchema = new mongoose.Schema({
-    cycleSeq: { type: Number, required: true },
-    timeSlot: { type: String, required: true },
+    cycleSeq: { type: Number },
+    timeSlot: { type: String },
     checkpoint: [checkpointSchema]
 }, { _id: false });
 
@@ -814,6 +874,120 @@ app.use((err, req, res, next) => {
         errorMessage: 'Something went wrong!'
     });
 });
+
+// ============================
+// Utility
+// ============================
+
+// save activity toi database
+const logActivity = async (userId, title, type, description) => {
+    try {
+        const activity = new Activity({
+            user: userId,
+            date: moment().utcOffset(8).toDate(),
+            title: title,
+            type: type,
+            description: description
+        });
+
+        await activity.save();
+        console.log('Activity logged:', activity);
+    } catch (error) {
+        console.error('Error logging activity:', error);
+    }
+};
+
+// save notifcation to database & use push notifcation to other user
+const createAndSendNotification = async (userId, recipientId, type, url, message) => {
+    try {
+        // Create a new notification
+        const newNotification = new Notification({
+            sender: userId,
+            recipient: new mongoose.Types.ObjectId(recipientId),
+            type: type,
+            url: url,
+            message: message
+        });
+
+        await newNotification.save();
+        console.log('Notification created:', newNotification);
+
+        // Fetch subscriptions for the recipient user
+        const subscriptions = await Subscriptions.find({ user: recipientId });
+
+        if (subscriptions.length > 0) {
+            // Map through the subscriptions to send notifications
+            const sendNotificationPromises = subscriptions.map(async (subscription) => {
+                const payload = JSON.stringify({
+                    title: type,
+                    body: message,
+                    url: "https://www.lakmnsportal.com/",
+                    vibrate: [100, 50, 100],
+                    requireInteraction: true,
+                    silent: false
+                });
+
+                const options = {
+                    vapidDetails: {
+                        subject: 'mailto:protech@lakmns.org', // Replace with your email
+                        publicKey: publicVapidKey, // Use actual public VAPID key here
+                        privateKey: privateVapidKey // Use actual private VAPID key here
+                    },
+                    TTL: 60 // Time to live for the notification (in seconds)
+                };
+
+                try {
+                    await webPush.sendNotification(subscription, payload, options);
+                    console.log('Push notification sent successfully to:', subscription.endpoint);
+                } catch (error) {
+                    console.error('Error sending notification to:', subscription.endpoint, error);
+                }
+            });
+
+            // Wait for all notifications to be sent
+            await Promise.all(sendNotificationPromises);
+        } else {
+            console.log('The user does not subscribe for push notifications');
+        }
+    } catch (error) {
+        console.error('Error creating or sending notification:', error);
+    }
+};
+
+// save notifcation to database & send email to other user using transporter
+const sendEmailNotification = async (recipientEmail, emailData) => {
+    try {
+        // Generate the HTML content for the email using EJS template rendering
+        const emailHTML = await new Promise((resolve, reject) => {
+            app.render('email-template', { emailData }, (err, html) => {
+                if (err) reject(err);
+                else resolve(html);
+            });
+        });
+
+        console.log('Generated email HTML:', emailHTML);
+        console.log('Email data:', emailData);
+
+        // Define the mail options for sending the email
+        let mailOptions = {
+            from: 'protech@lakmns.org', // Replace with your sender email address
+            to: recipientEmail,
+            subject: 'lakmnsportal - Leave Request Approval',
+            html: emailHTML
+        };
+
+        // Send the email using the Nodemailer transporter
+        const info = await transporter.sendMail(mailOptions);
+
+        if (info) {
+            console.log('Email sent successfully to:', recipientEmail);
+        } else {
+            console.log('Email sending failed');
+        }
+    } catch (error) {
+        console.error('Error sending email:', error);
+    }
+};
 
 // ============================
 // Routes
@@ -1335,7 +1509,67 @@ app.get('/', isAuthenticated, async (req, res, next) => {
     }
 });
 
-// PROFILE ROUTE
+// Guide route
+app.get('/guide', isAuthenticated, async (req, res, next) => {
+    try {
+        // Get the authenticated user and their unread notifications
+        const user = req.user;
+        const notifications = req.notifications;
+
+        // Render the guide page
+        res.render('guide', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4() // Generate a unique ID for the session or content
+        });
+    } catch (renderError) {
+        console.error('Rendering Error:', renderError);
+        next(renderError); // Pass errors to the global error handler
+    }
+});
+
+// Changelog route
+app.get('/changelog', isAuthenticated, async (req, res, next) => {
+    try {
+        // Get the authenticated user and their unread notifications
+        const user = req.user;
+        const notifications = req.notifications;
+
+        // Render the changelog page
+        res.render('changelog', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4() // Generate a unique ID for the session or content
+        });
+    } catch (renderError) {
+        console.error('Rendering Error:', renderError);
+        next(renderError); // Pass errors to the global error handler
+    }
+});
+
+// Calendar route
+app.get('/calendar', isAuthenticated, async (req, res, next) => {
+    try {
+        // Get the authenticated user and their unread notifications from the middleware
+        const user = req.user;
+        const notifications = req.notifications;
+
+        // Render the calendar page with the user and notifications data
+        res.render('calendar', {
+            user: user,
+            notifications: notifications
+        });
+    } catch (renderError) {
+        console.error('Rendering Error:', renderError);
+        next(renderError); // Pass errors to the global error handler
+    }
+});
+
+// ============================
+// Profile
+// ============================
+
+// Profile route
 app.get('/profile', isAuthenticated, async (req, res, next) => {
     try {
         const user = req.user;
@@ -1381,7 +1615,11 @@ app.get('/profile', isAuthenticated, async (req, res, next) => {
     }
 });
 
-// SETTINGS ROUTE - GET
+// ============================
+// Settings
+// ============================
+
+// Settings route - get
 app.get('/settings', isAuthenticated, async (req, res, next) => {
     try {
         const user = req.user;
@@ -1404,7 +1642,7 @@ app.get('/settings', isAuthenticated, async (req, res, next) => {
     }
 });
 
-// SETTINGS ROUTE - POST
+// Settings route - post
 app.post('/settings', isAuthenticated, async (req, res, next) => {
     try {
         const user = req.user;
@@ -1513,7 +1751,7 @@ app.post('/settings', isAuthenticated, async (req, res, next) => {
     }
 });
 
-// CHANGE PASSWORD ROUTE
+// Settings route - change password
 app.post('/settings/change-password', isAuthenticated, async (req, res, next) => {
     try {
         const user = req.user;
@@ -1570,7 +1808,7 @@ app.post('/settings/change-password', isAuthenticated, async (req, res, next) =>
     }
 });
 
-// UPLOAD PROFILE IMAGE ROUTE
+// Setting route - upload/change profile image
 app.post('/settings/upload/profile-image', isAuthenticated, async (req, res, next) => {
     try {
         const user = req.user;
@@ -1610,7 +1848,7 @@ app.post('/settings/upload/profile-image', isAuthenticated, async (req, res, nex
     }
 });
 
-// INFO ROUTE
+// info route
 app.get('/info/:type/:method/:id', async (req, res, next) => {
     try {
         const user = req.user;
@@ -1651,672 +1889,554 @@ app.get('/info/:type/:method/:id', async (req, res, next) => {
     }
 });
 
-//STAFF DETAILS
-app.get('/staff/details/:id', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    })
-        .populate('sender')
-        .sort({ timestamp: -1 });
+// staff details route
+app.get('/staff/details/:id', isAuthenticated, async (req, res, next) => {
+    try {
+        const { id } = req.params;
 
-    const id = req.params.id;
-    const otherUser = await User.findOne({ _id: id });
+        // Fetch otherUser first since other queries depend on it
+        const otherUser = await User.findOne({ _id: id });
 
-    const task = await Task.find({ assignee: { $in: [otherUser._id] } })
-        .populate('assignee')
-        .exec();
-    const file = await File.find();
-    const allUser = await User.find();
-    const info = await Info.findOne({ user: otherUser._id });
+        // Execute all asynchronous operations concurrently
+        const [
+            tasks,
+            files,
+            allUsers,
+            info,
+            leave,
+            activities,
+            attendance
+        ] = await Promise.all([
+            Task.find({ assignee: { $in: [otherUser._id] } }).populate('assignee'),
+            File.find(),
+            User.find(),
+            Info.findOne({ user: otherUser._id }),
+            Leave.find({ user: otherUser._id, status: { $nin: ['denied', 'cancelled'] } }).sort({ timestamp: -1 }),
+            Activity.find({ user: otherUser._id }).sort({ date: -1 }),
+            Attendance.find({ user: otherUser._id }).sort({ timestamp: -1 })
+        ]);
 
-    const leave = await Leave.find({
-        user: otherUser._id,
-        status: { $nin: ['denied', 'cancelled'] }
-    }).sort({ timestamp: -1 });
-    const activities = await Activity.find({ user: otherUser._id }).sort({
-        date: -1
-    });
-    const attendance = await Attendance.find({ user: otherUser._id }).sort({
-        timestamp: -1
-    });
+        res.render('staff-details', {
+            user: req.user,              // Use req.user set by isAuthenticated middleware
+            notifications: req.notifications, // Use req.notifications set by middleware
+            otherUser,
+            tasks,
+            files,
+            allUsers,
+            info,
+            leave,
+            activities,
+            attendance
+        });
 
-    if (user) {
-        try {
-            res.render('staff-details', {
-                user: user,
-                notifications: notifications,
-                // other data
-                otherUser: otherUser,
-                tasks: task,
-                files: file,
-                allUser: allUser,
-                activities: activities,
-                leave: leave,
-                attendance: attendance,
-                info: info
-            });
-        } catch (renderError) {
-            console.error('Rendering Error:', renderError);
-            next(renderError);
-        }
+    } catch (error) {
+        console.error('Error fetching staff details:', error);
+        next(error); // Pass the error to the global error handler
     }
 });
 
-// TASK
+// ============================
+// Task
+// ============================
 
-// ADD TASK
-app.post('/task/add', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
+// Task route - add
+app.post('/task/add', isAuthenticated, async (req, res, next) => {
+    try {
+        const user = req.user; // User object is already available from isAuthenticated middleware
 
-    if (user) {
-        const name = req.body.name;
-        const description = req.body.description;
-        const status = req.body.status;
-        const due = req.body.due;
-        const reminder = req.body.reminder;
-        const selectedNames = req.body.selectedNames
-            ? req.body.selectedNames.split(',')
-            : [];
-        const fileId = req.body.uuid;
+        const {
+            name,
+            description,
+            status,
+            due,
+            reminder,
+            selectedNames = '',
+            uuid: fileId
+        } = req.body;
 
-        if (
-            name &&
-            description &&
-            status &&
-            due &&
-            reminder &&
-            selectedNames.length > 0
-        ) {
-            const assignee = await User.find(
-                { fullname: { $in: selectedNames } },
-                '_id'
-            );
+        const selectedNamesArray = selectedNames ? selectedNames.split(',') : [];
 
+        if (name && description && status && due && reminder && selectedNamesArray.length > 0) {
+            // Fetch assignees based on selected names
+            const assignees = await User.find({ fullname: { $in: selectedNamesArray } }, '_id');
+
+            // Create new task
             const newTask = new Task({
                 owner: user._id,
-                name: name,
-                description: description,
-                status: status,
-                due: due,
-                reminder: reminder,
-                assignee: assignee,
-                fileId: fileId
+                name,
+                description,
+                status,
+                due,
+                reminder,
+                assignee: assignees,
+                fileId
             });
 
-            const task = newTask.save();
+            await newTask.save();  // Save task to database
 
-            if (task) {
-                // activity
-                const activityUser = new Activity({
-                    user: user._id,
-                    date: moment().utcOffset(8).toDate(),
-                    title: 'Add Assignee on Task',
-                    type: 'Task',
-                    description:
-                        user.fullname +
-                        ' has add assignee '
-                        + assignee[0].username +
-                        ' at '
-                        + getDateFormat2(moment().utcOffset(8).toDate())
+            // Loop through each assignee to create and send notifications
+            for (const assignee of assignees) {
+                // Send push notification
+                await createAndSendNotification(
+                    user._id, // Sender
+                    assignee._id, // Recipient
+                    'Task Assignment',
+                    `/`,
+                    `You have been assigned to a new task: ${name}`
+                );
+
+                // Send email notification
+                await sendEmailNotification(assignee.email, {
+                    content: `You have been assigned to a new task: ${name}. Please check the task details.`,
+                    id: newTask._id
                 });
-
-                activityUser.save();
-
-                console.log('New activity submitted', activityUser);
-
-                console.log('New task added');
-                res.redirect('/');
             }
+
+            console.log('New task added');
+            res.redirect('/');
         } else {
-            console.log('Your input was not valid or complete please try again!');
+            console.log('Input was not valid or complete, please try again!');
             res.redirect('/');
         }
+    } catch (error) {
+        console.error('Error adding task:', error);
+        next(error);  // Pass error to global error handler
     }
 });
 
-// UPDATE
-app.post('/update/:content/:id', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
+// Task route - update
+app.post('/update/:content/:id', isAuthenticated, async (req, res, next) => {
+    const user = req.user; // Directly use the authenticated user from the middleware
+    const notifications = req.notifications; // Access notifications if needed
     const content = req.params.content;
     const id = req.params.id;
 
     if (user) {
-        // task desc
-        if (content === 'description') {
-            const description = req.body.description;
-            const update = await Task.findOneAndUpdate(
-                { _id: id },
-                {
-                    $set: { description: description }
-                },
-                {
-                    new: true
-                }
-            );
-
-            if (update) {
-                // activity
-                const activityUser = new Activity({
-                    user: user._id,
-                    date: moment().utcOffset(8).toDate(),
-                    title: 'Update Task Description',
-                    type: 'Task',
-                    description:
-                        user.fullname +
-                        ' has update task description '
-                        + update.name +
-                        ' at '
-                        + getDateFormat2(moment().utcOffset(8).toDate())
-                });
-
-                activityUser.save();
-
-                console.log('New activity submitted', activityUser);
-
-                console.log('Description task has been updated');
-                res.redirect('/');
-            } else {
-                console.log('Description task has not been updated.');
-                res.redirect('/');
-            }
-        } else if (content === 'subtask') {
-            const subtask = req.body.subtask;
-
-            const update = await Task.findOneAndUpdate(
-                { _id: id },
-                { $push: { subtask: { name: subtask } } },
-                { new: true }
-            );
-
-            if (update) {
-                // activity
-                const activityUser = new Activity({
-                    user: user._id,
-                    date: moment().utcOffset(8).toDate(),
-                    title: 'Update/Add Task Description',
-                    type: 'Task',
-                    description:
-                        user.fullname +
-                        ' has update/add task description '
-                        + update.name +
-                        ' at '
-                        + getDateFormat2(moment().utcOffset(8).toDate())
-                });
-
-                activityUser.save();
-
-                console.log('New activity submitted', activityUser);
-
-                console.log('Subtask added');
-                res.redirect('/');
-            } else {
-                console.log('Subtask failed to be added.');
-            }
-        } else if (content === 'task') {
-            const subtask = req.body.subtaskCheckbox;
-            const status = req.body.status;
-            const due = req.body.due;
-            const reminder = req.body.reminder;
-
-            const updateFields = {};
-
-            if (due) {
-                updateFields.due = moment(due).utcOffset(8).toDate();
-            }
-
-            if (reminder) {
-                updateFields.reminder = moment(reminder).utcOffset(8).toDate();
-            }
-
-            if (status !== undefined && status !== null && status !== '') {
-                updateFields.status = status;
-            }
-
-            if (subtask && subtask.length > 0) {
-                await Task.findByIdAndUpdate(
+        try {
+            let notificationMessage = '';
+            if (content === 'description') {
+                const description = req.body.description;
+                const update = await Task.findOneAndUpdate(
                     { _id: id },
-                    { $pull: { subtask: { _id: { $in: subtask } } } },
+                    { $set: { description: description } },
                     { new: true }
                 );
-                console.log('Selected subtasks have been deleted.');
-            } else {
-                console.log('There is no subtask selected.');
-            }
 
-            const update = await Task.findByIdAndUpdate(
-                { _id: id },
-                {
-                    $pull: { subtask: { _id: { $in: subtask } } },
-                    $set: updateFields
-                },
-                { new: true }
-            );
+                if (update) {
+                    await logActivity(
+                        user._id,
+                        'Update Task Description',
+                        'Task',
+                        `${user.fullname} has updated task description ${update.name} at ${getDateFormat2(moment().utcOffset(8).toDate())}`
+                    );
 
-            if (update) {
-                // activity
-                const activityUser = new Activity({
-                    user: user._id,
-                    date: moment().utcOffset(8).toDate(),
-                    title: 'Update Task Content',
-                    type: 'Task',
-                    description:
-                        user.fullname +
-                        ' has update task content '
-                        + update.name +
-                        ' at '
-                        + getDateFormat2(moment().utcOffset(8).toDate())
-                });
+                    // Create notification message
+                    notificationMessage = `${user.fullname} has updated the description of the task ${update.name}`;
 
-                activityUser.save();
+                    // Create and send notifications to all assignees
+                    const notificationPromises = update.assignee.map(async (assignee) => {
+                        await createAndSendNotification(
+                            user._id,
+                            assignee._id, // Assuming assignee._id is the recipient user ID
+                            'Task Update',
+                            `/`,
+                            notificationMessage
+                        );
 
-                console.log('New activity submitted', activityUser);
+                        // Prepare email data
+                        const emailData = {
+                            content: notificationMessage,
+                            url: 'https://www.lakmnsportal.com/'
+                        };
 
-                console.log('Update task success');
-                res.redirect('/');
-            } else {
-                console.log('There is must be something wrong in the update');
-                res.redirect('/');
-            }
-        } else if (content === 'file') {
-            if (!req.files || Object.keys(req.files).length === 0) {
-                console.log('There is no files selected');
-            } else {
-                console.log('There are files try to be uploaded');
-
-                const uuid = req.body.uuid;
-                const origin = req.body.origin;
-
-                console.log(uuid);
-
-                // No file with the report ID found, proceed with file upload
-                for (const file of Object.values(req.files)) {
-                    const upload = __dirname + '/public/uploads/' + file.name;
-                    const pathUpload = '/uploads/' + file.name;
-                    const today = moment().utcOffset(8).startOf('day').toDate();
-                    const type = path.extname(file.name);
-
-                    await file.mv(upload);
-
-                    // Calculate file size in megabytes
-                    const fileSizeInBytes = (await fs.stat(upload)).size;
-                    const fileSizeInMB = fileSizeInBytes / (1024 * 1024);
-
-                    console.log(fileSizeInMB);
-
-                    const newFile = new File({
-                        uuid: uuid,
-                        user: user._id,
-                        name: file.name,
-                        path: pathUpload,
-                        date: today,
-                        type: type,
-                        origin: origin,
-                        size: fileSizeInMB.toFixed(2) + ' MB'
+                        // Send email notification to each assignee
+                        await sendEmailNotification(assignee.email, emailData); // Assuming assignee.email is the recipient email
                     });
 
-                    newFile.save();
+                    // Wait for all notifications and emails to be sent
+                    await Promise.all(notificationPromises);
+
+                    console.log('Description task has been updated');
+                    res.redirect('/');
+                } else {
+                    console.log('Description task has not been updated.');
+                    res.redirect('/');
+                }
+            } else if (content === 'subtask') {
+                const subtask = req.body.subtask;
+                const update = await Task.findOneAndUpdate(
+                    { _id: id },
+                    { $push: { subtask: { name: subtask } } },
+                    { new: true }
+                );
+
+                if (update) {
+                    await logActivity(
+                        user._id,
+                        'Update/Add Task Subtask',
+                        'Task',
+                        `${user.fullname} has updated/added subtask ${update.name} at ${getDateFormat2(moment().utcOffset(8).toDate())}`
+                    );
+
+                    // Create notification message
+                    notificationMessage = `${user.fullname} has added a new subtask to the task ${update.name}`;
+
+                    // Create and send notifications to all assignees
+                    const notificationPromises = update.assignee.map(async (assignee) => {
+                        await createAndSendNotification(
+                            user._id,
+                            assignee._id, // Assuming assignee._id is the recipient user ID
+                            'Subtask Update',
+                            `/`,
+                            notificationMessage
+                        );
+
+                        // Prepare email data
+                        const emailData = {
+                            content: notificationMessage,
+                            url: 'https://www.lakmnsportal.com/'
+                        };
+
+                        // Send email notification to each assignee
+                        await sendEmailNotification(assignee.email, emailData); // Assuming assignee.email is the recipient email
+                    });
+
+                    // Wait for all notifications and emails to be sent
+                    await Promise.all(notificationPromises);
+
+                    console.log('Subtask added');
+                    res.redirect('/');
+                } else {
+                    console.log('Subtask failed to be added.');
+                    res.redirect('/');
+                }
+            } else if (content === 'task') {
+                const subtask = req.body.subtaskCheckbox;
+                const status = req.body.status;
+                const due = req.body.due;
+                const reminder = req.body.reminder;
+                const updateFields = {};
+
+                if (due) updateFields.due = moment(due).utcOffset(8).toDate();
+                if (reminder) updateFields.reminder = moment(reminder).utcOffset(8).toDate();
+                if (status !== undefined && status !== null && status !== '') updateFields.status = status;
+
+                if (subtask && subtask.length > 0) {
+                    await Task.findByIdAndUpdate(
+                        { _id: id },
+                        { $pull: { subtask: { _id: { $in: subtask } } } },
+                        { new: true }
+                    );
+                    console.log('Selected subtasks have been deleted.');
                 }
 
-                // activity
-                const activityUser = new Activity({
-                    user: user._id,
-                    date: moment().utcOffset(8).toDate(),
-                    title: 'Upload File for Task',
-                    type: 'Task',
-                    description:
-                        user.fullname +
-                        ' has upload file at '
-                        + getDateFormat2(moment().utcOffset(8).toDate())
-                });
+                const update = await Task.findByIdAndUpdate(
+                    { _id: id },
+                    { $set: updateFields },
+                    { new: true }
+                );
 
-                activityUser.save();
+                if (update) {
+                    await logActivity(
+                        user._id,
+                        'Update Task Content',
+                        'Task',
+                        `${user.fullname} has updated task content ${update.name} at ${getDateFormat2(moment().utcOffset(8).toDate())}`
+                    );
 
-                console.log('New activity submitted', activityUser);
+                    // Create notification message
+                    notificationMessage = `${user.fullname} has updated the task ${update.name}`;
 
-                console.log('Done upload files!');
+                    // Create and send notifications to all assignees
+                    const notificationPromises = update.assignee.map(async (assignee) => {
+                        await createAndSendNotification(
+                            user._id,
+                            assignee._id, // Assuming assignee._id is the recipient user ID
+                            'Task Update',
+                            `/`,
+                            notificationMessage
+                        );
+
+                        // Prepare email data
+                        const emailData = {
+                            content: notificationMessage,
+                            url: 'https://www.lakmnsportal.com/'
+                        };
+
+                        // Send email notification to each assignee
+                        await sendEmailNotification(assignee.email, emailData); // Assuming assignee.email is the recipient email
+                    });
+
+                    // Wait for all notifications and emails to be sent
+                    await Promise.all(notificationPromises);
+
+                    console.log('Update task success');
+                    res.redirect('/');
+                } else {
+                    console.log('There must be something wrong in the update');
+                    res.redirect('/');
+                }
+            } else if (content === 'file') {
+                if (!req.files || Object.keys(req.files).length === 0) {
+                    console.log('No files selected');
+                } else {
+                    console.log('Files being uploaded');
+                    const uuid = req.body.uuid;
+                    const origin = req.body.origin;
+
+                    for (const file of Object.values(req.files)) {
+                        const uploadPath = __dirname + '/public/uploads/' + file.name;
+                        const pathUpload = '/uploads/' + file.name;
+                        const today = moment().utcOffset(8).startOf('day').toDate();
+                        const type = path.extname(file.name);
+
+                        await file.mv(uploadPath);
+                        const fileSizeInBytes = (await fs.stat(uploadPath)).size;
+                        const fileSizeInMB = fileSizeInBytes / (1024 * 1024);
+
+                        const newFile = new File({
+                            uuid: uuid,
+                            user: user._id,
+                            name: file.name,
+                            path: pathUpload,
+                            date: today,
+                            type: type,
+                            origin: origin,
+                            size: fileSizeInMB.toFixed(2) + ' MB'
+                        });
+
+                        await newFile.save();
+                    }
+
+                    await logActivity(
+                        user._id,
+                        'Upload File for Task',
+                        'Task',
+                        `${user.fullname} has uploaded a file at ${getDateFormat2(moment().utcOffset(8).toDate())}`
+                    );
+
+                    // Create notification message
+                    notificationMessage = `${user.fullname} has uploaded a file for the task.`;
+
+                    // Create and send notifications to all assignees
+                    const notificationPromises = update.assignee.map(async (assignee) => {
+                        await createAndSendNotification(
+                            user._id,
+                            assignee._id, // Assuming assignee._id is the recipient user ID
+                            'File Upload',
+                            `/`,
+                            notificationMessage
+                        );
+
+                        // Prepare email data
+                        const emailData = {
+                            content: notificationMessage,
+                            url: 'https://www.lakmnsportal.com/'
+                        };
+
+                        // Send email notification to each assignee
+                        await sendEmailNotification(assignee.email, emailData); // Assuming assignee.email is the recipient email
+                    });
+
+                    // Wait for all notifications and emails to be sent
+                    await Promise.all(notificationPromises);
+
+                    console.log('Files uploaded successfully');
+                }
             }
+        } catch (error) {
+            console.error('Error in update route:', error);
+            next(error); // Pass the error to the global error handler
         }
+    } else {
+        res.redirect('/landing');
     }
 });
 
-// DELETE
-app.get('/delete/:content/:id', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
+// Task route - delete
+app.get('/delete/:content/:id', isAuthenticated, async (req, res, next) => {
+    const user = req.user; // Directly use the authenticated user from the middleware
     const content = req.params.content;
     const id = req.params.id;
 
     if (user) {
-        if (content === 'task') {
-            const deletedTask = await Task.findOneAndDelete({ _id: id });
+        try {
+            if (content === 'task') {
+                const deletedTask = await Task.findOneAndDelete({ _id: id });
 
-            if (deletedTask) {
-                const deletedFiles = await File.find({ uuid: deletedTask.fileId });
+                if (deletedTask) {
+                    const deletedFiles = await File.find({ uuid: deletedTask.fileId });
 
-                if (deletedFiles.length > 0) {
-                    for (const deletedFile of deletedFiles) {
-                        const filePath = path.join(
-                            __dirname,
-                            'public',
-                            'uploads',
-                            deletedFile.name
+                    if (deletedFiles.length > 0) {
+                        for (const deletedFile of deletedFiles) {
+                            const filePath = path.join(
+                                __dirname,
+                                'public',
+                                'uploads',
+                                deletedFile.name
+                            );
+
+                            await fs.unlink(filePath);
+                            await File.deleteOne({ _id: deletedFile._id });
+                        }
+
+                        // Create notification message
+                        const notificationMessage = `${user.fullname} has deleted the task ${deletedTask.name}`;
+
+                        // Create and send notifications and emails to all assignees
+                        const notificationPromises = deletedTask.assignee.map(async (assignee) => {
+                            await createAndSendNotification(
+                                user._id,
+                                assignee._id, // Assuming assignee._id is the recipient user ID
+                                'Task Deletion',
+                                `/`,
+                                notificationMessage
+                            );
+
+                            // Prepare email data
+                            const emailData = {
+                                content: notificationMessage,
+                                url: 'https://www.lakmnsportal.com/'
+                            };
+
+                            // Send email notification to each assignee
+                            await sendEmailNotification(assignee.email, emailData); // Assuming assignee.email is the recipient email
+                        });
+
+                        // Wait for all notifications and emails to be sent
+                        await Promise.all(notificationPromises);
+
+                        await logActivity(
+                            user._id,
+                            'Delete Task',
+                            'Task',
+                            `${user.fullname} has deleted task ${deletedTask.name} at ${getDateFormat2(moment().utcOffset(8).toDate())}`
                         );
 
-                        await fs.unlink(filePath);
+                        console.log('Task and related files deleted');
+                        res.redirect('/');
+                    } else {
+                        await logActivity(
+                            user._id,
+                            'Delete Task',
+                            'Task',
+                            `${user.fullname} has deleted task ${deletedTask.name} at ${getDateFormat2(moment().utcOffset(8).toDate())}`
+                        );
 
-                        await File.deleteOne({ _id: deletedFile._id });
+                        console.log('Task deleted');
+                        res.redirect('/');
                     }
-
-                    console.log('Task and files related are deleted!');
-                    res.redirect('/');
                 } else {
-                    console.log('The task selected has been deleted');
+                    console.log('Task not found for deletion');
                     res.redirect('/');
                 }
             }
+        } catch (error) {
+            console.error('Error in delete route:', error);
+            next(error); // Pass the error to the global error handler
         }
+    } else {
+        res.redirect('/landing');
     }
 });
 
-// SEARCH STAFF IN SAME DEPARTMENT
-app.get('/search/staff/assignee-relief', isAuthenticated, async function (req, res) {
+// ============================
+// Search query
+// ============================
+
+// Search staff - assignee relief
+app.get('/search/staff/assignee-relief', isAuthenticated, async (req, res, next) => {
     const username = req.user.username;
     const user = await User.findOne({ username: username });
     const query = req.query.query;
 
     try {
-        let results;
+        let results = [];
+
         if (query && query.trim() !== '') {
+            // Define common query options
+            const commonQuery = { fullname: { $regex: query, $options: 'i' } };
+
+            // Define user-specific query options based on roles
+            const queries = [];
+
             if (user.isChiefExec) {
-                const deputyChiefExecQuery = {
-                    isDeputyChiefExec: true,
-                    fullname: { $regex: query, $options: 'i' }
-                };
-
-                const managementQuery = {
-                    isManagement: true,
-                    fullname: { $regex: query, $options: 'i' }
-                };
-
-                const personalAssistant = {
-                    isPersonalAssistant: true,
-                    fullname: { $regex: query, $options: 'i' }
-                };
-
-                results = await User.find({
-                    $or: [deputyChiefExecQuery, managementQuery, personalAssistant]
-                });
+                queries.push({ isDeputyChiefExec: true }, { isManagement: true }, { isPersonalAssistant: true });
             } else if (user.isDeputyChiefExec) {
-                const managementQuery = {
-                    isManagement: true,
-                    fullname: { $regex: query, $options: 'i' }
-                };
-
-                const personalAssistant = {
-                    isPersonalAssistant: true,
-                    fullname: { $regex: query, $options: 'i' }
-                };
-
-                const headOfDepartment = {
-                    isHeadOfDepartment: true,
-                    fullname: { $regex: query, $options: 'i' }
-                };
-
-                results = await User.find({
-                    $or: [headOfDepartment, managementQuery, personalAssistant]
-                });
+                queries.push({ isHeadOfDepartment: true }, { isManagement: true }, { isPersonalAssistant: true });
             } else if (user.isHeadOfDepartment) {
-                results = await User.find({
-                    department: user.department,
-                    fullname: { $regex: query, $options: 'i' }
-                });
+                queries.push({ department: user.department });
             } else if (user.isPersonalAssistant) {
-                const departmentQuery = {
-                    department: user.department,
-                    fullname: { $regex: query, $options: 'i' }
-                };
-
-                const personalAssistant = {
-                    isPersonalAssistant: true,
-                    fullname: { $regex: query, $options: 'i' }
-                };
-
-                results = await User.find({
-                    $or: [departmentQuery, personalAssistant]
-                });
+                queries.push({ department: user.department }, { isPersonalAssistant: true });
             } else if (user.isDriver) {
-                const departmentQuery = {
-                    department: user.department,
-                    fullname: { $regex: query, $options: 'i' }
-                };
-
-                const driver = {
-                    isDriver: true,
-                    fullname: { $regex: query, $options: 'i' }
-                };
-
-                results = await User.find({
-                    $or: [departmentQuery, driver]
-                });
+                queries.push({ department: user.department }, { isDriver: true });
             } else if (user.isTeaLady) {
-                const departmentQuery = {
-                    department: user.department,
-                    fullname: { $regex: query, $options: 'i' }
-                };
-
-                const teaLady = {
-                    isTeaLady: true,
-                    fullname: { $regex: query, $options: 'i' }
-                };
-
-                results = await User.find({
-                    $or: [departmentQuery, teaLady]
-                });
+                queries.push({ department: user.department }, { isTeaLady: true });
             } else if (user.isAdmin) {
-                const departmentQuery = {
-                    department: user.department,
-                    fullname: { $regex: query, $options: 'i' }
-                };
-
-                const admin = {
-                    isAdmin: true,
-                    fullname: { $regex: query, $options: 'i' }
-                };
-
-                results = await User.find({
-                    $or: [departmentQuery, admin]
-                });
+                queries.push({ department: user.department }, { isAdmin: true });
             } else {
-                results = await User.find({
-                    department: user.department,
-                    fullname: { $regex: query, $options: 'i' }
-                });
+                queries.push({ department: user.department });
             }
-        } else {
-            results = [];
+
+            // Execute the query with role-based conditions
+            results = await User.find({
+                $or: queries.map(query => ({ ...query, ...commonQuery }))
+            });
         }
 
         res.json(results);
     } catch (err) {
-        console.error(err);
+        console.error('Error searching staff (assignee relief):', err);
         res.status(500).send('Internal Server Error');
     }
-}
-);
+});
 
-app.get('/search/staff/auxiliary-police', isAuthenticated, async function (req, res) {
+// Search Staff - Auxiliary Police
+app.get('/search/staff/auxiliary-police', isAuthenticated, async (req, res, next) => {
     const username = req.user.username;
     const user = await User.findOne({ username: username });
     const query = req.query.query;
 
     try {
-        let results;
+        let results = [];
+
         if (query && query.trim() !== '') {
+            // Define common query options
+            const commonQuery = { fullname: { $regex: query, $options: 'i' } };
+
+            // Define user-specific query options based on roles
+            const queries = [];
+
             if (user.isChiefExec) {
-                const deputyChiefExecQuery = {
-                    isDeputyChiefExec: true,
-                    fullname: { $regex: query, $options: 'i' }
-                };
-
-                const managementQuery = {
-                    isManagement: true,
-                    fullname: { $regex: query, $options: 'i' }
-                };
-
-                const personalAssistant = {
-                    isPersonalAssistant: true,
-                    fullname: { $regex: query, $options: 'i' }
-                };
-
-                results = await User.find({
-                    $or: [deputyChiefExecQuery, managementQuery, personalAssistant]
-                });
+                queries.push({ isDeputyChiefExec: true }, { isManagement: true }, { isPersonalAssistant: true });
             } else if (user.isDeputyChiefExec) {
-                const managementQuery = {
-                    isManagement: true,
-                    fullname: { $regex: query, $options: 'i' }
-                };
-
-                const personalAssistant = {
-                    isPersonalAssistant: true,
-                    fullname: { $regex: query, $options: 'i' }
-                };
-
-                const headOfDepartment = {
-                    isHeadOfDepartment: true,
-                    fullname: { $regex: query, $options: 'i' }
-                };
-
-                results = await User.find({
-                    $or: [headOfDepartment, managementQuery, personalAssistant]
-                });
+                queries.push({ isHeadOfDepartment: true }, { isManagement: true }, { isPersonalAssistant: true });
             } else if (user.isHeadOfDepartment) {
-                results = await User.find({
-                    department: user.department,
-                    fullname: { $regex: query, $options: 'i' }
-                });
+                queries.push({ department: user.department });
             } else if (user.isPersonalAssistant) {
-                const departmentQuery = {
-                    department: user.department,
-                    fullname: { $regex: query, $options: 'i' }
-                };
-
-                const personalAssistant = {
-                    isPersonalAssistant: true,
-                    fullname: { $regex: query, $options: 'i' }
-                };
-
-                results = await User.find({
-                    $or: [departmentQuery, personalAssistant]
-                });
+                queries.push({ department: user.department }, { isPersonalAssistant: true });
+            } else if (user.isAdmin) {
+                queries.push({ department: user.department }, { isAdmin: true });
             } else {
-                results = await User.find({
-                    section: user.section,
-                    fullname: { $regex: query, $options: 'i' }
-                });
+                queries.push({ section: user.section });
             }
-        } else if (user.isAdmin) {
-            const departmentQuery = {
-                department: user.department,
-                fullname: { $regex: query, $options: 'i' }
-            };
 
-            const admin = {
-                isAdmin: true,
-                fullname: { $regex: query, $options: 'i' }
-            };
-
+            // Execute the query with role-based conditions
             results = await User.find({
-                $or: [departmentQuery, admin]
+                $or: queries.map(query => ({ ...query, ...commonQuery }))
             });
-        } else {
-            results = [];
         }
 
         res.json(results);
     } catch (err) {
-        console.error(err);
+        console.error('Error searching staff (auxiliary police):', err);
         res.status(500).send('Internal Server Error');
     }
-}
-);
-
-// TUTORIAL
-app.get('/guide', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    })
-        .populate('sender')
-        .sort({ timestamp: -1 });
-
-    if (user) {
-        try {
-            res.render('guide', {
-                user: user,
-                notifications: notifications,
-                uuid: uuidv4()
-            });
-        } catch (renderError) {
-            console.error('Rendering Error:', renderError);
-            next(renderError);
-        }
-    }
 });
 
-// TUTORIAL
-app.get('/changelog', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    })
-        .populate('sender')
-        .sort({ timestamp: -1 });
-
-    if (user) {
-        try {
-            res.render('changelog', {
-                user: user,
-                notifications: notifications,
-                uuid: uuidv4()
-            });
-        } catch (renderError) {
-            console.error('Rendering Error:', renderError);
-            next(renderError);
-        }
-    }
-});
-
-//FULL CALENDAR
-
-app.get('/calendar', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    })
-        .populate('sender')
-        .sort({ timestamp: -1 });
-    try {
-        res.render('calendar', {
-            user: user,
-            notifications: notifications
-        });
-    } catch (renderError) {
-        console.error('Rendering Error:', renderError);
-        next(renderError);
-    }
-});
+// ============================
+// Leave
+// ============================
 
 //LEAVE
 
@@ -4392,8 +4512,12 @@ app.get('/leave/:approval/:id', async function (req, res) {
     }
 });
 
-//ATTENDANCE
-app.get('/attendance', restrictAccess, async function (req, res) {
+// ============================
+// Attendance
+// ============================
+
+// Main attendance route
+app.get('/attendance', restrictAccess, async function (req, res, next) {
     const uniqueIdentifier = generateUniqueIdentifier();
     try {
         res.render('attendance', {
@@ -4402,55 +4526,89 @@ app.get('/attendance', restrictAccess, async function (req, res) {
         });
     } catch (renderError) {
         console.error('Rendering Error:', renderError);
-        next(renderError);
+        next(renderError); // Pass error to global error handler
     }
 });
 
-// UPDATE REMARKS ATTENDANCE
-app.post('/attendance/update/remarks/:id', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-
-    if (user) {
-        const id = req.params.id;
-        console.log(id);
-        console.log(req.body.remarks)
-
-        const attendance = await Attendance.findOneAndUpdate(
-            { _id: id },
-            { $set: { remarks: req.body.remarks } },
-            { upsert: true }
-        )
-
-        if (attendance) {
-            console.log('Update remark success:', req.body.remarks);
-            res.redirect('/profile');
-        }
+// Scan QR route
+app.get('/scan-qr', isAuthenticated, async function (req, res, next) {
+    try {
+        res.render('scan', {
+            user: req.user,
+            notifications: req.notifications,
+            uuid: uuidv4()
+        });
+    } catch (renderError) {
+        console.error('Rendering Error:', renderError);
+        next(renderError); // Pass error to global error handler
     }
 });
 
-app.get('/attendance/acknowledged/:id', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
+// Attendance records route - HOD only
+app.get('/attendance/today/department/section', isAuthenticated, async function (req, res, next) {
+    try {
+        res.render('attendance-records', {
+            user: req.user,
+            notifications: req.notifications,
+            uuid: uuidv4()
+        });
+    } catch (renderError) {
+        console.error('Rendering Error:', renderError);
+        next(renderError); // Pass error to global error handler
+    }
+});
+
+// Update attendance remarks
+app.post('/attendance/update/remarks/:id', isAuthenticated, async function (req, res, next) {
+    const id = req.params.id;
+    const remarks = req.body.remarks;
+    const userId = req.user._id;
 
     try {
-        const user = await User.findOne({ username: username });
+        const attendance = await Attendance.findOneAndUpdate(
+            { _id: id },
+            { $set: { remarks: remarks } },
+            { upsert: true }
+        );
 
-        if (!user) {
-            console.error(`User not found for username: ${username}`);
-            return res.status(404).send('User not found');
+        if (attendance) {
+            console.log('Update remark success:', remarks);
+
+            // Log activity
+            await logActivity(userId, 'Attendance Updated', 'Update', `Remarks updated to: ${remarks}`);
+
+            // Create and send notification
+            const user = await User.findById(userId);
+            const message = 'Your attendance record has been updated.';
+            await createAndSendNotification(userId, user._id, 'Attendance Updated', `/profile`, message);
+
+            // Prepare email data
+            const emailData = {
+                content: message,
+                url: 'https://www.lakmnsportal.com/profile'
+            };
+            await sendEmailNotification(user.email, emailData);
+
+            res.redirect('/profile');
+        } else {
+            throw new Error('Attendance record not found');
         }
+    } catch (error) {
+        console.error('Error updating remarks:', error);
+        next(error); // Pass error to global error handler
+    }
+});
 
-        const id = req.params.id;
-        console.log(id);
+// Acknowledge attendance
+app.get('/attendance/acknowledged/:id', isAuthenticated, async function (req, res, next) {
+    const id = req.params.id;
+    const userId = req.user._id;
 
+    try {
         const findAttendance = await Attendance.findOne({ _id: id });
-
         if (!findAttendance) {
-            console.error(`Attendance record not found for ID: ${id}`);
-            return res.status(404).send('Attendance record not found');
+            throw new Error('Attendance record not found');
         }
-
-        console.log('Found Attendance:', findAttendance);
 
         const updatedAttendance = await Attendance.findOneAndUpdate(
             { _id: id },
@@ -4458,162 +4616,108 @@ app.get('/attendance/acknowledged/:id', isAuthenticated, async function (req, re
                 $set: {
                     status: 'Present',
                     type: 'manual add',
-                    remarks: `${findAttendance.remarks} - Acknowledged by ${user.position}`
+                    remarks: `${findAttendance.remarks} - Acknowledged by ${req.user.position}`
                 }
             },
-            { new: true, upsert: true } // `new: true` to return the updated document
+            { new: true, upsert: true }
         );
 
         if (updatedAttendance) {
             console.log('Update attendance status success:', updatedAttendance.remarks);
-            return res.redirect('/');
+
+            // Log activity
+            await logActivity(userId, 'Attendance Acknowledged', 'Acknowledgment', `Attendance acknowledged by ${req.user.position}`);
+
+            // Create and send notification
+            const user = await User.findById(userId);
+            const message = 'Your attendance record has been acknowledged.';
+            await createAndSendNotification(userId, user._id, 'Attendance Acknowledged', `/`, message);
+
+            // Send email notification
+            const emailData = {
+                content: message,
+                url: 'https://www.lakmnsportal.com/profile'
+            };
+            await sendEmailNotification(user.email, emailData);
+
+            res.redirect('/');
         } else {
-            console.error('Failed to update attendance status');
-            return res.status(500).send('Failed to update attendance status');
+            throw new Error('Failed to update attendance status');
         }
     } catch (error) {
         console.error('Error during attendance update:', error);
-        return res.status(500).send('Internal Server Error');
+        next(error); // Pass error to global error handler
     }
 });
 
-// SCAN QR PAGE
-app.get('/scan-qr', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    })
-        .populate('sender')
-        .sort({ timestamp: -1 });
+// ============================
+// Human Resource Management
+// ============================
 
-    if (user) {
-        try {
-            res.render('scan', {
-                user: user,
-                notifications: notifications,
-                uuid: uuidv4()
-            });
-        } catch (renderError) {
-            console.error('Rendering Error:', renderError);
-            next(renderError);
-        }
+// Staff members route - overview
+app.get('/human-resource/staff-members/overview', isAuthenticated, async function (req, res, next) {
+    const { user, notifications } = req;
+
+    try {
+        const allUser = await User.find();
+        const uniqueDepartments = new Set();
+        const uniqueSections = new Set();
+
+        allUser.forEach(user => {
+            if (user.department) {
+                uniqueDepartments.add(user.department);
+            }
+            if (user.section) {
+                uniqueSections.add(user.section);
+            }
+        });
+
+        const departments = Array.from(uniqueDepartments);
+        const sections = Array.from(uniqueSections);
+
+        res.render('hr-staffmembers-overview', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4(),
+            departments: departments,
+            sections: sections,
+            allUser: allUser,
+            show: '',
+            alert: ''
+        });
+    } catch (renderError) {
+        console.error('Rendering Error:', renderError);
+        next(renderError);
     }
 });
 
-// ATTENDANCE TODAY FOR HOD PAGE
-app.get('/attendance/today/department/section', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    })
-        .populate('sender')
-        .sort({ timestamp: -1 });
-
-    if (user) {
-        try {
-            res.render('attendance-records', {
-                user: user,
-                notifications: notifications,
-                uuid: uuidv4()
-            });
-        } catch (renderError) {
-            console.error('Rendering Error:', renderError);
-            next(renderError);
-        }
-    }
-}
-);
-
-//HUMAN RESOURCES
-app.get('/human-resource/staff-members/overview', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    }).populate('sender');
-
-    const allUser = await User.find();
-    const uniqueDepartments = new Set();
-    const uniqueSection = new Set();
-
-    allUser.forEach(user => {
-        if (user.department) {
-            uniqueDepartments.add(user.department);
-        }
-    });
-
-    allUser.forEach(user => {
-        if (user.section) {
-            uniqueSection.add(user.section);
-        }
-    });
-
-    const departments = Array.from(uniqueDepartments);
-    const sections = Array.from(uniqueSection);
-
-    if (user) {
-        try {
-            res.render('hr-staffmembers-overview', {
-                user: user,
-                notifications: notifications,
-                uuid: uuidv4(),
-                departments: departments,
-                sections: sections,
-                // all data
-                allUser: allUser,
-                show: '',
-                alert: ''
-            });
-        } catch (renderError) {
-            console.error('Rendering Error:', renderError);
-            next(renderError);
-        }
-    }
-}
-);
-
-app.get('/human-resource/staff-members/overview/update/:id', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    }).populate('sender');
-
+// Staff members route - update
+app.get('/human-resource/staff-members/overview/update/:id', isAuthenticated, async function (req, res, next) {
+    const { user, notifications } = req;
     const userId = req.params.id;
 
-    if (user) {
+    try {
         const otherUser = await User.findOne({ _id: userId });
-        try {
-            res.render('hr-staffmembers-overview-update', {
-                user: user,
-                notifications: notifications,
-                uuid: uuidv4(),
-                // data
-                otherUser: otherUser
-            });
-        } catch (renderError) {
-            console.error('Rendering Error:', renderError);
-            next(renderError);
-        }
+
+        res.render('hr-staffmembers-overview-update', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4(),
+            otherUser: otherUser
+        });
+    } catch (renderError) {
+        console.error('Rendering Error:', renderError);
+        next(renderError);
     }
 }).post('/human-resource/staff-members/overview/update/:id', isAuthenticated, async function (req, res) {
     const userId = req.params.id;
-
     const {
         fullname, classification, grade, position, department, section, dateEmployed, gender,
         isOfficer, isAdmin, isHeadOfDepartment, isHeadOfSection, isManagement, isPersonalAssistant, isDriver, isTeaLady, isNonOfficeHour
     } = req.body;
 
-    // Initialize updatedFields with the extracted values
     const updatedFields = { fullname, classification, grade, position, department, section, dateEmployed, gender };
 
-    // Function to filter out empty fields
     const filterEmptyFields = (fields) => {
         const filteredFields = {};
         for (const key in fields) {
@@ -4624,13 +4728,10 @@ app.get('/human-resource/staff-members/overview/update/:id', isAuthenticated, as
         return filteredFields;
     };
 
-    // Filter out empty fields
     const nonEmptyUpdatedFields = filterEmptyFields(updatedFields);
 
-    // Function to check boolean fields
     const isFieldTrue = (field) => field && field !== 'no' && field !== 'Select an option';
 
-    // Update boolean fields
     nonEmptyUpdatedFields.isOfficer = isFieldTrue(isOfficer);
     nonEmptyUpdatedFields.isAdmin = isFieldTrue(isAdmin);
     nonEmptyUpdatedFields.isHeadOfDepartment = isFieldTrue(isHeadOfDepartment);
@@ -4641,324 +4742,257 @@ app.get('/human-resource/staff-members/overview/update/:id', isAuthenticated, as
     nonEmptyUpdatedFields.isTeaLady = isFieldTrue(isTeaLady);
     nonEmptyUpdatedFields.isNonOfficeHour = isFieldTrue(isNonOfficeHour);
 
-
     const updatedUser = await User.findOneAndUpdate(
         { _id: userId },
         { $set: nonEmptyUpdatedFields },
         { new: true, useFindAndModify: false, runValidators: true }
     );
 
-    if (!updatedUser) {
-        console.log('Failed to update');
+    const headOfDepartment = await User.findOne({ section: 'Human Resource Management Division', isHeadOfSection: true });
+
+    if (updatedUser) {
+        await logActivity(req.user._id, 'Update Staff Data', 'Admin',
+            `${req.user.fullname} has updated staff ${updatedUser.username} at ${getDateFormat2(moment().utcOffset(8).toDate())}`);
+
+        await createAndSendNotification(req.user._id, headOfDepartment._id, 'Staff Updated', `/human-resource/staff-members/overview/update/${userId}`,
+            `${req.user.fullname} has updated staff ${updatedUser.username}`);
+
+        const message = `${updatedUser.fullname}, your staff (${req.user.fullname}) data has been updated  at ${getDateFormat2(moment().utcOffset(8).toDate())}.`
+
+        // Prepare email data
+        const emailData = {
+            content: message,
+            url: `https://www.lakmnsportal.com/human-resource/staff-members/overview/update/${userId}`
+        };
+
+        await sendEmailNotification(headOfDepartment.email, emailData);
     } else {
-        // activity
-        const activityUser = new Activity({
-            user: req.user._id,
-            date: moment().utcOffset(8).toDate(),
-            title: 'Update Staff Data',
-            type: 'Admin',
-            description:
-                req.user.fullname +
-                ' has updated staff '
-                + updatedUser.username +
-                ' at '
-                + getDateFormat2(moment().utcOffset(8).toDate())
-        });
-
-        await activityUser.save();
-
-        console.log('New activity submitted', activityUser);
+        console.log('Failed to update');
     }
 
     res.redirect('/human-resource/staff-members/overview/update/' + userId);
 });
 
-app
-    .get('/human-resource/staff-members/add-staff', isAuthenticated, async function (req, res) {
-        const username = req.user.username;
-        const user = await User.findOne({ username: username });
-        const notifications = await Notification.find({
-            recipient: user._id,
-            read: false
-        }).populate('sender');
-
-        if (user) {
-            try {
-                res.render('hr-staffmembers-addstaff', {
-                    user: user,
-                    notifications: notifications,
-                    uuid: uuidv4(),
-                    // all data
-                    show: '',
-                    alert: ''
-                });
-            } catch (renderError) {
-                console.error('Rendering Error:', renderError);
-                next(renderError);
-            }
-        }
+// Staff members route - add employees 
+app.get('/human-resource/staff-members/add-staff', isAuthenticated, async function (req, res, next) {
+    const { user, notifications } = req;
+    try {
+        res.render('hr-staffmembers-add-staff', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4()
+        });
+    } catch (renderError) {
+        console.error('Rendering Error:', renderError);
+        next(renderError);
     }
-    )
-    .post('/human-resource/staff-members/add-staff', isAuthenticated, async function (req, res) {
-        const username = req.user.username;
-        const user1 = await User.findOne({ username: username });
-        const notifications = await Notification.find({
-            recipient: user1._id,
-            read: false
-        }).populate('sender');
+}).post('/human-resource/staff-members/add-staff', isAuthenticated, async function (req, res) {
+    const { user, notifications } = req;
 
-        // for successful
-        const allUser = await User.find();
-        const uniqueDepartments = new Set();
-        const uniqueSection = new Set();
+    // For successful rendering
+    const allUser = await User.find();
+    const uniqueDepartments = new Set();
+    const uniqueSection = new Set();
 
-        allUser.forEach(user => {
-            if (user.department) {
-                uniqueDepartments.add(user.department);
-            }
-        });
-
-        allUser.forEach(user => {
-            if (user.section) {
-                uniqueSection.add(user.section);
-            }
-        });
-
-        const departments = Array.from(uniqueDepartments);
-        const sections = Array.from(uniqueSection);
-
-        if (user1) {
-            if (
-                !req.body.fullname ||
-                !req.body.username ||
-                !req.body.email ||
-                !req.body.password ||
-                !req.body.position ||
-                !req.body.grade ||
-                !req.body.department ||
-                !req.body.gender
-            ) {
-                try {
-                    res.render('hr-staffmembers-addstaff', {
-                        user: user1,
-                        notifications: notifications,
-                        uuid: uuidv4(),
-                        show: 'show',
-                        alert: 'Sign up unsuccessful'
-                    });
-                } catch (renderError) {
-                    console.error('Rendering Error:', renderError);
-                    next(renderError);
-                }
-            }
-
-            // Process boolean fields
-            const isFieldTrue = (field) => field && field !== 'no' && field !== 'Select an option';
-
-            const newUser = new User({
-                fullname: req.body.fullname,
-                username: req.body.username,
-                email: req.body.email,
-                nric: '',
-                phone: '',
-                profile: '',
-                age: 0,
-                address: '',
-                dateEmployed: '1974-07-04T00:00:00.000+00:00',
-                birthdate: '1974-07-04T00:00:00.000+00:00',
-                department: req.body.department,
-                section: req.body.section,
-                gender: req.body.gender,
-                grade: req.body.grade,
-                position: req.body.position,
-                education: '',
-                marital: 'single',
-                classification: req.body.class,
-                isChiefExec: false,
-                isDeputyChiefExec: false,
-                isHeadOfDepartment: isFieldTrue(req.body.isHeadOfDepartment),
-                isHeadOfSection: isFieldTrue(req.body.isHeadOfSection),
-                isAdmin: isFieldTrue(req.body.isAdmin),
-                isManagement: isFieldTrue(req.body.isManagement),
-                isPersonalAssistant: isFieldTrue(req.body.isPersonalAssistant),
-                isDriver: isFieldTrue(req.body.isDriver),
-                isTealady: isFieldTrue(req.body.isTealady),
-                isNonOfficeHour: isFieldTrue(req.body.isNonOfficeHour),
-            });
-
-            User.register(newUser, req.body.password, async function (err, user) {
-                if (err) {
-                    console.log(err);
-                    res.render('hr-staffmembers-addstaff', {
-                        user: user1,
-                        notifications: notifications,
-                        uuid: uuidv4(),
-                        show: 'show',
-                        alert: err
-                    });
-                } else {
-                    // Create a new UserLeave document for the user
-                    const newUserLeave = new UserLeave({
-                        user: user._id,
-                        annual: { leave: 14, taken: 0 },
-                        sick: { leave: 14, taken: 0 },
-                        sickExtended: { leave: 60, taken: 0 },
-                        emergency: { leave: 0, taken: 0 },
-                        paternity: { leave: 3, taken: 0 },
-                        maternity: { leave: 60, taken: 0 },
-                        bereavement: { leave: 3, taken: 0 },
-                        study: { leave: 3, taken: 0 },
-                        marriage: { leave: 3, taken: 0 },
-                        attendExam: { leave: 5, taken: 0 },
-                        hajj: { leave: 40, taken: 0 },
-                        unpaid: { taken: 0 },
-                        special: { leave: 3, taken: 0 }
-                    });
-
-                    await newUserLeave.save();
-
-                    const createInfo = new Info({
-                        user: user._id,
-                        status: 'New staff',
-                        emailVerified: false,
-                        phoneVerified: false,
-                        isOnline: false,
-                        lastSeen: moment().utcOffset(8).toDate()
-                    });
-                    await createInfo.save();
-                    console.log('New info document created:', createInfo);
-
-                    // activity
-                    const activityUser = new Activity({
-                        user: user1._id,
-                        date: moment().utcOffset(8).toDate(),
-                        title: 'Add new staff',
-                        type: 'Admin HR',
-                        description:
-                            user1.fullname +
-                            ' has add staff '
-                            + newUserLeave.username +
-                            ' at '
-                            + getDateFormat2(moment().utcOffset(8).toDate())
-                    });
-
-                    activityUser.save();
-
-                    console.log('New activity submitted', activityUser);
-
-                    passport.authenticate('local')(req, res, function () {
-                        res.render('hr-staffmembers-overview', {
-                            user: user1,
-                            notifications: notifications,
-                            uuid: uuidv4(),
-                            departments: departments,
-                            sections: sections,
-                            // all data
-                            allUser: allUser,
-                            show: 'show',
-                            alert: 'Sign up successful'
-                        });
-                    });
-                }
-            });
-        }
+    allUser.forEach(user => {
+        if (user.department) uniqueDepartments.add(user.department);
+        if (user.section) uniqueSection.add(user.section);
     });
 
+    const departments = Array.from(uniqueDepartments);
+    const sections = Array.from(uniqueSection);
 
-app.get('/human-resource/leave/overview', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    }).populate('sender');
-
-    const allLeave = await Leave.find().sort({ timestamp: -1 });
-    const allUser = await User.find();
-
-    if (user) {
-        try {
-            res.render('hr-leave-overview', {
-                user: user,
-                notifications: notifications,
-                uuid: uuidv4(),
-                // all data
-                allLeave: allLeave,
-                allUser: allUser
-            });
-        } catch (renderError) {
-            console.error('Rendering Error:', renderError);
-            next(renderError);
-        }
+    if (!req.body.fullname ||
+        !req.body.username ||
+        !req.body.email ||
+        !req.body.password ||
+        !req.body.position ||
+        !req.body.grade ||
+        !req.body.department ||
+        !req.body.gender) {
+        return res.render('hr-staffmembers-addstaff', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4(),
+            show: 'show',
+            alert: 'Sign up unsuccessful'
+        });
     }
-}
-);
 
-app.get('/human-resource/leave/balances', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    }).populate('sender');
+    // Process boolean fields
+    const isFieldTrue = field => field && field !== 'no' && field !== 'Select an option';
 
-    const allUserLeave = await UserLeave.find();
-    const allUser = await User.find();
+    const newUser = new User({
+        fullname: req.body.fullname,
+        username: req.body.username,
+        email: req.body.email,
+        nric: '',
+        phone: '',
+        profile: '',
+        age: 0,
+        address: '',
+        dateEmployed: '1974-07-04T00:00:00.000+00:00',
+        birthdate: '1974-07-04T00:00:00.000+00:00',
+        department: req.body.department,
+        section: req.body.section,
+        gender: req.body.gender,
+        grade: req.body.grade,
+        position: req.body.position,
+        education: '',
+        marital: 'single',
+        classification: req.body.class,
+        isChiefExec: false,
+        isDeputyChiefExec: false,
+        isHeadOfDepartment: isFieldTrue(req.body.isHeadOfDepartment),
+        isHeadOfSection: isFieldTrue(req.body.isHeadOfSection),
+        isAdmin: isFieldTrue(req.body.isAdmin),
+        isManagement: isFieldTrue(req.body.isManagement),
+        isPersonalAssistant: isFieldTrue(req.body.isPersonalAssistant),
+        isDriver: isFieldTrue(req.body.isDriver),
+        isTealady: isFieldTrue(req.body.isTealady),
+        isNonOfficeHour: isFieldTrue(req.body.isNonOfficeHour),
+    });
 
-    if (user) {
-        try {
-            res.render('hr-leave-balances', {
+    User.register(newUser, req.body.password, async function (err, user) {
+        if (err) {
+            return res.render('hr-staffmembers-addstaff', {
                 user: user,
                 notifications: notifications,
                 uuid: uuidv4(),
-                // all data
-                allUserLeave: allUserLeave,
+                show: 'show',
+                alert: err
+            });
+        }
+
+        // Create a new UserLeave document for the user
+        const newUserLeave = new UserLeave({
+            user: user._id,
+            annual: { leave: 14, taken: 0 },
+            sick: { leave: 14, taken: 0 },
+            sickExtended: { leave: 60, taken: 0 },
+            emergency: { leave: 0, taken: 0 },
+            paternity: { leave: 3, taken: 0 },
+            maternity: { leave: 60, taken: 0 },
+            bereavement: { leave: 3, taken: 0 },
+            study: { leave: 3, taken: 0 },
+            marriage: { leave: 3, taken: 0 },
+            attendExam: { leave: 5, taken: 0 },
+            hajj: { leave: 40, taken: 0 },
+            unpaid: { taken: 0 },
+            special: { leave: 3, taken: 0 }
+        });
+
+        await newUserLeave.save();
+
+        const createInfo = new Info({
+            user: user._id,
+            status: 'New staff',
+            emailVerified: false,
+            phoneVerified: false,
+            isOnline: false,
+            lastSeen: moment().utcOffset(8).toDate()
+        });
+        await createInfo.save();
+        console.log('New info document created:', createInfo);
+
+        // send notification via email and web push 
+        const headOfDepartment = await User.findOne({ section: 'Human Resource Management Division', isHeadOfSection: true });
+
+        await logActivity(user._id, 'Register new staff', 'Admin',
+            `${user.fullname} has registered staff ${newUser.username} at ${getDateFormat2(moment().utcOffset(8).toDate())}`);
+
+        await createAndSendNotification(user._id, headOfDepartment._id, 'Staff Registered', `/human-resource/staff-members/overview/`,
+            `${user.fullname} has registered staff ${newUser.username}`);
+
+        const message = `Your staff (${user.fullname}) has registered new staff, ${newUser.fullname} (${newUser.username}) at ${getDateFormat2(moment().utcOffset(8).toDate())}.`
+
+        // Prepare email data
+        const emailData = {
+            content: message,
+            url: `https://www.lakmnsportal.com/human-resource/staff-members/overview/`
+        };
+
+        await sendEmailNotification(headOfDepartment.email, emailData);
+
+        passport.authenticate('local')(req, res, function () {
+            res.render('hr-staffmembers-overview', {
+                user: user,
+                notifications: notifications,
+                uuid: uuidv4(),
+                departments: departments,
+                sections: sections,
                 allUser: allUser,
-                show: '',
-                alert: ''
+                show: 'show',
+                alert: 'Register new staff successful'
             });
-        } catch (renderError) {
-            console.error('Rendering Error:', renderError);
-            next(renderError);
-        }
+        });
+    });
+});
+
+// Leave route - overview
+app.get('/human-resource/leave/overview', isAuthenticated, async function (req, res) {
+    const { user, notifications } = req;
+
+    try {
+        const allLeave = await Leave.find().sort({ timestamp: -1 });
+        const allUser = await User.find();
+
+        res.render('hr-leave-overview', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4(),
+            allLeave: allLeave,
+            allUser: allUser
+        });
+    } catch (renderError) {
+        console.error('Rendering Error:', renderError);
+        next(renderError);
     }
-}
-);
+});
 
+// Leave route - balances
+app.get('/human-resource/leave/balances', isAuthenticated, async function (req, res) {
+    const { user, notifications } = req;
+
+    try {
+        const allUserLeave = await UserLeave.find();
+        const allUser = await User.find();
+
+        res.render('hr-leave-balances', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4(),
+            allUserLeave: allUserLeave,
+            allUser: allUser,
+            show: '',
+            alert: ''
+        });
+    } catch (renderError) {
+        console.error('Rendering Error:', renderError);
+        next(renderError);
+    }
+});
+
+// Leave route - balances update
 app.get('/human-resource/leave/balances/update/:id', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    }).populate('sender');
+    const { user, notifications } = req;
+    const userId = req.params.id;
 
-    const checkUser = req.params.id;
+    try {
+        const userLeave = await UserLeave.findOne({ user: userId }).populate('user').exec();
 
-    if (user) {
-        const userLeave = await UserLeave.findOne({ user: checkUser })
-            .populate('user')
-            .exec();
-        try {
-            res.render('hr-leave-balances-update', {
-                user: user,
-                notifications: notifications,
-                uuid: uuidv4(),
-                userLeave: userLeave,
-            });
-        } catch (renderError) {
-            console.error('Rendering Error:', renderError);
-            next(renderError);
-        }
+        res.render('hr-leave-balances-update', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4(),
+            userLeave: userLeave
+        });
+    } catch (renderError) {
+        console.error('Rendering Error:', renderError);
+        next(renderError);
     }
 }).post('/human-resource/leave/balances/update/:id', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    }).populate('sender');
-
+    const { user, notifications } = req;
     const userId = req.params.id;
     const {
         annualtotal, annualtaken, sicktotal, sicktaken,
@@ -4968,21 +5002,16 @@ app.get('/human-resource/leave/balances/update/:id', isAuthenticated, async func
 
     const allUserLeave = await UserLeave.find();
     const allUser = await User.find();
-    const userLeave = await UserLeave.findOne({ user: userId })
-        .populate('user')
-        .exec();
+    const userLeave = await UserLeave.findOne({ user: userId }).populate('user').exec();
 
-    // Initialize an empty object to store the fields to update
     const updatedFields = {};
 
-    // Helper function to add fields to updatedFields if they have a value
     const addFieldIfExists = (field, value) => {
         if (value !== undefined && value !== '') {
             updatedFields[field] = parseFloat(value, 10).toFixed(1);
         }
     };
 
-    // Add fields to updatedFields only if they have a value
     addFieldIfExists('annual.leave', annualtotal);
     addFieldIfExists('annual.taken', annualtaken);
     addFieldIfExists('sick.leave', sicktotal);
@@ -5004,60 +5033,51 @@ app.get('/human-resource/leave/balances/update/:id', isAuthenticated, async func
             { new: true, useFindAndModify: false }
         );
 
-        const findUser = await User.findOne({ _id: userId });
+        const headOfDepartment = await User.findOne({ section: 'Human Resource Management Division', isHeadOfSection: true });
 
-        if (!updatedLeave) {
-            console.log('Failed to update');
+        if (updatedLeave) {
+            const findUser = await User.findOne({ _id: userId });
+
+            // send notification via email and web push 
+            await logActivity(user._id, 'Update Leave Balance', 'Admin',
+                `${user.fullname} has update leave balances ${findUser.username} at ${getDateFormat2(moment().utcOffset(8).toDate())}`);
+
+            await createAndSendNotification(user._id, headOfDepartment._id, 'Leave Balances Updated', `/human-resource/leave/balances/update/${upddatedLeave._id}`,
+                `${user.fullname} has registered staff ${findUser.username}`);
+
+            const message = `Your staff (${user.fullname}) has registered new staff, ${findUser.fullname} (${findUser.username}) at ${getDateFormat2(moment().utcOffset(8).toDate())}.`
+
+            // Prepare email data
+            const emailData = {
+                content: message,
+                url: `https://www.lakmnsportal.com/human-resource/leave/balances/update/`
+            };
+
+            await sendEmailNotification(headOfDepartment.email, emailData);
         } else {
-            // activity
-            const activityUser = new Activity({
-                user: user._id,
-                date: moment().utcOffset(8).toDate(),
-                title: 'Update staff leave balances',
-                type: 'Admin',
-                description:
-                    user.fullname +
-                    ' has update staff leave balances '
-                    + findUser.username +
-                    ' at '
-                    + getDateFormat2(moment().utcOffset(8).toDate())
-            });
-
-            activityUser.save();
-
-            console.log('New activity submitted', activityUser);
+            console.log('Failed to update');
         }
 
-        res.redirect('/human-resource/leave/balances/update/' + userId);
+        res.redirect(`/human-resource/leave/balances/update/${userId}`);
     } catch (err) {
-        try {
-            res.render('hr-leave-balances', {
-                user: user,
-                notifications: notifications,
-                uuid: uuidv4(),
-                allUserLeave: allUserLeave,
-                allUser: allUser,
-                show: 'show',
-                alert: userLeave.user.fullname + ' leave balances update failed!'
-            });
-        } catch (renderError) {
-            console.error('Rendering Error:', renderError);
-            next(renderError);
-        }
+        console.error('Error:', err);
+        res.render('hr-leave-balances', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4(),
+            allUserLeave: allUserLeave,
+            allUser: allUser,
+            show: 'show',
+            alert: `${userLeave.user.fullname} leave balances update failed!`
+        });
     }
 });
 
+// Attendance route - overview
 app.get('/human-resource/attendance/overview', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    })
-        .populate('sender')
-        .sort({ timestamp: -1 });
+    const { user, notifications } = req;
 
-    if (user) {
+    try {
         const startOfToday = moment().utcOffset(8).startOf('day').toDate();
         const endOfToday = moment().utcOffset(8).endOf('day').toDate();
 
@@ -5066,75 +5086,23 @@ app.get('/human-resource/attendance/overview', isAuthenticated, async function (
         }).sort({ timestamp: -1 });
 
         const allUser = await User.find();
-        try {
-            res.render('hr-attendance-overview', {
-                user: user,
-                notifications: notifications,
-                uuid: uuidv4(),
-                allUser: allUser,
-                attendance: attendance
-            });
-        } catch (renderError) {
-            console.error('Rendering Error:', renderError);
-            next(renderError);
-        }
-    }
-}
-);
 
-//PROCUREMENT
-
-//TENDER 
-
-//TENDER REGISTER
-app.get('/procurement/tender/register', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    })
-        .populate('sender')
-        .sort({ timestamp: -1 });
-
-    if (user) {
-        try {
-            res.render('procurement-tender-register', {
-                user: user,
-                notifications: notifications,
-                uuid: uuidv4(),
-            });
-        } catch (renderError) {
-            console.error('Rendering Error:', renderError);
-            next(renderError);
-        }
+        res.render('hr-attendance-overview', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4(),
+            allUser: allUser,
+            attendance: attendance
+        });
+    } catch (renderError) {
+        console.error('Rendering Error:', renderError);
+        next(renderError);
     }
 });
 
-//TENDER LIST
-app.get('/procurement/tender/register', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    })
-        .populate('sender')
-        .sort({ timestamp: -1 });
-
-    if (user) {
-        try {
-            res.render('procurement-tender-list', {
-                user: user,
-                notifications: notifications,
-                uuid: uuidv4(),
-            });
-        } catch (renderError) {
-            console.error('Rendering Error:', renderError);
-            next(renderError);
-        }
-    }
-});
+// ============================
+// Auxiliary Police
+// ============================
 
 //AUXILIARY POLICE
 
@@ -6340,6 +6308,10 @@ app.get('/submit-failed', async function (req, res) {
         next(renderError);
     }
 });
+
+// ============================
+// Visitor Management System
+// ============================
 
 // VMS
 // ROUTE FOR DISPLAYING THE FORM
