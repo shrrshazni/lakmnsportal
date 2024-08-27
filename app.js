@@ -989,6 +989,23 @@ const sendEmailNotification = async (recipientEmail, emailData) => {
     }
 };
 
+// Allowed IP addresses for restricted access
+const allowedIPs = [
+    '175.140.45.73', '104.28.242.42', '210.186.48.79',
+    '60.50.17.102', '175.144.217.244', '203.106.120.240'
+];
+
+// Middleware to restrict access based on IP address
+const restrictAccess = (req, res, next) => {
+    const clientIp = req.clientIp;
+
+    if (allowedIPs.includes(clientIp)) {
+        next();
+    } else {
+        res.render('error');
+    }
+};
+
 // ============================
 // Routes
 // ============================
@@ -1034,273 +1051,258 @@ const isAuthenticated = async (req, res, next) => {
 };
 
 // Sign in routes
-app
-    // GET /sign-in - Render the sign-in page
-    .get('/sign-in', async (req, res, next) => {
-        try {
-            res.render('sign-in', {
-                // Initial validation states
-                validationUsername: '',
-                validationPassword: '',
-                // Input values
-                username: '',
-                password: '',
-                // Toast notification
-                toastShow: '',
-                toastMsg: ''
-            });
-        } catch (renderError) {
-            // Log rendering errors and pass to global error handler
-            console.error('Rendering Error:', renderError);
-            next(renderError);
-        }
-    })
+app.get('/sign-in', async (req, res, next) => {
+    try {
+        res.render('sign-in', {
+            // Initial validation states
+            validationUsername: '',
+            validationPassword: '',
+            // Input values
+            username: '',
+            password: '',
+            // Toast notification
+            toastShow: '',
+            toastMsg: ''
+        });
+    } catch (renderError) {
+        // Log rendering errors and pass to global error handler
+        console.error('Rendering Error:', renderError);
+        next(renderError);
+    }
+}).post('/sign-in', async (req, res, next) => {
+    const { username, password, rememberMe } = req.body;
 
-    // POST /sign-in - Handle sign-in form submission
-    .post('/sign-in', async (req, res, next) => {
-        const { username, password, rememberMe } = req.body;
+    // Start measuring sign-in process time
+    console.time('Sign-in Process');
 
-        // Start measuring sign-in process time
-        console.time('Sign-in Process');
+    // Calculate expiration date based on rememberMe checkbox
+    const expirationDate = rememberMe
+        ? moment().utcOffset(8).add(7, 'days').toDate()  // 7 days if rememberMe is checked
+        : moment().utcOffset(8).add(1, 'hour').toDate(); // 1 hour otherwise
 
-        // Calculate expiration date based on rememberMe checkbox
-        const expirationDate = rememberMe
-            ? moment().utcOffset(8).add(7, 'days').toDate()  // 7 days if rememberMe is checked
-            : moment().utcOffset(8).add(1, 'hour').toDate(); // 1 hour otherwise
+    const passwordRegex = /^(?:\d+|[a-zA-Z0-9]{2,})/; // Password validation regex
 
-        const passwordRegex = /^(?:\d+|[a-zA-Z0-9]{2,})/; // Password validation regex
+    try {
+        // Find user by username
+        const user = await User.findByUsername(username);
 
-        try {
-            // Find user by username
-            const user = await User.findByUsername(username);
+        // Validate username and password
+        const validationUsername = username && user ? 'is-valid' : 'is-invalid';
+        const validationPassword = password && passwordRegex.test(password) ? 'is-valid' : 'is-invalid';
 
-            // Validate username and password
-            const validationUsername = username && user ? 'is-valid' : 'is-invalid';
-            const validationPassword = password && passwordRegex.test(password) ? 'is-valid' : 'is-invalid';
+        // Check if both username and password are valid
+        if (validationUsername === 'is-valid' && validationPassword === 'is-valid') {
+            user.authenticate(password, async (err, authenticatedUser) => {
+                if (err || !authenticatedUser) {
+                    // End timing and log for invalid authentication
+                    console.timeEnd('Sign-in Process');
 
-            // Check if both username and password are valid
-            if (validationUsername === 'is-valid' && validationPassword === 'is-valid') {
-                user.authenticate(password, async (err, authenticatedUser) => {
-                    if (err || !authenticatedUser) {
-                        // End timing and log for invalid authentication
+                    return res.render('sign-in', {
+                        validationUsername,
+                        validationPassword: 'is-invalid',
+                        username,
+                        password,
+                        toastShow: 'show',
+                        toastMsg: 'Incorrect password'
+                    });
+                }
+
+                // Password is correct, log in the user
+                req.logIn(authenticatedUser, async err => {
+                    if (err) {
+                        // End timing and log for login error
                         console.timeEnd('Sign-in Process');
-
-                        return res.render('sign-in', {
-                            validationUsername,
-                            validationPassword: 'is-invalid',
-                            username,
-                            password,
-                            toastShow: 'show',
-                            toastMsg: 'Incorrect password'
-                        });
+                        return next(err);
                     }
 
-                    // Password is correct, log in the user
-                    req.logIn(authenticatedUser, async err => {
-                        if (err) {
-                            // End timing and log for login error
-                            console.timeEnd('Sign-in Process');
-                            return next(err);
-                        }
+                    // Update user info
+                    await Info.findOneAndUpdate(
+                        { user: user._id },
+                        { isOnline: true, lastSeen: moment().utcOffset(8).toDate() },
+                        { new: true }
+                    );
 
-                        // Update user info
-                        await Info.findOneAndUpdate(
-                            { user: user._id },
-                            { isOnline: true, lastSeen: moment().utcOffset(8).toDate() },
-                            { new: true }
-                        );
+                    // Set session expiration date
+                    req.session.cookie.expires = expirationDate;
+                    console.log(`Current Session expires: ${req.session.cookie.expires}`);
 
-                        // Set session expiration date
-                        req.session.cookie.expires = expirationDate;
-                        console.log(`Current Session expires: ${req.session.cookie.expires}`);
-
-                        // End timing and redirect to home
-                        console.timeEnd('Sign-in Process');
-                        return res.redirect('/');
-                    });
+                    // End timing and redirect to home
+                    console.timeEnd('Sign-in Process');
+                    return res.redirect('/');
                 });
-            } else {
-                // End timing and render sign-in page with validation errors
-                console.timeEnd('Sign-in Process');
-
-                res.render('sign-in', {
-                    validationUsername,
-                    validationPassword,
-                    username,
-                    password,
-                    toastShow: 'show',
-                    toastMsg: 'There is an error, please check your input'
-                });
-            }
-        } catch (error) {
-            // End timing and handle unexpected errors
+            });
+        } else {
+            // End timing and render sign-in page with validation errors
             console.timeEnd('Sign-in Process');
-            console.error('Sign-in Error:', error);
-            res.status(500).send('Internal Server Error');
+
+            res.render('sign-in', {
+                validationUsername,
+                validationPassword,
+                username,
+                password,
+                toastShow: 'show',
+                toastMsg: 'There is an error, please check your input'
+            });
         }
-    });
+    } catch (error) {
+        // End timing and handle unexpected errors
+        console.timeEnd('Sign-in Process');
+        console.error('Sign-in Error:', error);
+        res.status(500).send('Internal Server Error');
+    }
+});
 
 // Forgot password routes
-app
-    // GET /forgot-password - Render the forgot password page
-    .get('/forgot-password', async (req, res, next) => {
-        try {
-            res.render('forgot-password', {
-                show: '',
-                alert: ''
-            });
-        } catch (renderError) {
-            // Log rendering errors and pass to global error handler
-            console.error('Rendering Error:', renderError);
-            next(renderError);
-        }
-    })
+app.get('/forgot-password', async (req, res, next) => {
+    try {
+        res.render('forgot-password', {
+            show: '',
+            alert: ''
+        });
+    } catch (renderError) {
+        // Log rendering errors and pass to global error handler
+        console.error('Rendering Error:', renderError);
+        next(renderError);
+    }
+}).post('/forgot-password', async (req, res, next) => {
+    const email = req.body.email;
 
-    // POST /forgot-password - Handle forgot password form submission
-    .post('/forgot-password', async (req, res, next) => {
-        const email = req.body.email;
+    // Find the user by email
+    const checkEmail = await User.findOne({ email });
 
-        // Find the user by email
-        const checkEmail = await User.findOne({ email });
+    // Generate a random alphanumeric code for the reset link
+    const randomUUID = uuidv4();
+    const randomAlphaNumeric = randomUUID
+        .replace(/-/g, '')
+        .substring(0, 5)
+        .toUpperCase();
 
-        // Generate a random alphanumeric code for the reset link
-        const randomUUID = uuidv4();
-        const randomAlphaNumeric = randomUUID
-            .replace(/-/g, '')
-            .substring(0, 5)
-            .toUpperCase();
+    const emailData = {
+        checkEmail,
+        uuid: randomAlphaNumeric,
+    };
 
-        const emailData = {
-            checkEmail,
-            uuid: randomAlphaNumeric,
+    console.log('User Email:', emailData.checkEmail);
+    console.log('Generated Code:', emailData.uuid);
+
+    // Render the email HTML content
+    const emailHTML = await new Promise((resolve, reject) => {
+        app.render('email', { uuid: randomAlphaNumeric, checkEmail }, (err, html) => {
+            if (err) reject(err);
+            else resolve(html);
+        });
+    });
+
+    console.log('Email HTML:', emailHTML);
+
+    if (checkEmail) {
+        // Define mail options
+        const mailOptions = {
+            from: 'protech@lakmns.org',
+            to: checkEmail.email,
+            subject: 'lakmnsportal - Reset Password',
+            html: emailHTML,
         };
 
-        console.log('User Email:', emailData.checkEmail);
-        console.log('Generated Code:', emailData.uuid);
+        // Send the reset password email
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+                console.error('Email Send Error:', error);
 
-        // Render the email HTML content
-        const emailHTML = await new Promise((resolve, reject) => {
-            app.render('email', { uuid: randomAlphaNumeric, checkEmail }, (err, html) => {
-                if (err) reject(err);
-                else resolve(html);
-            });
-        });
-
-        console.log('Email HTML:', emailHTML);
-
-        if (checkEmail) {
-            // Define mail options
-            const mailOptions = {
-                from: 'protech@lakmns.org',
-                to: checkEmail.email,
-                subject: 'lakmnsportal - Reset Password',
-                html: emailHTML,
-            };
-
-            // Send the reset password email
-            transporter.sendMail(mailOptions, (error, info) => {
-                if (error) {
-                    console.error('Email Send Error:', error);
-
-                    // Render forgot password page with error alert
-                    return res.render('forgot-password', {
-                        show: 'show',
-                        alert: 'The email you submitted is invalid or does not belong to any user in our web app.'
-                    });
-                }
-
-                console.log('Message sent:', info.messageId, info.response);
-
-                // Render forgot password page with success alert
+                // Render forgot password page with error alert
                 return res.render('forgot-password', {
                     show: 'show',
-                    alert: 'We have sent a reset password link and a 5-character alpha-numeric code to your email. Please check it.'
+                    alert: 'The email you submitted is invalid or does not belong to any user in our web app.'
                 });
-            });
-        } else {
-            // Render forgot password page with email not found alert
+            }
+
+            console.log('Message sent:', info.messageId, info.response);
+
+            // Render forgot password page with success alert
             return res.render('forgot-password', {
                 show: 'show',
-                alert: 'The email address you entered is not registered in lakmnsportal. Please check your email again.'
+                alert: 'We have sent a reset password link and a 5-character alpha-numeric code to your email. Please check it.'
             });
-        }
-    });
+        });
+    } else {
+        // Render forgot password page with email not found alert
+        return res.render('forgot-password', {
+            show: 'show',
+            alert: 'The email address you entered is not registered in lakmnsportal. Please check your email again.'
+        });
+    }
+});
 
 // Reset password routes
-app
-    // GET /reset-password/:id - Render the reset password page
-    .get('/reset-password/:id', async (req, res, next) => {
-        const id = req.params.id;
-        console.log('Reset Password ID:', id);
+app.get('/reset-password/:id', async (req, res, next) => {
+    const id = req.params.id;
+    console.log('Reset Password ID:', id);
 
+    try {
+        res.render('reset-password', {
+            id,
+            show: '',
+            alert: ''
+        });
+    } catch (renderError) {
+        // Log rendering errors and pass to global error handler
+        console.error('Rendering Error:', renderError);
+        next(renderError);
+    }
+}).post('/reset-password/:id', async (req, res, next) => {
+    const id = req.params.id;
+    const { password, confirmPassword } = req.body;
+
+    // Find the user by ID
+    const user = await User.findOne({ _id: id });
+
+    if (!user) {
+        // If the user is not found, render the page with an error message
+        return res.render('reset-password', {
+            id,
+            show: 'show',
+            alert: 'User not found!'
+        });
+    }
+
+    if (password === confirmPassword) {
         try {
-            res.render('reset-password', {
-                id,
-                show: '',
-                alert: ''
-            });
+            // Set the new password and save the user
+            await user.setPassword(password);
+            const updatePassword = await user.save();
+
+            if (updatePassword) {
+                // Render the sign-in page with a success message
+                return res.render('sign-in', {
+                    validationUsername: '',
+                    validationPassword: '',
+                    username: '',
+                    password: '',
+                    toastShow: 'show',
+                    toastMsg: 'Reset password successful!'
+                });
+            } else {
+                // Render the reset password page with an error message
+                return res.render('reset-password', {
+                    id,
+                    show: 'show',
+                    alert: 'Update password failed!'
+                });
+            }
         } catch (renderError) {
-            // Log rendering errors and pass to global error handler
+            // Log errors during password update and rendering
             console.error('Rendering Error:', renderError);
             next(renderError);
         }
-    })
-
-    // POST /reset-password/:id - Handle the password reset form submission
-    .post('/reset-password/:id', async (req, res, next) => {
-        const id = req.params.id;
-        const { password, confirmPassword } = req.body;
-
-        // Find the user by ID
-        const user = await User.findOne({ _id: id });
-
-        if (!user) {
-            // If the user is not found, render the page with an error message
-            return res.render('reset-password', {
-                id,
-                show: 'show',
-                alert: 'User not found!'
-            });
-        }
-
-        if (password === confirmPassword) {
-            try {
-                // Set the new password and save the user
-                await user.setPassword(password);
-                const updatePassword = await user.save();
-
-                if (updatePassword) {
-                    // Render the sign-in page with a success message
-                    return res.render('sign-in', {
-                        validationUsername: '',
-                        validationPassword: '',
-                        username: '',
-                        password: '',
-                        toastShow: 'show',
-                        toastMsg: 'Reset password successful!'
-                    });
-                } else {
-                    // Render the reset password page with an error message
-                    return res.render('reset-password', {
-                        id,
-                        show: 'show',
-                        alert: 'Update password failed!'
-                    });
-                }
-            } catch (renderError) {
-                // Log errors during password update and rendering
-                console.error('Rendering Error:', renderError);
-                next(renderError);
-            }
-        } else {
-            // Render the reset password page with a mismatch alert
-            return res.render('reset-password', {
-                id,
-                show: 'show',
-                alert: 'New password and confirm password do not match!'
-            });
-        }
-    });
+    } else {
+        // Render the reset password page with a mismatch alert
+        return res.render('reset-password', {
+            id,
+            show: 'show',
+            alert: 'New password and confirm password do not match!'
+        });
+    }
+});
 
 // Sign out route
 app.get('/sign-out/:id', async (req, res, next) => {
@@ -1848,7 +1850,7 @@ app.post('/settings/upload/profile-image', isAuthenticated, async (req, res, nex
     }
 });
 
-// info route
+// Info route - method
 app.get('/info/:type/:method/:id', async (req, res, next) => {
     try {
         const user = req.user;
@@ -1889,7 +1891,33 @@ app.get('/info/:type/:method/:id', async (req, res, next) => {
     }
 });
 
-// staff details route
+// Info route - status update
+app.post('/status-update', isAuthenticated, async (req, res, next) => {
+    try {
+        const { user } = req;
+        const { username } = user;
+        const { status } = req.body;
+
+        // Find the user and update their status
+        const updatedInfo = await Info.findOneAndUpdate(
+            { user: user._id },
+            { $set: { status } },
+            { upsert: true, new: true, useFindAndModify: false }
+        );
+
+        if (updatedInfo) {
+            console.log('Status update accomplished!');
+            res.redirect('/');
+        } else {
+            console.log('Status update failed!');
+            res.redirect('/');
+        }
+    } catch (error) {
+        next(error);  // Use global error handler
+    }
+});
+
+// Staff details route
 app.get('/staff/details/:id', isAuthenticated, async (req, res, next) => {
     try {
         const { id } = req.params;
@@ -1932,6 +1960,386 @@ app.get('/staff/details/:id', isAuthenticated, async (req, res, next) => {
     } catch (error) {
         console.error('Error fetching staff details:', error);
         next(error); // Pass the error to the global error handler
+    }
+});
+
+// ============================
+// Notification Handling
+// ============================
+
+// Notification history route
+app.get('/notifications/history', isAuthenticated, async (req, res, next) => {
+    try {
+        const { user } = req;
+        const { _id: userId } = user;
+
+        // Fetch all notifications
+        const notifications = await Notification.find({
+            recipient: userId,
+            read: false
+        }).populate('sender').sort({ timestamp: -1 });
+
+        // Define date ranges using moment
+        const today = moment().utcOffset(8).startOf('day').toDate();
+        const tomorrow = moment(today).add(1, 'days').toDate();
+        const yesterday = moment(today).subtract(1, 'days').toDate();
+        const firstDayOfWeek = moment(today).startOf('isoWeek').toDate();
+        const lastDayOfWeek = moment(today).endOf('isoWeek').toDate();
+        const firstDayOfMonth = moment(today).startOf('month').toDate();
+        const lastDayOfMonth = moment(today).endOf('month').toDate();
+
+        // Fetch notifications based on date ranges
+        const notificationsToday = await Notification.find({
+            recipient: userId,
+            timestamp: { $gte: today, $lt: tomorrow }
+        }).populate('sender').sort({ timestamp: -1, read: -1 });
+
+        const notificationsYesterday = await Notification.find({
+            recipient: userId,
+            timestamp: { $gte: yesterday, $lt: today }
+        }).populate('sender').sort({ timestamp: -1, read: -1 });
+
+        const notificationsThisWeek = await Notification.find({
+            recipient: userId,
+            timestamp: { $gte: firstDayOfWeek, $lte: lastDayOfWeek }
+        }).populate('sender').sort({ timestamp: -1, read: -1 });
+
+        const notificationsThisMonth = await Notification.find({
+            recipient: userId,
+            timestamp: { $gte: firstDayOfMonth, $lte: lastDayOfMonth }
+        }).populate('sender').sort({ timestamp: -1, read: -1 });
+
+        // Render notifications page
+        res.render('notifications', {
+            user,
+            notifications,
+            notificationsToday,
+            notificationsYesterday,
+            notificationsThisWeek,
+            notificationsThisMonth
+        });
+    } catch (error) {
+        next(error);  // Use global error handler
+    }
+});
+
+// Notification route - mark as read
+app.get('/markAsRead/:id', isAuthenticated, async (req, res, next) => {
+    try {
+        const { id } = req.params;
+
+        // Update the notification status
+        const update = await Notification.findByIdAndUpdate(
+            id,
+            { read: true },
+            { new: true }
+        );
+
+        // Redirect based on update success
+        if (update) {
+            res.redirect(update.url);
+        } else {
+            console.log('Error updating notification');
+            res.redirect('/');
+        }
+    } catch (error) {
+        next(error);  // Use global error handler
+    }
+});
+
+// Notification route - mark all as read
+app.get('/markAllAsRead', isAuthenticated, async (req, res, next) => {
+    try {
+        const { user } = req;
+        const { _id: userId } = user;
+
+        // Update all unread notifications
+        await Notification.updateMany(
+            { recipient: userId, read: false },
+            { read: true }
+        );
+
+        res.redirect('/');
+    } catch (error) {
+        next(error);  // Use global error handler
+    }
+});
+
+// Web push notification route - send public vapid key
+app.get('/vapidPublicKey', (req, res) => {
+    res.send(publicVapidKey);
+});
+
+// Web push notification route - subscription
+app.post('/subscribe', async (req, res, next) => {
+    const { endpoint, expirationTime, keys, userId } = req.body;
+
+    if (!endpoint || !keys.p256dh || !keys.auth) {
+        return res.status(400).json({ error: 'Missing required subscription details.' });
+    }
+
+    try {
+        const subscription = new Subscriptions({
+            endpoint,
+            expirationTime,
+            keys,
+            user: userId
+        });
+
+        await subscription.save();
+        res.status(201).json({ message: 'Subscription saved successfully.' });
+    } catch (error) {
+        console.error('Failed to save subscription:', error);
+        res.status(500).json({ error: 'Failed to save subscription.' });
+    }
+});
+
+// Web push notification route - check existed subscription
+app.post('/check-subscription', isAuthenticated, async (req, res, next) => {
+    try {
+        const { user } = req;
+        const { _id: userId } = user;
+        const subscription = req.body;
+
+        const existingSubscription = await Subscriptions.findOne({
+            endpoint: subscription.endpoint,
+            user: userId
+        });
+
+        const isSubscribed = existingSubscription &&
+            existingSubscription.keys.p256dh === subscription.keys.p256dh &&
+            existingSubscription.keys.auth === subscription.keys.auth;
+
+        res.json({ isSubscribed: !!isSubscribed });
+    } catch (error) {
+        next(error);  // Use global error handler
+    }
+});
+
+
+// ============================
+// File Handling
+// ============================
+
+// File route - upload
+app.post('/files/upload', isAuthenticated, async (req, res, next) => {
+    try {
+        const { user } = req;
+        const { username } = user;
+        const { uuid, origin } = req.body;
+        const files = req.files;
+
+        if (!files || Object.keys(files).length === 0) {
+            console.log('No files selected');
+            return res.status(400).send('No files selected');
+        }
+
+        console.log('Files being uploaded');
+
+        for (const file of Object.values(files)) {
+            const uploadPath = __dirname + '/public/uploads/' + file.name;
+            const pathUpload = '/uploads/' + file.name;
+            const today = moment().utcOffset(8).startOf('day').toDate();
+            const type = path.extname(file.name);
+
+            // Move file to upload directory
+            await file.mv(uploadPath);
+
+            // Calculate file size in megabytes
+            const fileSizeInBytes = (await fs.stat(uploadPath)).size;
+            const fileSizeInMB = fileSizeInBytes / (1024 * 1024);
+
+            console.log(`File size: ${fileSizeInMB.toFixed(2)} MB`);
+
+            const newFile = new File({
+                uuid,
+                user: user._id,
+                name: file.name,
+                path: pathUpload,
+                date: today,
+                type,
+                origin,
+                size: `${fileSizeInMB.toFixed(2)} MB`
+            });
+
+            await newFile.save();
+        }
+
+        console.log('Files uploaded successfully');
+        res.redirect('/');
+    } catch (error) {
+        next(error);  // Use global error handler
+    }
+});
+
+// File route - downlaod
+app.get('/files/download/:id', async (req, res, next) => {
+    try {
+        const { id } = req.params;
+
+        const file = await File.findById(id);
+
+        if (file) {
+            const filePath = __dirname + '/public/uploads/' + file.name;
+            res.download(filePath, file.name);
+            console.log('Downloading file');
+        } else {
+            console.log('File not found');
+            res.status(404).send('File not found');
+        }
+    } catch (error) {
+        next(error);  // Use global error handler
+    }
+});
+
+// File route - delete by id
+app.get('/files/delete/:id', async (req, res, next) => {
+    try {
+        const { id } = req.params;
+
+        const deletedFile = await File.findByIdAndDelete(id);
+
+        if (deletedFile) {
+            const otherFiles = await File.find({
+                name: deletedFile.name,
+                size: deletedFile.size
+            });
+
+            if (otherFiles.length > 0) {
+                console.log('File removed from database only');
+            } else {
+                const filePath = __dirname + '/public/uploads/' + deletedFile.name;
+                console.log('File deleted from filesystem and database');
+                await fs.unlink(filePath);
+            }
+
+            res.redirect('/');
+        } else {
+            console.log('Error deleting the file');
+            res.status(404).send('Error deleting the file');
+        }
+    } catch (error) {
+        next(error);  // Use global error handler
+    }
+});
+
+// File route - delete by uuid
+app.get('/files/delete/cancel/:uuid', async (req, res, next) => {
+    try {
+        const { uuid } = req.params;
+
+        const filesToDelete = await File.find({ uuid });
+        const result = await File.deleteMany({ uuid });
+
+        if (result.deletedCount > 0) {
+            console.log(`${result.deletedCount} files deleted`);
+
+            for (const file of filesToDelete) {
+                const filePath = __dirname + '/public/uploads/' + file.name;
+                await fs.unlink(filePath);
+            }
+
+            res.redirect('/leave/request');
+        } else {
+            console.log('No files found or error occurred');
+            res.status(404).send('No files found or error occurred');
+        }
+    } catch (error) {
+        next(error);  // Use global error handler
+    }
+});
+
+// ============================
+// Search query
+// ============================
+
+// Search staff - assignee relief
+app.get('/search/staff/assignee-relief', isAuthenticated, async (req, res, next) => {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const query = req.query.query;
+
+    try {
+        let results = [];
+
+        if (query && query.trim() !== '') {
+            // Define common query options
+            const commonQuery = { fullname: { $regex: query, $options: 'i' } };
+
+            // Define user-specific query options based on roles
+            const queries = [];
+
+            if (user.isChiefExec) {
+                queries.push({ isDeputyChiefExec: true }, { isManagement: true }, { isPersonalAssistant: true });
+            } else if (user.isDeputyChiefExec) {
+                queries.push({ isHeadOfDepartment: true }, { isManagement: true }, { isPersonalAssistant: true });
+            } else if (user.isHeadOfDepartment) {
+                queries.push({ department: user.department });
+            } else if (user.isPersonalAssistant) {
+                queries.push({ department: user.department }, { isPersonalAssistant: true });
+            } else if (user.isDriver) {
+                queries.push({ department: user.department }, { isDriver: true });
+            } else if (user.isTeaLady) {
+                queries.push({ department: user.department }, { isTeaLady: true });
+            } else if (user.isAdmin) {
+                queries.push({ department: user.department }, { isAdmin: true });
+            } else {
+                queries.push({ department: user.department });
+            }
+
+            // Execute the query with role-based conditions
+            results = await User.find({
+                $or: queries.map(query => ({ ...query, ...commonQuery }))
+            });
+        }
+
+        res.json(results);
+    } catch (err) {
+        console.error('Error searching staff (assignee relief):', err);
+        res.status(500).send('Internal Server Error');
+    }
+});
+
+// Search Staff - Auxiliary Police
+app.get('/search/staff/auxiliary-police', isAuthenticated, async (req, res, next) => {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const query = req.query.query;
+
+    try {
+        let results = [];
+
+        if (query && query.trim() !== '') {
+            // Define common query options
+            const commonQuery = { fullname: { $regex: query, $options: 'i' } };
+
+            // Define user-specific query options based on roles
+            const queries = [];
+
+            if (user.isChiefExec) {
+                queries.push({ isDeputyChiefExec: true }, { isManagement: true }, { isPersonalAssistant: true });
+            } else if (user.isDeputyChiefExec) {
+                queries.push({ isHeadOfDepartment: true }, { isManagement: true }, { isPersonalAssistant: true });
+            } else if (user.isHeadOfDepartment) {
+                queries.push({ department: user.department });
+            } else if (user.isPersonalAssistant) {
+                queries.push({ department: user.department }, { isPersonalAssistant: true });
+            } else if (user.isAdmin) {
+                queries.push({ department: user.department }, { isAdmin: true });
+            } else {
+                queries.push({ section: user.section });
+            }
+
+            // Execute the query with role-based conditions
+            results = await User.find({
+                $or: queries.map(query => ({ ...query, ...commonQuery }))
+            });
+        }
+
+        res.json(results);
+    } catch (err) {
+        console.error('Error searching staff (auxiliary police):', err);
+        res.status(500).send('Internal Server Error');
     }
 });
 
@@ -2337,100 +2745,6 @@ app.get('/delete/:content/:id', isAuthenticated, async (req, res, next) => {
         }
     } else {
         res.redirect('/landing');
-    }
-});
-
-// ============================
-// Search query
-// ============================
-
-// Search staff - assignee relief
-app.get('/search/staff/assignee-relief', isAuthenticated, async (req, res, next) => {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const query = req.query.query;
-
-    try {
-        let results = [];
-
-        if (query && query.trim() !== '') {
-            // Define common query options
-            const commonQuery = { fullname: { $regex: query, $options: 'i' } };
-
-            // Define user-specific query options based on roles
-            const queries = [];
-
-            if (user.isChiefExec) {
-                queries.push({ isDeputyChiefExec: true }, { isManagement: true }, { isPersonalAssistant: true });
-            } else if (user.isDeputyChiefExec) {
-                queries.push({ isHeadOfDepartment: true }, { isManagement: true }, { isPersonalAssistant: true });
-            } else if (user.isHeadOfDepartment) {
-                queries.push({ department: user.department });
-            } else if (user.isPersonalAssistant) {
-                queries.push({ department: user.department }, { isPersonalAssistant: true });
-            } else if (user.isDriver) {
-                queries.push({ department: user.department }, { isDriver: true });
-            } else if (user.isTeaLady) {
-                queries.push({ department: user.department }, { isTeaLady: true });
-            } else if (user.isAdmin) {
-                queries.push({ department: user.department }, { isAdmin: true });
-            } else {
-                queries.push({ department: user.department });
-            }
-
-            // Execute the query with role-based conditions
-            results = await User.find({
-                $or: queries.map(query => ({ ...query, ...commonQuery }))
-            });
-        }
-
-        res.json(results);
-    } catch (err) {
-        console.error('Error searching staff (assignee relief):', err);
-        res.status(500).send('Internal Server Error');
-    }
-});
-
-// Search Staff - Auxiliary Police
-app.get('/search/staff/auxiliary-police', isAuthenticated, async (req, res, next) => {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const query = req.query.query;
-
-    try {
-        let results = [];
-
-        if (query && query.trim() !== '') {
-            // Define common query options
-            const commonQuery = { fullname: { $regex: query, $options: 'i' } };
-
-            // Define user-specific query options based on roles
-            const queries = [];
-
-            if (user.isChiefExec) {
-                queries.push({ isDeputyChiefExec: true }, { isManagement: true }, { isPersonalAssistant: true });
-            } else if (user.isDeputyChiefExec) {
-                queries.push({ isHeadOfDepartment: true }, { isManagement: true }, { isPersonalAssistant: true });
-            } else if (user.isHeadOfDepartment) {
-                queries.push({ department: user.department });
-            } else if (user.isPersonalAssistant) {
-                queries.push({ department: user.department }, { isPersonalAssistant: true });
-            } else if (user.isAdmin) {
-                queries.push({ department: user.department }, { isAdmin: true });
-            } else {
-                queries.push({ section: user.section });
-            }
-
-            // Execute the query with role-based conditions
-            results = await User.find({
-                $or: queries.map(query => ({ ...query, ...commonQuery }))
-            });
-        }
-
-        res.json(results);
-    } catch (err) {
-        console.error('Error searching staff (auxiliary police):', err);
-        res.status(500).send('Internal Server Error');
     }
 });
 
@@ -4517,7 +4831,7 @@ app.get('/leave/:approval/:id', async function (req, res) {
 // ============================
 
 // Main attendance route
-app.get('/attendance', restrictAccess, async function (req, res, next) {
+app.get('/attendance', async function (req, res, next) {
     const uniqueIdentifier = generateUniqueIdentifier();
     try {
         res.render('attendance', {
@@ -5074,7 +5388,7 @@ app.get('/human-resource/leave/balances/update/:id', isAuthenticated, async func
 });
 
 // Attendance route - overview
-app.get('/human-resource/attendance/overview', isAuthenticated, async function (req, res) {
+app.get('/human-resource/attendance/overview', isAuthenticated, async (req, res, next) => {
     const { user, notifications } = req;
 
     try {
@@ -5104,47 +5418,49 @@ app.get('/human-resource/attendance/overview', isAuthenticated, async function (
 // Auxiliary Police
 // ============================
 
-//AUXILIARY POLICE
+// Duty handover route - view
+app.get('/auxiliary-police/duty-handover/view', isAuthenticated, async (req, res, next) => {
+    try {
+        const bmi = await DutyHandoverAux.find({ location: 'Baitul Makmur I' }).sort({ date: -1 });
+        const bmii = await DutyHandoverAux.find({ location: 'Baitul Makmur II' }).sort({ date: -1 });
+        const jm = await DutyHandoverAux.find({ location: 'Jamek Mosque' }).sort({ date: -1 });
+        const cm = await DutyHandoverAux.find({ location: 'City Mosque' }).sort({ date: -1 });
+        const rs = await DutyHandoverAux.find({ location: 'Raudhatul Sakinah' }).sort({ date: -1 });
 
-// DUTY HANDOVER
-app.get('/auxiliary-police/duty-handover/submit', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    })
-        .populate('sender')
-        .sort({ timestamp: -1 });
-
-    if (user) {
-        try {
-            res.render('auxiliarypolice-dutyhandover-submit', {
-                user: user,
-                notifications: notifications,
-                uuid: uuidv4(),
-                show: '',
-                alert: '',
-            });
-        } catch (renderError) {
-            console.error('Rendering Error:', renderError);
-            next(renderError);
-        }
+        res.render('auxiliarypolice-dutyhandover-view', {
+            user: req.user,
+            notifications: req.notifications,
+            uuid: uuidv4(),
+            bmi: bmi,
+            bmii: bmii,
+            jm: jm,
+            cm: cm,
+            rs: rs
+        });
+    } catch (renderError) {
+        console.error('Rendering Error:', renderError);
+        next(renderError);
     }
+});
 
-}).post('/auxiliary-police/duty-handover/submit', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    })
-        .populate('sender')
-        .sort({ timestamp: -1 });
+// Duty handover route - submission
+app.get('/auxiliary-police/duty-handover/submit', isAuthenticated, async (req, res, next) => {
+    try {
+        res.render('auxiliarypolice-dutyhandover-submit', {
+            user: req.user,
+            notifications: req.notifications,
+            uuid: uuidv4(),
+            show: '',
+            alert: '',
+        });
+    } catch (renderError) {
+        console.error('Rendering Error:', renderError);
+        next(renderError);
+    }
+}).post('/auxiliary-police/duty-handover/submit', isAuthenticated, async (req, res, next) => {
     const { location, date, shift, time, notes, shiftStaff, dutyHandoverId } = req.body;
 
     try {
-
         let dutyHandover = await DutyHandoverAux.findOne({
             location: location,
             date: moment(date).utcOffset(8).toDate(),
@@ -5158,31 +5474,22 @@ app.get('/auxiliary-police/duty-handover/submit', isAuthenticated, async functio
             dutyHandover.staff = shiftStaff;
             dutyHandover.status = 'completed';
             dutyHandover.timestamp = moment().utcOffset(8).toDate();
-
             await dutyHandover.save();
-            console.log('Exisitng handover updated'); try {
-                res.render('auxiliarypolice-dutyhandover-submit', {
-                    user: user,
-                    notifications: notifications,
-                    uuid: uuidv4(),
-                    show: 'show',
-                    alert: 'Existing handover updated',
-                });
-            } catch (renderError) {
-                console.error('Rendering Error:', renderError);
-                next(renderError);
-            }
-        } else {
-            // update duty handover based on id
-            await DutyHandoverAux.findByIdAndUpdate(
-                dutyHandoverId,
-                { status: 'completed' },
-                { new: true } // To return the updated document
-            );
 
-            // Create a new duty handover
+            console.log('Existing handover updated');
+            res.render('auxiliarypolice-dutyhandover-submit', {
+                user: req.user,
+                notifications: req.notifications,
+                uuid: uuidv4(),
+                show: 'show',
+                alert: 'Existing handover updated',
+            });
+        } else {
+            // Update duty handover based on ID and create a new one if needed
+            await DutyHandoverAux.findByIdAndUpdate(dutyHandoverId, { status: 'completed' }, { new: true });
+
             dutyHandover = new DutyHandoverAux({
-                headShift: user.fullname,
+                headShift: req.user.fullname,
                 date: moment(date).utcOffset(8).toDate(),
                 location: location,
                 remarks: notes,
@@ -5196,804 +5503,483 @@ app.get('/auxiliary-police/duty-handover/submit', isAuthenticated, async functio
             const create = await dutyHandover.save();
             const newReport = await createPatrolReport(dutyHandoverId, location, date, shift, time, shiftStaff);
 
-            console.log('New duty handover and patrol report created', create, newReport); try {
-                res.render('auxiliarypolice-dutyhandover-submit', {
-                    user: user,
-                    notifications: notifications,
-                    uuid: uuidv4(),
-                    show: 'show',
-                    alert: 'New duty handover and patrol report created',
-                });
-            } catch (renderError) {
-                console.error('Rendering Error:', renderError);
-                next(renderError);
-            }
+            console.log('New duty handover and patrol report created', create, newReport);
+            res.render('auxiliarypolice-dutyhandover-submit', {
+                user: req.user,
+                notifications: req.notifications,
+                uuid: uuidv4(),
+                show: 'show',
+                alert: 'New duty handover and patrol report created',
+            });
         }
     } catch (error) {
         console.error('Error updating duty handover:', error);
-        res.status(500).json({ success: false, message: 'Internal Server Error' });
+        next(error);
     }
 });
 
-app.get('/auxiliary-police/duty-handover/view', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    })
-        .populate('sender')
-        .sort({ timestamp: -1 });
+// Schedule route - view
+app.get('/auxiliary-police/schedule/view', isAuthenticated, async (req, res, next) => {
+    try {
+        res.render('auxiliarypolice-schedule-view', {
+            user: req.user,
+            notifications: req.notifications,
+            uuid: uuidv4(),
+        });
+    } catch (renderError) {
+        console.error('Rendering Error:', renderError);
+        next(renderError);
+    }
+});
 
-    if (user) {
-        const bmi = await DutyHandoverAux.find({
-            location: 'Baitul Makmur I',
-        }).sort({ date: -1 });
+// Schedule route - GET add
+app.get('/auxiliary-police/schedule/add', isAuthenticated, async (req, res, next) => {
+    try {
+        res.render('auxiliarypolice-schedule-add', {
+            user: req.user,
+            notifications: req.notifications,
+            uuid: uuidv4(),
+            show: '',
+            alert: ''
+        });
+    } catch (renderError) {
+        console.error('Rendering Error:', renderError);
+        next(renderError);
+    }
+}).post('/auxiliary-police/schedule/add', isAuthenticated, async (req, res, next) => {
+    const {
+        location,
+        date,
+        selectedNames1,
+        selectedNames2,
+        selectedNames3,
+        selectedNames4 = '',
+        time1,
+        time2,
+        time3,
+        time4 = '',
+        selectedNames5 = '',
+        selectedNames6 = ''
+    } = req.body;
 
-        const bmii = await DutyHandoverAux.find({
-            location: 'Baitul Makmur II',
-        }).sort({ date: -1 });
+    console.log('Received form data:', { location, date, selectedNames1, selectedNames2, selectedNames3, selectedNames4, time1, time2, time3, time4, selectedNames5, selectedNames6 });
 
-        const jm = await DutyHandoverAux.find({
-            location: 'Jamek Mosque',
-        }).sort({ date: -1 });
+    if (!location || !date || !selectedNames1 || !selectedNames2 || !selectedNames3 || time1 === 'Select shift time' || time2 === 'Select shift time' || time3 === 'Select shift time' || (selectedNames4 && time4 === 'Select shift time')) {
+        console.log('Failed to add auxiliary police schedule');
+        res.render('auxiliarypolice-schedule-add', {
+            user: req.user,
+            notifications: req.notifications,
+            uuid: uuidv4(),
+            show: 'show',
+            alert: 'All form fields must be filled, there is an empty input'
+        });
+        return;
+    }
 
-        const cm = await DutyHandoverAux.find({
-            location: 'City Mosque',
-        }).sort({ date: -1 });
+    const selectedNames1Array = selectedNames1.split(',');
+    const selectedNames2Array = selectedNames2.split(',');
+    const selectedNames3Array = selectedNames3.split(',');
+    const selectedNames4Array = selectedNames4 ? selectedNames4.split(',') : [];
+    const staffRaisedFlagArray = selectedNames5 ? selectedNames5.split(',') : [];
+    const staffLoweredFlagArray = selectedNames6 ? selectedNames6.split(',') : [];
 
-        const rs = await DutyHandoverAux.find({
-            location: 'Raudhatul Sakinah',
-        }).sort({ date: -1 });
-        try {
-            res.render('auxiliarypolice-dutyhandover-view', {
-                user: user,
-                notifications: notifications,
-                uuid: uuidv4(),
-                bmi: bmi,
-                bmii: bmii,
-                jm: jm,
-                cm: cm,
-                rs: rs
+    const shifts = [
+        { shiftName: 'Shift A', staff: selectedNames1Array, time: time1 },
+        { shiftName: 'Shift B', staff: selectedNames2Array, time: time2 },
+        { shiftName: 'Shift C', staff: selectedNames3Array, time: time3 },
+        ...(selectedNames4Array.length > 0 ? [{ shiftName: 'Shift D', staff: selectedNames4Array, time: time4 }] : [])
+    ];
+
+    console.log('Constructed shifts array:', shifts);
+
+    try {
+        const findSchedule = await ScheduleAux.findOne({ location: location, date: moment(date).utcOffset(8).toDate() });
+
+        if (findSchedule) {
+            const updateSchedule = await ScheduleAux.findOneAndUpdate(
+                { location: location, date: moment(date).utcOffset(8).toDate() },
+                {
+                    $set: {
+                        shift: shifts,
+                        staffRaisedFlag: staffRaisedFlagArray,
+                        staffLoweredFlag: staffLoweredFlagArray
+                    }
+                },
+                { upsert: true }
+            );
+
+            if (updateSchedule) {
+                console.log('Successfully updated auxiliary police schedule');
+                res.render('auxiliarypolice-schedule-add', {
+                    user: req.user,
+                    notifications: req.notifications,
+                    uuid: uuidv4(),
+                    show: 'show',
+                    alert: 'Successfully updated auxiliary police schedule'
+                });
+            }
+        } else {
+            const newSchedule = new ScheduleAux({
+                date: moment(date).utcOffset(8).toDate(),
+                location: location,
+                shift: shifts,
+                staffRaisedFlag: staffRaisedFlagArray,
+                staffLoweredFlag: staffLoweredFlagArray
             });
-        } catch (renderError) {
-            console.error('Rendering Error:', renderError);
-            next(renderError);
+
+            const saveSchedule = await newSchedule.save();
+
+            if (saveSchedule) {
+                console.log('Successfully added auxiliary police schedule on ' + date);
+                res.render('auxiliarypolice-schedule-add', {
+                    user: req.user,
+                    notifications: req.notifications,
+                    uuid: uuidv4(),
+                    show: 'show',
+                    alert: 'Successfully added auxiliary police schedule on ' + date
+                });
+            } else {
+                console.log('Failed to add auxiliary police schedule on ' + date);
+                res.render('auxiliarypolice-schedule-add', {
+                    user: req.user,
+                    notifications: req.notifications,
+                    uuid: uuidv4(),
+                    show: 'show',
+                    alert: 'Failed to add auxiliary police schedule on ' + date
+                });
+            }
         }
+    } catch (error) {
+        console.error('Error handling schedule add:', error);
+        next(error);
     }
-
 });
 
-// SEARCH DUTY HANDOVER
-app.get('/search-duty-handover', isAuthenticated, async function (req, res) {
-    const { location, date, shift, time } = req.query;
+// Duty handover route - search
+app.get('/search-duty-handover', isAuthenticated, async (req, res, next) => {
+    try {
+        const { location, date, shift, time } = req.query;
 
-    let shiftTime;
-    let adjustedDate = moment(date).utcOffset(8).toDate();
+        let shiftTime;
+        let adjustedDate = moment(date).utcOffset(8).toDate(); // Adjust date to Kuala Lumpur time
 
-    if (time === '0700') {
-        shiftTime = '2300';
-        adjustedDate.setDate(adjustedDate.getDate() - 1); // Subtract one day
-    } else if (time === '1500') {
-        shiftTime = '0700';
-    } else if (time === '2300') {
-        shiftTime = '1500';
-    }
-
-    const results = await DutyHandoverAux.findOne({
-        location: location,
-        date: adjustedDate,
-        time: shiftTime
-    });
-
-    const resultsSchedule = await ScheduleAux.findOne({
-        location: location,
-        date: moment(date).utcOffset(8).toDate(),
-        'shift.shiftName': shift
-    });
-
-    const response = {
-        dutyHandover: results,
-        shiftSchedule: resultsSchedule
-    }
-
-    console.log(response.shiftSchedule);
-
-    res.json(response);
-});
-
-// SCHEDULE VIEW
-app.get('/auxiliary-police/schedule/view', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    })
-        .populate('sender')
-        .sort({ timestamp: -1 });
-
-    if (user) {
-        try {
-            res.render('auxiliarypolice-schedule-view', {
-                user: user,
-                notifications: notifications,
-                uuid: uuidv4(),
-            });
-        } catch (renderError) {
-            console.error('Rendering Error:', renderError);
-            next(renderError);
+        // Determine previous shift's time and adjust the date if necessary
+        if (time === '0700') {
+            shiftTime = '2300';
+            adjustedDate.setDate(adjustedDate.getDate() - 1); // Subtract one day
+        } else if (time === '1500') {
+            shiftTime = '0700';
+        } else if (time === '2300') {
+            shiftTime = '1500';
         }
+
+        // Fetch the duty handover and shift schedule details
+        const [results, resultsSchedule] = await Promise.all([
+            DutyHandoverAux.findOne({
+                location: location,
+                date: adjustedDate,
+                time: shiftTime
+            }),
+            ScheduleAux.findOne({
+                location: location,
+                date: moment(date).utcOffset(8).toDate(),
+                'shift.shiftName': shift
+            })
+        ]);
+
+        const response = {
+            dutyHandover: results,
+            shiftSchedule: resultsSchedule
+        };
+
+        console.log(response.shiftSchedule);
+
+        res.json(response);
+    } catch (error) {
+        console.error('Error searching duty handover:', error);
+        next(error);
     }
 });
 
-// SCHEDULE ADD
-app.get('/auxiliary-police/schedule/add', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    })
-        .populate('sender')
-        .sort({ timestamp: -1 });
+// Case report route - view
+app.get('/auxiliary-police/case/view', isAuthenticated, async (req, res, next) => {
+    try {
+        // Fetch all case reports, sorted by date in descending order.
+        const caseReport = await CaseAux.find().sort({ date: -1 });
 
-    if (user) {
+        // Render the case view page with the user data, notifications, and case reports.
+        res.render('auxiliarypolice-case-view', {
+            user: req.user,
+            notifications: req.notifications,
+            uuid: uuidv4(),
+            caseReport: caseReport
+        });
+    } catch (renderError) {
+        // Log and handle any rendering errors.
+        console.error('Rendering Error:', renderError);
+        next(renderError);
+    }
+});
+
+// Case report route - details
+app.get('/auxiliary-police/case/details/:id', isAuthenticated, async (req, res, next) => {
+    try {
+        const id = req.params.id; // Extract case ID from the request parameters.
+
+        // Fetch the specific case report using the provided ID.
+        const caseReport = await CaseAux.findOne({ _id: id });
+
+        // Render the case detail page with the user data, notifications, and specific case report.
+        res.render('auxiliarypolice-case-detail', {
+            user: req.user,
+            notifications: req.notifications,
+            uuid: uuidv4(),
+            caseReport: caseReport
+        });
+    } catch (renderError) {
+        // Log and handle any rendering errors.
+        console.error('Rendering Error:', renderError);
+        next(renderError);
+    }
+});
+
+// Case report route - add
+app.get('/auxiliary-police/case/add', isAuthenticated, async (req, res, next) => {
+    try {
+        // Render the case add page with the user data and notifications.
+        res.render('auxiliarypolice-case-add', {
+            user: req.user,
+            notifications: req.notifications,
+            uuid: uuidv4(),
+            show: '',
+            alert: ''
+        });
+    } catch (renderError) {
+        // Log and handle any rendering errors.
+        console.error('Rendering Error:', renderError);
+        next(renderError);
+    }
+}).post('/auxiliary-police/schedule/add', isAuthenticated, async (req, res, next) => {
+    const {
+        location,
+        date,
+        selectedNames1,
+        selectedNames2,
+        selectedNames3,
+        selectedNames4 = '',  // Optional field for Shift D
+        time1,
+        time2,
+        time3,
+        time4 = '',  // Optional field for Shift D
+        selectedNames5 = '',  // Optional field for Raised Flag Duty
+        selectedNames6 = ''  // Optional field for Lowered Flag Duty
+    } = req.body;
+
+    // Validate required fields; if any are missing, show an alert.
+    if (!location || !date || !selectedNames1 || !selectedNames2 || !selectedNames3 || time1 === 'Select shift time' || time2 === 'Select shift time' || time3 === 'Select shift time' || (selectedNames4 && time4 === 'Select shift time')) {
+        console.log('Failed to add auxiliary police schedule');
         try {
             res.render('auxiliarypolice-schedule-add', {
-                user: user,
-                notifications: notifications,
+                user: req.user,
+                notifications: req.notifications,
                 uuid: uuidv4(),
-                show: '',
-                alert: ''
+                show: 'show',
+                alert: 'All form fields must be filled; there is an empty input.'
             });
         } catch (renderError) {
             console.error('Rendering Error:', renderError);
             next(renderError);
         }
+        return;
     }
-}).post('/auxiliary-police/schedule/add', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    }).populate('sender');
 
-    if (user) {
-        const {
-            location,
-            date,
-            selectedNames1,
-            selectedNames2,
-            selectedNames3,
-            selectedNames4 = '',  // Optional field for Shift D
-            time1,
-            time2,
-            time3,
-            time4 = '',  // Optional field for Shift D
-            selectedNames5 = '',  // Optional field for Raised Flag Duty
-            selectedNames6 = ''  // Optional field for Lowered Flag Duty
-        } = req.body;
+    // Ensure the selected names are split into arrays.
+    const selectedNames1Array = selectedNames1 ? selectedNames1.split(',') : [];
+    const selectedNames2Array = selectedNames2 ? selectedNames2.split(',') : [];
+    const selectedNames3Array = selectedNames3 ? selectedNames3.split(',') : [];
+    const selectedNames4Array = selectedNames4 ? selectedNames4.split(',') : [];  // Handle new shift
+    const staffRaisedFlagArray = selectedNames5 ? selectedNames5.split(',') : [];  // Handle raised flag duty
+    const staffLoweredFlagArray = selectedNames6 ? selectedNames6.split(',') : [];  // Handle lowered flag duty
 
-        console.log('Received form data:', {
-            location,
-            date,
-            selectedNames1,
-            selectedNames2,
-            selectedNames3,
-            selectedNames4,
-            time1,
-            time2,
-            time3,
-            time4,
-            selectedNames5,
-            selectedNames6
+    // Construct the shifts array.
+    const shifts = [
+        { shiftName: 'Shift A', staff: selectedNames1Array, time: time1 },
+        { shiftName: 'Shift B', staff: selectedNames2Array, time: time2 },
+        { shiftName: 'Shift C', staff: selectedNames3Array, time: time3 },
+        ...(selectedNames4Array.length > 0 ? [{ shiftName: 'Shift D', staff: selectedNames4Array, time: time4 }] : [])
+    ];
+
+    console.log('Constructed shifts array:', shifts);
+
+    try {
+        // Check if a schedule already exists for the provided location and date.
+        const findSchedule = await ScheduleAux.findOne({
+            location: location,
+            date: moment(date).utcOffset(8).toDate()
         });
 
-        if (!location || !date || !selectedNames1 || !selectedNames2 || !selectedNames3 || time1 === 'Select shift time' || time2 === 'Select shift time' || time3 === 'Select shift time' || (selectedNames4 && time4 === 'Select shift time')) {
-            console.log('Failed to add auxiliary police schedule'); try {
-                res.render('auxiliarypolice-schedule-add', {
-                    user: user,
-                    notifications: notifications,
-                    uuid: uuidv4(),
-                    show: 'show',
-                    alert: 'All form must be filled, there is an empty input'
-                });
-            } catch (renderError) {
-                console.error('Rendering Error:', renderError);
-                next(renderError);
+        if (findSchedule) {
+            // Update existing schedule if found.
+            const updateSchedule = await ScheduleAux.findOneAndUpdate(
+                { location: location, date: moment(date).utcOffset(8).toDate() },
+                {
+                    $set: {
+                        shift: shifts,
+                        staffRaisedFlag: staffRaisedFlagArray,
+                        staffLoweredFlag: staffLoweredFlagArray
+                    }
+                },
+                { upsert: true }
+            );
+
+            if (updateSchedule) {
+                console.log('Successfully updated auxiliary police schedule');
+                try {
+                    res.render('auxiliarypolice-schedule-add', {
+                        user: req.user,
+                        notifications: req.notifications,
+                        uuid: uuidv4(),
+                        show: 'show',
+                        alert: 'Successfully updated auxiliary police schedule.'
+                    });
+                } catch (renderError) {
+                    console.error('Rendering Error:', renderError);
+                    next(renderError);
+                }
             }
         } else {
-            // Ensure the selected names are split into arrays
-            const selectedNames1Array = selectedNames1 ? selectedNames1.split(',') : [];
-            const selectedNames2Array = selectedNames2 ? selectedNames2.split(',') : [];
-            const selectedNames3Array = selectedNames3 ? selectedNames3.split(',') : [];
-            const selectedNames4Array = selectedNames4 ? selectedNames4.split(',') : [];  // Handle new shift
-            const staffRaisedFlagArray = selectedNames5 ? selectedNames5.split(',') : [];  // Handle raised flag duty
-            const staffLoweredFlagArray = selectedNames6 ? selectedNames6.split(',') : [];  // Handle lowered flag duty
-
-            console.log('Parsed selected names arrays:', {
-                selectedNames1Array,
-                selectedNames2Array,
-                selectedNames3Array,
-                selectedNames4Array,
-                staffRaisedFlagArray,
-                staffLoweredFlagArray
-            });
-
-            // Construct the shifts array
-            const shifts = [
-                { shiftName: 'Shift A', staff: selectedNames1Array, time: time1 },
-                { shiftName: 'Shift B', staff: selectedNames2Array, time: time2 },
-                { shiftName: 'Shift C', staff: selectedNames3Array, time: time3 },
-                ...(selectedNames4Array.length > 0 ? [{ shiftName: 'Shift D', staff: selectedNames4Array, time: time4 }] : [])
-            ];
-
-            // Log shifts array for debugging
-            console.log('Constructed shifts array:', shifts);
-
-            const findSchedule = await ScheduleAux.findOne({
+            // If no existing schedule is found, create a new schedule.
+            const newSchedule = new ScheduleAux({
+                date: moment(date).utcOffset(8).toDate(),
                 location: location,
-                date: moment(date).utcOffset(8).toDate()
+                shift: shifts,
+                staffRaisedFlag: staffRaisedFlagArray,
+                staffLoweredFlag: staffLoweredFlagArray
             });
 
-            if (findSchedule) {
-                const updateSchedule = await ScheduleAux.findOneAndUpdate(
-                    { location: location, date: moment(date).utcOffset(8).toDate() },
-                    {
-                        $set: {
-                            shift: shifts,
-                            staffRaisedFlag: staffRaisedFlagArray,
-                            staffLoweredFlag: staffLoweredFlagArray
-                        }
-                    },
-                    { upsert: true }
-                );
+            const saveSchedule = await newSchedule.save();
 
-                if (updateSchedule) {
-                    console.log('Successfully updated auxiliary police schedule');
-                    try {
-                        res.render('auxiliarypolice-schedule-add', {
-                            user: user,
-                            notifications: notifications,
-                            uuid: uuidv4(),
-                            show: 'show',
-                            alert: 'Successfully updated auxiliary police schedule on'
-                        });
-                    } catch (renderError) {
-                        console.error('Rendering Error:', renderError);
-                        next(renderError);
-                    }
+            if (saveSchedule) {
+                console.log('Successfully added auxiliary police schedule on ' + date);
+                try {
+                    res.render('auxiliarypolice-schedule-add', {
+                        user: req.user,
+                        notifications: req.notifications,
+                        uuid: uuidv4(),
+                        show: 'show',
+                        alert: 'Successfully added auxiliary police schedule on ' + date
+                    });
+                } catch (renderError) {
+                    console.error('Rendering Error:', renderError);
+                    next(renderError);
                 }
             } else {
-                const newSchedule = new ScheduleAux({
-                    date: moment(date).utcOffset(8).toDate(),
-                    location: location,
-                    shift: shifts,
-                    staffRaisedFlag: staffRaisedFlagArray,
-                    staffLoweredFlag: staffLoweredFlagArray
-                });
-
-                const saveSchedule = await newSchedule.save();
-
-                if (saveSchedule) {
-                    console.log('Successfully added auxiliary police schedule on ' + date);
-                    try {
-                        res.render('auxiliarypolice-schedule-add', {
-                            user: user,
-                            notifications: notifications,
-                            uuid: uuidv4(),
-                            show: 'show',
-                            alert: 'Successfully added auxiliary police schedule on ' + date
-                        });
-                    } catch (renderError) {
-                        console.error('Rendering Error:', renderError);
-                        next(renderError);
-                    }
-                } else {
-                    console.log('Failed to add auxiliary police schedule on ' + date);
-                    try {
-                        res.render('auxiliarypolice-schedule-add', {
-                            user: user,
-                            notifications: notifications,
-                            uuid: uuidv4(),
-                            show: 'show',
-                            alert: 'Failed to add auxiliary police schedule on ' + date
-                        });
-                    } catch (renderError) {
-                        console.error('Rendering Error:', renderError);
-                        next(renderError);
-                    }
+                console.log('Failed to add auxiliary police schedule on ' + date);
+                try {
+                    res.render('auxiliarypolice-schedule-add', {
+                        user: req.user,
+                        notifications: req.notifications,
+                        uuid: uuidv4(),
+                        show: 'show',
+                        alert: 'Failed to add auxiliary police schedule on ' + date
+                    });
+                } catch (renderError) {
+                    console.error('Rendering Error:', renderError);
+                    next(renderError);
                 }
             }
         }
+    } catch (error) {
+        // Log and handle any errors during schedule processing.
+        console.error('Error handling schedule add:', error);
+        next(error);
     }
 });
 
-// CASE
+// Shift member lcoation route - view
+app.get('/auxiliary-police/patrol/shift-member-location/view', isAuthenticated, async (req, res, next) => {
+    try {
+        const { user, notifications } = req;
 
-// VIEW
-app.get('/auxiliary-police/case/view', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    })
-        .populate('sender')
-        .sort({ timestamp: -1 });
+        // Query all locations for shift member location
+        const [bmi, bmii, jm, cm, rs] = await Promise.all([
+            PatrolAux.find({ location: 'Baitul Makmur I', type: 'Shift Member Location' }).sort({ date: -1 }),
+            PatrolAux.find({ location: 'Baitul Makmur II', type: 'Shift Member Location' }).sort({ date: -1 }),
+            PatrolAux.find({ location: 'Jamek Mosque', type: 'Shift Member Location' }).sort({ date: -1 }),
+            PatrolAux.find({ location: 'City Mosque', type: 'Shift Member Location' }).sort({ date: -1 }),
+            PatrolAux.find({ location: 'Raudhatul Sakinah', type: 'Shift Member Location' }).sort({ date: -1 })
+        ]);
 
-    if (user) {
-        const caseReport = await CaseAux.find().sort({ date: -1 });
-        try {
-            res.render('auxiliarypolice-case-view', {
-                user: user,
-                notifications: notifications,
-                uuid: uuidv4(),
-                caseReport: caseReport
-            });
-        } catch (renderError) {
-            console.error('Rendering Error:', renderError);
-            next(renderError);
-        }
+        res.render('auxiliarypolice-patrol-shiftmemberlocation-view', {
+            user,
+            notifications,
+            uuid: uuidv4(),
+            bmi,
+            bmii,
+            jm,
+            cm,
+            rs
+        });
+    } catch (error) {
+        console.error('Error fetching shift member location data:', error);
+        next(error);
     }
 });
 
-// DETAIL
-app.get('/auxiliary-police/case/details/:id', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    })
-        .populate('sender')
-        .sort({ timestamp: -1 });
-
-    if (user) {
-        const id = req.params.id;
-        const caseReport = await CaseAux.findOne({ _id: id });
-        try {
-            res.render('auxiliarypolice-case-detail', {
-                user: user,
-                notifications: notifications,
-                uuid: uuidv4(),
-                caseReport: caseReport
-            });
-        } catch (renderError) {
-            console.error('Rendering Error:', renderError);
-            next(renderError);
-        }
-    }
-});
-
-// ADD
-app.get('/auxiliary-police/case/add', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    })
-        .populate('sender')
-        .sort({ timestamp: -1 });
-
-    if (user) {
-        try {
-            res.render('auxiliarypolice-case-add', {
-                user: user,
-                notifications: notifications,
-                uuid: uuidv4(),
-                show: '',
-                alert: ''
-            });
-        } catch (renderError) {
-            console.error('Rendering Error:', renderError);
-            next(renderError);
-        }
-    }
-}).post('/auxiliary-police/schedule/add', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    }).populate('sender');
-
-    if (user) {
-        const {
-            location,
-            date,
-            selectedNames1,
-            selectedNames2,
-            selectedNames3,
-            selectedNames4 = '',  // Optional field for Shift D
-            time1,
-            time2,
-            time3,
-            time4 = '',  // Optional field for Shift D
-            selectedNames5 = '',  // Optional field for Raised Flag Duty
-            selectedNames6 = ''  // Optional field for Lowered Flag Duty
-        } = req.body;
-
-        if (!location || !date || !selectedNames1 || !selectedNames2 || !selectedNames3 || time1 === 'Select shift time' || time2 === 'Select shift time' || time3 === 'Select shift time' || (selectedNames4 && time4 === 'Select shift time')) {
-            console.log('Failed to add auxiliary police schedule');
-            try {
-                res.render('auxiliarypolice-schedule-add', {
-                    user: user,
-                    notifications: notifications,
-                    uuid: uuidv4(),
-                    show: 'show',
-                    alert: 'All form must be filled, there is an empty input'
-                });
-            } catch (renderError) {
-                console.error('Rendering Error:', renderError);
-                next(renderError);
-            }
-        } else {
-            // Ensure the selected names are split into arrays
-            const selectedNames1Array = selectedNames1 ? selectedNames1.split(',') : [];
-            const selectedNames2Array = selectedNames2 ? selectedNames2.split(',') : [];
-            const selectedNames3Array = selectedNames3 ? selectedNames3.split(',') : [];
-            const selectedNames4Array = selectedNames4 ? selectedNames4.split(',') : [];  // Handle new shift
-            const staffRaisedFlagArray = selectedNames5 ? selectedNames5.split(',') : [];  // Handle raised flag duty
-            const staffLoweredFlagArray = selectedNames6 ? selectedNames6.split(',') : [];  // Handle lowered flag duty
-
-            // Construct the shifts array
-            const shifts = [
-                { shiftName: 'Shift A', staff: selectedNames1Array, time: time1 },
-                { shiftName: 'Shift B', staff: selectedNames2Array, time: time2 },
-                { shiftName: 'Shift C', staff: selectedNames3Array, time: time3 },
-                ...(selectedNames4Array.length > 0 ? [{ shiftName: 'Shift D', staff: selectedNames4Array, time: time4 }] : [])
-            ];
-
-            // Log shifts array for debugging
-            console.log('Constructed shifts array:', shifts);
-
-            const findSchedule = await ScheduleAux.findOne({
-                location: location,
-                date: moment(date).utcOffset(8).toDate()
-            });
-
-            if (findSchedule) {
-                const updateSchedule = await ScheduleAux.findOneAndUpdate(
-                    { location: location, date: moment(date).utcOffset(8).toDate() },
-                    {
-                        $set: {
-                            shift: shifts,
-                            staffRaisedFlag: staffRaisedFlagArray,
-                            staffLoweredFlag: staffLoweredFlagArray
-                        }
-                    },
-                    { upsert: true }
-                );
-
-                if (updateSchedule) {
-                    console.log('Successfully updated auxiliary police schedule');
-                    try {
-                        res.render('auxiliarypolice-schedule-add', {
-                            user: user,
-                            notifications: notifications,
-                            uuid: uuidv4(),
-                            show: 'show',
-                            alert: 'Successfully updated auxiliary police schedule on'
-                        });
-                    } catch (renderError) {
-                        console.error('Rendering Error:', renderError);
-                        next(renderError);
-                    }
-                }
-            } else {
-
-                const newSchedule = new ScheduleAux({
-                    date: moment(date).utcOffset(8).toDate(),
-                    location: location,
-                    shift: shifts,
-                    staffRaisedFlag: staffRaisedFlagArray,
-                    staffLoweredFlag: staffLoweredFlagArray
-                });
-
-                const saveSchedule = await newSchedule.save();
-
-                if (saveSchedule) {
-                    console.log('Successfully added auxiliary police schedule on ' + date);
-                    try {
-                        res.render('auxiliarypolice-schedule-add', {
-                            user: user,
-                            notifications: notifications,
-                            uuid: uuidv4(),
-                            show: 'show',
-                            alert: 'Successfully added auxiliary police schedule on ' + date
-                        });
-                    } catch (renderError) {
-                        console.error('Rendering Error:', renderError);
-                        next(renderError);
-                    }
-                } else {
-                    console.log('Failed to add auxiliary police schedule on ' + date);
-                    try {
-                        res.render('auxiliarypolice-schedule-add', {
-                            user: user,
-                            notifications: notifications,
-                            uuid: uuidv4(),
-                            show: 'show',
-                            alert: 'Failed to add auxiliary police schedule on ' + date
-                        });
-                    } catch (renderError) {
-                        console.error('Rendering Error:', renderError);
-                        next(renderError);
-                    }
-                }
-            }
-        }
-    }
-});
-
-// PATROL
-
-// SHIFT MEMBER LOCATION
-app.get('/auxiliary-police/patrol/shift-member-location/view', async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    })
-        .populate('sender')
-        .sort({ timestamp: -1 });
-
-    if (user) {
-        const bmi = await PatrolAux.find({
-            location: 'Baitul Makmur I',
-            type: 'Shift Member Location'
-        }).sort({ date: -1 });
-
-        const bmii = await PatrolAux.find({
-            location: 'Baitul Makmur II',
-            type: 'Shift Member Location'
-        }).sort({ date: -1 });
-
-        const jm = await PatrolAux.find({
-            location: 'Jamek Mosque',
-            type: 'Shift Member Location'
-        }).sort({ date: -1 });
-
-        const cm = await PatrolAux.find({
-            location: 'City Mosque',
-            type: 'Shift Member Location'
-        }).sort({ date: -1 });
-
-        const rs = await PatrolAux.find({
-            location: 'Raudhatul Sakinah',
-            type: 'Shift Member Location'
-        }).sort({ date: -1 });
-
-        try {
-            res.render('auxiliarypolice-patrol-shiftmemberlocation-view', {
-                user: user,
-                notifications: notifications,
-                uuid: uuidv4(),
-                bmi: bmi,
-                bmii: bmii,
-                jm: jm,
-                cm: cm,
-                rs: rs
-            });
-        } catch (renderError) {
-            console.error('Rendering Error:', renderError);
-            next(renderError);
-        }
-    }
-});
-
-app.get('/auxiliary-police/patrol/shift-member-location/details/:id', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    })
-        .populate('sender')
-        .sort({ timestamp: -1 });
-
-    if (user) {
+// Shift member location route - details
+app.get('/auxiliary-police/patrol/shift-member-location/details/:id', isAuthenticated, async (req, res, next) => {
+    try {
+        const { user, notifications } = req;
         const id = req.params.id;
 
+        // Find the report and its shift member cycles
         const checkReport = await PatrolAux.findOne({ _id: id });
-
         const shiftMemberCycles = checkReport.shiftMember.cycle;
 
+        // Calculate the current time and determine the current time slot
         const currentTime = moment.utc().add(8, 'hours').format('HH:mm:ss');
-
         const currentTimeNumeric = parseInt(currentTime.replace(':', ''), 10);
+        let currentTimeSlot;
 
         for (const cycle of shiftMemberCycles) {
-            const startTimeNumeric = parseInt(cycle.timeSlot.split('-')[0], 10);
-            const endTimeNumeric = parseInt(cycle.timeSlot.split('-')[1], 10);
-
-            console.log(startTimeNumeric);
-            console.log(endTimeNumeric);
-
-            if (cycle.timeSlot === '2300-0000') {
-                if (
-                    currentTimeNumeric >= startTimeNumeric &&
-                    currentTimeNumeric >= endTimeNumeric
-                ) {
-                    var currentTimeSlot = cycle.timeSlot;
-                    break;
-                }
-            } else {
-                if (
-                    currentTimeNumeric >= startTimeNumeric &&
-                    currentTimeNumeric <= endTimeNumeric
-                ) {
-                    var currentTimeSlot = cycle.timeSlot;
-                    break;
-                }
+            const [start, end] = cycle.timeSlot.split('-').map(Number);
+            if ((cycle.timeSlot === '2300-0000' && currentTimeNumeric >= start && currentTimeNumeric >= end) ||
+                (currentTimeNumeric >= start && currentTimeNumeric <= end)) {
+                currentTimeSlot = cycle.timeSlot;
+                break;
             }
         }
 
-        if (currentTimeSlot === undefined) {
-            // Handle the case when no matching time slot is found
-            console.log('No matching time slot found.');
-        }
+        // Calculate the percentage of times with values
+        const totalTimesWithValuesInShift = shiftMemberCycles.reduce((acc, cycle) =>
+            acc + cycle.checkpoint.filter(checkpoint => checkpoint.time && checkpoint.time.trim() !== '').length, 0);
 
-        // Function to count times with values in a cycle
-        function countTimesWithValuesInCycle(cycle) {
-            let timesWithValuesCount = 0;
+        const totalTimesInShift = shiftMemberCycles.reduce((acc, cycle) => acc + cycle.checkpoint.length, 0);
+        const percentageTimesWithValuesInShift = (totalTimesWithValuesInShift / totalTimesInShift) * 100;
 
-            for (const checkpoint of cycle.checkpoint) {
-                // Check if the time property has a non-empty value
-                if (checkpoint.time && checkpoint.time.trim() !== '') {
-                    timesWithValuesCount++;
-                }
-            }
-
-            return timesWithValuesCount;
-        }
-
-        // Function to count total times in a cycle
-        function countTotalTimesInCycle(cycle) {
-            return cycle.checkpoint.length;
-        }
-
-        // Function to count total times with values in all cycles
-        function countTotalTimesWithValuesInShift(shiftMemberCycles) {
-            let totalTimesWithValuesInShift = 0;
-            let totalTimesInShift = 0;
-
-            for (const cycle of shiftMemberCycles) {
-                totalTimesWithValuesInShift += countTimesWithValuesInCycle(cycle);
-                totalTimesInShift += countTotalTimesInCycle(cycle);
-            }
-
-            return { totalTimesWithValuesInShift, totalTimesInShift };
-        }
-
-        // Count total times with values and total times in the shift
-        const { totalTimesWithValuesInShift, totalTimesInShift } =
-            countTotalTimesWithValuesInShift(shiftMemberCycles);
-
-        // Calculate percentage
-        const percentageTimesWithValuesInShift =
-            (totalTimesWithValuesInShift / totalTimesInShift) * 100;
-
-        console.log('Check Report', checkReport);
-        console.log('Shift Cycle', shiftMemberCycles);
-        console.log('Current time slot', currentTimeSlot);
-        console.log('Percentage', percentageTimesWithValuesInShift.toFixed(0));
-
-        try {
-            res.render('auxiliarypolice-patrol-shiftmemberlocation-detail', {
-                user: user,
-                notifications: notifications,
-                uuid: uuidv4(),
-                // data extracted
-                patrolReport: checkReport,
-                reportId: id,
-                cycle: shiftMemberCycles,
-                currentTimeSlot: currentTimeSlot,
-                progressReport: percentageTimesWithValuesInShift.toFixed(0),
-            });
-        } catch (renderError) {
-            console.error('Rendering Error:', renderError);
-            next(renderError);
-        }
-    }
-});
-
-// PATROL UNIT
-app.get('/auxiliary-police/patrol/patrol-unit/view', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    })
-        .populate('sender')
-        .sort({ timestamp: -1 });
-
-    if (user) {
-
-        const patrolUnit = await PatrolAux.find({
-            type: 'Patrol Unit'
-        }).sort({ date: -1 });
-
-        try {
-            res.render('auxiliarypolice-patrol-patrolunit-view', {
-                user: user,
-                notifications: notifications,
-                uuid: uuidv4(),
-                patrolUnit: patrolUnit
-            });
-        } catch (renderError) {
-            console.error('Rendering Error:', renderError);
-            next(renderError);
-        }
-
-    }
-});
-
-app.get('/auxiliary-police/patrol/patrol-unit/details/:id', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    })
-        .populate('sender')
-        .sort({ timestamp: -1 });
-
-    const reportId = req.params.id;
-
-    if (user) {
-
-        const checkReport = await PatrolAux.findOne({
-            _id: reportId
+        res.render('auxiliarypolice-patrol-shiftmemberlocation-detail', {
+            user,
+            notifications,
+            uuid: uuidv4(),
+            patrolReport: checkReport,
+            reportId: id,
+            cycle: shiftMemberCycles,
+            currentTimeSlot,
+            progressReport: percentageTimesWithValuesInShift.toFixed(0),
         });
-
-        // Check for amount of time for checkpoint being submit or not
-        let nonEmptyTimeCount = 0;
-        const totalPatrolUnits = checkReport.patrolUnit.length;
-
-        console.log(checkReport.patrolUnit.length);
-
-        // Check each patrol unit for non-empty time
-        checkReport.patrolUnit.forEach(patrolUnit => {
-            if (patrolUnit.time && patrolUnit.time.trim() !== '') {
-                nonEmptyTimeCount++;
-            }
-        });
-
-        const percentageNonEmptyTime =
-            (nonEmptyTimeCount / totalPatrolUnits) * 100;
-
-
-        try {
-            res.render('auxiliarypolice-patrol-patrolunit-detail', {
-                user: user,
-                notifications: notifications,
-                uuid: uuidv4(),
-                // patrol report
-                patrolReport: checkReport,
-                percentage: percentageNonEmptyTime.toString(),
-                reportId: reportId,
-            });
-        } catch (renderError) {
-            console.error('Rendering Error:', renderError);
-            next(renderError);
-        }
+    } catch (error) {
+        console.error('Error fetching shift member location details:', error);
+        next(error);
     }
 });
 
-app.post('/remarks/update/:id', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-
-    if (user) {
+// Shift member location - POST update remarks
+app.post('/auxiliary-police/patrol/remarks/update/:id', isAuthenticated, async (req, res, next) => {
+    try {
+        const { user } = req;
         const id = req.params.id;
 
+        // Update the remarks for a patrol report
         const patrol = await PatrolAux.findOneAndUpdate(
             { _id: id },
             { $set: { remarks: req.body.remarks } },
@@ -6001,198 +5987,81 @@ app.post('/remarks/update/:id', isAuthenticated, async function (req, res) {
         );
 
         if (patrol) {
-            console.log('Successfully update remarks on this patrol report');
+            console.log('Successfully updated remarks on this patrol report');
             res.redirect('/auxiliary-police/patrol/patrol-unit/' + patrol._id);
         } else {
             console.log('Failed to update remarks on this patrol report');
             res.redirect('/auxiliary-police/patrol/patrol-unit/' + patrol._id);
         }
-    }
-});
-
-// SUBMIT CHECKPOINT DATA WITH QR SCAN
-app.get(
-    '/patrol-unit/checkpoint-submit/:checkpointName/:longitude/:latitude',
-    async function (req, res) {
-        const dateToday = moment().utcOffset(8).toDate();
-        const kualaLumpurTimeZoneOffset1 = 8; // Kuala Lumpur is UTC+8
-        const now1 = moment().utcOffset(kualaLumpurTimeZoneOffset1 * 60); // Convert hours to minutes
-
-        // Get the current time in the Asia/Kuala_Lumpur timezone
-        const time = now1.format('HHmm') + 'HRS';
-
-        console.log(dateToday);
-
-        const checkpointName = _.startCase(
-            req.params.checkpointName.replace(/-/g, ' ')
-        );
-        const currentLongitude = req.params.longitude;
-        const currentLatitude = req.params.latitude;
-
-        const logReport = 'Have patrol this area at ' + time;
-
-        const updatedCheckpointData = {
-            time: time, // Replace with the new time
-            longitude: currentLongitude, // Replace with the new longitude
-            latitude: currentLatitude, // Replace with the new latitude
-            logReport: logReport
-        };
-
-        // Find the patrol report by ID and update the specific checkpoint in the patrolUnit array
-        const checkPatrolUnit = await PatrolAux.findOneAndUpdate(
-            {
-                type: 'Patrol Unit',
-                date: moment().utcOffset(8).toDate(),
-                'patrolUnit.checkpointName': checkpointName
-            },
-            {
-                $set: {
-                    'patrolUnit.$.time': updatedCheckpointData.time,
-                    'patrolUnit.$.longitude': updatedCheckpointData.longitude,
-                    'patrolUnit.$.latitude': updatedCheckpointData.latitude,
-                    'patrolUnit.$.logReport': updatedCheckpointData.logReport
-                }
-            },
-            { new: true, useFindAndModify: false }
-        );
-
-        if (checkPatrolUnit.status === 'Open' && checkPatrolUnit) {
-
-            console.log(checkPatrolUnit._id);
-
-            console.log(
-                'Successfully update on patrol unit for at ' +
-                checkpointName
-            );
-            try { res.render('submit-success'); } catch (renderError) {
-                console.error('Rendering Error:', renderError);
-                next(renderError);
-            }
-        } else {
-            console.log('Unsuccessful update the qr data due to closed status!');
-            try { res.render('submit-failed'); } catch (renderError) {
-                console.error('Rendering Error:', renderError);
-                next(renderError);
-            }
-        }
-    }
-);
-
-// MAP COORDINATES
-app.get('/map-coordinates/:reportId', async (req, res) => {
-    const reportId = req.params.reportId;
-
-    try {
-        // Use findOne to find a single report based on the reportId
-        const patrolReport = await PatrolAux.findOne({ _id: reportId });
-
-        if (!patrolReport) {
-            return res.status(404).json({ error: 'Report not found' });
-        }
-
-        // Extract checkpoint coordinates within the patrolReport and format them
-        const checkpointCoordinates = patrolReport.patrolUnit.map(checkpoint => [
-            checkpoint.longitude,
-            checkpoint.latitude
-        ]);
-
-        // Send the retrieved checkpoint coordinates as JSON
-        res.json(checkpointCoordinates);
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Internal Server Error' });
+        console.error('Error updating patrol remarks:', error);
+        next(error);
     }
 });
 
-// Select fullname
-app.get(
-    '/shift-member/fullname-submit/:location/:checkpointName',
-    async function (req, res) {
-        // init the params from the link
+// Shift member location - find shift member 
+app.get('/shift-member/fullname-submit/:location/:checkpointName', async (req, res, next) => {
+    try {
         const location = _.startCase(req.params.location.replace(/-/g, ' '));
-
-        // init the params from the link
-        const checkpointName = _.startCase(
-            req.params.checkpointName.replace(/-/g, ' ')
-        );
+        const checkpointName = _.startCase(req.params.checkpointName.replace(/-/g, ' '));
 
         const today = moment().utcOffset(8).startOf('day').toDate();
+        const kualaLumpurTimeZoneOffset1 = 8;
+        const now1 = moment().utcOffset(kualaLumpurTimeZoneOffset1 * 60);
 
-        const kualaLumpurTimeZoneOffset1 = 8; // Kuala Lumpur is UTC+8
-        const now1 = moment().utcOffset(kualaLumpurTimeZoneOffset1 * 60); // Convert hours to minutes
-
-        // Get the current time in the Asia/Kuala_Lumpur timezone
         const currentTimeNumeric = now1.format('HHmm');
-
-        // Check if the current time is between 2300 and 0700
         const isNightShift = currentTimeNumeric >= 2300 || currentTimeNumeric < 700;
 
+        // Fetch reports based on whether it's a night shift or not
         if (isNightShift) {
             const filteredReports1 = await PatrolAux.findOne({
                 location: location,
                 startShift: '2300',
-                $or: [{ date: today }, { date: yesterday }]
+                $or: [{ date: today }, { date: moment(today).subtract(1, 'days').toDate() }]
             });
 
             console.log(filteredReports1);
-
-            try {
-                res.render('shift-member-submit', {
-                    patrolReport: filteredReports1,
-                    location: location,
-                    checkpointName: checkpointName
-                });
-            } catch (renderError) {
-                console.error('Rendering Error:', renderError);
-                next(renderError);
-            }
+            res.render('shift-member-submit', {
+                patrolReport: filteredReports1,
+                location: location,
+                checkpointName: checkpointName
+            });
         } else {
             const filteredReports2 = await PatrolAux.findOne({
                 location: location,
-                date: { $gte: currentTimeNumeric },
+                date: { $gte: today },
                 startShift: { $gte: currentTimeNumeric },
                 endShift: { $gte: currentTimeNumeric }
             });
 
             console.log(filteredReports2);
-
-            try {
-                res.render('shift-member-submit', {
-                    patrolReport: filteredReports2,
-                    location: location,
-                    checkpointName: checkpointName
-                });
-            } catch (renderError) {
-                console.error('Rendering Error:', renderError);
-                next(renderError);
-            }
+            res.render('shift-member-submit', {
+                patrolReport: filteredReports2,
+                location: location,
+                checkpointName: checkpointName
+            });
         }
+    } catch (error) {
+        console.error('Error selecting fullname:', error);
+        next(error);
     }
-);
+});
 
-// SUBMIT DATA USING QR SCANNER
-app.get(
-    '/shift-member/checkpoint-submit/:location/:checkpointName/:shiftMember/:reportId',
-    async function (req, res) {
+// Shift member location route - submit patrol qr
+app.get('/shift-member/checkpoint-submit/:location/:checkpointName/:shiftMember/:reportId', async (req, res, next) => {
+    try {
         const checkUser = await User.findOne({ fullname: req.params.shiftMember });
-
         const reportId = req.params.reportId;
 
-        // init the params from the link
-        const checkpointName = _.startCase(
-            req.params.checkpointName.replace(/-/g, ' ')
-        );
-        // init the params from the link
+        // Parse location and checkpoint name from URL parameters
+        const checkpointName = _.startCase(req.params.checkpointName.replace(/-/g, ' '));
         const location = _.startCase(req.params.location.replace(/-/g, ' '));
 
         if (checkUser) {
-            // Find a patrol report where the staff array contains the user's full name
-            const patrolReport = await PatrolAux.findOne({
-                _id: reportId
-            });
+            const patrolReport = await PatrolAux.findOne({ _id: reportId });
 
             if (patrolReport && patrolReport.status === 'Pending') {
-                // Find the relevant cycle based on your logic and checkpointName
+                // Find the relevant cycle based on checkpoint name and time slot
                 const cycleToUpdate = patrolReport.shiftMember.cycle.find(cycle =>
                     cycle.checkpoint.some(
                         checkpoint =>
@@ -6201,739 +6070,486 @@ app.get(
                     )
                 );
 
-                // Function to check if the current time is within the given time slot
-                function isWithinTimeSlot(timeSlot) {
-                    // Parse the start and end times from the time slot
-                    const [startTime, endTime] = timeSlot.split('-');
-
-                    // Get the current time in numeric format (e.g., HHmm)
-                    const currentTimeNumeric = moment.utc().add(8, 'hours').format('HH:mm:ss');
-                    const currentTime = parseInt(currentTimeNumeric.replace(':', ''), 10);
-
-                    var startNumeric = '';
-                    var endNumeric = '';
-
-                    // Convert start and end times to numeric format
-                    startNumeric = parseInt(startTime.replace(':', ''), 10);
-                    endNumeric = parseInt(endTime.replace(':', ''), 10);
-
-                    if (endNumeric === 0) {
-                        endNumeric = 2400;
-                    }
-
-                    if (startNumeric <= endNumeric) {
-                        return currentTime >= startNumeric && currentTime <= endNumeric;
-                    } else {
-                        // Handle the case where the time slot spans midnight
-                        return currentTime >= startNumeric || currentTime <= endNumeric;
-                    }
-                }
-
                 if (cycleToUpdate) {
-                    // Find the checkpoint with the matching checkpointName
                     const checkpointToUpdate = cycleToUpdate.checkpoint.find(
                         checkpoint => checkpoint.checkpointName === checkpointName
                     );
 
                     if (checkpointToUpdate) {
-                        // Get the current time in numeric format (e.g., HHmm)
-                        const currentTimeNumeric1 = moment.utc().add(8, 'hours').format('HH:mm:ss')
-                        const currentTime1 = parseInt(
-                            currentTimeNumeric1.replace(':', ''),
-                            10
-                        );
+                        const currentTimeNumeric1 = moment.utc().add(8, 'hours').format('HH:mm:ss');
+                        const currentTime1 = parseInt(currentTimeNumeric1.replace(':', ''), 10);
 
                         const inputString = checkUser.fullname;
 
-                        // Update the time in the found checkpoint with the current time
+                        // Update the checkpoint details
                         checkpointToUpdate.time = currentTime1 + 'HRS';
-                        checkpointToUpdate.logReport =
-                            checkpointName +
-                            ' have been patrol by ' +
-                            inputString +
-                            ' at ' +
-                            currentTime1 +
-                            'HRS';
+                        checkpointToUpdate.logReport = `${checkpointName} have been patrol by ${inputString} at ${currentTime1}HRS`;
                         checkpointToUpdate.username = checkUser.username;
                         checkpointToUpdate.fullName = inputString;
 
-                        // Save the changes to the database
                         await patrolReport.save();
 
                         console.log('Successful update using QR scanner!');
-
-                        try { res.render('submit-success'); } catch (renderError) {
-                            console.error('Rendering Error:', renderError);
-                            next(renderError);
-                        }
+                        res.render('submit-success');
                     } else {
                         console.log('Checkpoint not found in the cycle.');
-                        try { res.render('submit-failed'); } catch (renderError) {
-                            console.error('Rendering Error:', renderError);
-                            next(renderError);
-                        }
+                        res.render('submit-failed');
                     }
                 } else {
                     console.log('Cycle not found.');
-                    try { res.render('submit-failed'); } catch (renderError) {
-                        console.error('Rendering Error:', renderError);
-                        next(renderError);
-                    }
+                    res.render('submit-failed');
                 }
             } else {
-                console.log(
-                    'No patrol report found for the user or the patrol report is already closed.'
-                );
-                try { res.render('submit-failed'); } catch (renderError) {
-                    console.error('Rendering Error:', renderError);
-                    next(renderError);
-                }
+                console.log('No patrol report found for the user or the patrol report is already closed.');
+                res.render('submit-failed');
             }
+        } else {
+            console.log('User not found.');
+            res.render('submit-failed');
         }
-    }
-);
-
-// SUBMIT SUCCESS
-
-app.get('/submit-success', async function (req, res) {
-    try { res.render('submit-success'); } catch (renderError) {
-        console.error('Rendering Error:', renderError);
-        next(renderError);
+    } catch (error) {
+        console.error('Error submitting checkpoint data using QR scanner:', error);
+        next(error);
     }
 });
 
-app.get('/submit-failed', async function (req, res) {
-    try { res.render('submit-failed'); } catch (renderError) {
-        console.error('Rendering Error:', renderError);
-        next(renderError);
-    }
-});
-
-// ============================
-// Visitor Management System
-// ============================
-
-// VMS
-// ROUTE FOR DISPLAYING THE FORM
-app.get('/visitor/submit', (req, res) => {
+// Patrol unit route- view
+app.get('/auxiliary-police/patrol/patrol-unit/view', isAuthenticated, async (req, res, next) => {
     try {
-        try {
-            res.render('visitor_form', {
-                thank_you_message: null,
-                fields: {
-                    vis_firstname: '',
-                    vis_lastname: '',
-                    no_ic: '',
-                    address: '',
-                    level: '',
-                    no_pas: '',
-                    no_telephone: '',
-                    pur_visit: ''
-                },
-                errors: {}
-            });
-        } catch (renderError) {
-            console.error('Rendering Error:', renderError);
-            next(renderError);
+        const { user, notifications } = req;
+
+        // Query all patrol units
+        const patrolUnit = await PatrolAux.find({ type: 'Patrol Unit' }).sort({ date: -1 });
+
+        res.render('auxiliarypolice-patrol-patrolunit-view', {
+            user,
+            notifications,
+            uuid: uuidv4(),
+            patrolUnit
+        });
+    } catch (error) {
+        console.error('Error fetching patrol unit data:', error);
+        next(error);
+    }
+});
+
+// Patrol unit route - details
+app.get('/auxiliary-police/patrol/patrol-unit/details/:id', isAuthenticated, async (req, res, next) => {
+    try {
+        const { user, notifications } = req;
+        const reportId = req.params.id;
+
+        // Find the report and calculate percentage of non-empty times
+        const checkReport = await PatrolAux.findOne({ _id: reportId });
+        const totalPatrolUnits = checkReport.patrolUnit.length;
+        const nonEmptyTimeCount = checkReport.patrolUnit.filter(unit => unit.time && unit.time.trim() !== '').length;
+        const percentageNonEmptyTime = (nonEmptyTimeCount / totalPatrolUnits) * 100;
+
+        res.render('auxiliarypolice-patrol-patrolunit-detail', {
+            user,
+            notifications,
+            uuid: uuidv4(),
+            patrolReport: checkReport,
+            percentage: percentageNonEmptyTime.toFixed(0),
+            reportId
+        });
+    } catch (error) {
+        console.error('Error fetching patrol unit details:', error);
+        next(error);
+    }
+});
+
+// Patrol unit route - submit patrol qr
+app.get('/patrol-unit/checkpoint-submit/:checkpointName/:longitude/:latitude', async (req, res, next) => {
+    try {
+        const dateToday = moment().utcOffset(8).toDate();
+        const kualaLumpurTimeZoneOffset1 = 8;
+        const now1 = moment().utcOffset(kualaLumpurTimeZoneOffset1 * 60);
+        const time = now1.format('HHmm') + 'HRS';
+
+        const checkpointName = _.startCase(req.params.checkpointName.replace(/-/g, ' '));
+        const currentLongitude = req.params.longitude;
+        const currentLatitude = req.params.latitude;
+
+        const logReport = `Have patrol this area at ${time}`;
+
+        // Update the patrol unit checkpoint details in the database
+        const checkPatrolUnit = await PatrolAux.findOneAndUpdate(
+            {
+                type: 'Patrol Unit',
+                date: moment().utcOffset(8).toDate(),
+                'patrolUnit.checkpointName': checkpointName
+            },
+            {
+                $set: {
+                    'patrolUnit.$.time': time,
+                    'patrolUnit.$.longitude': currentLongitude,
+                    'patrolUnit.$.latitude': currentLatitude,
+                    'patrolUnit.$.logReport': logReport
+                }
+            },
+            { new: true, useFindAndModify: false }
+        );
+
+        if (checkPatrolUnit && checkPatrolUnit.status === 'Open') {
+            console.log(checkPatrolUnit._id);
+            console.log(`Successfully updated patrol unit for ${checkpointName}`);
+            res.render('submit-success');
+        } else {
+            console.log('Unsuccessful update the QR data due to closed status!');
+            res.render('submit-failed');
         }
+    } catch (error) {
+        console.error('Error submitting checkpoint data with QR scan:', error);
+        next(error);
+    }
+});
+
+// Patrol unit route - get map coordinates
+app.get('/map-coordinates/:reportId', async (req, res, next) => {
+    const reportId = req.params.reportId;
+
+    try {
+        const patrolReport = await PatrolAux.findOne({ _id: reportId });
+
+        if (!patrolReport) {
+            return res.status(404).json({ error: 'Report not found' });
+        }
+
+        // Extract and format checkpoint coordinates from the patrol report
+        const checkpointCoordinates = patrolReport.patrolUnit.map(checkpoint => [
+            checkpoint.longitude,
+            checkpoint.latitude
+        ]);
+
+        res.json(checkpointCoordinates);
+    } catch (error) {
+        console.error('Error fetching map coordinates:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+// Success route - patrol unit/shift member location
+app.get('/submit-success', async (req, res, next) => {
+    try {
+        res.render('submit-success');
     } catch (renderError) {
         console.error('Rendering Error:', renderError);
         next(renderError);
     }
-}).post('/visitor/submit', async (req, res) => {
-    const kualaLumpurTimeZoneOffset1 = 8; // Kuala Lumpur is UTC+8
-    const now1 = moment().utcOffset(kualaLumpurTimeZoneOffset1 * 60); // Convert hours to minutes
-
-    const fields = {
-        vis_firstname: req.body.vis_firstname.trim(),
-        vis_lastname: req.body.vis_lastname.trim(),
-        no_ic: req.body.no_ic.trim(),
-        address: req.body.address.trim(),
-        level: req.body.level.trim(),
-        no_pas: req.body.no_pas.trim(),
-        no_telephone: req.body.no_telephone.trim(),
-        pur_visit: req.body.pur_visit.trim(),
-        time_in: now1.format('YYYY-MM-DD HH:mm:ss'), // Format as 'YYYY-MM-DD HH:mm:ss' for time_in
-        build_loc: req.body.build_loc
-    };
-
-    let errors = {};
-    if (!/^[a-zA-Z\s]+$/.test(fields.vis_firstname)) errors.vis_firstname = "Invalid first name format.";
-    if (!/^[a-zA-Z\s]+$/.test(fields.vis_lastname)) errors.vis_lastname = "Invalid last name format.";
-    if (!/^\d{12}$/.test(fields.no_ic)) errors.no_ic = "IC number must be 12 digits.";
-    if (fields.address === '') errors.address = "Address is required.";
-    if (!/^\d+$/.test(fields.level)) errors.level = "Level must be a number.";
-    if (fields.no_pas === '') errors.no_pas = "No Pas is required.";
-    if (!/^\d{10,15}$/.test(fields.no_telephone)) errors.no_telephone = "Phone number must be between 10 and 15 digits.";
-    if (fields.pur_visit === '') errors.pur_visit = "Purpose of visit is required.";
-
-    if (Object.keys(errors).length === 0) {
-        const newVisitor = new Vms(fields);
-        try {
-            await newVisitor.save();
-            try {
-                res.render('visitor_form', {
-                    thank_you_message: 'Thank you for your submission!',
-                    fields: fields,
-                    errors: {}
-                });
-            } catch (renderError) {
-                console.error('Rendering Error:', renderError);
-                next(renderError);
-            }
-        } catch (err) {
-            console.error('Error saving visitor:', err);
-            try {
-                res.render('visitor_form', {
-                    thank_you_message: '',
-                    fields: fields,
-                    errors: {}
-                });
-            } catch (renderError) {
-                console.error('Rendering Error:', renderError);
-                next(renderError);
-            }
-        }
-    } else {
-        try {
-            res.render('visitor_form', {
-                thank_you_message: '',
-                fields: fields,
-                errors: errors
-            });
-        } catch (renderError) {
-            console.error('Rendering Error:', renderError);
-            next(renderError);
-        }
-    }
 });
 
-// ROUTE FOR HANDLING FORM SUBMISSION
-
-
-// ROUTE FOR DISPLAYING VISITOR LIST
-app.get('/vms/list', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    })
-        .populate('sender')
-        .sort({ timestamp: -1 });
-
-    // Fetch visitor data with formatted dates
-    const visitors = await Vms.find().exec();
-    const formattedVisitors = visitors.map(visitor => ({
-        ...visitor.toObject(),
-        time_in: visitor.time_in ? moment(visitor.time_in).format('YYYY-MM-DD HH:mm:ss') : '-',
-        time_out: visitor.time_out ? moment(visitor.time_out).format('YYYY-MM-DD HH:mm:ss') : '-'
-    }));
-
-
-    // Calculate visitor counts
-    const totalVisitorsToday = await getTotalVisitorsToday();
-    const timeInVisitorsToday = await getTotalVisitorsTimeInToday();
-    const timeOutVisitorsToday = await getTotalVisitorsTimeOutToday();
-
-    if (user) {
-        try {
-            res.render('vms-list', {
-                user: user,
-                notifications: notifications,
-                uuid: uuidv4(),
-                visitors: formattedVisitors,  // Pass formatted visitor data
-                totalVisitorsToday,
-                timeInVisitorsToday,
-                timeOutVisitorsToday
-            });
-        } catch (renderError) {
-            console.error('Rendering Error:', renderError);
-            next(renderError);
-        }
-    }
-});
-
-// Handle time out action
-app.post('/toggle_status', async (req, res) => {
-    const visitorId = req.body.visitor_id;
-    const kualaLumpurTimeZoneOffset1 = 8;
-    const now1 = moment().utcOffset(kualaLumpurTimeZoneOffset1 * 60);
-    const timeOut = now1.format('YYYY-MM-DD HH:mm:ss');
-
+// Failed route - patrol unit/shift member location
+app.get('/submit-failed', async (req, res, next) => {
     try {
-        await Vms.findByIdAndUpdate(visitorId, { time_out: timeOut });
-        res.redirect('/vms/list');
-    } catch (err) {
-        console.error('Error updating visitor time out:', err);
-        res.redirect('/vms/list');
+        res.render('submit-failed');
+    } catch (renderError) {
+        console.error('Rendering Error:', renderError);
+        next(renderError);
     }
 });
 
-// Handle delete action
-app.post('/delete_visitor', async (req, res) => {
-    const { visitor_id } = req.body;
+
+// // ============================
+// // Visitor Management System
+// // ============================
+
+// // VMS
+// // ROUTE FOR DISPLAYING THE FORM
+// app.get('/visitor/submit', (req, res) => {
+//     try {
+//         try {
+//             res.render('visitor_form', {
+//                 thank_you_message: null,
+//                 fields: {
+//                     vis_firstname: '',
+//                     vis_lastname: '',
+//                     no_ic: '',
+//                     address: '',
+//                     level: '',
+//                     no_pas: '',
+//                     no_telephone: '',
+//                     pur_visit: ''
+//                 },
+//                 errors: {}
+//             });
+//         } catch (renderError) {
+//             console.error('Rendering Error:', renderError);
+//             next(renderError);
+//         }
+//     } catch (renderError) {
+//         console.error('Rendering Error:', renderError);
+//         next(renderError);
+//     }
+// }).post('/visitor/submit', async (req, res) => {
+//     const kualaLumpurTimeZoneOffset1 = 8; // Kuala Lumpur is UTC+8
+//     const now1 = moment().utcOffset(kualaLumpurTimeZoneOffset1 * 60); // Convert hours to minutes
+
+//     const fields = {
+//         vis_firstname: req.body.vis_firstname.trim(),
+//         vis_lastname: req.body.vis_lastname.trim(),
+//         no_ic: req.body.no_ic.trim(),
+//         address: req.body.address.trim(),
+//         level: req.body.level.trim(),
+//         no_pas: req.body.no_pas.trim(),
+//         no_telephone: req.body.no_telephone.trim(),
+//         pur_visit: req.body.pur_visit.trim(),
+//         time_in: now1.format('YYYY-MM-DD HH:mm:ss'), // Format as 'YYYY-MM-DD HH:mm:ss' for time_in
+//         build_loc: req.body.build_loc
+//     };
+
+//     let errors = {};
+//     if (!/^[a-zA-Z\s]+$/.test(fields.vis_firstname)) errors.vis_firstname = "Invalid first name format.";
+//     if (!/^[a-zA-Z\s]+$/.test(fields.vis_lastname)) errors.vis_lastname = "Invalid last name format.";
+//     if (!/^\d{12}$/.test(fields.no_ic)) errors.no_ic = "IC number must be 12 digits.";
+//     if (fields.address === '') errors.address = "Address is required.";
+//     if (!/^\d+$/.test(fields.level)) errors.level = "Level must be a number.";
+//     if (fields.no_pas === '') errors.no_pas = "No Pas is required.";
+//     if (!/^\d{10,15}$/.test(fields.no_telephone)) errors.no_telephone = "Phone number must be between 10 and 15 digits.";
+//     if (fields.pur_visit === '') errors.pur_visit = "Purpose of visit is required.";
+
+//     if (Object.keys(errors).length === 0) {
+//         const newVisitor = new Vms(fields);
+//         try {
+//             await newVisitor.save();
+//             try {
+//                 res.render('visitor_form', {
+//                     thank_you_message: 'Thank you for your submission!',
+//                     fields: fields,
+//                     errors: {}
+//                 });
+//             } catch (renderError) {
+//                 console.error('Rendering Error:', renderError);
+//                 next(renderError);
+//             }
+//         } catch (err) {
+//             console.error('Error saving visitor:', err);
+//             try {
+//                 res.render('visitor_form', {
+//                     thank_you_message: '',
+//                     fields: fields,
+//                     errors: {}
+//                 });
+//             } catch (renderError) {
+//                 console.error('Rendering Error:', renderError);
+//                 next(renderError);
+//             }
+//         }
+//     } else {
+//         try {
+//             res.render('visitor_form', {
+//                 thank_you_message: '',
+//                 fields: fields,
+//                 errors: errors
+//             });
+//         } catch (renderError) {
+//             console.error('Rendering Error:', renderError);
+//             next(renderError);
+//         }
+//     }
+// });
+
+// // ROUTE FOR HANDLING FORM SUBMISSION
+
+
+// // ROUTE FOR DISPLAYING VISITOR LIST
+// app.get('/vms/list', isAuthenticated, async function (req, res) {
+//     const username = req.user.username;
+//     const user = await User.findOne({ username: username });
+//     const notifications = await Notification.find({
+//         recipient: user._id,
+//         read: false
+//     })
+//         .populate('sender')
+//         .sort({ timestamp: -1 });
+
+//     // Fetch visitor data with formatted dates
+//     const visitors = await Vms.find().exec();
+//     const formattedVisitors = visitors.map(visitor => ({
+//         ...visitor.toObject(),
+//         time_in: visitor.time_in ? moment(visitor.time_in).format('YYYY-MM-DD HH:mm:ss') : '-',
+//         time_out: visitor.time_out ? moment(visitor.time_out).format('YYYY-MM-DD HH:mm:ss') : '-'
+//     }));
+
+
+//     // Calculate visitor counts
+//     const totalVisitorsToday = await getTotalVisitorsToday();
+//     const timeInVisitorsToday = await getTotalVisitorsTimeInToday();
+//     const timeOutVisitorsToday = await getTotalVisitorsTimeOutToday();
+
+//     if (user) {
+//         try {
+//             res.render('vms-list', {
+//                 user: user,
+//                 notifications: notifications,
+//                 uuid: uuidv4(),
+//                 visitors: formattedVisitors,  // Pass formatted visitor data
+//                 totalVisitorsToday,
+//                 timeInVisitorsToday,
+//                 timeOutVisitorsToday
+//             });
+//         } catch (renderError) {
+//             console.error('Rendering Error:', renderError);
+//             next(renderError);
+//         }
+//     }
+// });
+
+// // Handle time out action
+// app.post('/toggle_status', async (req, res) => {
+//     const visitorId = req.body.visitor_id;
+//     const kualaLumpurTimeZoneOffset1 = 8;
+//     const now1 = moment().utcOffset(kualaLumpurTimeZoneOffset1 * 60);
+//     const timeOut = now1.format('YYYY-MM-DD HH:mm:ss');
+
+//     try {
+//         await Vms.findByIdAndUpdate(visitorId, { time_out: timeOut });
+//         res.redirect('/vms/list');
+//     } catch (err) {
+//         console.error('Error updating visitor time out:', err);
+//         res.redirect('/vms/list');
+//     }
+// });
+
+// // Handle delete action
+// app.post('/delete_visitor', async (req, res) => {
+//     const { visitor_id } = req.body;
+//     try {
+//         await Vms.findByIdAndDelete(visitor_id);
+//         res.redirect('/vms/list');
+//     } catch (error) {
+//         handleError(res, error);
+//     }
+// });
+
+// // Handle visitor update
+// app.post('/update_visitor/:id', async (req, res) => {
+//     const visitorId = req.params.id;
+//     const updatedData = req.body;
+
+//     try {
+//         await Vms.findByIdAndUpdate(visitorId, updatedData);
+//         res.send('Visitor updated successfully');
+//     } catch (error) {
+//         console.error('Error updating visitor:', error);
+//         res.status(500).send('Error updating visitor');
+//     }
+// });
+
+// // Fetch visitors for AJAX requests
+// app.get('/fetch_visitors', async (req, res) => {
+//     const { search_name, selected_date, status_filter, build_loc } = req.query;
+//     try {
+//         const conditions = {};
+//         if (search_name) {
+//             conditions.$or = [
+//                 { vis_firstname: new RegExp(search_name, 'i') },
+//                 { vis_lastname: new RegExp(search_name, 'i') }
+//             ];
+//         }
+//         if (selected_date) {
+//             const startDate = moment(selected_date).startOf('day').toDate();
+//             const endDate = moment(selected_date).endOf('day').toDate();
+//             conditions.time_in = { $gte: startDate, $lte: endDate };
+//         }
+//         if (status_filter) {
+//             if (status_filter === 'checked_in') {
+//                 conditions.time_in = { $ne: null };
+//                 conditions.time_out = null;
+//             } else if (status_filter === 'checked_out') {
+//                 conditions.time_out = { $ne: null };
+//             }
+//         }
+//         if (build_loc) {
+//             conditions.build_loc = build_loc;
+//         }
+//         const visitors = await Vms.find(conditions).exec();
+//         res.json(visitors);
+//     } catch (error) {
+//         handleError(res, error);
+//     }
+// });
+
+// // Fetch total visitors for AJAX requests
+// app.get('/total_visitors', async (req, res) => {
+//     try {
+//         const totalVisitors = await getTotalVisitorsToday();
+//         res.send(totalVisitors.toString());
+//     } catch (error) {
+//         handleError(res, error);
+//     }
+// });
+
+// app.get('/total_timein_visitors', async (req, res) => {
+//     try {
+//         const totalTimeInVisitors = await getTotalVisitorsTimeInToday();
+//         res.send(totalTimeInVisitors.toString());
+//     } catch (error) {
+//         handleError(res, error);
+//     }
+// });
+
+// app.get('/total_timeout_visitors', async (req, res) => {
+//     try {
+//         const totalTimeOutVisitors = await getTotalVisitorsTimeOutToday();
+//         res.send(totalTimeOutVisitors.toString());
+//     } catch (error) {
+//         handleError(res, error);
+//     }
+// });
+
+// ============================
+// Fetch Data API
+// ============================
+
+//  * Route to get attendance data for today.
+//  * Uses moment.js to calculate the start and end of the day.
+//  * Fetches attendance records and formats the data.
+app.get('/api/all-attendance/today/all', async (req, res, next) => {
     try {
-        await Vms.findByIdAndDelete(visitor_id);
-        res.redirect('/vms/list');
-    } catch (error) {
-        handleError(res, error);
-    }
-});
-
-// Handle visitor update
-app.post('/update_visitor/:id', async (req, res) => {
-    const visitorId = req.params.id;
-    const updatedData = req.body;
-
-    try {
-        await Vms.findByIdAndUpdate(visitorId, updatedData);
-        res.send('Visitor updated successfully');
-    } catch (error) {
-        console.error('Error updating visitor:', error);
-        res.status(500).send('Error updating visitor');
-    }
-});
-
-// Fetch visitors for AJAX requests
-app.get('/fetch_visitors', async (req, res) => {
-    const { search_name, selected_date, status_filter, build_loc } = req.query;
-    try {
-        const conditions = {};
-        if (search_name) {
-            conditions.$or = [
-                { vis_firstname: new RegExp(search_name, 'i') },
-                { vis_lastname: new RegExp(search_name, 'i') }
-            ];
-        }
-        if (selected_date) {
-            const startDate = moment(selected_date).startOf('day').toDate();
-            const endDate = moment(selected_date).endOf('day').toDate();
-            conditions.time_in = { $gte: startDate, $lte: endDate };
-        }
-        if (status_filter) {
-            if (status_filter === 'checked_in') {
-                conditions.time_in = { $ne: null };
-                conditions.time_out = null;
-            } else if (status_filter === 'checked_out') {
-                conditions.time_out = { $ne: null };
-            }
-        }
-        if (build_loc) {
-            conditions.build_loc = build_loc;
-        }
-        const visitors = await Vms.find(conditions).exec();
-        res.json(visitors);
-    } catch (error) {
-        handleError(res, error);
-    }
-});
-
-// Fetch total visitors for AJAX requests
-app.get('/total_visitors', async (req, res) => {
-    try {
-        const totalVisitors = await getTotalVisitorsToday();
-        res.send(totalVisitors.toString());
-    } catch (error) {
-        handleError(res, error);
-    }
-});
-
-app.get('/total_timein_visitors', async (req, res) => {
-    try {
-        const totalTimeInVisitors = await getTotalVisitorsTimeInToday();
-        res.send(totalTimeInVisitors.toString());
-    } catch (error) {
-        handleError(res, error);
-    }
-});
-
-app.get('/total_timeout_visitors', async (req, res) => {
-    try {
-        const totalTimeOutVisitors = await getTotalVisitorsTimeOutToday();
-        res.send(totalTimeOutVisitors.toString());
-    } catch (error) {
-        handleError(res, error);
-    }
-});
-
-//NOTIFICATIONS
-app.get('/notifications/history', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    })
-        .populate('sender')
-        .sort({ timestamp: -1 });
-
-    // init day using moment
-
-    const today = moment().utcOffset(8).startOf('day').toDate();
-    const tomorrow = moment(today).add(1, 'days').toDate();
-    const yesterday = moment(today).subtract(1, 'days').toDate();
-    const firstDayOfWeek = moment(today).startOf('isoWeek').toDate();
-    const lastDayOfWeek = moment(today).endOf('isoWeek').toDate();
-    const firstDayOfMonth = moment(today).startOf('month').toDate();
-    const lastDayOfMonth = moment(today).endOf('month').toDate();
-
-
-    const notificationsToday = await Notification.find({
-        recipient: user._id,
-        timestamp: {
-            $gte: today,
-            $lt: tomorrow
-        }
-    })
-        .populate('sender')
-        .sort({ timestamp: -1, read: -1 });
-
-    const notificationsYesterday = await Notification.find({
-        recipient: user._id,
-        timestamp: {
-            $gte: yesterday,
-            $lt: today
-        }
-    })
-        .populate('sender')
-        .sort({ timestamp: -1, read: -1 });
-
-    const notificationsThisWeek = await Notification.find({
-        recipient: user._id,
-        timestamp: {
-            $gte: firstDayOfWeek,
-            $lte: lastDayOfWeek
-        }
-    })
-        .populate('sender')
-        .sort({ timestamp: -1, read: -1 });
-
-    const notificationsThisMonth = await Notification.find({
-        recipient: user._id,
-        timestamp: {
-            $gte: firstDayOfMonth,
-            $lte: lastDayOfMonth
-        }
-    })
-        .populate('sender')
-        .sort({ timestamp: -1, read: -1 });
-
-    if (user) {
-        try {
-            res.render('notifications', {
-                user: user,
-                notifications: notifications,
-                notificationsToday: notificationsToday,
-                notificationsYesterday: notificationsYesterday,
-                notificationsThisWeek: notificationsThisWeek,
-                notificationsThisMonth: notificationsThisMonth
-            });
-        } catch (renderError) {
-            console.error('Rendering Error:', renderError);
-            next(renderError);
-        }
-    }
-});
-
-app.get('/markAsRead/:id', isAuthenticated, async function (req, res) {
-    const id = req.params.id;
-    console.log(id);
-
-    const update = await Notification.findByIdAndUpdate(
-        { _id: id },
-        { read: true },
-        { new: true }
-    );
-
-    if (update) {
-        res.redirect(update.url);
-    } else {
-        console.log('There is error for the update for notifications');
-        res.redirect('/');
-    }
-});
-
-app.get('/markAllAsRead', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    })
-        .populate('sender')
-        .sort({ timestamp: -1 });
-
-    const update = await Notification.updateMany(
-        { recipient: user._id },
-        { read: true },
-        { new: true }
-    );
-
-    if (update) {
-        res.redirect('/');
-    } else {
-        console.log('There is error for the update for notifications');
-        res.redirect('/');
-    }
-});
-
-// Route to Serve VAPID Public Key
-app.get('/vapidPublicKey', (req, res) => {
-    res.send(publicVapidKey);
-});
-
-app.post('/subscribe', async (req, res) => {
-    const { endpoint, expirationTime, keys, userId } = req.body;
-
-    if (!endpoint || !keys.p256dh || !keys.auth) {
-        return res.status(400).json({ error: 'Missing required subscription details.' });
-    }
-
-    try {
-        const subscription = new Subscriptions({
-            endpoint,
-            expirationTime,
-            keys,
-            user: userId
-        });
-
-        await subscription.save();
-        res.status(201).json({ message: 'Subscription saved successfully.' });
-    } catch (error) {
-        console.error('Failed to save subscription:', error);
-        res.status(500).json({ error: 'Failed to save subscription.' });
-    }
-});
-
-// Route to Check if Subscription Exists
-app.post('/check-subscription', isAuthenticated, async (req, res) => {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-
-    const subscription = req.body;
-    const existingSubscription = await Subscriptions.findOne({ endpoint: subscription.endpoint, user: user._id });
-
-    const isSubscribed = existingSubscription && existingSubscription.keys.p256dh === subscription.keys.p256dh &&
-        existingSubscription.keys.auth === subscription.keys.auth;
-
-    res.json({ isSubscribed: !!isSubscribed });
-});
-
-// Route to Send Notifications
-app.post('/sendNotification', async (req, res) => {
-    const { recipientId, message, url } = req.body;
-
-    const subscriptions = await Subscriptions.find({ user: recipientId });
-
-    subscriptions.forEach(sub => {
-        const payload = JSON.stringify({ title: 'Notification', message, url });
-        webPush.sendNotification(sub, payload).catch(error => console.error(error));
-    });
-
-    const notification = new Notification({
-        sender: req.user._id,
-        recipient: recipientId,
-        message,
-        type: 'Web Push',
-        url
-    });
-
-    await notification.save();
-    res.status(200).json({ success: true });
-});
-
-//FILES
-
-// UPLOAD
-app.post('/files/upload', isAuthenticated, async (reqFiles, resFiles) => {
-    const username = reqFiles.user.username;
-    const user = await User.findOne({ username: username });
-
-    if (!reqFiles.files || Object.keys(reqFiles.files).length === 0) {
-        console.log('There is no files selected');
-    } else {
-        console.log('There are files try to be uploaded');
-
-        const uuid = reqFiles.body.uuid;
-        const origin = reqFiles.body.origin;
-
-        // No file with the report ID found, proceed with file upload
-        for (const file of Object.values(reqFiles.files)) {
-            const upload = __dirname + '/public/uploads/' + file.name;
-            const pathUpload = '/uploads/' + file.name;
-            const today = moment().utcOffset(8).startOf('day').toDate();
-            const type = path.extname(file.name);
-
-            await file.mv(upload);
-
-            // Calculate file size in megabytes
-            const fileSizeInBytes = (await fs.stat(upload)).size;
-            const fileSizeInMB = fileSizeInBytes / (1024 * 1024);
-
-            console.log(fileSizeInMB);
-
-            const newFile = new File({
-                uuid: uuid,
-                user: user._id,
-                name: file.name,
-                path: pathUpload,
-                date: today,
-                type: type,
-                origin: origin,
-                size: fileSizeInMB.toFixed(2) + ' MB'
-            });
-
-            newFile.save();
-        }
-
-        console.log('Done upload files!');
-    }
-});
-
-// DOWNLOAD
-app.get('/files/download/:id', async function (req, res) {
-    const _id = req.params.id;
-
-    const file = await File.findOne({ _id: _id });
-
-    if (file) {
-        const filePath = __dirname + '/public/uploads/' + file.name;
-
-        res.download(filePath, file.name);
-        console.log('Downloading file');
-    }
-});
-
-// DELETE USING FILES ID
-app.get('/files/delete/:id', async function (req, res) {
-    const _id = req.params.id;
-
-    const deleted = await File.findOneAndDelete({ _id: _id });
-
-    if (deleted) {
-        const otherFile = await File.find({ name: deleted.name, size: deleted.size });
-
-        if (otherFile.length > 0) {
-            console.log('Only delete the file database');
-        } else {
-            const filePath = __dirname + '/public/uploads/' + deleted.name;
-            console.log('File selected is deleted!');
-            await fs.unlink(filePath);
-        }
-
-        res.redirect('/');
-    } else {
-        console.log('There must be something wrong in deleting the files!');
-        res.redirect('/');
-    }
-});
-
-// DELETE USING FILES UUID
-app.get('/files/delete/cancel/:uuid', async function (req, res) {
-    const uuid = req.params.uuid;
-
-    const filesToDelete = await File.find({ uuid: uuid });
-    const deletedFiles = await File.deleteMany({ uuid: uuid });
-
-    if (deletedFiles.deletedCount > 0) {
-        console.log(`${deletedFiles.deletedCount} files are deleted!`);
-
-        for (const deletedFile of filesToDelete) {
-            const filePath = __dirname + '/public/uploads/' + deletedFile.name;
-            await fs.unlink(filePath);
-        }
-
-        res.redirect('/leave/request');
-    } else {
-        console.log('No files found or there was an error deleting files.');
-        res.redirect('/');
-    }
-});
-
-// FECTH API
-
-// STATUS UPDATE
-app.post('/status-update', isAuthenticated, async (req, res) => {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const status = req.body.status;
-
-    const update = await Info.findOneAndUpdate(
-        { user: user._id },
-        { $set: { status: status } },
-        { upsert: true, new: true, useFindAndModify: false }
-    );
-
-    if (update) {
-        console.log('Status update accomplished! ');
-        res.redirect('/');
-    } else {
-        console.log('Status update failed!');
-        res.redirect('/');
-    }
-});
-
-// ATTENDACE TODAY DATA FOR ALL
-app.get('/api/all-attendance/today/all', async function (req, res) {
-    try {
-        // Get today's date
-        const today = moment().utcOffset(8).startOf('day').toDate();// Set hours, minutes, seconds, and milliseconds to 0 to get the start of the day
-
-        // Get the current time
+        const today = moment().utcOffset(8).startOf('day').toDate();
         const currentTime = moment().utcOffset(8);
 
-        // Find attendance data for today within the specified time range
+        // Fetch attendance data for today
         const attendanceData = await Attendance.find({
             'date.signInTime': {
-                $gte: today, // Find records where signInTime is greater than or equal to today
-                $lte: currentTime // and less than or equal to the current time
+                $gte: today,
+                $lte: currentTime
             }
         })
             .sort({ timestamp: -1 })
             .limit(2)
             .lean();
 
-        // Get all users
+        // Fetch all user data
         const allUsers = await User.find().lean();
 
-        // Filter the attendance data and populate user information
+        // Format attendance data
         const filteredData = attendanceData.map(entry => {
-            const user = allUsers.find(
-                user => user._id.toString() === entry.user.toString()
-            );
+            const user = allUsers.find(user => user._id.toString() === entry.user.toString());
 
-            const getInitials = str => {
-                const names = str.split(' '); // Split the full name into an array of names
-                const initials = names
-                    .slice(0, 2)
-                    .map(name => name.charAt(0).toUpperCase()); // Get the first letter of each name and capitalize it
-                return initials.join(''); // Join the initials into a single string
-            };
+            const getInitials = str => str.split(' ')
+                .slice(0, 2)
+                .map(name => name.charAt(0).toUpperCase())
+                .join('');
 
-            const formatDateTime = dateTime => {
-                const options = {
-                    timeZone: 'Asia/Kuala_Lumpur',
-                    hour12: false,
-                    hour: '2-digit',
-                    minute: '2-digit'
-                };
-                return dateTime.toLocaleTimeString('en-MY', options);
-            };
+            const formatDateTime = dateTime => dateTime.toLocaleTimeString('en-MY', {
+                timeZone: 'Asia/Kuala_Lumpur',
+                hour12: false,
+                hour: '2-digit',
+                minute: '2-digit'
+            });
 
             return {
-                user: user
-                    ? {
-                        _id: user._id,
-                        fullname: user.fullname,
-                        initials: getInitials(user.fullname),
-                        username: user.username,
-                        department: user.department,
-                        section: user.section,
-                        profile: user.profile
-                        // Add other user fields as needed
-                    }
-                    : null,
+                user: user ? {
+                    _id: user._id,
+                    fullname: user.fullname,
+                    initials: getInitials(user.fullname),
+                    username: user.username,
+                    department: user.department,
+                    section: user.section,
+                    profile: user.profile
+                } : null,
                 datetime: formatDateTime(moment(entry.date.signInTime).utcOffset(8).toDate()),
                 signInTime: entry.date.signInTime,
                 signOutTime: entry.date.signOutTime,
@@ -6942,40 +6558,36 @@ app.get('/api/all-attendance/today/all', async function (req, res) {
             };
         });
 
-        // Send the filtered attendance data for today to the client
-        res.json(filteredData);
+        res.json(filteredData); // Send formatted data as response
     } catch (err) {
-        console.error('Error fetching attendance data for today:', err);
-        res.status(500).json({ error: 'Internal server error' });
+        next(err); // Pass error to global error handler
     }
 });
 
-// ATTENDACE TODAY DATA FOR HR
-app.post('/api/data/all-attendance/today/human-resources', isAuthenticated, async function (req, res) {
-    const searchQuery = req.query.search || ''; // Get search query from request query params
-    const page = parseInt(req.query.page) || 1; // Get page number from request query params
-    const limit = 5; // Number of items per page
+// * Route to get today's attendance data for HR.
+// * Supports search and pagination.
+app.post('/api/data/all-attendance/today/human-resources', isAuthenticated, async (req, res, next) => {
+    const searchQuery = req.query.search || '';
+    const page = parseInt(req.query.page) || 1;
+    const limit = 5;
     const skip = (page - 1) * limit;
 
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-
-    // Get today's date
-    const today = moment().startOf('day').toDate(); // Start of today in local time
-
     try {
-        // Query attendance records for today
+        const username = req.user.username;
+        const user = await User.findOne({ username: username });
+
+        const today = moment().startOf('day').toDate();
+
+        // Fetch attendance data for today
         const attendanceData = await Attendance.aggregate([
-            // Match attendance records for today
             {
                 $match: {
                     timestamp: {
-                        $gte: today, // Find records where timestamp is greater than or equal to today
-                        $lt: moment().endOf('day').toDate() // Less than end of today
+                        $gte: today,
+                        $lt: moment().endOf('day').toDate()
                     }
                 }
             },
-            // Group by user and status, include attendance type, sign-in time, and sign-out time
             {
                 $group: {
                     _id: '$user',
@@ -6991,53 +6603,44 @@ app.post('/api/data/all-attendance/today/human-resources', isAuthenticated, asyn
             }
         ]);
 
-        // Collect unique user IDs from attendanceData
-        const userIds = attendanceData.map(record => record._id);
-
-        // Query all users in the same department or section as the logged-in user, excluding the logged-in user
-        const allUser = await User.find();
-
-        // Create a map to quickly access user details by user ID
-        const userMap = {};
-        allUser.forEach(user => {
-            userMap[user._id] = {
+        // Map user data for faster access
+        const allUsers = await User.find();
+        const userMap = allUsers.reduce((map, user) => {
+            map[user._id] = {
                 _id: user._id,
                 username: user.username,
                 fullname: user.fullname,
                 section: user.section,
                 department: user.department
             };
-        });
+            return map;
+        }, {});
 
-        // Create the combined data from attendanceData and userMap
-        const combinedData = allUser.map(user => {
-            const attendanceRecord = attendanceData.find(record =>
-                record._id.equals(user._id)
-            );
-            return attendanceRecord
-                ? {
-                    _id: attendanceRecord._id,
-                    user: userMap[user._id],
-                    status: attendanceRecord.status,
-                    type: attendanceRecord.type,
-                    signInTime: attendanceRecord.signInTime,
-                    signOutTime: attendanceRecord.signOutTime,
-                    timestamp: attendanceRecord.timestamp,
-                    location: attendanceRecord.location,
-                    remarks: attendanceRecord.remarks,
-                    count: attendanceRecord.count
-                }
-                : null;
-        }).filter(item => item !== null); // Filter out null entries (users without attendance records)
+        // Combine attendance data with user data
+        const combinedData = allUsers.map(user => {
+            const attendanceRecord = attendanceData.find(record => record._id.equals(user._id));
+            return attendanceRecord ? {
+                _id: attendanceRecord._id,
+                user: userMap[user._id],
+                status: attendanceRecord.status,
+                type: attendanceRecord.type,
+                signInTime: attendanceRecord.signInTime,
+                signOutTime: attendanceRecord.signOutTime,
+                timestamp: attendanceRecord.timestamp,
+                location: attendanceRecord.location,
+                remarks: attendanceRecord.remarks,
+                count: attendanceRecord.count
+            } : null;
+        }).filter(item => item !== null);
 
-        // Sort combinedData based on timestamp, placing users without attendance records at the end
+        // Sort data by timestamp
         combinedData.sort((a, b) => {
             if (!a.timestamp) return 1;
             if (!b.timestamp) return -1;
             return moment(b.timestamp).diff(moment(a.timestamp));
         });
 
-        // Filter combinedData based on the search query
+        // Filter data based on search query
         const filteredData = combinedData.filter(item => {
             const { fullname, section, department, username } = item.user;
             const { status, type, signInTime, signOutTime, remarks, location } = item;
@@ -7051,30 +6654,20 @@ app.post('/api/data/all-attendance/today/human-resources', isAuthenticated, asyn
                 regex.test(type) ||
                 regex.test(location) ||
                 regex.test(remarks) ||
-                (signInTime &&
-                    regex.test(
-                        moment(signInTime).format('LT') // Format sign-in time to 'hh:mm A'
-                    )) ||
-                (signOutTime &&
-                    regex.test(
-                        moment(signOutTime).format('LT') // Format sign-out time to 'hh:mm A'
-                    ))
+                (signInTime && regex.test(moment(signInTime).format('LT'))) ||
+                (signOutTime && regex.test(moment(signOutTime).format('LT')))
             );
         });
 
-        // Paginate the filtered data
+        // Paginate filtered data
         const paginatedData = filteredData.slice(skip, skip + limit);
 
-        // Calculate counts for present, absent, late, leave statuses
-        const totalCounts = combinedData.reduce(
-            (acc, item) => {
-                acc.total++;
-                acc[item.status.toLowerCase()] =
-                    (acc[item.status.toLowerCase()] || 0) + 1;
-                return acc;
-            },
-            { total: 0, present: 0, absent: 0, late: 0, leave: 0, invalid: 0 }
-        );
+        // Calculate total counts of different statuses
+        const totalCounts = combinedData.reduce((acc, item) => {
+            acc.total++;
+            acc[item.status.toLowerCase()] = (acc[item.status.toLowerCase()] || 0) + 1;
+            return acc;
+        }, { total: 0, present: 0, absent: 0, late: 0, leave: 0, invalid: 0 });
 
         const response = {
             data1: paginatedData,
@@ -7082,34 +6675,28 @@ app.post('/api/data/all-attendance/today/human-resources', isAuthenticated, asyn
             counts: totalCounts
         };
 
-        // Respond with the paginated and filtered attendance data
-        res.json(response);
+        res.json(response); // Send response with paginated and filtered data
     } catch (error) {
-        console.error('Error:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
+        next(error); // Pass error to global error handler
     }
-}
-);
+});
 
-// GET ALL ATTENDACNE PER DATE ON SELECTED DATE HR
-app.post('/api/data/all-attendance/per-date/human-resources', isAuthenticated, async function (req, res) {
+//  * Route to get attendance data per selected date for HR.
+//  * Supports search and pagination.
+app.post('/api/data/all-attendance/per-date/human-resources', isAuthenticated, async (req, res, next) => {
     const selectedDate = req.body.date;
-    const searchQuery = req.query.search || ''; // Get search query from request query params
-    const page = parseInt(req.query.page) || 1; // Get page number from request query params
-    const limit = 10; // Number of items per page
-    const skip = (page - 1) * limit; // Calculate the number of items to skip
-
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
+    const searchQuery = req.query.search || '';
+    const page = parseInt(req.query.page) || 1;
+    const limit = 10;
+    const skip = (page - 1) * limit;
 
     try {
+        // Calculate start and end of the selected date
         const selectedLocalDate = moment(selectedDate).utcOffset(8).startOf('day');
-
-        // Calculate start and end date in UTC based on local time
         const startDate = selectedLocalDate.clone().utc().toDate();
         const endDate = selectedLocalDate.clone().endOf('day').utc().toDate();
 
-        // Query attendance records for the selected date
+        // Fetch attendance data for the selected date
         const attendanceData = await Attendance.find({
             timestamp: {
                 $gte: startDate,
@@ -7117,27 +6704,23 @@ app.post('/api/data/all-attendance/per-date/human-resources', isAuthenticated, a
             }
         });
 
-        // Get all users in the same department or section as the logged-in user
-        const allUser = await User.find();
-
-        // Create a map for quick lookup of users
-        const userMap = {};
-        allUser.forEach(user => {
-            userMap[user._id] = {
+        // Map user data for faster access
+        const allUsers = await User.find();
+        const userMap = allUsers.reduce((map, user) => {
+            map[user._id] = {
                 _id: user._id,
                 username: user.username,
                 fullname: user.fullname,
                 section: user.section,
                 department: user.department
             };
-        });
+            return map;
+        }, {});
 
-        // Create combined data with attendance records
-        const combinedData = allUser.map(user => {
+        // Combine attendance data with user data
+        const combinedData = allUsers.map(user => {
             const attendanceRecord = attendanceData.find(record => record.user.equals(user._id));
-            if (!attendanceRecord) return null;
-
-            return {
+            return attendanceRecord ? {
                 _id: attendanceRecord._id,
                 user: userMap[user._id],
                 status: attendanceRecord.status,
@@ -7147,17 +6730,13 @@ app.post('/api/data/all-attendance/per-date/human-resources', isAuthenticated, a
                 timestamp: attendanceRecord.timestamp,
                 location: attendanceRecord.location,
                 remarks: attendanceRecord.remarks,
-            };
+            } : null;
         }).filter(item => item !== null);
 
-        // Sort combinedData based on timestamp
-        combinedData.sort((a, b) => {
-            const dateA = moment(a.timestamp);
-            const dateB = moment(b.timestamp);
-            return dateB - dateA; // Sort in descending order
-        });
+        // Sort data by timestamp
+        combinedData.sort((a, b) => moment(b.timestamp).diff(moment(a.timestamp)));
 
-        // Filter combinedData based on the search query
+        // Filter data based on search query
         const filteredData = combinedData.filter(item => {
             const { fullname, section, department, username } = item.user;
             const { status, type, signInTime, signOutTime, remarks, location } = item;
@@ -7171,47 +6750,28 @@ app.post('/api/data/all-attendance/per-date/human-resources', isAuthenticated, a
                 regex.test(type) ||
                 regex.test(location) ||
                 regex.test(remarks) ||
-                (signInTime &&
-                    regex.test(moment(signInTime)
-                        .utcOffset(8) // Asia/Kuala_Lumpur timezone (UTC+8)
-                        .format('h:mm A')
-                    )) ||
-                (signOutTime &&
-                    regex.test(
-                        moment(signOutTime)
-                            .utcOffset(8) // Asia/Kuala_Lumpur timezone (UTC+8)
-                            .format('h:mm A')
-                    ))
+                (signInTime && regex.test(moment(signInTime).format('LT'))) ||
+                (signOutTime && regex.test(moment(signOutTime).format('LT')))
             );
         });
 
-        // Paginate the filtered data
+        // Paginate filtered data
         const paginatedData = filteredData.slice(skip, skip + limit);
 
-        if (!paginatedData || paginatedData.length === 0) {
-            return res.status(404).json({ message: 'No paginated attendance data found' });
-        }
-
-        const response = {
-            data1: paginatedData,
-            data2: filteredData
-        };
-
-        // Respond with the paginated and filtered attendance data
-        res.json(response);
+        res.json(paginatedData); // Send paginated data as response
     } catch (error) {
-        console.error('Error:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
+        next(error); // Pass error to global error handler
     }
 });
 
-//GET ALL ATTENDANCE DATA PER MONTH ON SELECTED DATE HR
-app.post('/api/data/all-attendance/per-month/human-resources', isAuthenticated, async function (req, res) {
-    const selectedDate = req.body.date;
-    const searchQuery = req.query.search || ''; // Get search query from request query params
-    const page = parseInt(req.query.page) || 1; // Get page number from request query params
+//  * Route to get attendance data per selected date for HR.
+//  * Fetches attendance data for a specific month and year for all users.
+app.post('/api/data/all-attendance/per-month/human-resources', isAuthenticated, async function (req, res, next) {
+    const selectedDate = req.body.date; // Date selected by the user
+    const searchQuery = req.query.search || ''; // Search query from request query params
+    const page = parseInt(req.query.page) || 1; // Page number from request query params
     const limit = 10; // Number of items per page
-    const skip = (page - 1) * limit; // Calculate the number of items to skip
+    const skip = (page - 1) * limit; // Number of items to skip
 
     // Extract month and year from the selected date
     const [month, year] = selectedDate.split('/');
@@ -7219,32 +6779,30 @@ app.post('/api/data/all-attendance/per-month/human-resources', isAuthenticated, 
     try {
         // Create a set of all possible status types
         const allStatusTypes = ['Present', 'Absent', 'Late', 'Invalid', 'Leave', 'Non Working Day'];
-        const allUser = await User.find();
+        const allUser = await User.find(); // Fetch all users
 
         // Query attendance records based on the month and year
         const attendanceData = await Attendance.aggregate([
-            // Match attendance records for the selected month and year
             {
                 $match: {
                     timestamp: {
-                        $gte: moment([year, month - 1]).startOf('month').toDate(),
-                        $lt: moment([year, month]).startOf('month').toDate()
+                        $gte: moment([year, month - 1]).startOf('month').toDate(), // Start of the month
+                        $lt: moment([year, month]).startOf('month').toDate() // Start of the next month
                     }
                 }
             },
-            // Group by user and status, count occurrences
             {
                 $group: {
                     _id: { user: '$user', status: '$status', type: '$type' },
-                    count: { $sum: 1 }
+                    count: { $sum: 1 } // Count occurrences
                 }
             }
         ]);
 
+        // Initialize status counts and public holiday counts
         const userStatusCounts = {};
         const publicHolidayCounts = {};
 
-        // Initialize status counts and public holiday counts for each user
         allUser.forEach(user => {
             userStatusCounts[user._id] = {};
             allStatusTypes.forEach(statusType => {
@@ -7264,7 +6822,7 @@ app.post('/api/data/all-attendance/per-month/human-resources', isAuthenticated, 
             }
         });
 
-        // Combine populated attendance data with user status counts and public holiday counts
+        // Combine user data with status counts and public holiday counts
         const combinedData = allUser.map(user => {
             const statusCounts = userStatusCounts[user._id];
             const publicHolidayCount = publicHolidayCounts[user._id];
@@ -7281,7 +6839,7 @@ app.post('/api/data/all-attendance/per-month/human-resources', isAuthenticated, 
             };
         });
 
-        // Filter combinedData based on the search query
+        // Filter combined data based on the search query
         const filteredData = combinedData.filter(item => {
             const { fullname, section, department, username } = item.user;
             const regex = new RegExp(searchQuery, 'i');
@@ -7293,50 +6851,49 @@ app.post('/api/data/all-attendance/per-month/human-resources', isAuthenticated, 
             );
         });
 
-        // Paginate the filtered data
+        // Paginate filtered data
         const paginatedData = filteredData.slice(skip, skip + limit);
 
+        // Prepare response
         const response = {
-            data1: paginatedData,
-            data2: filteredData
+            data1: paginatedData, // Paginated data
+            data2: filteredData // All filtered data
         };
 
+        // Log paginated data for debugging
         console.log(paginatedData);
 
         // Respond with the paginated and filtered attendance data
         res.json(response);
     } catch (error) {
-        console.error('Error fetching attendance data:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        // Pass error to global error handler
+        next(error);
     }
 });
 
-// ATTENDACE TODAY DATA FOR DEPARTMENT AND SECTION
-app.post('/api/data/all-attendance/today/department-section', isAuthenticated, async function (req, res) {
-    const searchQuery = req.query.search || ''; // Get search query from request query params
-    const page = parseInt(req.query.page) || 1; // Get page number from request query params
+//  * Route to get attendance data per selected date for department/section.
+//  * Fetches today's attendance data for the department or section of the logged-in user.
+app.post('/api/data/all-attendance/today/department-section', isAuthenticated, async function (req, res, next) {
+    const searchQuery = req.query.search || ''; // Search query from request query params
+    const page = parseInt(req.query.page) || 1; // Page number from request query params
     const limit = 5; // Number of items per page
-    const skip = (page - 1) * limit;
-
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-
-    // Get today's date
-    const today = moment().startOf('day').toDate(); // Start of today in local time
+    const skip = (page - 1) * limit; // Items to skip
 
     try {
-        // Query attendance records for today
+        const username = req.user.username;
+        const user = await User.findOne({ username: username });
+
+        // Get today's date range
+        const today = moment().startOf('day').toDate();
+        const endOfToday = moment().endOf('day').toDate();
+
+        // Query today's attendance records
         const attendanceData = await Attendance.aggregate([
-            // Match attendance records for today
             {
                 $match: {
-                    timestamp: {
-                        $gte: today, // Find records where timestamp is greater than or equal to today
-                        $lt: moment().endOf('day').toDate() // Less than end of today
-                    }
+                    timestamp: { $gte: today, $lt: endOfToday }
                 }
             },
-            // Group by user and status, include attendance type, sign-in time, and sign-out time
             {
                 $group: {
                     _id: '$user',
@@ -7352,67 +6909,55 @@ app.post('/api/data/all-attendance/today/department-section', isAuthenticated, a
             }
         ]);
 
-        // Collect unique user IDs from attendanceData
         const userIds = attendanceData.map(record => record._id);
 
-        // Query all users in the same department or section as the logged-in user, excluding the logged-in user
-        let allUser;
+        // Get users in the same department/section
+        let allUsers;
         if (user.isHeadOfDepartment) {
-            allUser = await User.find({ department: user.department, _id: { $ne: user._id } });
+            allUsers = await User.find({ department: user.department, _id: { $ne: user._id } });
         } else if (user.isHeadOfSection) {
-            allUser = await User.find({ section: user.section, _id: { $ne: user._id } });
+            allUsers = await User.find({ section: user.section, _id: { $ne: user._id } });
         } else {
             return res.status(403).json({ error: 'Unauthorized access' });
         }
 
-        // Create a map to quickly access user details by user ID
-        const userMap = {};
-        allUser.forEach(user => {
-            userMap[user._id] = {
+        // Map users by ID
+        const userMap = allUsers.reduce((map, user) => {
+            map[user._id] = {
                 _id: user._id,
                 username: user.username,
                 fullname: user.fullname,
                 section: user.section,
                 department: user.department
             };
-        });
+            return map;
+        }, {});
 
-        // Create the combined data from attendanceData and userMap
-        const combinedData = allUser.map(user => {
-            const attendanceRecord = attendanceData.find(record =>
-                record._id.equals(user._id)
-            );
-            return attendanceRecord
-                ? {
-                    _id: attendanceRecord._id,
-                    user: userMap[user._id],
-                    status: attendanceRecord.status,
-                    type: attendanceRecord.type,
-                    signInTime: attendanceRecord.signInTime,
-                    signOutTime: attendanceRecord.signOutTime,
-                    timestamp: attendanceRecord.timestamp,
-                    location: attendanceRecord.location,
-                    remarks: attendanceRecord.remarks,
-                    count: attendanceRecord.count
-                }
-                : null;
-        }).filter(item => item !== null); // Filter out null entries (users without attendance records)
+        // Combine attendance records with user details
+        const combinedData = allUsers.map(user => {
+            const attendanceRecord = attendanceData.find(record => record._id.equals(user._id));
+            return attendanceRecord ? {
+                _id: attendanceRecord._id,
+                user: userMap[user._id],
+                status: attendanceRecord.status,
+                type: attendanceRecord.type,
+                signInTime: attendanceRecord.signInTime,
+                signOutTime: attendanceRecord.signOutTime,
+                timestamp: attendanceRecord.timestamp,
+                location: attendanceRecord.location,
+                remarks: attendanceRecord.remarks,
+                count: attendanceRecord.count
+            } : null;
+        }).filter(item => item !== null);
 
-        // Sort combinedData based on timestamp, placing users without attendance records at the end
+        // Sort combined data by timestamp
         combinedData.sort((a, b) => {
-            // Check if either timestamp is missing
             if (!a.timestamp) return 1;
             if (!b.timestamp) return -1;
-
-            // Convert timestamps to Moment.js objects
-            const dateA = moment(a.timestamp);
-            const dateB = moment(b.timestamp);
-
-            // Compare Moment.js objects
-            return dateB.diff(dateA);
+            return moment(b.timestamp).diff(moment(a.timestamp));
         });
 
-        // Filter combinedData based on the search query
+        // Filter data based on search query
         const filteredData = combinedData.filter(item => {
             const { fullname, section, department, username } = item.user;
             const { status, type, signInTime, signOutTime, remarks, location } = item;
@@ -7426,26 +6971,19 @@ app.post('/api/data/all-attendance/today/department-section', isAuthenticated, a
                 regex.test(type) ||
                 regex.test(location) ||
                 regex.test(remarks) ||
-                (signInTime &&
-                    regex.test(
-                        moment(signInTime).format('LT') // Format sign-in time to 'hh:mm A'
-                    )) ||
-                (signOutTime &&
-                    regex.test(
-                        moment(signOutTime).format('LT') // Format sign-out time to 'hh:mm A'
-                    ))
+                (signInTime && regex.test(moment(signInTime).format('LT'))) ||
+                (signOutTime && regex.test(moment(signOutTime).format('LT')))
             );
         });
 
-        // Paginate the filtered data
+        // Paginate filtered data
         const paginatedData = filteredData.slice(skip, skip + limit);
 
-        // Calculate counts for present, absent, late, leave statuses
+        // Calculate status counts
         const totalCounts = combinedData.reduce(
             (acc, item) => {
                 acc.total++;
-                acc[item.status.toLowerCase()] =
-                    (acc[item.status.toLowerCase()] || 0) + 1;
+                acc[item.status.toLowerCase()] = (acc[item.status.toLowerCase()] || 0) + 1;
                 return acc;
             },
             { total: 0, present: 0, absent: 0, late: 0, leave: 0, invalid: 0 }
@@ -7457,67 +6995,59 @@ app.post('/api/data/all-attendance/today/department-section', isAuthenticated, a
             counts: totalCounts
         };
 
-        // Respond with the paginated and filtered attendance data
         res.json(response);
     } catch (error) {
-        console.error('Error:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
+        next(error); // Pass error to global error handler
     }
 });
 
-app.post('/api/data/all-attendance/per-date/department-section', isAuthenticated, async function (req, res) {
+//  * Route to get attendance data per selected date for department/section.
+//  * Fetches attendance data for a specific date for the department or section of the logged-in user.
+app.post('/api/data/all-attendance/per-date/department-section', isAuthenticated, async function (req, res, next) {
     const selectedDate = req.body.date;
-    const searchQuery = req.query.search || ''; // Get search query from request query params
-    const page = parseInt(req.query.page) || 1; // Get page number from request query params
-    const limit = 10; // Number of items per page
-    const skip = (page - 1) * limit; // Calculate the number of items to skip
-
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
+    const searchQuery = req.query.search || '';
+    const page = parseInt(req.query.page) || 1;
+    const limit = 10;
+    const skip = (page - 1) * limit;
 
     try {
-        const selectedLocalDate = moment(selectedDate).utcOffset(8).startOf('day');
+        const username = req.user.username;
+        const user = await User.findOne({ username: username });
 
-        // Calculate start and end date in UTC based on local time
+        const selectedLocalDate = moment(selectedDate).utcOffset(8).startOf('day');
         const startDate = selectedLocalDate.clone().utc().toDate();
         const endDate = selectedLocalDate.clone().endOf('day').utc().toDate();
 
         // Query attendance records for the selected date
         const attendanceData = await Attendance.find({
-            timestamp: {
-                $gte: startDate,
-                $lt: endDate
-            }
+            timestamp: { $gte: startDate, $lt: endDate }
         });
 
-        // Get all users in the same department or section as the logged-in user
-        let allUser;
+        let allUsers;
         if (user.isHeadOfDepartment) {
-            allUser = await User.find({ department: user.department });
+            allUsers = await User.find({ department: user.department });
         } else if (user.isHeadOfSection) {
-            allUser = await User.find({ section: user.section });
+            allUsers = await User.find({ section: user.section });
         } else {
             return res.status(403).json({ error: 'Unauthorized access' });
         }
 
-        // Create a map for quick lookup of users
-        const userMap = {};
-        allUser.forEach(user => {
-            userMap[user._id] = {
+        // Map users by ID
+        const userMap = allUsers.reduce((map, user) => {
+            map[user._id] = {
                 _id: user._id,
                 username: user.username,
                 fullname: user.fullname,
                 section: user.section,
                 department: user.department
             };
-        });
+            return map;
+        }, {});
 
-        // Create combined data with attendance records
-        const combinedData = allUser.map(user => {
+        // Combine attendance records with user details
+        const combinedData = allUsers.map(user => {
             const attendanceRecord = attendanceData.find(record => record.user.equals(user._id));
-            if (!attendanceRecord) return null;
-
-            return {
+            return attendanceRecord ? {
                 _id: attendanceRecord._id,
                 user: userMap[user._id],
                 status: attendanceRecord.status,
@@ -7526,20 +7056,14 @@ app.post('/api/data/all-attendance/per-date/department-section', isAuthenticated
                 signOutTime: attendanceRecord.date.signOutTime,
                 timestamp: attendanceRecord.timestamp,
                 location: attendanceRecord.location,
-                remarks: attendanceRecord.remarks,
-            };
+                remarks: attendanceRecord.remarks
+            } : null;
         }).filter(item => item !== null);
 
-        combinedData.sort((a, b) => {
-            // Convert timestamps to Moment.js objects
-            const dateA = moment(a.timestamp);
-            const dateB = moment(b.timestamp);
+        // Sort combined data by timestamp
+        combinedData.sort((a, b) => moment(b.timestamp).diff(moment(a.timestamp)));
 
-            // Compare Moment.js objects in descending order
-            return dateB.diff(dateA);
-        });
-
-        // Filter combinedData based on the search query
+        // Filter data based on search query
         const filteredData = combinedData.filter(item => {
             const { fullname, section, department, username } = item.user;
             const { status, type, signInTime, signOutTime, remarks, location } = item;
@@ -7553,25 +7077,15 @@ app.post('/api/data/all-attendance/per-date/department-section', isAuthenticated
                 regex.test(type) ||
                 regex.test(location) ||
                 regex.test(remarks) ||
-                (signInTime &&
-                    regex.test(
-                        moment(signInTime)
-                            .utcOffset(8) // Asia/Kuala_Lumpur timezone (UTC+8)
-                            .format('h:mm A')
-                    )) ||
-                (signOutTime &&
-                    regex.test(
-                        moment(signOutTime)
-                            .utcOffset(8) // Asia/Kuala_Lumpur timezone (UTC+8)
-                            .format('h:mm A')
-                    ))
+                (signInTime && regex.test(moment(signInTime).utcOffset(8).format('h:mm A'))) ||
+                (signOutTime && regex.test(moment(signOutTime).utcOffset(8).format('h:mm A')))
             );
         });
 
-        // Paginate the filtered data
+        // Paginate filtered data
         const paginatedData = filteredData.slice(skip, skip + limit);
 
-        if (!paginatedData || paginatedData.length === 0) {
+        if (paginatedData.length === 0) {
             return res.status(404).json({ message: 'No paginated attendance data found' });
         }
 
@@ -7580,142 +7094,126 @@ app.post('/api/data/all-attendance/per-date/department-section', isAuthenticated
             data2: filteredData
         };
 
-        // Respond with the paginated and filtered attendance data
         res.json(response);
     } catch (error) {
-        console.error('Error:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
+        next(error); // Pass error to global error handler
     }
 });
 
-app.post('/api/data/all-attendance/per-month/department-section', isAuthenticated, async function (req, res) {
-    const selectedDate = req.body.date;
-    const searchQuery = req.query.search || ''; // Get search query from request query params
-    const page = parseInt(req.query.page) || 1; // Get page number from request query params
-    const limit = 10; // Number of items per page
-    const skip = (page - 1) * limit; // Calculate the number of items to skip
-
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-
-    // Extract month and year from the selected date
-    const [month, year] = selectedDate.split('/');
+//  * Route to get attendance data per selected date for department/section.
+//  * Fetches attendance data for a specific month for the department or section of the logged-in user.
+app.post('/api/data/all-attendance/per-month/department-section', isAuthenticated, async function (req, res, next) {
+    const { month, year } = req.body; // Month and year from request body
+    const searchQuery = req.query.search || '';
+    const page = parseInt(req.query.page) || 1;
+    const limit = 10;
+    const skip = (page - 1) * limit;
 
     try {
-        // Determine the users to query based on the user's role
-        let allUser;
+        const username = req.user.username;
+        const user = await User.findOne({ username: username });
+
+        // Determine the first and last day of the month
+        const startDate = moment(`${year}-${month}-01`).startOf('month').toDate();
+        const endDate = moment(startDate).endOf('month').toDate();
+
+        // Query attendance records for the specified month
+        const attendanceData = await Attendance.find({
+            timestamp: { $gte: startDate, $lt: endDate }
+        });
+
+        let allUsers;
         if (user.isHeadOfDepartment) {
-            allUser = await User.find({ department: user.department });
+            allUsers = await User.find({ department: user.department });
         } else if (user.isHeadOfSection) {
-            allUser = await User.find({ section: user.section });
+            allUsers = await User.find({ section: user.section });
         } else {
-            allUser = await User.find();
+            return res.status(403).json({ error: 'Unauthorized access' });
         }
 
-        // Create a set of all possible status types
-        const allStatusTypes = ['Present', 'Absent', 'Late', 'Invalid', 'Leave', 'Non Working Day'];
-
-        // Query attendance records based on the month and year
-        const attendanceData = await Attendance.aggregate([
-            // Match attendance records for the selected month and year
-            {
-                $match: {
-                    timestamp: {
-                        $gte: moment(`${year}-${month}-01`)
-                            .utcOffset(8) // Apply UTC+8 offset
-                            .startOf('day') // Start of the day (00:00:00)
-                            .toDate(),
-                        $lt: moment(`${year}-${month + 1}-01`)
-                            .utcOffset(8) // Apply UTC+8 offset
-                            .startOf('day') // Start of the day (00:00:00)
-                            .toDate()
-                    }
-                }
-            },
-            // Group by user and status, count occurrences
-            {
-                $group: {
-                    _id: { user: '$user', status: '$status', type: '$type' },
-                    count: { $sum: 1 }
-                }
-            }
-        ]);
-
-        const userStatusCounts = {};
-        const publicHolidayCounts = {};
-
-        // Initialize status counts and public holiday counts for each user
-        allUser.forEach(user => {
-            userStatusCounts[user._id] = {};
-            allStatusTypes.forEach(statusType => {
-                userStatusCounts[user._id][statusType] = 0;
-            });
-            publicHolidayCounts[user._id] = 0;
-        });
-
-        // Update status counts and public holiday counts based on the attendance data
-        attendanceData.forEach(({ _id, count }) => {
-            const { user, status, type } = _id;
-            // Ensure userStatusCounts[user] is defined before updating
-            if (userStatusCounts[user]) {
-                if (status) {
-                    userStatusCounts[user][status] = count;
-                }
-                if (type === 'public holiday') {
-                    publicHolidayCounts[user] = count;
-                }
-            }
-        });
-
-        // Combine populated attendance data with user status counts and public holiday counts
-        const combinedData = allUser.map(user => {
-            const statusCounts = userStatusCounts[user._id];
-            const publicHolidayCount = publicHolidayCounts[user._id];
-            return {
-                user: {
-                    _id: user._id,
-                    username: user.username,
-                    fullname: user.fullname,
-                    section: user.section,
-                    department: user.department
-                },
-                statusCounts: statusCounts,
-                publicHolidayCount: publicHolidayCount
+        // Map users by ID
+        const userMap = allUsers.reduce((map, user) => {
+            map[user._id] = {
+                _id: user._id,
+                username: user.username,
+                fullname: user.fullname,
+                section: user.section,
+                department: user.department
             };
-        });
+            return map;
+        }, {});
 
-        // Filter combinedData based on the search query
+        // Combine attendance records with user details
+        const combinedData = allUsers.map(user => {
+            const attendanceRecords = attendanceData.filter(record => record.user.equals(user._id));
+            const mergedRecord = attendanceRecords.reduce((acc, record) => {
+                acc.status = record.status;
+                acc.type = record.type;
+                acc.signInTime = record.date.signInTime;
+                acc.signOutTime = record.date.signOutTime;
+                acc.timestamp = record.timestamp;
+                acc.location = record.location;
+                acc.remarks = record.remarks;
+                acc.count = (acc.count || 0) + 1;
+                return acc;
+            }, {});
+            return mergedRecord ? {
+                _id: mergedRecord._id,
+                user: userMap[user._id],
+                status: mergedRecord.status,
+                type: mergedRecord.type,
+                signInTime: mergedRecord.signInTime,
+                signOutTime: mergedRecord.signOutTime,
+                timestamp: mergedRecord.timestamp,
+                location: mergedRecord.location,
+                remarks: mergedRecord.remarks,
+                count: mergedRecord.count
+            } : null;
+        }).filter(item => item !== null);
+
+        // Sort combined data by timestamp
+        combinedData.sort((a, b) => moment(b.timestamp).diff(moment(a.timestamp)));
+
+        // Filter data based on search query
         const filteredData = combinedData.filter(item => {
             const { fullname, section, department, username } = item.user;
+            const { status, type, signInTime, signOutTime, remarks, location } = item;
             const regex = new RegExp(searchQuery, 'i');
             return (
                 regex.test(fullname) ||
                 regex.test(section) ||
                 regex.test(department) ||
-                regex.test(username)
+                regex.test(username) ||
+                regex.test(status) ||
+                regex.test(type) ||
+                regex.test(location) ||
+                regex.test(remarks) ||
+                (signInTime && regex.test(moment(signInTime).utcOffset(8).format('h:mm A'))) ||
+                (signOutTime && regex.test(moment(signOutTime).utcOffset(8).format('h:mm A')))
             );
         });
 
-        // Paginate the filtered data
+        // Paginate filtered data
         const paginatedData = filteredData.slice(skip, skip + limit);
+
+        if (paginatedData.length === 0) {
+            return res.status(404).json({ message: 'No paginated attendance data found' });
+        }
 
         const response = {
             data1: paginatedData,
             data2: filteredData
         };
 
-        console.log(paginatedData);
-
-        // Respond with the paginated and filtered attendance data
         res.json(response);
     } catch (error) {
-        console.error('Error fetching attendance data:', error);
-        res.status(500).send('Internal Server Error');
+        next(error); // Pass error to global error handler
     }
-}
-);
+});
 
-// QR CODE API
+// * Route to generate a QR code with a unique identifier and client IP.
+// * Creates a QR code image with specified colors and dimensions,
+// * then returns the image data and unique identifier to the client.
 app.get('/api/qrcode/generate', async (req, res) => {
     const uniqueIdentifier = generateUniqueIdentifier();
     const clientIP = req.clientIp;
@@ -7724,7 +7222,7 @@ app.get('/api/qrcode/generate', async (req, res) => {
         const qrCodeImage = await qr.toDataURL(uniqueIdentifier + "-" + clientIP, {
             type: 'image/png',
             errorCorrectionLevel: 'H',
-            color: { dark: '#3874ff', light: '#f5f7fa' }, // Set the color (dark is the main color, light is the background color)
+            color: { dark: '#3874ff', light: '#f5f7fa' }, // Set colors for the QR code
             width: 400,
             margin: 0 // Set the width of the QR code
         });
@@ -7736,11 +7234,12 @@ app.get('/api/qrcode/generate', async (req, res) => {
     }
 });
 
-app.post('/api/qrcode/save-data', async function (req, res) {
+// * Route to save raw QR code data to the database.
+// * Receives QR code data from the client and stores it with a timestamp.
+app.post('/api/qrcode/save-data', async (req, res) => {
     const qrData = req.body.qrData;
-    // console.log('Received QR code data:', qrData);
 
-    // Save the raw URL in the database
+    // Save the QR code data in the database with the current timestamp
     await QRCode.create({
         uniqueId: qrData,
         createdAt: moment().utcOffset(8).toDate()
@@ -7749,7 +7248,10 @@ app.post('/api/qrcode/save-data', async function (req, res) {
     res.status(200).send('QR code data received and saved successfully');
 });
 
-app.post('/api/qrcode/process-data', isAuthenticated, async function (req, res) {
+// * Route to process scanned QR code data for attendance.
+// * Validates QR code data, checks user authentication, and updates attendance records
+// * based on scanning location and time.
+app.post('/api/qrcode/process-data', isAuthenticated, async (req, res) => {
     const scannedData = req.body.scannedData;
     const id = req.body.id;
 
@@ -7760,26 +7262,22 @@ app.post('/api/qrcode/process-data', isAuthenticated, async function (req, res) 
     const clientIp = scannedData.substring(scannedData.indexOf('-') + 1);
 
     console.log('Unique Identifier:', uniqueIdentifier);
-    console.log('clientIp:', clientIp);
+    console.log('Client IP:', clientIp);
+
+    // Determine location based on client IP
+    const locationMap = {
+        '175.140.45.73': 'BMI',
+        '104.28.242.42': 'BMI',
+        '210.186.48.79': 'JM',
+        '60.50.17.102': 'CM',
+        '175.144.217.244': 'RS'
+    };
+    const location = locationMap[clientIp] || 'Invalid';
+
+    console.log('Location:', location);
 
     const checkUser = await User.findOne({ _id: id });
-
-    var log = '';
-    var location = '';
-
-    if (clientIp === '175.140.45.73' || clientIp === '104.28.242.42') {
-        location = 'BMI';
-    } else if (clientIp === '210.186.48.79') {
-        location = 'JM';
-    } else if (clientIp === '60.50.17.102') {
-        location = 'CM';
-    } else if (clientIp === '175.144.217.244') {
-        location = 'RS';
-    } else {
-        location = 'Invalid';
-    }
-
-    console.log(location);
+    let log = '';
 
     if (checkUser) {
         const now = moment().utcOffset(8).toDate();
@@ -7788,42 +7286,29 @@ app.post('/api/qrcode/process-data', isAuthenticated, async function (req, res) 
         const checkQrCode = await QRCode.findOne({ uniqueId: uniqueIdentifier });
 
         if (checkQrCode) {
-            console.log('You qr code is invalid, try to scan latest qr code!');
-
-            log = 'You qr code is invalid, try to scan latest qr code!';
+            console.log('QR code is invalid, try to scan latest QR code!');
+            log = 'QR code is invalid, try to scan latest QR code!';
         } else {
             const existingAttendance = await Attendance.findOne({
                 user: checkUser._id,
-                timestamp: {
-                    $gte: today,
-                    $lte: now
-                }
+                timestamp: { $gte: today, $lte: now }
             });
 
-            console.log(existingAttendance);
+            console.log('Existing Attendance:', existingAttendance);
 
             if (existingAttendance) {
-                if (existingAttendance.date.signInTime !== null && existingAttendance.date.signOutTime === null) {
-                    // Check for non-office hour users (e.g., night shift)
+                if (existingAttendance.date.signInTime && !existingAttendance.date.signOutTime) {
+                    // Handle sign-out process
                     if (checkUser.isNonOfficeHour) {
                         const startShift = moment(existingAttendance.signInTime).utcOffset(8);
-
-                        // Calculate endShift: one day after startShift, at 07:00 of the next day
                         const endShift = moment(startShift)
-                            .add(1, 'days') // Add one day
-                            .set({ hour: 7, minute: 0, second: 0, millisecond: 0 }) // Set time to 07:00:00.000
-                            .toDate(); // 07:00 of the next day
+                            .add(1, 'days')
+                            .set({ hour: 7, minute: 0, second: 0, millisecond: 0 })
+                            .toDate();
 
                         if (now > endShift) {
-                            // If current time is past the end shift time, it means it's a sign-out for the previous day's shift
                             await Attendance.findOneAndUpdate(
-                                {
-                                    user: checkUser._id,
-                                    signInTime: {
-                                        $gte: startShift,
-                                        $lt: endShift
-                                    }
-                                },
+                                { user: checkUser._id, signInTime: { $gte: startShift, $lt: endShift } },
                                 {
                                     $set: {
                                         'date.signOutTime': now,
@@ -7833,47 +7318,26 @@ app.post('/api/qrcode/process-data', isAuthenticated, async function (req, res) 
                                         'location.signOut': location
                                     }
                                 },
-                                {
-                                    upsert: true,
-                                    new: true
-                                }
+                                { upsert: true, new: true }
                             );
 
-                            console.log('You have successfully signed out for today, thank you');
+                            console.log('Successfully signed out for today');
 
-                            const tempAttendance = new TempAttendance({
-                                user: checkUser._id,
-                                timestamp: now,
-                                type: 'sign out'
-                            });
-
-                            await tempAttendance.save();
-
-                            // activity
-                            const activityUser = new Activity({
+                            await new TempAttendance({ user: checkUser._id, timestamp: now, type: 'sign out' }).save();
+                            await new Activity({
                                 user: checkUser._id,
                                 date: now,
                                 title: 'Sign out for today',
                                 type: 'Attendance',
-                                description: checkUser.fullname + ' has signed out for ' + getDateFormat2(today)
-                            });
+                                description: `${checkUser.fullname} has signed out for ${getDateFormat2(today)}`
+                            }).save();
 
-                            await activityUser.save();
-
-                            console.log('New activity submitted', activityUser);
-
-                            log = 'You have successfully signed out for today, thank you!';
+                            log = 'Successfully signed out for today, thank you!';
                         }
                     } else {
                         // Regular shift sign-out
                         await Attendance.findOneAndUpdate(
-                            {
-                                user: checkUser._id,
-                                timestamp: {
-                                    $gte: today,
-                                    $lte: moment().utcOffset(8).toDate()
-                                }
-                            },
+                            { user: checkUser._id, timestamp: { $gte: today, $lte: now } },
                             {
                                 $set: {
                                     'date.signOutTime': now,
@@ -7883,204 +7347,115 @@ app.post('/api/qrcode/process-data', isAuthenticated, async function (req, res) 
                                     'location.signOut': location
                                 }
                             },
-                            {
-                                upsert: true,
-                                new: true
-                            }
+                            { upsert: true, new: true }
                         );
 
-                        console.log('You have successfully signed out for today, thank you');
+                        console.log('Successfully signed out for today');
 
-                        const tempAttendance = new TempAttendance({
-                            user: checkUser._id,
-                            timestamp: now,
-                            type: 'sign out'
-                        });
-
-                        await tempAttendance.save();
-
-                        // activity
-                        const activityUser = new Activity({
+                        await new TempAttendance({ user: checkUser._id, timestamp: now, type: 'sign out' }).save();
+                        await new Activity({
                             user: checkUser._id,
                             date: now,
                             title: 'Sign out for today',
                             type: 'Attendance',
-                            description: checkUser.fullname + ' has signed out for ' + getDateFormat2(today)
-                        });
+                            description: `${checkUser.fullname} has signed out for ${getDateFormat2(today)}`
+                        }).save();
 
-                        await activityUser.save();
-
-                        console.log('New activity submitted', activityUser);
-
-                        log = 'You have successfully signed out for today, thank you!';
+                        log = 'Successfully signed out for today, thank you!';
                     }
-                } else if (
-                    existingAttendance.date.signInTime === null &&
-                    existingAttendance.date.signOutTime === null
-                ) {
-                    if (checkUser.isNonOfficeHour === true) {
+                } else if (!existingAttendance.date.signInTime && !existingAttendance.date.signOutTime) {
+                    // Handle sign-in process
+                    if (checkUser.isNonOfficeHour) {
                         await Attendance.findOneAndUpdate(
-                            {
-                                user: checkUser._id,
-                                timestamp: {
-                                    $gte: today, // Greater than or equal to the start of today
-                                    $lte: moment().utcOffset(8).toDate() // Less than the current time
-                                }
-                            },
+                            { user: checkUser._id, timestamp: { $gte: today, $lte: now } },
                             {
                                 $set: {
                                     status: 'Present',
                                     type: 'sign in',
-                                    'date.signInTime': moment().utcOffset(8).toDate(),
-                                    timestamp: moment().utcOffset(8).toDate(),
+                                    'date.signInTime': now,
+                                    timestamp: now,
                                     'location.signIn': location
                                 }
                             },
                             { upsert: true, new: true }
                         );
 
-                        const tempAttendance = new TempAttendance({
+                        await new TempAttendance({ user: checkUser._id, timestamp: now, type: 'sign in' }).save();
+                        await new Activity({
                             user: checkUser._id,
-                            timestamp: moment().utcOffset(8).toDate(),
-                            type: 'sign in'
-                        });
-
-                        await tempAttendance.save();
-
-                        // activity
-                        const activityUser = new Activity({
-                            user: checkUser._id,
-                            date: moment().utcOffset(8).toDate(),
+                            date: now,
                             title: 'Sign in for today',
                             type: 'Attendance',
-                            description:
-                                checkUser.fullname +
-                                ' has sign in for ' + getDateFormat2(today)
-                        });
+                            description: `${checkUser.fullname} has signed in for ${getDateFormat2(today)}`
+                        }).save();
 
-                        activityUser.save();
-
-                        console.log('New activity submitted', activityUser);
-
-                        log = 'You have successfully signed in for today, thank you!';
+                        log = 'Successfully signed in for today, thank you!';
                     } else {
                         const currentTime = moment().utcOffset(8).toDate();
-                        const pstTime = currentTime.toLocaleString('en-MY', {
-                            timeZone: 'Asia/Kuala_Lumpur',
-                            hour12: false
-                        });
-                        const pstHourString = pstTime.split(',')[1].trim().split(':')[0];
-                        const pstHour = parseInt(pstHourString);
-
-                        console.log(pstHour);
+                        const pstTime = currentTime.toLocaleString('en-MY', { timeZone: 'Asia/Kuala_Lumpur', hour12: false });
+                        const pstHour = parseInt(pstTime.split(',')[1].trim().split(':')[0]);
 
                         if (pstHour >= 8) {
                             console.log('Clock in late confirmed');
 
                             await Attendance.findOneAndUpdate(
-                                {
-                                    user: checkUser._id,
-                                    timestamp: {
-                                        $gte: today, // Greater than or equal to the start of today
-                                        $lte: moment().utcOffset(8).toDate() // Less than the current time
-                                    }
-                                },
+                                { user: checkUser._id, timestamp: { $gte: today, $lte: now } },
                                 {
                                     $set: {
                                         status: 'Late',
                                         type: 'sign in',
-                                        'date.signInTime': moment().utcOffset(8).toDate(),
-                                        timestamp: moment().utcOffset(8).toDate(),
+                                        'date.signInTime': now,
+                                        timestamp: now,
                                         'location.signIn': location
                                     }
                                 },
                                 { upsert: true, new: true }
                             );
 
-                            const tempAttendance = new TempAttendance({
+                            await new TempAttendance({ user: checkUser._id, timestamp: now, type: 'sign in' }).save();
+                            await new Activity({
                                 user: checkUser._id,
-                                timestamp: moment().utcOffset(8).toDate(),
-                                type: 'sign in'
-                            });
-
-                            await tempAttendance.save();
-
-                            // activity
-                            const activityUser = new Activity({
-                                user: checkUser._id,
-                                date: moment().utcOffset(8).toDate(),
+                                date: now,
                                 title: 'Sign in late for today',
                                 type: 'Attendance',
-                                description:
-                                    checkUser.fullname +
-                                    ' has sign in late for ' + getDateFormat2(today)
-                            });
+                                description: `${checkUser.fullname} has signed in late for ${getDateFormat2(today)}`
+                            }).save();
 
-                            activityUser.save();
-
-                            console.log('New activity submitted', activityUser);
-
-                            log =
-                                'You have successfully signed in as late for today, thank you!';
+                            log = 'Successfully signed in as late for today, thank you!';
                         } else {
-
                             await Attendance.findOneAndUpdate(
-                                {
-                                    user: checkUser._id,
-                                    timestamp: {
-                                        $gte: today, // Greater than or equal to the start of today
-                                        $lte: moment().utcOffset(8).toDate() // Less than the current time
-                                    }
-                                },
+                                { user: checkUser._id, timestamp: { $gte: today, $lte: now } },
                                 {
                                     $set: {
                                         status: 'Present',
                                         type: 'sign in',
-                                        'date.signInTime': moment().utcOffset(8).toDate(),
-                                        timestamp: moment().utcOffset(8).toDate(),
+                                        'date.signInTime': now,
+                                        timestamp: now,
                                         'location.signIn': location
                                     }
                                 },
                                 { upsert: true, new: true }
                             );
 
-                            const tempAttendance = new TempAttendance({
+                            await new TempAttendance({ user: checkUser._id, timestamp: now, type: 'sign in' }).save();
+                            await new Activity({
                                 user: checkUser._id,
-                                timestamp: moment().utcOffset(8).toDate(),
-                                type: 'sign in'
-                            });
-
-                            await tempAttendance.save();
-
-                            // activity
-                            const activityUser = new Activity({
-                                user: checkUser._id,
-                                date: moment().utcOffset(8).toDate(),
+                                date: now,
                                 title: 'Sign in for today',
                                 type: 'Attendance',
-                                description:
-                                    checkUser.fullname +
-                                    ' has sign in for ' + getDateFormat2(today)
-                            });
+                                description: `${checkUser.fullname} has signed in for ${getDateFormat2(today)}`
+                            }).save();
 
-                            activityUser.save();
-
-                            console.log('New activity submitted', activityUser);
-
-                            log = 'You have successfully signed in for today, thank you!';
+                            log = 'Successfully signed in for today, thank you!';
                         }
                     }
-
                 } else {
-                    console.log('You already sign out for today.');
-                    log = 'You already sign out for today, thank you!';
+                    console.log('User has already signed out for today.');
+                    log = 'You already signed out for today, thank you!';
                 }
             } else {
-                console.log(
-                    'The attendance for the user doesnt exist, please check the user id'
-                );
-                log =
-                    'The attendance for the user doesnt exist, please check the user id';
+                console.log('Attendance record does not exist for the user.');
+                log = 'Attendance record does not exist for the user, please check the user ID';
             }
         }
 
@@ -8093,37 +7468,45 @@ app.post('/api/qrcode/process-data', isAuthenticated, async function (req, res) 
     }
 });
 
-app.get('/api/qrcode/get-latest', async function (req, res) {
+// * Route to get the latest scanned attendance data.
+// * Retrieves the most recent attendance record from the TempAttendance collection
+// * and returns the related user and message.
+app.get('/api/qrcode/get-latest', async (req, res) => {
     try {
         const today = moment().utcOffset(8).startOf('day').toDate();
 
+        // Find the most recent attendance record for today
         const tempAttendance = await TempAttendance.findOne({
-            timestamp: {
-                $gte: today, // Greater than or equal to the start of today
-                $lte: moment().utcOffset(8).toDate() // Less than the current time
-            }
+            timestamp: { $gte: today, $lte: moment().utcOffset(8).toDate() }
         })
             .sort({ timestamp: -1 })
             .lean();
-        var message = '';
-        var response = '';
+
+        let message = '';
+        let response = '';
 
         if (tempAttendance) {
-            const allUser = await User.find();
-            const user = allUser.find(
-                user => user._id.toString() === tempAttendance.user.toString()
-            );
+            const allUsers = await User.find();
+            const user = allUsers.find(user => user._id.toString() === tempAttendance.user.toString());
 
-            if (tempAttendance.type === 'sign in') {
-                message = 'Have sign in, welcome!';
-            } else if (tempAttendance.type === 'sign out') {
-                message = 'Have sign out, have a good rest!';
-            } else if (tempAttendance.type === 'meeting') {
-                message = 'Welcome to the meeting room!';
-            } else if (tempAttendance.type === 'events') {
-                message = 'Thank you for your participation!';
-            } else if (tempAttendance.type === 'invalid') {
-                message = 'PLease try again!';
+            switch (tempAttendance.type) {
+                case 'sign in':
+                    message = 'Have signed in, welcome!';
+                    break;
+                case 'sign out':
+                    message = 'Have signed out, have a good rest!';
+                    break;
+                case 'meeting':
+                    message = 'Welcome to the meeting room!';
+                    break;
+                case 'events':
+                    message = 'Thank you for your participation!';
+                    break;
+                case 'invalid':
+                    message = 'Please try again!';
+                    break;
+                default:
+                    message = 'Unknown attendance type.';
             }
 
             response = {
@@ -8132,7 +7515,7 @@ app.get('/api/qrcode/get-latest', async function (req, res) {
                 message: message
             };
         } else {
-            // Handle the case when tempAttendance is null
+            // Handle the case when no attendance record is found
             message = 'No attendance record found.';
             response = {
                 temp: null,
@@ -8148,27 +7531,41 @@ app.get('/api/qrcode/get-latest', async function (req, res) {
     }
 });
 
-// ECHARTS
-// USER'S LEAVE TYPE
-app.get('/api/echarts/leaveType/:id', isAuthenticated, async function (req, res) {
-    const { id } = req.params;
-    const userLeave = await UserLeave.findOne({ user: id })
-        .populate('user')
-        .exec();
+// * Route to get the latest scanned attendance data
+// * Retrieves the most recent attendance record from the TempAttendance collection
+// * and returns the related user and message.
+app.get('/api/attendance/latest', isAuthenticated, async function (req, res, next) {
+    try {
+        // Find the most recent attendance record from the TempAttendance collection
+        const latestAttendance = await TempAttendance.findOne().sort({ timestamp: -1 }).populate('user').exec();
 
-    if (!userLeave) {
-        return res.status(404).json({ error: 'User leave data not found' });
+        if (!latestAttendance) {
+            return res.status(404).json({ error: 'No attendance records found' });
+        }
+
+        // Return the most recent attendance record and related user information
+        res.json({
+            user: latestAttendance.user,
+            message: latestAttendance.message
+        });
+    } catch (error) {
+        next(error); // Pass error to global error handler
     }
-    res.json(userLeave);
-}
-);
+});
 
-app.get('/api/leave/selectedmonth', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
+// ============================
+// Fetch Data API (Echarts)
+// ============================
 
-    if (user) {
-        try {
+// * Route to get leave data for a selected month
+// * Retrieves leave records for the specified month and counts the number of approved and denied leave requests
+// * for each day of the month, then returns this data in a structured format.
+app.get('/api/leave/selectedmonth', isAuthenticated, async function (req, res, next) {
+    try {
+        const username = req.user.username;
+        const user = await User.findOne({ username: username });
+
+        if (user) {
             const selectedMonth = req.query.month;
 
             // Determine the start and end dates of the selected month
@@ -8186,7 +7583,7 @@ app.get('/api/leave/selectedmonth', isAuthenticated, async function (req, res) {
             // Initialize count object for each day
             const leaveCounts = {};
 
-            // Iterate through each day of the month
+            // Iterate through each day of the month to count leave statuses
             for (let day = 1; day <= endOfMonth.date(); day++) {
                 leaveCounts[day] = { approved: 0, denied: 0 };
 
@@ -8198,7 +7595,6 @@ app.get('/api/leave/selectedmonth', isAuthenticated, async function (req, res) {
                 // Count approved and denied leaves for the current day
                 recordsForDay.forEach(record => {
                     const status = record.status;
-
                     if (status === 'approved') {
                         leaveCounts[day].approved++;
                     } else if (status === 'denied') {
@@ -8207,20 +7603,24 @@ app.get('/api/leave/selectedmonth', isAuthenticated, async function (req, res) {
                 });
             }
 
+            // Return the leave counts for each day of the selected month
             res.json(leaveCounts);
-        } catch (error) {
-            console.error('Error fetching leave data:', error);
-            res.status(500).json({ error: 'Internal Server Error' });
+        } else {
+            res.status(404).json({ error: 'User not found' });
         }
+    } catch (error) {
+        next(error); // Pass error to global error handler
     }
 });
 
-app.get('/api/leave/totalcount', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
+// * Route to get the total approved leave count for a selected month
+// * Retrieves all approved leave records for the specified month and calculates the total number of approved leaves.
+app.get('/api/leave/totalcount', isAuthenticated, async function (req, res, next) {
+    try {
+        const username = req.user.username;
+        const user = await User.findOne({ username: username });
 
-    if (user) {
-        try {
+        if (user) {
             const selectedMonth = req.query.month;
 
             // Determine the start and end dates of the selected month
@@ -8239,469 +7639,313 @@ app.get('/api/leave/totalcount', isAuthenticated, async function (req, res) {
             // Calculate the total approved leave count
             const totalApprovedLeave = leaveRecords.length;
 
-            // Return the result
+            // Return the total approved leave count
             res.json({ totalLeaveCount: totalApprovedLeave });
-        } catch (error) {
-            console.error('Error fetching total leave count:', error);
-            res.status(500).json({ error: 'Internal Server Error' });
+        } else {
+            res.status(404).json({ error: 'User not found' });
         }
+    } catch (error) {
+        next(error); // Pass error to global error handler
     }
 });
 
-app.get('/api/leave/pending-invalid', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
+// * Route to get pending and invalid leave status for the last 7 days
+// * Retrieves leave data for the last 7 days and counts the number of pending and invalid leave requests for each day,
+// * and calculates the percentage of pending leaves relative to the total leaves for each day.
+app.get('/api/leave/pending-invalid', isAuthenticated, async function (req, res, next) {
+    try {
+        const username = req.user.username;
+        const user = await User.findOne({ username: username });
 
-    if (user) {
-
-        // Get the current date and seven days ago with UTC+8 offset
-        const currentDate = moment().utcOffset(8).startOf('day');
-        const sevenDaysAgo = moment().utcOffset(8).subtract(7, 'days').startOf('day');
-
-        // Assuming 'Leave' is your Mongoose model
-        const leaveData = await Leave.find({
-            'date.start': {
-                $gte: sevenDaysAgo.toDate(),
-                $lte: currentDate.toDate()
-            }
-        }).select('date.start status invalid');
-
-        // Create an object to store counts for each date
-        const dateCounts = {};
-
-        // Initialize counts for all dates in the range
-        let currentDatePointer = sevenDaysAgo.clone();
-        while (currentDatePointer.isSameOrBefore(currentDate, 'day')) {
-            const formattedDate = currentDatePointer.format('YYYY-MM-DD');
-            dateCounts[formattedDate] = { pending: 0, invalid: 0, percentage: 0 };
-            currentDatePointer.add(1, 'days');
-        }
-
-        // Process the retrieved data
-        leaveData.forEach(entry => {
-            const formattedDate = moment(entry.date.start).utcOffset(8).format('YYYY-MM-DD');
-
-            // Update counts for the date
-            if (dateCounts[formattedDate]) {
-                dateCounts[formattedDate].pending += entry.status === 'pending' ? 1 : 0;
-                dateCounts[formattedDate].invalid += entry.status === 'invalid' ? 1 : 0;
-            }
-        });
-
-        // Calculate percentage for each date
-        Object.keys(dateCounts).forEach(date => {
-            const total = dateCounts[date].pending + dateCounts[date].invalid;
-            dateCounts[date].percentage =
-                total > 0 ? (dateCounts[date].pending / total) * 100 : 0;
-        });
-
-        let totalPending = 0;
-        let totalInvalid = 0;
-
-        Object.keys(dateCounts).forEach(date => {
-            totalPending += dateCounts[date].pending;
-            totalInvalid += dateCounts[date].invalid;
-        });
-
-        const totalPercentagePending =
-            totalPending + totalInvalid > 0
-                ? (totalPending / (totalPending + totalInvalid)) * 100
-                : 0;
-        const totalPercentageInvalid = 100 - totalPercentagePending;
-
-        // Find previous 7 days
-        const fourteenDaysAgo = sevenDaysAgo.clone().subtract(7, 'days');
-
-        const leaveDataPrevious7Days = await Leave.find({
-            'date.start': {
-                $gte: fourteenDaysAgo.toDate(),
-                $lt: sevenDaysAgo.toDate()
-            }
-        }).select('date.start status invalid');
-
-        const dateCountsPrevious7Days = {};
-
-        let currentDatePointerPrevious7Days = fourteenDaysAgo.clone();
-        while (currentDatePointerPrevious7Days.isBefore(sevenDaysAgo, 'day')) {
-            const formattedDate = currentDatePointerPrevious7Days.format('YYYY-MM-DD');
-            dateCountsPrevious7Days[formattedDate] = { pending: 0, invalid: 0, percentage: 0 };
-            currentDatePointerPrevious7Days.add(1, 'days');
-        }
-
-        leaveDataPrevious7Days.forEach(entry => {
-            const formattedDate = moment(entry.date.start).utcOffset(8).format('YYYY-MM-DD');
-
-            if (!dateCountsPrevious7Days[formattedDate]) {
-                dateCountsPrevious7Days[formattedDate] = { pending: 0, invalid: 0, percentage: 0 };
-            }
-
-            // Update counts for the date
-            dateCountsPrevious7Days[formattedDate].pending += entry.status === 'pending' ? 1 : 0;
-            dateCountsPrevious7Days[formattedDate].invalid += entry.status === 'invalid' ? 1 : 0;
-        });
-
-        Object.keys(dateCountsPrevious7Days).forEach(date => {
-            const total = dateCountsPrevious7Days[date].pending + dateCountsPrevious7Days[date].invalid;
-            dateCountsPrevious7Days[date].percentage =
-                total > 0 ? (dateCountsPrevious7Days[date].pending / total) * 100 : 0;
-        });
-
-        let totalPendingPrevious7Days = 0;
-        let totalInvalidPrevious7Days = 0;
-
-        Object.keys(dateCountsPrevious7Days).forEach(date => {
-            totalPendingPrevious7Days += dateCountsPrevious7Days[date].pending;
-            totalInvalidPrevious7Days += dateCountsPrevious7Days[date].invalid;
-        });
-
-        const totalPercentagePendingPrevious7Days =
-            totalPendingPrevious7Days + totalInvalidPrevious7Days > 0
-                ? (totalPendingPrevious7Days / (totalPendingPrevious7Days + totalInvalidPrevious7Days)) * 100
-                : 0;
-
-        const differencePending = totalPercentagePending - totalPercentagePendingPrevious7Days;
-
-        const formattedDifferencePending =
-            (differencePending >= 0 ? '+' : '-') + Math.abs(differencePending).toFixed(2);
-
-        const responseData = {
-            dateCounts,
-            totalPercentagePending,
-            totalPercentageInvalid,
-            totalPending,
-            formattedDifferencePending
-        };
-
-        res.json(responseData);
-
-    }
-}
-);
-
-app.get('/api/leave/submmitted', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-
-    if (user) {
-        try {
-
-            // Get the current date with UTC+8 offset
+        if (user) {
+            // Get the current date and seven days ago with UTC+8 offset
             const currentDate = moment().utcOffset(8).startOf('day');
-            const fourteenDaysAgo = moment().utcOffset(8).subtract(14, 'days').startOf('day');
             const sevenDaysAgo = moment().utcOffset(8).subtract(7, 'days').startOf('day');
 
-            // Assuming 'Leave' is your Mongoose model
-            const leaveDataLast14Days = await Leave.find({
-                timestamp: {
-                    $gte: fourteenDaysAgo.toDate(),
-                    $lte: sevenDaysAgo.toDate()
-                },
-                status: 'submitted'
-            });
-
-            const leaveDataLast7Days = await Leave.find({
-                timestamp: {
+            // Retrieve leave data for the last 7 days
+            const leaveData = await Leave.find({
+                'date.start': {
                     $gte: sevenDaysAgo.toDate(),
                     $lte: currentDate.toDate()
-                },
-                status: 'submitted'
-            });
+                }
+            }).select('date.start status invalid');
 
-            // Create an object to store submitted counts for each day
-            const submittedCountsLast14Days = {};
-            const submittedCountsLast7Days = {};
+            // Create an object to store counts for each date
+            const dateCounts = {};
 
             // Initialize counts for all dates in the range
-            let currentDatePointerLast14Days = fourteenDaysAgo.clone();
-            let currentDatePointerLast7Days = sevenDaysAgo.clone();
-
-            while (currentDatePointerLast14Days.isSameOrBefore(currentDate, 'day')) {
-                const formattedDate = currentDatePointerLast14Days.format('YYYY-MM-DD');
-                submittedCountsLast14Days[formattedDate] = 0;
-                currentDatePointerLast14Days.add(1, 'days');
+            let currentDatePointer = sevenDaysAgo.clone();
+            while (currentDatePointer.isSameOrBefore(currentDate, 'day')) {
+                const formattedDate = currentDatePointer.format('YYYY-MM-DD');
+                dateCounts[formattedDate] = { pending: 0, invalid: 0, percentage: 0 };
+                currentDatePointer.add(1, 'days');
             }
 
+            // Process the retrieved data
+            leaveData.forEach(entry => {
+                const formattedDate = moment(entry.date.start).utcOffset(8).format('YYYY-MM-DD');
+
+                // Update counts for the date
+                if (dateCounts[formattedDate]) {
+                    dateCounts[formattedDate].pending += entry.status === 'pending' ? 1 : 0;
+                    dateCounts[formattedDate].invalid += entry.status === 'invalid' ? 1 : 0;
+                }
+            });
+
+            // Calculate percentage for each date
+            Object.keys(dateCounts).forEach(date => {
+                const total = dateCounts[date].pending + dateCounts[date].invalid;
+                dateCounts[date].percentage =
+                    total > 0 ? (dateCounts[date].pending / total) * 100 : 0;
+            });
+
+            let totalPending = 0;
+            let totalInvalid = 0;
+
+            Object.keys(dateCounts).forEach(date => {
+                totalPending += dateCounts[date].pending;
+                totalInvalid += dateCounts[date].invalid;
+            });
+
+            const totalPercentagePending =
+                totalPending + totalInvalid > 0
+                    ? (totalPending / (totalPending + totalInvalid)) * 100
+                    : 0;
+            const totalPercentageInvalid = 100 - totalPercentagePending;
+
+            // Find previous 7 days
+            const fourteenDaysAgo = sevenDaysAgo.clone().subtract(7, 'days');
+
+            const leaveDataPrevious7Days = await Leave.find({
+                'date.start': {
+                    $gte: fourteenDaysAgo.toDate(),
+                    $lt: sevenDaysAgo.toDate()
+                }
+            }).select('date.start status invalid');
+
+            const dateCountsPrevious7Days = {};
+
+            let currentDatePointerPrevious7Days = fourteenDaysAgo.clone();
+            while (currentDatePointerPrevious7Days.isBefore(sevenDaysAgo, 'day')) {
+                const formattedDate = currentDatePointerPrevious7Days.format('YYYY-MM-DD');
+                dateCountsPrevious7Days[formattedDate] = { pending: 0, invalid: 0, percentage: 0 };
+                currentDatePointerPrevious7Days.add(1, 'days');
+            }
+
+            leaveDataPrevious7Days.forEach(entry => {
+                const formattedDate = moment(entry.date.start).utcOffset(8).format('YYYY-MM-DD');
+
+                if (!dateCountsPrevious7Days[formattedDate]) {
+                    dateCountsPrevious7Days[formattedDate] = { pending: 0, invalid: 0, percentage: 0 };
+                }
+
+                // Update counts for the date
+                dateCountsPrevious7Days[formattedDate].pending += entry.status === 'pending' ? 1 : 0;
+                dateCountsPrevious7Days[formattedDate].invalid += entry.status === 'invalid' ? 1 : 0;
+            });
+
+            Object.keys(dateCountsPrevious7Days).forEach(date => {
+                const total = dateCountsPrevious7Days[date].pending + dateCountsPrevious7Days[date].invalid;
+                dateCountsPrevious7Days[date].percentage =
+                    total > 0 ? (dateCountsPrevious7Days[date].pending / total) * 100 : 0;
+            });
+
+            let totalPendingPrevious7Days = 0;
+            let totalInvalidPrevious7Days = 0;
+
+            Object.keys(dateCountsPrevious7Days).forEach(date => {
+                totalPendingPrevious7Days += dateCountsPrevious7Days[date].pending;
+                totalInvalidPrevious7Days += dateCountsPrevious7Days[date].invalid;
+            });
+
+            const totalPercentagePendingPrevious7Days =
+                totalPendingPrevious7Days + totalInvalidPrevious7Days > 0
+                    ? (totalPendingPrevious7Days / (totalPendingPrevious7Days + totalInvalidPrevious7Days)) * 100
+                    : 0;
+            const totalPercentageInvalidPrevious7Days = 100 - totalPercentagePendingPrevious7Days;
+
+            // Calculate percentage changes
+            const percentageChangePending =
+                totalPendingPrevious7Days > 0
+                    ? ((totalPending - totalPendingPrevious7Days) / totalPendingPrevious7Days) * 100
+                    : totalPending > 0
+                        ? 100
+                        : 0;
+            const percentageChangeInvalid =
+                totalInvalidPrevious7Days > 0
+                    ? ((totalInvalid - totalInvalidPrevious7Days) / totalInvalidPrevious7Days) * 100
+                    : totalInvalid > 0
+                        ? 100
+                        : 0;
+
+            const formattedChangePending =
+                percentageChangePending >= 0 ? '+' : '-' + Math.abs(percentageChangePending).toFixed(2);
+            const formattedChangeInvalid =
+                percentageChangeInvalid >= 0 ? '+' : '-' + Math.abs(percentageChangeInvalid).toFixed(2);
+
+            res.json({
+                currentWeek: {
+                    counts: dateCounts,
+                    totalPending,
+                    totalInvalid,
+                    totalPercentagePending,
+                    totalPercentageInvalid
+                },
+                previousWeek: {
+                    counts: dateCountsPrevious7Days,
+                    totalPending: totalPendingPrevious7Days,
+                    totalInvalid: totalInvalidPrevious7Days,
+                    totalPercentagePending: totalPercentagePendingPrevious7Days,
+                    totalPercentageInvalid: totalPercentageInvalidPrevious7Days
+                },
+                change: {
+                    pending: formattedChangePending,
+                    invalid: formattedChangeInvalid
+                }
+            });
+        } else {
+            res.status(404).json({ error: 'User not found' });
+        }
+    } catch (error) {
+        next(error); // Pass error to global error handler
+    }
+});
+
+// * Route to get leave records for the last 7 and 14 days
+// * Retrieves leave data for the last 7 days and the previous 7 days (14 days ago to 7 days ago),
+// * counts the number of submitted leave requests for each day, and calculates the percentage change
+// * between the two periods.
+app.get('/api/leave/submitted', isAuthenticated, async function (req, res, next) {
+    try {
+        const username = req.user.username;
+        const user = await User.findOne({ username: username });
+
+        if (user) {
+            // Get the current date and seven and fourteen days ago with UTC+8 offset
+            const currentDate = moment().utcOffset(8).startOf('day');
+            const sevenDaysAgo = moment().utcOffset(8).subtract(7, 'days').startOf('day');
+            const fourteenDaysAgo = sevenDaysAgo.clone().subtract(7, 'days');
+
+            // Retrieve leave data for the last 7 days
+            const leaveDataLast7Days = await Leave.find({
+                'date.start': {
+                    $gte: sevenDaysAgo.toDate(),
+                    $lte: currentDate.toDate()
+                }
+            }).select('date.start status');
+
+            // Initialize counts for each day in the last 7 days
+            const dateCountsLast7Days = {};
+            let currentDatePointerLast7Days = sevenDaysAgo.clone();
             while (currentDatePointerLast7Days.isSameOrBefore(currentDate, 'day')) {
                 const formattedDate = currentDatePointerLast7Days.format('YYYY-MM-DD');
-                submittedCountsLast7Days[formattedDate] = 0;
+                dateCountsLast7Days[formattedDate] = { submitted: 0 };
                 currentDatePointerLast7Days.add(1, 'days');
             }
 
-            // Process the retrieved data for the last 14 days
-            leaveDataLast14Days.forEach(entry => {
-                const formattedDate = moment(entry.timestamp).utcOffset(8).format('YYYY-MM-DD');
-
-                // Update submitted counts for the date
-                if (submittedCountsLast14Days[formattedDate] !== undefined) {
-                    submittedCountsLast14Days[formattedDate]++;
-                }
-            });
-
-            // Process the retrieved data for the last 7 days
+            // Count submitted leave records for the last 7 days
             leaveDataLast7Days.forEach(entry => {
-                const formattedDate = moment(entry.timestamp).utcOffset(8).format('YYYY-MM-DD');
+                const formattedDate = moment(entry.date.start).utcOffset(8).format('YYYY-MM-DD');
 
-                // Update submitted counts for the date
-                if (submittedCountsLast7Days[formattedDate] !== undefined) {
-                    submittedCountsLast7Days[formattedDate]++;
+                if (dateCountsLast7Days[formattedDate]) {
+                    dateCountsLast7Days[formattedDate].submitted++;
                 }
             });
 
-            const totalSubmittedLast14Days = leaveDataLast14Days.length;
-            const totalSubmitted = leaveDataLast7Days.length;
-            const totalPercentageLast7 =
-                (totalSubmitted / (totalSubmitted + totalSubmittedLast14Days)) * 100;
-            const totalPercentageLast14 =
-                (totalSubmittedLast14Days / (totalSubmitted + totalSubmittedLast14Days)) * 100;
-            const differencePercentage = totalPercentageLast7 - totalPercentageLast14;
-            const formattedDifference =
-                totalSubmitted > 0
-                    ? (differencePercentage >= 0 ? '+' : '-') + Math.abs(differencePercentage).toFixed(2) + '%'
-                    : '0%';
+            // Retrieve leave data for the previous 7 days (14 days ago to 7 days ago)
+            const leaveDataPrevious7Days = await Leave.find({
+                'date.start': {
+                    $gte: fourteenDaysAgo.toDate(),
+                    $lt: sevenDaysAgo.toDate()
+                }
+            }).select('date.start status');
 
-            // Create a single JSON object to send as the response
-            const responseDataSubmittedCountsLast7Days = {
-                submittedCountsLast7Days,
-                totalSubmitted,
-                formattedDifference
-            };
+            // Initialize counts for each day in the previous 7 days
+            const dateCountsPrevious7Days = {};
+            let currentDatePointerPrevious7Days = fourteenDaysAgo.clone();
+            while (currentDatePointerPrevious7Days.isBefore(sevenDaysAgo, 'day')) {
+                const formattedDate = currentDatePointerPrevious7Days.format('YYYY-MM-DD');
+                dateCountsPrevious7Days[formattedDate] = { submitted: 0 };
+                currentDatePointerPrevious7Days.add(1, 'days');
+            }
 
-            res.json(responseDataSubmittedCountsLast7Days);
+            // Count submitted leave records for the previous 7 days
+            leaveDataPrevious7Days.forEach(entry => {
+                const formattedDate = moment(entry.date.start).utcOffset(8).format('YYYY-MM-DD');
 
-        } catch (error) {
-            console.error('Error:', error);
-            res.status(500).json({ error: 'Internal Server Error' });
+                if (dateCountsPrevious7Days[formattedDate]) {
+                    dateCountsPrevious7Days[formattedDate].submitted++;
+                }
+            });
+
+            // Calculate total submitted leaves for each period
+            const totalSubmittedLast7Days = Object.values(dateCountsLast7Days).reduce(
+                (sum, day) => sum + day.submitted,
+                0
+            );
+            const totalSubmittedPrevious7Days = Object.values(dateCountsPrevious7Days).reduce(
+                (sum, day) => sum + day.submitted,
+                0
+            );
+
+            // Calculate percentage change between the two periods
+            const percentageChange =
+                totalSubmittedPrevious7Days > 0
+                    ? ((totalSubmittedLast7Days - totalSubmittedPrevious7Days) / totalSubmittedPrevious7Days) * 100
+                    : totalSubmittedLast7Days > 0
+                        ? 100
+                        : 0;
+
+            const formattedChange =
+                percentageChange >= 0 ? '+' : '-' + Math.abs(percentageChange).toFixed(2);
+
+            // Return the leave data and percentage change
+            res.json({
+                totalSubmittedLast7Days,
+                totalSubmittedPrevious7Days,
+                percentageChange: formattedChange
+            });
+        } else {
+            res.status(404).json({ error: 'User not found' });
         }
+    } catch (error) {
+        next(error); // Pass error to global error handler
     }
 });
 
-app.get('/api/leave/status', isAuthenticated, async function (req, res) {
+// ============================
+// Super Admin
+// ============================
+
+// * Route to update user leave balances
+// * This route is accessible only to super admins.
+// * It updates existing leave records for all users by adding a new Umrah leave category
+// * and sets its initial leave value to 7 days. If a user does not have an existing leave record,
+// * a new record is created with various leave categories, including the new Umrah leave.
+app.get('/super-admin/update', isAuthenticated, async (req, res, next) => {
     const username = req.user.username;
-    const user = await User.findOne({ username: username });
+    const user = req.user;
 
-    if (user) {
-
-        // Get the current date with UTC+8 offset
-        const currentDate = moment().utcOffset(8).startOf('day');
-        const sevenDaysAgo = moment().utcOffset(8).subtract(7, 'days').startOf('day');
-
-        // Assuming 'Leave' is your Mongoose model
-        const leaveDataLast7Days = await Leave.find({
-            timestamp: {
-                $gte: sevenDaysAgo.toDate(),
-                $lte: currentDate.toDate()
-            }
-        }).select('status');
-
-        // Initialize counts for each status
-        let submittedCount = 0;
-        let pendingCount = 0;
-        let invalidCount = 0;
-        let deniedCount = 0;
-        let approvedCount = 0;
-
-        // Process the retrieved data for the last 7 days
-        leaveDataLast7Days.forEach(entry => {
-            switch (entry.status) {
-                case 'submitted':
-                    submittedCount++;
-                    break;
-                case 'pending':
-                    pendingCount++;
-                    break;
-                case 'invalid':
-                    invalidCount++;
-                    break;
-                case 'denied':
-                    deniedCount++;
-                    break;
-                case 'approved':
-                    approvedCount++;
-                    break;
-            }
-        });
-
-        // Calculate percentages
-        const totalLeaves = leaveDataLast7Days.length;
-        const percentageSubmitted = totalLeaves > 0 ? ((submittedCount / totalLeaves) * 100).toFixed(0) : 0;
-        const percentagePending = totalLeaves > 0 ? ((pendingCount / totalLeaves) * 100).toFixed(0) : 0;
-        const percentageInvalid = totalLeaves > 0 ? ((invalidCount / totalLeaves) * 100).toFixed(0) : 0;
-        const percentageDenied = totalLeaves > 0 ? ((deniedCount / totalLeaves) * 100).toFixed(0) : 0;
-        const percentageApproved = totalLeaves > 0 ? ((approvedCount / totalLeaves) * 100).toFixed(0) : 0;
-
-        // Create a single JSON object to send as the response
-        const responseDataLast7Days = {
-            percentageSubmitted,
-            percentagePending,
-            percentageInvalid,
-            percentageDenied,
-            percentageApproved,
-            totalLeaves
-        };
-
-        // Respond with the data
-        res.json(responseDataLast7Days);
-
-    }
-});
-
-app.get('/api/staff/overview/department-section', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-
-    if (user) {
-        const allUser = await User.find();
-
-        // Create Sets to store unique departments and sections
-        const uniqueDepartments = new Set();
-        const uniqueSections = new Set();
-
-        // Iterate through the users and add their departments and sections to the sets
-        allUser.forEach(user => {
-            if (user.department) {
-                uniqueDepartments.add(user.department);
-            }
-
-            if (user.section) {
-                uniqueSections.add(user.section);
-            }
-        });
-
-        // Convert Sets to Arrays
-        const departments = Array.from(uniqueDepartments);
-        const sections = Array.from(uniqueSections);
-
-        // Create objects to store user counts for each department and section
-        const userCountByDepartment = {};
-        const userCountBySection = {};
-
-        // Initialize counts to zero for each department and section
-        departments.forEach(department => {
-            userCountByDepartment[department] = 0;
-        });
-
-        sections.forEach(section => {
-            userCountBySection[section] = 0;
-        });
-
-        // Update counts based on user data
-        allUser.forEach(user => {
-            if (user.department) {
-                userCountByDepartment[user.department]++;
-            }
-
-            if (user.section) {
-                userCountBySection[user.section]++;
-            }
-        });
-
-        const responseData = {
-            userCountByDepartment,
-            userCountBySection
-        };
-
-        res.json(responseData);
-    }
-}
-);
-
-app.get('/api/auxiliary-police/schedule/calendar-data', async (req, res) => {
-    try {
-        const { date, location } = req.query;
-
-        console.log(date, 'This is the date for find the schedule');
-
-        const selectedDate = moment(date);
-        const startOfMonth = selectedDate.startOf('month').toDate();
-        const endOfMonth = selectedDate.endOf('month').toDate();
-        console.log(endOfMonth);
-
-        const schedules = await ScheduleAux.aggregate([
-            {
-                $match: {
-                    date: { $gte: startOfMonth, $lte: endOfMonth },
-                    location: location
-                }
-            },
-            {
-                $unwind: "$shift"
-            },
-            {
-                $group: {
-                    _id: { date: "$date" },
-                    shifts: { $push: "$shift" },
-                    totalCount: { $sum: { $size: "$shift.staff" } }
-                }
-            },
-            {
-                $project: {
-                    _id: 0,
-                    date: { $dateToString: { format: "%Y-%m-%d", date: "$_id.date" } },
-                    shifts: 1,
-                    totalCount: 1
-                }
-            }
-        ]);
-
-        // Format the data as required
-        const formattedData = schedules.map(schedule => ({
-            date: schedule.date,
-            shifts: schedule.shifts,
-            totalCount: schedule.totalCount
-        }));
-
-        console.log(formattedData);
-        // Send the formatted data as JSON response
-        res.json(formattedData);
-    } catch (err) {
-        res.status(500).send(err);
-    }
-});
-
-//EMAIL
-app.get('/email', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    }).populate('sender');
-
-    try {
-        res.render('email', {
-            user: user,
-            notifications: notifications,
-            uuid: uuidv4(),
-        });
-    } catch (renderError) {
-        console.error('Rendering Error:', renderError);
-        next(renderError);
-    }
-});
-
-//SUPER ADMIN
-app.get('/super-admin/update', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-
+    // Check if the authenticated user is a super admin
     if (user.isSuperAdmin) {
-
         try {
+            // Retrieve all users from the database
             const users = await User.find();
 
-            // Loop through each user and update their leave
+            // Iterate through each user to update their leave records
             for (let user of users) {
+                // Find existing leave record for the user
                 const userLeave = await UserLeave.findOne({ user: user._id });
 
                 if (userLeave) {
-                    // Update existing userLeave with new Umrah leave
+                    // Update existing leave record with new Umrah leave category
                     userLeave.umrah = {
                         leave: 7,
                         taken: 0
                     };
                     await userLeave.save();
                 } else {
-                    // If no userLeave found, create a new one
+                    // Create a new leave record for the user if none exists
                     const newUserLeave = new UserLeave({
                         user: user._id,
                         annual: { leave: 14, taken: 0 },
@@ -8715,7 +7959,7 @@ app.get('/super-admin/update', isAuthenticated, async function (req, res) {
                         marriage: { leave: 3, taken: 0 },
                         attendExam: { leave: 5, taken: 0 },
                         hajj: { leave: 40, taken: 0 },
-                        umrah: { leave: 7, taken: 0 }, // new Umrah leave
+                        umrah: { leave: 7, taken: 0 }, // new Umrah leave category
                         unpaid: { taken: 0 },
                         special: { leave: 3, taken: 0 }
                     });
@@ -8724,93 +7968,123 @@ app.get('/super-admin/update', isAuthenticated, async function (req, res) {
             }
 
             console.log('User leaves updated successfully');
-
         } catch (error) {
-            console.error('Error creating Info documents:', error);
+            // Pass error to global error handler
+            return next(error);
         }
 
-        console.log('Done update');
+        console.log('Update process completed');
+        res.redirect('/');
+    } else {
+        // Redirect to home if the user is not a super admin
         res.redirect('/');
     }
 });
 
-app.get('/super-admin/logout', isAuthenticated, async function (req, res) {
+// * Route to log out all users
+// * This route is accessible only to super admins.
+// * It performs actions necessary to log out all users (details not implemented in this snippet).
+// * After logging out all users, it redirects to the home page.
+app.get('/super-admin/logout', isAuthenticated, async (req, res, next) => {
     const username = req.user.username;
-    const user = await User.findOne({ username: username });
+    const user = req.user;
 
+    // Check if the authenticated user is a super admin
     if (user.isSuperAdmin) {
-
         try {
-
+            // Implement logout functionality for all users here
+            // This functionality needs to be defined (e.g., removing tokens, sessions, etc.)
         } catch (error) {
-            console.error('error logging out all user', error);
+            // Pass error to global error handler
+            return next(error);
         }
 
         console.log('All users have been logged out.');
         res.redirect('/');
+    } else {
+        // Redirect to home if the user is not a super admin
+        res.redirect('/');
     }
 });
 
-//TEMPORARY PAGE
-app.get('/temp', async (req, res) => {
+// ============================
+// Testing 
+// ============================
+
+// * Route to render a temporary page
+// * This route is accessible to authenticated users.
+// * It retrieves the user's data and unread notifications,
+// * and renders the 'temp' view with the user data, notifications, and a unique UUID.
+app.get('/temp', isAuthenticated, async (req, res, next) => {
     const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    })
-        .populate('sender')
-        .sort({ timestamp: -1 });
+    const user = req.user;
 
-    if (user) {
-        try {
-            res.render('temp', {
-                user: user,
-                notifications: notifications,
-                uuid: uuidv4(),
-            });
-        } catch (renderError) {
-            console.error('Rendering Error:', renderError);
-            next(renderError);
-        }
+    try {
+        // Retrieve unread notifications for the user
+        const notifications = await Notification.find({
+            recipient: user._id,
+            read: false
+        })
+            .populate('sender')
+            .sort({ timestamp: -1 });
+
+        // Render the 'temp' page with user data and notifications
+        res.render('temp', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4(),
+        });
+    } catch (renderError) {
+        // Pass rendering errors to global error handler
+        console.error('Rendering Error:', renderError);
+        next(renderError);
     }
 });
 
-app.get('/testing', isAuthenticated, async (req, res) => {
+// * Route to render the email leave page for testing
+// * This route is accessible to authenticated users.
+// * It retrieves the user's data and unread notifications,
+// * and renders the 'email-leave' view with the user data, notifications, and a unique UUID.
+app.get('/testing', isAuthenticated, async (req, res, next) => {
     const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    })
-        .populate('sender')
-        .sort({ timestamp: -1 });
+    const user = req.user;
 
-    if (user) {
-        try {
-            res.render('email-leave', {
-                user: user,
-                notifications: notifications,
-                uuid: uuidv4(),
-            });
-        } catch (renderError) {
-            // Log the error and pass it to the error-handling middleware
-            console.error('Rendering Error:', renderError);
-            next(renderError);
-        }
+    try {
+        // Retrieve unread notifications for the user
+        const notifications = await Notification.find({
+            recipient: user._id,
+            read: false
+        })
+            .populate('sender')
+            .sort({ timestamp: -1 });
+
+        // Render the 'email-leave' page with user data and notifications
+        res.render('email-leave', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4(),
+        });
+    } catch (renderError) {
+        // Pass rendering errors to global error handler
+        console.error('Rendering Error:', renderError);
+        next(renderError);
     }
 });
 
+// * Route to search for schedules based on date and location
+// * This route is accessible to all users.
+// * It handles the search for schedules, taking into account the provided date and location,
+// * and returns the schedules and unique staff details.
 app.post('/search-schedule-temp', async (req, res) => {
     try {
         const { date, location } = req.body;
         const query = {};
 
+        // Build query based on date and location
         if (date) {
-            // Use moment to handle dates with UTC+8 offset
+            // Handle dates with UTC+8 offset
             const startDate = moment(date).utcOffset(8).startOf('month').toDate();
             const endDate = moment(date).utcOffset(8).endOf('month').toDate();
-
             query.date = { $gte: startDate, $lte: endDate };
         }
 
@@ -8818,9 +8092,10 @@ app.post('/search-schedule-temp', async (req, res) => {
             query.location = location;
         }
 
+        // Retrieve schedules based on the query
         const schedules = await ScheduleAux.find(query);
 
-        // Collect all staff details with their corresponding dates
+        // Collect staff details from the schedules
         const staffDetails = schedules.flatMap(schedule =>
             schedule.shift.map(shiftDetail => ({
                 shift: shiftDetail.shiftName,
@@ -8830,23 +8105,28 @@ app.post('/search-schedule-temp', async (req, res) => {
             }))
         );
 
-        // Remove duplicates based on staff name and date
+        // Remove duplicate staff details based on staff name and date
         const uniqueStaffDetails = Array.from(new Map(
             staffDetails.map(detail => [`${detail.staff}-${detail.date}`, detail])
         ).values());
 
         console.log(schedules[0]);
 
+        // Send the schedules and unique staff details as JSON response
         res.json({ schedules, staffDetails: uniqueStaffDetails });
     } catch (error) {
+        // Log error and send server error response
         console.error(error);
         res.status(500).json({ error: 'Server error' });
     }
 });
 
-//SCHEDULER
 
-// Check every minutes a session for user
+// ============================
+// Scheduler
+// ============================
+
+// Scheduler to remove expired sessions every minute
 cron.schedule('* * * * *', async () => {
     console.log('Running cron job to remove expired sessions');
 
@@ -8855,154 +8135,116 @@ cron.schedule('* * * * *', async () => {
         const now = moment().utcOffset(8).toDate();
         console.log('Current time:', now);
 
-        // Ensure you are using the correct database and collection
+        // Retrieve and filter expired sessions
         const sessions = sessionDatabase.collection('sessions');
-
-        // Retrieve all sessions
         const allSessions = await sessions.find().toArray();
+        const expiredSessions = allSessions.filter(session => session.expires < now);
 
-        if (allSessions.length > 0) {
-            console.log(`${allSessions.length} sessions found.`);
+        if (expiredSessions.length > 0) {
+            console.log(`${expiredSessions.length} expired sessions found.`);
 
-            // Filter expired sessions
-            const expiredSessions = allSessions.filter(session => session.expires < now);
+            for (const session of expiredSessions) {
+                if (session.session?.passport?.user) {
+                    const userId = session.session.passport.user;
+                    const objectId = mongoose.Types.ObjectId.isValid(userId) ? new mongoose.Types.ObjectId(userId) : userId;
 
-            if (expiredSessions.length > 0) {
-                console.log(`${expiredSessions.length} expired sessions found.`);
+                    // Update user info document
+                    const infoUpdate = await Info.findOneAndUpdate(
+                        { user: objectId },
+                        { $set: { isOnline: false, lastSeen: now } },
+                        { new: true, upsert: true }
+                    );
 
-                // Iterate over expired sessions
-                for (const session of expiredSessions) {
-                    if (session.session && session.session.passport && session.session.passport.user) {
-                        const userId = session.session.passport.user;
-
-                        console.log(userId);
-
-                        const objectId = mongoose.Types.ObjectId.isValid(userId) ? new mongoose.Types.ObjectId(userId) : userId;
-
-                        // Update the Info document for the user
-                        const infoUpdate = await Info.findOneAndUpdate(
-                            { user: objectId }, // Ensure userId is in ObjectId format
-                            { $set: { isOnline: false, lastSeen: now } },
-                            { new: true, upsert: true }
-                        );
-
-                        if (infoUpdate) {
-                            console.log(`Info updated for user: ${userId}`);
-                        } else {
-                            console.log(`Info not found for user: ${userId}`);
-                        }
-                    } else {
-                        console.log('Session does not contain passport user information:', session._id);
-                    }
+                    console.log(infoUpdate ? `Info updated for user: ${userId}` : `Info not found for user: ${userId}`);
+                } else {
+                    console.log('Session does not contain passport user information:', session._id);
                 }
-
-                // Delete all expired sessions
-                const deleteResult = await sessions.deleteMany({ expires: { $lt: now } });
-                console.log(`${deleteResult.deletedCount} expired sessions deleted.`);
-            } else {
-                console.log('No expired sessions found.');
             }
+
+            // Delete expired sessions
+            const deleteResult = await sessions.deleteMany({ expires: { $lt: now } });
+            console.log(`${deleteResult.deletedCount} expired sessions deleted.`);
         } else {
-            console.log('No sessions found.');
+            console.log('No expired sessions found.');
         }
     } catch (error) {
         console.error('Error removing expired sessions:', error);
     }
 }, {
     scheduled: true,
-    timezone: 'Asia/Kuala_Lumpur' // Adjust timezone accordingly
+    timezone: 'Asia/Kuala_Lumpur'
 });
 
-// CHECK EACH LEAVE VALIDITY
-cron.schedule(
-    '0 0 * * *',
-    async () => {
+// Scheduler to check leave validity every day at midnight
+cron.schedule('0 0 * * *', async () => {
+    const today = moment().utcOffset(8).toDate();
 
-        const today = moment().utcOffset(8).toDate();
+    try {
+        // Find and process invalid leaves
+        const invalidLeaves = await Leave.find({ status: 'pending' });
 
-        // Find invalid leaves
-        const invalidLeaves = await Leave.find({
-            status: 'pending'
-        });
-
-        // Update the status of invalid leaves
         for (const leave of invalidLeaves) {
-
             const amountDay = calculateBusinessDays(today, leave.timestamp);
 
-            if (amountDay >= -3) {
-                console.log('still valid');
-            } else {
-                console.log('invalid');
+            if (amountDay < -3) {
+                console.log('Leave is invalid.');
+
                 const user = await User.findById(leave.user);
+                const isDeputyChiefExec = user.isDeputyChiefExec;
 
-                // Check if the user is a Deputy Chief Executive
-                if (user.isDeputyChiefExec) {
-                    leave.status = 'invalid';
-                    await leave.save();
-                } else {
-                    leave.status = 'invalid';
+                leave.status = 'invalid';
 
-                    // Find the index of the last valid approval
-                    let lastValidIndex = -1;
-                    leave.approvals.forEach((approval, index) => {
-                        if (approval.status === 'approved' || approval.status === 'submitted') {
-                            lastValidIndex = index;
-                        }
-                    });
+                if (!isDeputyChiefExec) {
+                    // Update leave approvals if not a Deputy Chief Executive
+                    let lastValidIndex = leave.approvals.reduce((lastIndex, approval, index) =>
+                        (approval.status === 'approved' || approval.status === 'submitted') ? index : lastIndex, -1);
 
-                    // Determine the index of the next approval after the last valid approval
-                    let nextApprovalIndex = lastValidIndex + 1;
+                    const nextApprovalIndex = lastValidIndex + 1;
 
-                    // Remove the next approval after the last valid approval if it exists and is not a Human Resource approval
                     if (nextApprovalIndex < leave.approvals.length) {
                         const nextApproval = leave.approvals[nextApprovalIndex];
                         if (nextApproval.role !== 'Human Resource') {
                             leave.approvals.splice(nextApprovalIndex, 1);
                         }
                     }
+                }
 
-                    // Update the leave with the modified approvals list
-                    await leave.save();
+                await leave.save();
 
-                    // Send notifications
-                    const sendNoti = leave.approvals.map(approval => approval.recipient);
+                // Send notifications
+                const sendNoti = leave.approvals.map(approval => approval.recipient);
+                if (sendNoti.length > 0) {
+                    for (const recipientId of sendNoti) {
+                        const newNotification = new Notification({
+                            sender: user._id,
+                            recipient: new mongoose.Types.ObjectId(recipientId),
+                            type: 'Leave request',
+                            url: '/leave/details/' + leave._id,
+                            message: 'Leave has become invalid due to it already past 3 days of approval, please do check the leave request.'
+                        });
 
-                    if (sendNoti.length > 0) {
-                        for (const recipientId of sendNoti) {
-                            const newNotification = new Notification({
-                                sender: user._id,
-                                recipient: new mongoose.Types.ObjectId(recipientId),
-                                type: 'Leave request',
-                                url: '/leave/details/' + leave._id,
-                                message: 'Leave has become invalid due to it already past 3 days of approval, please do check the leave request.'
-                            });
+                        await newNotification.save();
 
-                            await newNotification.save();
-                        }
-
-                        // Fetch subscriptions for the recipient user
+                        // Fetch subscriptions and send push notifications
                         const subscriptions = await Subscriptions.find({ user: recipientId });
-
-                        if (subscriptions) {
-                            // Map through the subscriptions to send notifications
-                            const sendNotificationPromises = subscriptions.map(async (subscription) => {
+                        if (subscriptions.length > 0) {
+                            await Promise.all(subscriptions.map(async (subscription) => {
                                 const payload = JSON.stringify({
-                                    "title": "Leave request",
-                                    "body": "Leave request need your attention and approval.",
-                                    "url": "https://www.lakmnsportal.com/leave/request/" + currentLeave._id,
-                                    "vibrate": [100, 50, 100],
-                                    "requireInteraction": true,
-                                    "silent": false
+                                    title: "Leave request",
+                                    body: "Leave request needs your attention and approval.",
+                                    url: "https://www.lakmnsportal.com/leave/request/" + leave._id,
+                                    vibrate: [100, 50, 100],
+                                    requireInteraction: true,
+                                    silent: false
                                 });
 
                                 const options = {
                                     vapidDetails: {
-                                        subject: 'mailto:protech@lakmns.org', // Replace with your email
-                                        publicKey: publicVapidKey, // Use actual public VAPID key here
-                                        privateKey: privateVapidKey // Use actual private VAPID key here
+                                        subject: 'mailto:protech@lakmns.org',
+                                        publicKey: publicVapidKey,
+                                        privateKey: privateVapidKey
                                     },
-                                    TTL: 60 // Time to live for the notification (in seconds)
+                                    TTL: 60
                                 };
 
                                 try {
@@ -9011,27 +8253,26 @@ cron.schedule(
                                 } catch (error) {
                                     console.error('Error sending notification to:', subscription.endpoint, error);
                                 }
-                            });
-
-                            // Wait for all notifications to be sent
-                            await Promise.all(sendNotificationPromises);
+                            }));
                         } else {
-                            console.log('The user doesnt subscribe for push notifications');
+                            console.log('The user doesn\'t subscribe for push notifications');
                         }
 
                         console.log('Done sending notifications!');
                     }
                 }
+            } else {
+                console.log('Leave is still valid.');
             }
         }
 
-        // Find pending leaves
+        // Update status of pending leaves
+        const threeDaysFromNow = moment().add(3, 'days').toDate();
         const pendingLeaves = await Leave.find({
-            estimated: { $lte: threeDaysFromNow.toDate() },
+            estimated: { $lte: threeDaysFromNow },
             status: 'submitted'
         });
 
-        // Update the status of pending leaves
         for (const pending of pendingLeaves) {
             pending.status = 'pending';
             await pending.save();
@@ -9039,273 +8280,442 @@ cron.schedule(
 
         console.log('Invalid leaves updated:', invalidLeaves.length);
         console.log('Pending leaves updated:', pendingLeaves.length);
-
-    },
-    {
-        scheduled: true,
-        timezone: 'Asia/Kuala_Lumpur' // Adjust timezone accordingly
+    } catch (error) {
+        console.error('Error checking leave validity:', error);
     }
-);
+}, {
+    scheduled: true,
+    timezone: 'Asia/Kuala_Lumpur'
+});
 
-// UPDATE ATTENDANCE AT 12:00AM
-cron.schedule(
-    '0 0 * * *',
-    () => {
-        console.log('Running cron job to update attendance at 1200AM at my times');
-        updateAbsentAttendance();
-        updateAttendanceForApprovedLeaves();
-        updateTodayAttendance();
-    },
-    {
-        scheduled: true,
-        timezone: 'Asia/Kuala_Lumpur' // Adjust timezone accordingly
-    }
-);
+// Scheduler to update attendance at midnight
+cron.schedule('0 0 * * *', () => {
+    console.log('Running cron job to update attendance at midnight');
+    updateAbsentAttendance();
+    updateAttendanceForApprovedLeaves();
+    updateTodayAttendance();
+}, {
+    scheduled: true,
+    timezone: 'Asia/Kuala_Lumpur'
+});
 
-// UPDATE ATTENDANCE TO INVALID AT 
-cron.schedule(
-    '59 23 * * *',
-    async () => {
-        console.log('Running cron job to update attendance');
-        updateAttendanceEndOfDays();
+// Scheduler to update attendance and clear QR codes at 11:59 PM
+cron.schedule('59 23 * * *', async () => {
+    console.log('Running cron job to update attendance and clear QR codes');
 
+    try {
+        await updateAttendanceEndOfDays();
         const clearQr = await QRCode.deleteMany();
-
-        if (clearQr) {
-            console.log('QR codes cleared');
-        } else {
-            console.log('QR codes not cleared');
-        }
-    },
-    {
-        scheduled: true,
-        timezone: 'Asia/Kuala_Lumpur' // Adjust timezone accordingly
+        console.log(clearQr.deletedCount ? 'QR codes cleared' : 'QR codes not cleared');
+    } catch (error) {
+        console.error('Error updating attendance and clearing QR codes:', error);
     }
-);
+}, {
+    scheduled: true,
+    timezone: 'Asia/Kuala_Lumpur'
+});
 
-// CLEAR QR CODE ID FOR TODAY
-cron.schedule(
-    '0 0 * * *',
-    () => {
-        console.log('Clear qr code save for today');
-        clearQRCodeData();
-    },
-    {
-        scheduled: true,
-        timezone: 'Asia/Kuala_Lumpur' // Adjust timezone accordingly
+// Scheduler to clear QR code data at midnight
+cron.schedule('0 0 * * *', () => {
+    console.log('Running cron job to clear QR code data for today');
+    clearQRCodeData();
+}, {
+    scheduled: true,
+    timezone: 'Asia/Kuala_Lumpur'
+});
+
+// Scheduler to update patrol unit status at 8 AM
+cron.schedule('0 8 * * *', () => {
+    console.log('Running cron job to update patrol unit status');
+
+    const checkpointData = [
+        { checkpointName: 'Mufti Residence', logReport: '', time: '' },
+        { checkpointName: 'Encik Drahman Residence', logReport: '', time: '' },
+        { checkpointName: 'Ceo Residence', logReport: '', time: '' },
+        { checkpointName: 'Sicc', logReport: '', time: '' }
+    ];
+
+    const patrolUnitData = {
+        reportId: uuidv4(),
+        type: 'Patrol Unit',
+        date: moment().utcOffset(8).toDate(),
+        status: 'Open',
+        startShift: '08:00',
+        endShift: '17:00',
+        remarks: '',
+        patrolUnit: checkpointData
+    };
+
+    scheduler(patrolUnitData);
+}, {
+    scheduled: true,
+    timezone: 'Asia/Kuala_Lumpur'
+});
+
+// Scheduler to close patrol reports at 5 PM
+cron.schedule('0 17 * * *', async () => {
+    console.log('Running cron job to update patrol unit status to Closed');
+
+    try {
+        const dateToday = moment().utcOffset(8).startOf('day').toDate();
+
+        const patrolUnit = await PatrolAux.findOneAndUpdate(
+            { date: dateToday, status: 'Open' },
+            { $set: { status: 'Closed' } }
+        );
+
+        console.log(patrolUnit ? `Patrol Reports for date ${dateToday} updated and closed at 5 PM` : 'Failed to update patrol reports');
+    } catch (error) {
+        console.error('Error in scheduled task at 5 PM:', error);
     }
-);
+}, {
+    scheduled: true,
+    timezone: 'Asia/Kuala_Lumpur'
+});
 
-// PATROL UNIT
-
-cron.schedule(
-    '0 8 * * *',
-    () => {
-        console.log('Running cron job to update patrol unit status');
-
-        const checkpointData = [
-            {
-                checkpointName: 'Mufti Residence',
-                logReport: '',
-                time: ''
-            },
-            {
-                checkpointName: 'Encik Drahman Residence',
-                logReport: '',
-                time: ''
-            },
-            {
-                checkpointName: 'Ceo Residence',
-                logReport: '',
-                time: ''
-            },
-            {
-                checkpointName: 'Sicc',
-                logReport: '',
-                time: ''
-            }
-        ];
-
-        const patrolUnitData = {
-            reportId: uuidv4(),
-            type: 'Patrol Unit',
-            date: moment().utcOffset(8).toDate(),
-            status: 'Open',
-            startShift: '08:00',
-            endShift: '17:00',
-            remarks: '',
-            patrolUnit: checkpointData
-        };
-
-        scheduler(patrolUnitData);
-
-    },
-    {
-        scheduled: true,
-        timezone: 'Asia/Kuala_Lumpur' // Adjust timezone accordingly
-    }
-);
-
-cron.schedule(
-    '0 17 * * *',
-    async () => {
-        try {
-            const dateToday = dateLocal.getDate();
-
-            console.log(dateToday);
-
-            // Update status of Patrol Reports with today's date to 'Closed'
-            const patrolUnit = await PatrolAux.findOneAndUpdate(
-                { date: dateToday, status: 'Open' },
-                { $set: { status: 'Closed' } }
-            );
-
-            if (patrolUnit) {
-                console.log(
-                    `Patrol Reports for date ${dateToday} updated and closed at 5 PM`
-                );
-            } else {
-                console.log(`Failed to update`);
-            }
-        } catch (error) {
-            console.error('Error in scheduled task at 5 PM:', error);
-        }
-    },
-    {
-        scheduled: true,
-        timezone: 'Asia/Kuala_Lumpur'
-    }
-);
-
-// SCHEDULER SUBMIT EVERYDAY 8 AM
-const scheduler = async data => {
-    const submitData = await PatrolAux.create(data);
-
-    if (submitData) {
-        console.log('Patrol unit submitted');
-    } else {
-        console.log('Error');
+// Function to submit patrol unit data
+const scheduler = async (data) => {
+    try {
+        const submitData = await PatrolAux.create(data);
+        console.log(submitData ? 'Patrol unit submitted' : 'Error submitting patrol unit');
+    } catch (error) {
+        console.error('Error submitting patrol unit:', error);
     }
 };
 
-// FUNCTIONS
+// ============================
+// Functions
+// ============================
 
-// GET DATE TODAY IN STRING
-getDateFormat2 = function () {
-    const today = moment().utcOffset('+08:00');
-    const formattedDate = today.format('D MMMM YYYY');
+// // * Get today's date formatted as 'DD/MM/YYYY'
+// const getDateFormat1 = () => moment().utcOffset('+08:00').format('DD/MM/YYYY');
 
-    return formattedDate;
-};
+// // * Get a date formatted as 'YYYY-MM-DD' from a JavaScript Date object
+// const getDateFormat3 = (date) => {
+//     const formattedDate = moment(date).utcOffset('+08:00').format('YYYY-MM-DD');
+//     return formattedDate;
+// };
 
-getDateFormat1 = function () {
-    const today = moment().utcOffset('+08:00');
-    const formattedDate = today.format('DD/MM/YYYY');
+// // * Get the current time formatted as 'HH:mm A'
+// const getCurrentTime = () => moment().utcOffset('+08:00').format('HH:mm A');
 
-    return formattedDate;
-};
+// * Calculate age based on birthdate
+const calculateAge = (birthdate) => moment().utcOffset('+08:00').diff(moment(birthdate), 'years');
 
-getDateFormat3 = function (date) {
-    const year = date.getUTCFullYear();
-    const month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
-    const day = date.getUTCDate().toString().padStart(2, '0');
-    return `${year}-${month}-${day}`;
-};
-
-// GET CURRENT TIME IN STRING
-getCurrentTime = function () {
-    const currentTimeInUTC8 = moment().utcOffset('+08:00');
-    const formattedTime = currentTimeInUTC8.format('HH:mm A');
-
-    return formattedTime;
-};
-
-calculateAge = function (birthdate) {
-    const today = moment().utcOffset('+08:00');
-    const birthdateObj = moment(birthdate);
-
-    let age = today.diff(birthdateObj, 'years');
-
-    return age;
-};
-
+// * Default public holidays for the year
 const defaultPublicHolidays = ['2024-02-16', '2024-05-01', '2024-05-07'];
 const allPublicHolidays = defaultPublicHolidays.map(date => moment(date).startOf('day').toDate());
 
-function calculateBusinessDays(startDateString, endDateString) {
-    let count = 0;
-    let start = moment(startDateString).startOf('day');
-    let end = moment(endDateString).startOf('day');
+// * Check if a date is a public holiday
+const isPublicHoliday = (date, holidays) => holidays.some(holiday => moment(date).isSame(moment(holiday), 'day'));
 
-    // If start and end dates are the same, return 1 if it's a business day
-    if (start.isSame(end)) {
-        const dayOfWeek = start.day();
-        if (dayOfWeek >= 1 && dayOfWeek <= 5 && !isPublicHoliday(start.toDate(), allPublicHolidays)) {
-            return 1;
-        } else {
-            return 0;
-        }
-    }
-
+// * Calculate business days between two dates
+const calculateBusinessDays = (startDateString, endDateString) => {
+    const start = moment(startDateString).startOf('day');
+    const end = moment(endDateString).startOf('day');
     const increment = start.isBefore(end) ? 1 : -1;
+    let count = 0;
 
-    // Loop through each day between the start and end date
-    while ((increment === 1 && start.isSameOrBefore(end)) || (increment === -1 && start.isSameOrAfter(end))) {
-        const dayOfWeek = start.day();
-
-        // Check if the current day is a business day (Monday to Friday) and not a public holiday
-        if (
-            dayOfWeek >= 1 &&
-            dayOfWeek <= 5 &&
-            !isPublicHoliday(start.toDate(), allPublicHolidays)
-        ) {
+    while (start.isSameOrBefore(end)) {
+        if (start.day() >= 1 && start.day() <= 5 && !isPublicHoliday(start.toDate(), allPublicHolidays)) {
             count++;
         }
-
-        if (start.isSame(end)) {
-            break;
-        }
-
+        if (start.isSame(end)) break;
         start.add(increment, 'days');
     }
 
-    // Adjust the count based on the direction of the increment
     return increment === -1 ? -count : count;
-}
-
-
-function isPublicHoliday(date, allPublicHolidays) {
-    return allPublicHolidays.some(holiday => moment(date).isSame(moment(holiday), 'day'));
-}
-
-const formatDate = function (date) {
-    return moment(date).format('YYYY-MM-DD');
 };
 
-isWeekend = function (date) {
-    const dayOfWeek = moment(date).day();
-    return dayOfWeek === 0 || dayOfWeek === 6; // 0 = Sunday, 6 = Saturday
-};
+// * Check if a date is a weekend (Saturday or Sunday)
+const isWeekend = (date) => moment(date).day() % 6 === 0;
 
-setOrCheckTodayHolidayOrWeekend = function () {
+// * Check if today is a holiday or weekend
+const setOrCheckTodayHolidayOrWeekend = () => {
     const today = moment().utcOffset(8).startOf('day').toDate();
-
-    const defaultPublicHolidays = ['2024-06-01', '2024-06-02', '2024-06-03', '2024-06-04', '2024-06-16', '2024-07-07', '2024-07-08', '2024-07-22'
-        , '2024-08-31', '2024-09-16', '2024-12-25'
-    ];
-    const allPublicHolidays = defaultPublicHolidays;
-
-    const isHoliday = isPublicHoliday(today, allPublicHolidays);
+    const isHoliday = isPublicHoliday(today, defaultPublicHolidays);
     const isWeekendDay = isWeekend(today);
-
-    return {
-        isHoliday,
-        isWeekend: isWeekendDay
-    };
+    return { isHoliday, isWeekend: isWeekendDay };
 };
 
-// GENERATES APPROVALS
-generateApprovals = function (
+// * Check if today's date is between two given dates
+const isDateInRange = (startDate, endDate) => {
+    const currentDate = moment().utcOffset(8);
+    return moment(startDate).utcOffset(8).startOf('day').isSameOrBefore(currentDate) &&
+        currentDate.isSameOrBefore(moment(endDate).utcOffset(8).endOf('day'));
+};
+
+// * Get today's date formatted as 'D MMMM YYYY'
+const getDateFormat2 = () => moment().utcOffset('+08:00').format('D MMMM YYYY');
+
+// * Generate a unique identifier
+const generateUniqueIdentifier = () => Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+
+// * Update attendance records at the end of the day for users who haven't signed out
+const updateAttendanceEndOfDays = async () => {
+    try {
+        const todayStart = moment().utcOffset(8).startOf('day').toDate();
+        const todayEnd = moment().utcOffset(8).endOf('day').toDate();
+
+        const attendanceRecords = await Attendance.find({
+            'date.signInTime': { $gte: todayStart, $lt: todayEnd },
+            'date.signOutTime': null
+        });
+
+        await Promise.all(attendanceRecords.map(record => {
+            record.status = 'Invalid';
+            return record.save();
+        }));
+
+        console.log('Attendance updated at 11:59PM');
+    } catch (error) {
+        console.error('Error updating attendance:', error);
+    }
+};
+
+// * Update attendance records for approved leaves
+const updateAttendanceForApprovedLeaves = async () => {
+    try {
+        const today = moment().utcOffset(8).startOf('day').toDate();
+
+        const approvedLeaves = await Leave.find({ status: 'approved' });
+
+        const todayLeaves = approvedLeaves.filter(leave => isDateInRange(leave.date.start, leave.date.return));
+
+        await Promise.all(todayLeaves.map(leave =>
+            Attendance.findOneAndUpdate(
+                {
+                    user: leave.user,
+                    timestamp: {
+                        $gte: today,
+                        $lte: moment().utcOffset(8).toDate()
+                    }
+                },
+                {
+                    $set: {
+                        status: 'Leave',
+                        type: 'manual add',
+                        timestamp: moment().utcOffset(8).toDate()
+                    }
+                },
+                { upsert: true, new: true }
+            )
+        ));
+
+        console.log('Attendance records updated for leaves approved today');
+    } catch (error) {
+        console.error('Error updating attendance records:', error);
+    }
+};
+
+// * Update today's attendance based on whether it is a holiday or weekend
+const updateTodayAttendance = async () => {
+    try {
+        const todayStart = moment().utcOffset(8).startOf('day').toDate();
+        const todayEnd = moment().utcOffset(8).endOf('day').toDate();
+        const { isHoliday, isWeekend: isWeekendDay } = setOrCheckTodayHolidayOrWeekend();
+
+        let updateType = '';
+        let updateStatus = '';
+
+        if (isWeekendDay) {
+            updateType = 'weekend';
+            updateStatus = 'Non Working Day';
+        } else if (isHoliday) {
+            updateType = 'public holiday';
+            updateStatus = 'Non Working Day';
+        }
+
+        if (updateType && updateStatus) {
+            await Attendance.updateMany(
+                { timestamp: { $gte: todayStart, $lt: todayEnd } },
+                { $set: { type: updateType, status: updateStatus } }
+            );
+
+            console.log(`Attendance records updated for ${updateType}: ${updateStatus}`);
+        } else {
+            console.log('Today is neither a weekend nor a public holiday.');
+        }
+    } catch (error) {
+        console.error('Error updating attendance records:', error);
+    }
+};
+
+// * Create attendance records for all users marking them as absent
+const updateAbsentAttendance = async () => {
+    try {
+        const today = moment().utcOffset(8).startOf('day').toDate();
+
+        const allUsers = await User.find();
+
+        await Promise.all(allUsers.map(user =>
+            new Attendance({
+                user: user._id,
+                type: 'invalid',
+                'date.signInTime': null,
+                'date.signOutTime': null,
+                'location.signIn': null,
+                'location.signOut': null,
+                status: 'Absent',
+                timestamp: today,
+                remarks: 'No remarks added'
+            }).save()
+        ));
+
+        console.log('Attendance records created for all users as absent');
+    } catch (error) {
+        console.error('Error creating attendance records for absent users:', error);
+    }
+};
+
+// * Delete all QR code data from the QRCode and TempAttendance collections
+const clearQRCodeData = async () => {
+    try {
+        const [qrResult, tempAttendanceResult] = await Promise.all([
+            QRCode.deleteMany({}),
+            TempAttendance.deleteMany({})
+        ]);
+
+        console.log(`Deleted ${qrResult.deletedCount} documents from the QRCode collection`);
+        console.log(`Deleted ${tempAttendanceResult.deletedCount} documents from the temporary attendance`);
+    } catch (error) {
+        console.error('Error clearing QRCode data:', error);
+    }
+};
+
+// * Location mappings for different sites
+const locationMappings = {
+    'Baitul Makmur I': [
+        { checkpointName: 'Parameter 1', time: '', logReport: '' },
+        { checkpointName: 'Parameter 2', time: '', logReport: '' },
+        { checkpointName: 'Parameter 3', time: '', logReport: '' },
+        { checkpointName: 'Parameter 4', time: '', logReport: '' },
+        { checkpointName: 'Basement 1', time: '', logReport: '' },
+        { checkpointName: 'Basement 2', time: '', logReport: '' },
+        { checkpointName: 'Basement 3', time: '', logReport: '' },
+        { checkpointName: 'Basement 4', time: '', logReport: '' },
+        { checkpointName: 'Club House', time: '', logReport: '' },
+        { checkpointName: 'Old Cafe', time: '', logReport: '' },
+        { checkpointName: 'Level 4', time: '', logReport: '' },
+        { checkpointName: 'Level 8', time: '', logReport: '' }
+    ],
+    'Baitul Makmur II': [
+        { checkpointName: 'Basement 1 (a)', time: '', logReport: '' },
+        { checkpointName: 'Basement 1 (b)', time: '', logReport: '' },
+        { checkpointName: 'Basement 1 (c)', time: '', logReport: '' },
+        { checkpointName: 'Basement 2 (a)', time: '', logReport: '' },
+        { checkpointName: 'Basement 2 (b)', time: '', logReport: '' },
+        { checkpointName: 'Basement 2 (c)', time: '', logReport: '' },
+        { checkpointName: 'Ground Floor 1', time: '', logReport: '' },
+        { checkpointName: 'Ground Floor 2', time: '', logReport: '' },
+        { checkpointName: 'Level 8', time: '', logReport: '' },
+        { checkpointName: 'Level 17', time: '', logReport: '' },
+        { checkpointName: 'Level 5 (a)', time: '', logReport: '' },
+        { checkpointName: 'Level 5 (b)', time: '', logReport: '' },
+        { checkpointName: 'Genset Outside Building', time: '', logReport: '' },
+        { checkpointName: 'Emergency Entrance', time: '', logReport: '' },
+        { checkpointName: 'Outside Cafe 1', time: '', logReport: '' },
+        { checkpointName: 'Outside Cafe 2', time: '', logReport: '' },
+        { checkpointName: 'Service Lift Level 6', time: '', logReport: '' },
+        { checkpointName: 'Service Lift Level 10', time: '', logReport: '' },
+        { checkpointName: 'Service Lift Level 11', time: '', logReport: '' }
+    ],
+    'Jamek Mosque': [
+        { checkpointName: 'Bilal Area', time: '', logReport: '' },
+        { checkpointName: 'Mosque Tower', time: '', logReport: '' },
+        { checkpointName: 'Cooling Tower', time: '', logReport: '' },
+        { checkpointName: 'Mimbar Area', time: '', logReport: '' },
+        { checkpointName: 'First Gate', time: '', logReport: '' }
+    ],
+    'City Mosque': [
+        { checkpointName: 'Main Entrance', time: '', logReport: '' },
+        { checkpointName: 'Gate 2', time: '', logReport: '' },
+        { checkpointName: 'Backside Mosque (cemetery)', time: '', logReport: '' },
+        { checkpointName: 'Muslimah Pray Area', time: '', logReport: '' }
+    ],
+    'Raudhatul Sakinah': [
+        { checkpointName: 'Cemetery Area 1', time: '', logReport: '' },
+        { checkpointName: 'Cemetery Area 2', time: '', logReport: '' },
+        { checkpointName: 'Cemetery Area 3', time: '', logReport: '' },
+        { checkpointName: 'Cemetery Area 4', time: '', logReport: '' },
+        { checkpointName: 'Office Area 1', time: '', logReport: '' },
+        { checkpointName: 'Office Area 2', time: '', logReport: '' },
+        { checkpointName: 'Office Area 3', time: '', logReport: '' }
+    ]
+};
+
+// * Helper function to calculate cycle amounts
+const calculateCycleAmount = (index) => index === 8 ? 8 : 4; // Example logic
+
+// * Function to create a new patrol report
+const createPatrolReport = async (dutyHandoverId, location, date, shift, startTime, selectedNames) => {
+    const endTime = startTime === '0700' ? '1500' :
+        startTime === '1500' ? '2300' : '0700';
+    const cycleAmount = startTime === '2300' ? 8 : '';
+
+    const checkpoints = locationMappings[location] || [];
+    checkpoints.forEach(checkpoint => checkpoint.fullName = '');
+
+    const cycles = [];
+    const cycleAmounts = { '0700': 4, '1500': 4, '2300': 8 };
+    const timeSlotIncrements = { '0700': 200, '1500': 200, '2300': 100 };
+
+    const timeSlotIncrement = timeSlotIncrements[startTime];
+
+    for (let i = 0; i < cycleAmounts[startTime]; i++) {
+        const timeSlotStart = (parseInt(startTime, 10) + i * timeSlotIncrement) % 2400;
+        const timeSlotEnd = (timeSlotStart + timeSlotIncrement) % 2400;
+
+        cycles.push({
+            cycleSeq: i + 1,
+            cycleAmount: calculateCycleAmount(i + 1),
+            timeSlot: `${timeSlotStart.toString().padStart(4, '0')}-${timeSlotEnd.toString().padStart(4, '0')}`,
+            checkpoint: checkpoints
+        });
+    }
+
+    const newPatrolReport = new PatrolAux({
+        reportId: dutyHandoverId,
+        type: 'Shift Member Location',
+        shift: shift,
+        startShift: startTime,
+        endShift: endTime,
+        date: moment(date).utcOffset(8).toDate(),
+        location: location,
+        status: 'Open',
+        staff: selectedNames,
+        shiftMember: { cycle: cycles },
+        timestamp: moment().utcOffset(8).toDate()
+    });
+
+    try {
+        await newPatrolReport.save();
+        return newPatrolReport;
+    } catch (error) {
+        throw new Error('Error creating patrol report: ' + error.message);
+    }
+};
+
+// * Function to get the total number of visitors today
+const getTotalVisitorsToday = async () => {
+    const today = moment().startOf('day').toDate();
+    return await Vms.countDocuments({ time_in: { $gte: today } });
+};
+
+// * Function to get the total number of visitors who checked in today and have not checked out
+const getTotalVisitorsTimeInToday = async () => {
+    const today = moment().startOf('day').toDate();
+    return await Vms.countDocuments({ time_in: { $gte: today }, time_out: null });
+};
+
+// * Function to get the total number of visitors who checked out today
+const getTotalVisitorsTimeOutToday = async () => {
+    const today = moment().startOf('day').toDate();
+    return await Vms.countDocuments({ time_out: { $gte: today } });
+};
+
+// * Function to generate leave approvals based on the user grade/position
+const generateApprovals = (
     user,
     headOfSection,
     headOfDepartment,
@@ -9315,10 +8725,8 @@ generateApprovals = function (
     assignee,
     supervisors,
     type
-) {
+) => {
     let approvals = [];
-
-    console.log(supervisors);
 
     if (type === 'Emergency Leave') {
         if (user.isOfficer === true) {
@@ -10012,401 +9420,6 @@ generateApprovals = function (
     return approvals;
 };
 
-// CHECK DATE TODAY BETWEEN TWO DATES IN RANGE
-isDateInRange = function (startDate, endDate) {
-
-    // Initialize current time with UTC offset +8 (if required)
-    const currentDate = moment().utcOffset(8);
-
-    // Convert start and end dates to Moment.js objects
-    const startDateObj = moment(startDate).utcOffset(8).startOf('day');
-    const endDateObj = moment(endDate).utcOffset(8).endOf('day');
-
-    // Check if the current date is between the start and end dates
-    return startDateObj.isSameOrBefore(currentDate) && currentDate.isSameOrBefore(endDateObj);
-};
-
-// Function to generate a unique identifier (replace this with your own logic)
-const generateUniqueIdentifier = () => {
-    return (
-        Math.random().toString(36).substring(2, 15) +
-        Math.random().toString(36).substring(2, 15)
-    );
-};
-
-// FOR SCHEDULER
-// Function to update attendance
-const updateAttendanceEndOfDays = async () => {
-    try {
-        const now = moment().utcOffset(8);
-        const todayStart = now.clone().startOf('day').toDate();
-        const todayEnd = now.clone().endOf('day').toDate();
-
-        // Find all attendance records for today with signOutTime as null
-        const attendanceRecords = await Attendance.find({
-            'date.signInTime': { $gte: todayStart, $lt: todayEnd },
-            'date.signOutTime': null
-        });
-
-        // Update status to 'Absent' for records without signOutTime
-        for (let record of attendanceRecords) {
-            record.status = 'Invalid';
-            await record.save();
-        }
-
-        console.log('Attendance updated at 11:59PM');
-    } catch (error) {
-        console.error('Error updating attendance:', error);
-    }
-};
-
-// Function to check leave on attendance
-const updateAttendanceForApprovedLeaves = async () => {
-    try {
-        const today = moment().utcOffset(8).startOf('day').toDate();
-
-        // Find leave requests with status 'approved' and return date of today
-        const approvedLeaves = await Leave.find({
-            status: 'approved'
-        });
-
-        let todayLeaves = [];
-
-        approvedLeaves.forEach(leave => {
-            if (isDateInRange(leave.date.start, leave.date.return)) {
-                todayLeaves.push(leave);
-            }
-        });
-
-        for (const leave of todayLeaves) {
-
-            await Attendance.findOneAndUpdate(
-                {
-                    user: leave.user,
-                    timestamp: {
-                        $gte: today, // Greater than or equal to the start of today
-                        $lte: moment().utcOffset(8).toDate() // Less than the current time
-                    }
-                },
-                {
-                    $set: {
-                        status: 'Leave',
-                        type: 'manual add',
-                        timestamp: moment().utcOffset(8).toDate()
-                    }
-                },
-                { upsert: true, new: true }
-            );
-
-        }
-
-        console.log('Attendance records updated for leaves approved today');
-    } catch (error) {
-        console.error('Error updating attendance records:', error);
-    }
-};
-
-const updateTodayAttendance = async () => {
-
-    // Get the current time as a Moment.js object
-    const now = moment().utcOffset(8);
-    const todayStart = now.clone().startOf('day').toDate();
-    const todayEnd = now.clone().endOf('day').toDate();
-
-    const todayStatus = setOrCheckTodayHolidayOrWeekend();
-    let updateType, updateStatus;
-
-    if (todayStatus.isWeekend) {
-        updateType = 'weekend';
-        updateStatus = 'Non Working Day';
-    } else if (todayStatus.isHoliday) {
-        updateType = 'public holiday';
-        updateStatus = 'Non Working Day';
-    } else {
-        updateType = '';
-        updateStatus = '';
-    }
-
-    if (updateType === '' && updateStatus === '') {
-        console.log('Today is neither a weekend nor a public holiday.');
-        return; // Exit if today is neither a weekend nor a public holiday
-    } else {
-
-        // Update all attendance records for today
-        await Attendance.updateMany(
-            { timestamp: { $gte: todayStart, $lt: todayEnd } },
-            { $set: { type: updateType, status: updateStatus } }
-        );
-
-        console.log(`Attendance records updated for ${updateType}: ${updateStatus}`);
-    }
-};
-
-// Function to check and update attendance absent
-const updateAbsentAttendance = async () => {
-    try {
-        const today = moment().utcOffset(8).startOf('day').toDate();
-
-        // Find all users
-        const allUsers = await User.find();
-
-        // Create new attendance records marking them as absent
-        for (const user of allUsers) {
-            const newAttendance = new Attendance({
-                user: user._id,
-                type: 'invalid',
-                'date.signInTime': null,
-                'date.signOutTime': null,
-                'location.signIn': null,
-                'location.signOut': null,
-                status: 'Absent',
-                timestamp: today,
-                remarks: 'No remarks added'
-            });
-
-            await newAttendance.save();
-        }
-
-        console.log('Attendance records created for all users as absent');
-    } catch (error) {
-        console.error('Error creating attendance records for absent users:', error);
-    }
-};
-
-// Function to delete all qr codes data
-const clearQRCodeData = async () => {
-    try {
-        // Delete all documents in the QRCode collection
-        const result = await QRCode.deleteMany({});
-        console.log(
-            `Deleted ${result.deletedCount} documents from the QRCode collection`
-        );
-
-        const tempAttendance = await TempAttendance.deleteMany({});
-
-        console.log(
-            `Deleted ${tempAttendance.deletedCount} documents from the temporary attendance`
-        );
-    } catch (error) {
-        console.error('Error clearing QRCode data:', error);
-    }
-};
-
-// location mappings
-const locationMappings = {
-    'Baitul Makmur I': [
-        { checkpointName: 'Parameter 1', time: '', logReport: '' },
-        { checkpointName: 'Parameter 2', time: '', logReport: '' },
-        { checkpointName: 'Parameter 3', time: '', logReport: '' },
-        { checkpointName: 'Parameter 4', time: '', logReport: '' },
-        { checkpointName: 'Basement 1', time: '', logReport: '' },
-        { checkpointName: 'Basement 2', time: '', logReport: '' },
-        { checkpointName: 'Basement 3', time: '', logReport: '' },
-        { checkpointName: 'Basement 4', time: '', logReport: '' },
-        { checkpointName: 'Club House', time: '', logReport: '' },
-        { checkpointName: 'Old Cafe', time: '', logReport: '' },
-        { checkpointName: 'Level 4', time: '', logReport: '' },
-        { checkpointName: 'Level 8', time: '', logReport: '' }
-    ],
-    'Baitul Makmur II': [
-        { checkpointName: 'Basement 1 (a)', time: '', logReport: '' },
-        { checkpointName: 'Basement 1 (b)', time: '', logReport: '' },
-        { checkpointName: 'Basement 1 (c)', time: '', logReport: '' },
-        { checkpointName: 'Basement 2 (a)', time: '', logReport: '' },
-        { checkpointName: 'Basement 2 (b)', time: '', logReport: '' },
-        { checkpointName: 'Basement 2 (c)', time: '', logReport: '' },
-        { checkpointName: 'Ground Floor 1', time: '', logReport: '' },
-        { checkpointName: 'Ground Floor 2', time: '', logReport: '' },
-        { checkpointName: 'Level 8', time: '', logReport: '' },
-        { checkpointName: 'Level 17', time: '', logReport: '' },
-        { checkpointName: 'Level 5 (a)', time: '', logReport: '' },
-        { checkpointName: 'Level 5 (b)', time: '', logReport: '' },
-        {
-            checkpointName: 'Genset Outside Building',
-            time: '',
-            logReport: ''
-        },
-        { checkpointName: 'Emergency Entrance', time: '', logReport: '' },
-        { checkpointName: 'Outside Cafe 1', time: '', logReport: '' },
-        { checkpointName: 'Outside Cafe 2', time: '', logReport: '' },
-        { checkpointName: 'Service Lift Level 6', time: '', logReport: '' },
-        { checkpointName: 'Service Lift Level 10', time: '', logReport: '' },
-        { checkpointName: 'Service Lift Level 11', time: '', logReport: '' }
-    ],
-    'Jamek Mosque': [
-        { checkpointName: 'Bilal Area', time: '', logReport: '' },
-        { checkpointName: 'Mosque Tower', time: '', logReport: '' },
-        { checkpointName: 'Cooling Tower', time: '', logReport: '' },
-        { checkpointName: 'Mimbar Area', time: '', logReport: '' },
-        { checkpointName: 'First Gate', time: '', logReport: '' }
-    ],
-    'City Mosque': [
-        { checkpointName: 'Main Entrance', time: '', logReport: '' },
-        { checkpointName: 'Gate 2', time: '', logReport: '' },
-        {
-            checkpointName: 'Backside Mosque (cemetery)',
-            time: '',
-            logReport: ''
-        },
-        { checkpointName: 'Muslimah Pray Area', time: '', logReport: '' }
-    ],
-    'Raudhatul Sakinah': [
-        { checkpointName: 'Cemetery Area 1', time: '', logReport: '' },
-        { checkpointName: 'Cemetery Area 2', time: '', logReport: '' },
-        { checkpointName: 'Cemetery Area 3', time: '', logReport: '' },
-        { checkpointName: 'Cemetery Area 4', time: '', logReport: '' },
-        { checkpointName: 'Office Area 1', time: '', logReport: '' },
-        { checkpointName: 'Office Area 2', time: '', logReport: '' },
-        { checkpointName: 'Office Area 3', time: '', logReport: '' }
-    ]
-};
-
-// Helper function to calculate cycle amounts
-function calculateCycleAmount(index) {
-    return index === 8 ? 8 : 4; // Example logic
-}
-
-// Function to create a new patrol report
-const createPatrolReport = async (dutyHandoverId, location, date, shift, startTime, selectedNames) => {
-    let endTime = '';
-    let cycleAmount = '';
-
-    if (startTime === '0700') {
-        endTime = '1500';
-    } else if (startTime === '1500') {
-        endTime = '2300';
-    } else if (startTime === '2300') {
-        endTime = '0700';
-        cycleAmount = 8;
-    }
-
-    const confirmLocation = locationMappings[location] || [];
-    confirmLocation.forEach(checkpoint => checkpoint.fullName = '');
-
-    const cycles = [];
-    const cycleAmounts = { '0700': 4, '1500': 4, '2300': 8 };
-    const timeSlotOffsets = { '0700': 0, '1500': 0, '2300': 0 };
-    const timeSlotIncrements = { '0700': 200, '1500': 200, '2300': 100 };
-
-    const timeSlotStartOffset = timeSlotOffsets[startTime];
-    const timeSlotIncrement = timeSlotIncrements[startTime];
-
-    for (let i = 0; i < cycleAmounts[startTime]; i++) {
-        const timeSlotStart = (parseInt(startTime, 10) + i * timeSlotIncrement + timeSlotStartOffset) % 2400;
-        const timeSlotEnd = (timeSlotStart + timeSlotIncrement) % 2400;
-        const currentCycleAmount = calculateCycleAmount(i + 1);
-
-        cycles.push({
-            cycleSeq: i + 1,
-            cycleAmount: currentCycleAmount,
-            timeSlot: `${timeSlotStart.toString().padStart(4, '0')}-${timeSlotEnd.toString().padStart(4, '0')}`,
-            checkpoint: confirmLocation
-        });
-    }
-
-    const newPatrolReport = new PatrolAux({
-        reportId: dutyHandoverId,
-        type: 'Shift Member Location',
-        shift: shift,
-        startShift: startTime,
-        endShift: endTime,
-        date: moment(date).utcOffset(8).toDate(),
-        location: location,
-        status: 'Open',
-        staff: selectedNames,
-        shiftMember: { cycle: cycles },
-        timestamp: moment().utcOffset(8).toDate()
-    });
-
-    try {
-        await newPatrolReport.save();
-        return newPatrolReport;
-    } catch (error) {
-        throw new Error('Error creating patrol report: ' + error.message);
-    }
-};
-
-// Function to visitor management
-async function getTotalVisitorsToday() {
-    const today = moment().startOf('day').toDate();
-    return await Vms.countDocuments({ time_in: { $gte: today } });
-}
-
-async function getTotalVisitorsTimeInToday() {
-    const today = moment().startOf('day').toDate();
-    return await Vms.countDocuments({ time_in: { $gte: today }, time_out: null });
-}
-
-async function getTotalVisitorsTimeOutToday() {
-    const today = moment().startOf('day').toDate();
-    return await Vms.countDocuments({ time_out: { $gte: today } });
-}
-
-// async function archiveOldData() {
-//     const archiveDate = moment().subtract(1, 'months').toDate();
-
-//     // Find old records
-//     const oldRecords = await Attendance.find({ timestamp: { $lt: archiveDate } }).exec();
-
-//     if (oldRecords.length > 0) {
-//         // Insert old records into the archive collection
-//         await ArchivedAttendance.insertMany(oldRecords);
-
-//         // Remove old records from the main collection
-//         await Attendance.deleteMany({ timestamp: { $lt: archiveDate } });
-
-//         console.log(`Archived ${oldRecords.length} records.`);
-//     } else {
-//         console.log('No records to archive.');
-//     }
-// }
-
-// async function fetchArchivedData(userId, startDate, endDate) {
-//     const archivedRecords = await ArchivedAttendance.find({
-//         user: userId,
-//         timestamp: {
-//             $gte: new Date(startDate),
-//             $lte: new Date(endDate)
-//         }
-//     }).exec();
-
-//     console.log('Archived Records:', archivedRecords);
-// }
-
-// async function fetchAllData(userId, startDate, endDate) {
-//     const currentRecords = await Attendance.find({
-//         user: userId,
-//         timestamp: {
-//             $gte: new Date(startDate),
-//             $lte: new Date(endDate)
-//         }
-//     }).exec();
-
-//     const archivedRecords = await ArchivedAttendance.find({
-//         user: userId,
-//         timestamp: {
-//             $gte: new Date(startDate),
-//             $lte: new Date(endDate)
-//         }
-//     }).exec();
-
-//     const allRecords = currentRecords.concat(archivedRecords);
-
-//     console.log('All Records:', allRecords);
-// }
-
-//  for restricted-link
-const allowedIPs = ['175.140.45.73', '104.28.242.42', '210.186.48.79', '60.50.17.102', '175.144.217.244', '203.106.120.240'];
-
-function restrictAccess(req, res, next) {
-    const clientIp = req.clientIp;
-    if (allowedIPs.includes(clientIp)) {
-        next();
-    } else {
-        res.render('error');
-    }
-}
-
-// PORT INITIALIZATION ON CLOUD OR LOCAL (5001)
+// Port initialization route - Port 5002
 const PORT = process.env.PORT || 5002;
 app.listen(PORT, () => console.log(`Listening on ${PORT}`));
