@@ -2255,8 +2255,7 @@ app.get('/files/delete/cancel/:uuid', async (req, res, next) => {
 
 // Search staff - assignee relief
 app.get('/search/staff/assignee-relief', isAuthenticated, async (req, res, next) => {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
+    const user = req.user;
     const query = req.query.query;
 
     try {
@@ -2302,8 +2301,7 @@ app.get('/search/staff/assignee-relief', isAuthenticated, async (req, res, next)
 
 // Search Staff - Auxiliary Police
 app.get('/search/staff/auxiliary-police', isAuthenticated, async (req, res, next) => {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
+    const user = req.user;
     const query = req.query.query;
 
     try {
@@ -2752,1140 +2750,221 @@ app.get('/delete/:content/:id', isAuthenticated, async (req, res, next) => {
 // Leave
 // ============================
 
-//LEAVE
+// Leave request 
+app.get('/leave/request', isAuthenticated, async (req, res, next) => {
+    try {
+        // Retrieve user and notifications data from the request object
+        const user = req.user;
+        const notifications = req.notifications;
 
-// REQUEST
-app
-    .get('/leave/request', isAuthenticated, async function (req, res) {
-        const username = req.user.username;
-        const user = await User.findOne({ username: username });
-        const notifications = await Notification.find({
-            recipient: user._id,
-            read: false
-        }).populate('sender');
+        // Fetch current leave records for the authenticated user
+        const currentLeave = await Leave.find({ user: user._id });
 
-        if (user) {
-            const currentLeave = await Leave.find({ user: user._id });
-            const userLeave = await UserLeave.findOne({ user: user._id })
-                .populate('user')
-                .exec();
+        // Fetch the user's leave details, including populated user information
+        const userLeave = await UserLeave.findOne({ user: user._id })
+            .populate('user')
+            .exec();
 
-            try {
-                res.render('leave-request', {
-                    user: user,
-                    uuid: uuidv4(),
-                    notifications: notifications,
-                    leave: currentLeave,
-                    userLeave: userLeave,
-                    selectedNames: '',
-                    selectedSupervisors: '',
-                    // data
-                    type: '',
-                    startDate: '',
-                    returnDate: '',
-                    purpose: '',
-                    // validation
-                    validationType: '',
-                    validationStartDate: '',
-                    validationReturnDate: '',
-                    validitionPurpose: '',
-                    startDateFeedback: 'Please select a start date',
-                    returnDateFeedback: 'Please select a return date',
-                    // toast
-                    show: '',
-                    alert: ''
-                });
-            } catch (renderError) {
-                console.error('Rendering Error:', renderError);
-                next(renderError);
-            }
-        }
-    })
-    .post('/leave/request', isAuthenticated, async function (req, res) {
-        const username = req.user.username;
-        const user = await User.findOne({ username: username });
-        const notifications = await Notification.find({
-            recipient: user._id,
-            read: false
-        }).populate('sender');
+        // Render the leave request page with all necessary data
+        res.render('leave-request', {
+            user, // User data
+            uuid: uuidv4(), // Unique identifier for the form
+            notifications, // Unread notifications for the user
+            leave: currentLeave, // Current leave records for the user
+            userLeave, // Detailed leave data for the user
+            selectedNames: '', // Placeholder for selected names input
+            selectedSupervisors: '', // Placeholder for selected supervisors input
+            // Data fields for leave request form
+            type: '',
+            startDate: '',
+            returnDate: '',
+            purpose: '',
+            // Validation fields for form submission
+            validationType: '',
+            validationStartDate: '',
+            validationReturnDate: '',
+            validationPurpose: '',
+            startDateFeedback: 'Please select a start date', // Default feedback message for start date
+            returnDateFeedback: 'Please select a return date', // Default feedback message for return date
+            // Toast notifications for form actions
+            show: '',
+            alert: ''
+        });
 
-        if (user) {
-            const uuid = req.body.uuid;
-            const type = req.body.type;
-            const startDate = req.body.startDate;
-            const returnDate = req.body.returnDate;
-            const purpose = req.body.purpose;
-            const selectedNames = req.body.selectedNames
-                ? req.body.selectedNames.split(',')
-                : [];
-            const selectedSupervisors = req.body.selectedSupervisors
-                ? req.body.selectedSupervisors.split(',')
-                : [];
+    } catch (error) {
+        console.error('Error fetching data for leave request:', error);
+        next(error); // Pass the error to the global error handler middleware
+    }
+}).post('/leave/request', isAuthenticated, async (req, res, next) => {
+    try {
+        const { user, notifications } = req;
 
-            // init to submit the leave req
-            var leaveBalance = '';
-            var approvals = '';
-            var sendNoti = [];
-            var sendEmail = [];
-            var headOfDepartment = '';
-            var headOfSection = '';
+        // Extract data from the request body
+        const { uuid, type, startDate, returnDate, purpose } = req.body;
+        const selectedNames = req.body.selectedNames ? req.body.selectedNames.split(',') : [];
+        const selectedSupervisors = req.body.selectedSupervisors ? req.body.selectedSupervisors.split(',') : [];
 
-            if (user.username === 'P549' || user.username === 'P548') {
-                headOfSection = await User.findOne({
-                    isHeadOfSection: true,
-                    section: 'Administration and Communication Division'
-                });
-                headOfDepartment = await User.findOne({
-                    isHeadOfDepartment: true,
-                    department: 'Management and Services Department'
-                });
-            } else {
-                headOfSection = await User.findOne({
-                    isHeadOfSection: true,
-                    section: user.section
-                });
-                headOfDepartment = await User.findOne({
-                    isHeadOfDepartment: true,
-                    department: user.department
-                });
-            }
+        // Initialize variables for leave request processing
+        let approvals = '';
+        let sendNoti = [];
+        let sendEmail = [];
+        let renderDataError = {};
 
-            const chiefExec = await User.findOne({ isChiefExec: true });
-            const depChiefExec = await User.findOne({ isDeputyChiefExec: true });
+        // Prepare leave dates in the required format
+        const newDate = {
+            start: moment(startDate).utcOffset(8).toDate(),
+            return: moment(returnDate).utcOffset(8).toDate()
+        };
 
-            const adminHR = await User.findOne({
-                isAdmin: true,
-                isHeadOfSection: true,
-                section: 'Human Resource Management Division'
-            });
-            const userLeave = await UserLeave.findOne({ user: user._id })
-                .populate('user')
-                .exec();
-            // find assignee
-            const assignee = await User.find({ fullname: { $in: selectedNames } });
-            const supervisors = await User.find({ fullname: { $in: selectedSupervisors } });
+        const [headOfSection, headOfDepartment, chiefExec, depChiefExec, adminHR, userLeave, assignee, supervisors, leave] = await Promise.all([
+            // Determine head of section and department based on user data
+            ['P549', 'P548'].includes(user.username)
+                ? User.findOne({ isHeadOfSection: true, section: 'Administration and Communication Division' })
+                : User.findOne({ isHeadOfSection: true, section: user.section }),
 
-            // leave for the user
-            const leave = await Leave.find({ user: user._id });
+            ['P549', 'P548'].includes(user.username)
+                ? User.findOne({ isHeadOfDepartment: true, department: 'Management and Services Department' })
+                : User.findOne({ isHeadOfDepartment: true, department: user.department }),
 
-            const newDate = {
-                start: moment(startDate).utcOffset(8).toDate(),
-                return: moment(returnDate).utcOffset(8).toDate()
-            };
+            // Fetch key organizational roles for leave approval routing
+            User.findOne({ isChiefExec: true }),
+            User.findOne({ isDeputyChiefExec: true }),
+            User.findOne({ isAdmin: true, isHeadOfSection: true, section: 'Human Resource Management Division' }),
 
-            const today = moment().utcOffset(8).startOf('day').toDate();
+            // Fetch user leave balance and related information
+            UserLeave.findOne({ user: user._id }).populate('user').exec(),
 
-            // Calculate the difference in hours between the two dates
-            var numberOfDays = '';
-            var leaveBalance = '';
-            var leaveTaken = '';
-            var approvals = [];
+            // Fetch selected assignees and supervisors from names provided in request
+            User.find({ fullname: { $in: selectedNames } }),
+            User.find({ fullname: { $in: selectedSupervisors } }),
 
-            if (type === 'Annual Leave') {
-                if (user.isNonOfficeHour) {
-                    numberOfDays = moment(returnDate).diff(moment(startDate), 'days') + 1;
-                } else {
-                    numberOfDays = calculateBusinessDays(startDate, returnDate);
+            // Fetch all leave records for the current user
+            Leave.find({ user: user._id })
+        ]);
+
+        await processLeaveRequest(type, user, userLeave, startDate, returnDate, uuid, {
+            headOfSection,
+            headOfDepartment,
+            depChiefExec,
+            chiefExec,
+            adminHR,
+            assignee,
+            supervisors
+        });
+
+        console.log('Render data error: ', renderDataError);
+        console.log('Approvals: ', approvals);
+
+        if (approvals.length === 0) {
+            console.log('Leave request requirements have not met');
+
+            const filesToDelete = await File.find({ uuid: uuid });
+            const deletedFiles = await File.deleteMany({ uuid: uuid });
+
+            if (deletedFiles.deletedCount > 0) {
+                console.log(`${deletedFiles.deletedCount} files are deleted!`);
+
+                for (const deletedFile of filesToDelete) {
+                    const filePath = __dirname + '/public/uploads/' + deletedFile.name;
+                    await fs.unlink(filePath);
                 }
-            } else if (type === 'Half Day Leave') {
-                if (user.isNonOfficeHour) {
-                    numberOfDays = (moment(returnDate).diff(moment(startDate), 'days') + 1) / 2;
-                } else {
-                    numberOfDays = calculateBusinessDays(startDate, returnDate) / 2;
-                }
-            } else if (type === 'Emergency Leave') {
-                numberOfDays = moment(returnDate).diff(moment(startDate), 'days') + 1
-            } else if (
-                type === 'Marriage Leave' ||
-                type === 'Paternity Leave' ||
-                type === 'Maternity Leave' ||
-                type === 'Attend Exam Leave' ||
-                type === 'Hajj Leave' ||
-                type === 'Unpaid Leave' ||
-                type === 'Special Leave' ||
-                type === 'Extended Sick Leave' ||
-                type === 'Sick Leave' ||
-                type === 'Umrah Leave'
-            ) {
-                numberOfDays = moment(returnDate).diff(moment(startDate), 'days') + 1;
-            }
-
-            let renderDataError = {};
-            const amountDayRequest = calculateBusinessDays(today, startDate);
-
-            console.log('Amount of day request:', amountDayRequest);
-            console.log(numberOfDays);
-
-            // set approval based on role
-            if (type === 'Annual Leave') {
-                leaveBalance = userLeave.annual.leave - userLeave.annual.taken;
-
-                if (leaveBalance >= numberOfDays && numberOfDays > 0) {
-                    if (amountDayRequest >= 3) {
-                        console.log(numberOfDays);
-                        console.log(
-                            'Sufficient annual leave balance for the requested duration'
-                        );
-
-                        approvals = generateApprovals(
-                            user,
-                            headOfSection,
-                            headOfDepartment,
-                            depChiefExec,
-                            chiefExec,
-                            adminHR,
-                            assignee,
-                            supervisors,
-                            type
-                        );
-                    } else {
-                        console.log(
-                            'The leave date applied must be more than 3 days from today'
-                        );
-
-                        renderDataError.show = 'show';
-                        renderDataError.alert =
-                            'The leave date applied must be more than 3 days from today';
-                    }
-                } else {
-                    console.log(
-                        'Insufficient annual leave balance for the requested duration'
-                    );
-
-                    renderDataError.show = 'show';
-                    renderDataError.alert =
-                        'Insufficient annual leave balance for the requested duration';
-                }
-            } else if (type === 'Half Day Leave') {
-                leaveBalance = userLeave.annual.leave - userLeave.annual.taken;
-
-                if (leaveBalance >= numberOfDays && numberOfDays > 0) {
-                    if (amountDayRequest >= 3) {
-                        console.log(numberOfDays);
-                        console.log(
-                            'Sufficient annual leave balance for the requested duration'
-                        );
-
-                        approvals = generateApprovals(
-                            user,
-                            headOfSection,
-                            headOfDepartment,
-                            depChiefExec,
-                            chiefExec,
-                            adminHR,
-                            assignee,
-                            supervisors,
-                            type
-                        );
-                    } else {
-                        console.log(
-                            'The leave date applied must be more than 3 days from today'
-                        );
-
-                        renderDataError.show = 'show';
-                        renderDataError.alert =
-                            'The leave date applied must be more than 3 days from today';
-                    }
-                } else {
-                    console.log(
-                        'Insufficient annual leave balance for the requested duration'
-                    );
-
-                    renderDataError.show = 'show';
-                    renderDataError.alert =
-                        'Insufficient annual leave balance for the requested duration';
-                }
-            } else if (type === 'Sick Leave') {
-                leaveBalance = userLeave.sick.leave - userLeave.sick.taken;
-                const findFile = await File.find({ uuid: uuid });
-
-                if (leaveBalance >= numberOfDays && numberOfDays > 0) {
-                    if (amountDayRequest <= 1 && amountDayRequest >= -5) {
-                        if (findFile.length > 0) {
-                            approvals = generateApprovals(
-                                user,
-                                headOfSection,
-                                headOfDepartment,
-                                depChiefExec,
-                                chiefExec,
-                                adminHR,
-                                assignee,
-                                supervisors,
-                                type
-                            );
-                        } else {
-                            console.log(
-                                'The leave request must attached with suporting documents'
-                            );
-
-                            renderDataError.show = 'show';
-                            renderDataError.alert =
-                                'The leave request must attached with suporting documents';
-                        }
-                    } else {
-                        console.log(
-                            'The sick leave request date must be applied today or 5 days before'
-                        );
-
-                        renderDataError.show = 'show';
-                        renderDataError.alert =
-                            'The sick leave request must be applied today 5 days before';
-                    }
-                } else {
-                    console.log(
-                        'Insufficient sick leave balance for the requested duration'
-                    );
-
-                    renderDataError.show = 'show';
-                    renderDataError.alert =
-                        'Insufficient sick leave balance for the requested duration';
-                }
-            } else if (type === 'Extended Sick Leave') {
-                leaveBalance =
-                    userLeave.sickExtended.leave - userLeave.sickExtended.taken;
-                const findFile = await File.find({ uuid: uuid });
-
-                if (leaveBalance >= numberOfDays && numberOfDays > 0) {
-                    if (amountDayRequest <= 1 && amountDayRequest >= -5) {
-                        if (findFile.length > 0) {
-                            approvals = generateApprovals(
-                                user,
-                                headOfSection,
-                                headOfDepartment,
-                                depChiefExec,
-                                chiefExec,
-                                adminHR,
-                                assignee,
-                                supervisors,
-                                type
-                            );
-                        } else {
-                            console.log('There is no file attached for sick extended leave!');
-
-                            renderDataError.show = 'show';
-                            renderDataError.alert =
-                                'Insufficient sick leave balance for the requested duration';
-                        }
-                    } else {
-                        console.log('The leave date applied must be from today onwards');
-
-                        renderDataError.show = 'show';
-                        renderDataError.alert =
-                            'The leave date applied must be from today onwards';
-                    }
-                } else {
-                    console.log(
-                        'Insufficient extended sick leave balance for the requested duration'
-                    );
-
-                    renderDataError.show = 'show';
-                    renderDataError.alert =
-                        'Insufficient extended sick leave balance for the requested duration';
-                }
-            } else if (type === 'Emergency Leave') {
-                const findFile = await File.find({ uuid: uuid });
-
-                if (amountDayRequest <= 1 && amountDayRequest >= -5) {
-                    if (findFile.length > 0) {
-                        approvals = generateApprovals(
-                            user,
-                            headOfSection,
-                            headOfDepartment,
-                            depChiefExec,
-                            chiefExec,
-                            adminHR,
-                            assignee,
-                            supervisors,
-                            type
-                        );
-                    } else {
-                        console.log('There is no file attached');
-
-                        renderDataError.show = 'show';
-                        renderDataError.alert =
-                            'Supporting documents must be attached accordingly';
-                    }
-                } else {
-                    console.log('There is an error in requesting the emergency leave');
-
-                    renderDataError.show = 'show';
-                    renderDataError.alert =
-                        'There is an error in requesting the emergency leave';
-                }
-            } else if (type === 'Attend Exam Leave') {
-                leaveBalance = userLeave.attendExam.leave - userLeave.attendExam.taken;
-                const findFile = await File.find({ uuid: uuid });
-
-                if (leaveBalance >= numberOfDays && numberOfDays > 0) {
-                    if (amountDayRequest >= 3) {
-                        if (findFile.length > 0) {
-                            approvals = generateApprovals(
-                                user,
-                                headOfSection,
-                                headOfDepartment,
-                                depChiefExec,
-                                chiefExec,
-                                adminHR,
-                                assignee,
-                                supervisors,
-                                type
-                            );
-                        } else {
-                            console.log('There is no file attached for attend exam leave!');
-
-                            renderDataError.show = 'show';
-                            renderDataError.alert =
-                                'There is no file attached for attend exam leave!';
-                        }
-                    } else {
-                        console.log(
-                            'The leave date applied must be more than 3 days from today'
-                        );
-
-                        renderDataError.show = 'show';
-                        renderDataError.alert =
-                            'The leave date applied must be more than 3 days from today';
-                    }
-                } else {
-                    console.log(
-                        'Insufficient extended sick leave balance for the requested duration'
-                    );
-
-                    renderDataError.show = 'show';
-                    renderDataError.alert =
-                        'Insufficient attend exam leave balance for the requested duration';
-                }
-            } else if (type === 'Paternity Leave') {
-                leaveBalance = userLeave.paternity.leave;
-                leaveTaken = userLeave.paternity.taken;
-                const findFile = await File.find({ uuid: uuid });
-
-                if (
-                    leaveBalance >= numberOfDays &&
-                    numberOfDays > 0 &&
-                    leaveTaken <= 6 &&
-                    user.gender === 'Male'
-                ) {
-                    if (amountDayRequest <= 1 && amountDayRequest >= -5) {
-                        if (findFile.length > 0) {
-                            approvals = generateApprovals(
-                                user,
-                                headOfSection,
-                                headOfDepartment,
-                                depChiefExec,
-                                chiefExec,
-                                adminHR,
-                                assignee,
-                                supervisors,
-                                type
-                            );
-                        } else {
-                            console.log('There is no file attached for paternity leave!');
-
-                            renderDataError.show = 'show';
-                            renderDataError.alert =
-                                'There is no file attached for paternity leave!';
-                        }
-                    } else {
-                        console.log(
-                            'The leave date applied must be more than 3 days from today'
-                        );
-
-                        renderDataError.show = 'show';
-                        renderDataError.alert =
-                            'The leave date applied must be more than 3 days from today';
-                    }
-                } else {
-                    console.log(
-                        'Insufficient extended sick leave balance for the requested duration'
-                    );
-
-                    renderDataError.show = 'show';
-                    renderDataError.alert =
-                        'Insufficient paternity leave balance for the requested duration and taken maximum up to 6 for only male staff';
-                }
-            } else if (type === 'Maternity Leave') {
-                leaveBalance = userLeave.maternity.leave;
-                const findFile = await File.find({ uuid: uuid });
-
-                if (
-                    leaveBalance >= numberOfDays &&
-                    numberOfDays > 0 &&
-                    user.gender === 'Female'
-                ) {
-                    if (findFile.length > 0) {
-                        approvals = generateApprovals(
-                            user,
-                            headOfSection,
-                            headOfDepartment,
-                            depChiefExec,
-                            chiefExec,
-                            adminHR,
-                            assignee,
-                            supervisors,
-                            type
-                        );
-                    } else {
-                        console.log('There is no file attached for maternity leave!');
-
-                        renderDataError.show = 'show';
-                        renderDataError.alert =
-                            'There is no file attached for maternity leave!';
-                    }
-                } else {
-                    console.log(
-                        'Insufficient extended sick leave balance for the requested duration'
-                    );
-
-                    renderDataError.show = 'show';
-                    renderDataError.alert =
-                        'Insufficient maternity leave balance for the requested duration for only female staff';
-                }
-            } else if (type === 'Marriage Leave') {
-                leaveBalance = userLeave.marriage.leave;
-                leaveTaken = userLeave.marriage.taken;
-                const findFile = await File.find({ uuid: uuid });
-
-                if (
-                    leaveBalance >= numberOfDays &&
-                    numberOfDays > 0 &&
-                    leaveTaken <= 1
-                ) {
-                    if (amountDayRequest >= 3) {
-                        if (findFile.length > 0) {
-                            approvals = generateApprovals(
-                                user,
-                                headOfSection,
-                                headOfDepartment,
-                                depChiefExec,
-                                chiefExec,
-                                adminHR,
-                                assignee,
-                                supervisors,
-                                type
-                            );
-                        } else {
-                            console.log('There is no file attached for marriage leave!');
-
-                            renderDataError.show = 'show';
-                            renderDataError.alert =
-                                'There is no file attached for marriage leave!';
-                        }
-                    } else {
-                        console.log(
-                            'The leave date applied must be more than 3 days from today'
-                        );
-
-                        renderDataError.show = 'show';
-                        renderDataError.alert =
-                            'The leave date applied must be more than 3 days from today';
-                    }
-                } else {
-                    console.log(
-                        'Insufficient marriage balance for the requested duration'
-                    );
-
-                    renderDataError.show = 'show';
-                    renderDataError.alert =
-                        'Insufficient marriage balance for the requested duration with maximum taken up to 1 only';
-                }
-            } else if (type === 'Hajj Leave') {
-                leaveBalance = userLeave.hajj.leave;
-                leaveTaken = userLeave.hajj.taken;
-                const findFile = await File.find({ uuid: uuid });
-
-                if (
-                    leaveBalance >= numberOfDays &&
-                    numberOfDays > 0 &&
-                    leaveTaken <= 1
-                ) {
-                    if (amountDayRequest >= 3) {
-                        if (findFile.length > 0) {
-                            approvals = generateApprovals(
-                                user,
-                                headOfSection,
-                                headOfDepartment,
-                                depChiefExec,
-                                chiefExec,
-                                adminHR,
-                                assignee,
-                                supervisors,
-                                type
-                            );
-                        } else {
-                            console.log('There is no file attached for hajj leave!');
-
-                            renderDataError.show = 'show';
-                            renderDataError.alert =
-                                'There is no file attached for hajj leave!';
-                        }
-                    } else {
-                        console.log(
-                            'The leave date applied must be more than 3 days from today'
-                        );
-
-                        renderDataError.show = 'show';
-                        renderDataError.alert =
-                            'The leave date applied must be more than 3 days from today';
-                    }
-                } else {
-                    console.log(
-                        'Insufficient marriage balance for the requested duration'
-                    );
-
-                    renderDataError.show = 'show';
-                    renderDataError.alert =
-                        'Insufficient hajj leave balance for the requested duration with maximum taken up to 1 only';
-                }
-            } else if (type === 'Umrah Leave') {
-                leaveBalance = userLeave.umrah.leave;
-                leaveTaken = userLeave.umrah.taken;
-                const findFile = await File.find({ uuid: uuid });
-
-                if (
-                    leaveBalance >= numberOfDays &&
-                    numberOfDays > 0 &&
-                    leaveTaken <= 1
-                ) {
-                    if (amountDayRequest >= 3) {
-                        if (findFile.length > 0) {
-                            approvals = generateApprovals(
-                                user,
-                                headOfSection,
-                                headOfDepartment,
-                                depChiefExec,
-                                chiefExec,
-                                adminHR,
-                                assignee,
-                                supervisors,
-                                type
-                            );
-                        } else {
-                            console.log('There is no file attached for umrah leave!');
-
-                            renderDataError.show = 'show';
-                            renderDataError.alert =
-                                'There is no file attached for umrah leave!';
-                        }
-                    } else {
-                        console.log(
-                            'The leave date applied must be more than 3 days from today'
-                        );
-
-                        renderDataError.show = 'show';
-                        renderDataError.alert =
-                            'The leave date applied must be more than 3 days from today';
-                    }
-                } else {
-                    console.log(
-                        'Insufficient umrah balance for the requested duration'
-                    );
-
-                    renderDataError.show = 'show';
-                    renderDataError.alert =
-                        'Insufficient umrah leave balance for the requested duration with maximum taken up to 1 only';
-                }
-            } else if (type === 'Special Leave') {
-                leaveBalance = userLeave.special.leave;
-                leaveTaken = userLeave.special.taken;
-                const findFile = await File.find({ uuid: uuid });
-
-                if (
-                    leaveBalance >= numberOfDays &&
-                    numberOfDays > 0 &&
-                    leaveTaken <= 10
-                ) {
-                    if (amountDayRequest <= 1 && amountDayRequest >= -5) {
-                        if (findFile.length > 0) {
-                            approvals = generateApprovals(
-                                user,
-                                headOfSection,
-                                headOfDepartment,
-                                depChiefExec,
-                                chiefExec,
-                                adminHR,
-                                assignee,
-                                supervisors,
-                                type
-                            );
-                        } else {
-                            console.log('There is no file attached for special leave!');
-
-                            renderDataError.show = 'show';
-                            renderDataError.alert =
-                                'There is no file attached for special leave!';
-                        }
-                    } else {
-                        console.log(
-                            'The leave date applied must be more than 1 days from today'
-                        );
-
-                        renderDataError.show = 'show';
-                        renderDataError.alert =
-                            'The leave date applied must be more than 1 days from today';
-                    }
-                } else {
-                    console.log(
-                        'Insufficient special leave balance for the requested duration'
-                    );
-
-                    renderDataError.show = 'show';
-                    renderDataError.alert =
-                        'Insufficient special leave balance for the requested duration with maximum taken up to 10 only';
-                }
-            } else if (type === 'Unpaid Leave') {
-                approvals = generateApprovals(
-                    user,
-                    headOfSection,
-                    headOfDepartment,
-                    depChiefExec,
-                    chiefExec,
-                    adminHR,
-                    supervisors,
-                    type
-                );
-            }
-
-            if (approvals.length === 0) {
-                console.log('Leave request requirements have not met');
-
-                const filesToDelete = await File.find({ uuid: uuid });
-                const deletedFiles = await File.deleteMany({ uuid: uuid });
-
-                if (deletedFiles.deletedCount > 0) {
-                    console.log(`${deletedFiles.deletedCount} files are deleted!`);
-
-                    for (const deletedFile of filesToDelete) {
-                        const filePath = __dirname + '/public/uploads/' + deletedFile.name;
-                        await fs.unlink(filePath);
-                    }
-                    try {
-                        res.render('leave-request', {
-                            user: user,
-                            uuid: uuid,
-                            notifications: notifications,
-                            leave: leave,
-                            userLeave: userLeave,
-                            selectedNames: '',
-                            selectedSupervisors: '',
-                            // data
-                            type: '',
-                            startDate: startDate,
-                            returnDate: returnDate,
-                            purpose: purpose,
-                            // validation
-                            validationType: 'is-invalid',
-                            validationStartDate: 'is-invalid',
-                            validationReturnDate: 'is-invalid',
-                            validationPurpose: '',
-                            startDateFeedback: 'Please enter a valid start date',
-                            returnDateFeedback: 'Please select valid return date',
-                            // toast
-                            show: renderDataError.show,
-                            alert: renderDataError.alert
-                        });
-                    } catch (renderError) {
-                        console.error('Rendering Error:', renderError);
-                        next(renderError);
-                    }
-                } else {
-                    try {
-                        res.render('leave-request', {
-                            user: user,
-                            uuid: uuid,
-                            notifications: notifications,
-                            leave: leave,
-                            userLeave: userLeave,
-                            selectedNames: '',
-                            selectedSupervisors: '',
-                            // data
-                            type: '',
-                            startDate: startDate,
-                            returnDate: returnDate,
-                            purpose: purpose,
-                            // validation
-                            validationType: 'is-invalid',
-                            validationStartDate: '',
-                            validationReturnDate: '',
-                            validationPurpose: '',
-                            startDateFeedback: 'Please select a start date',
-                            returnDateFeedback: 'Please select a return date',
-                            // toast
-                            show: renderDataError.show,
-                            alert: renderDataError.alert
-                        });
-                    } catch (renderError) {
-                        console.error('Rendering Error:', renderError);
-                        next(renderError);
-                    }
-                }
-            } else {
-                const adminUsers = await User.find({
-                    isAdmin: true,
-                    section: 'Human Resource Management Division',
-                    _id: { $ne: adminHR._id }
-                });
-
-                // Push the IDs of admin users to sendNoti
-                adminUsers.forEach(user => {
-                    if (!sendNoti.includes(user._id)) {
-                        sendNoti.push(user._id);
-                    }
-                });
-
-                const nextRecipient = approvals[1].recipient;
-                sendNoti.push(nextRecipient);
-                console.log(sendNoti);
-
-                let i = 0;
-                // set user id to be send
-                for (const approval of approvals) {
-                    const recipientId = approval.recipient;
-
-                    // Fetch the user by recipient ID
-                    const email = await User.findById(recipientId);
-
-                    // Check if the user is found and has an email
-                    if (email && user.email) {
-                        // Add the user's email to sendEmail
-                        sendEmail.push(email.email);
-                    }
-
-                    i++;
-                }
-
-                const leave = new Leave({
-                    fileId: uuid,
-                    user: user._id,
-                    department: user.department,
-                    grade: user.grade,
-                    assignee: assignee,
-                    type: type,
-                    date: newDate,
-                    status: 'submitted',
-                    purpose: purpose,
-                    approvals: approvals
-                });
-
-                const currentLeave = await Leave.create(leave);
-                console.log('Leave request submitted');
-
-                // activity
-                const activityUser = new Activity({
-                    user: user._id,
-                    date: moment().utcOffset(8).toDate(),
-                    title: 'Submitted a leave application',
-                    type: 'Leave request',
-                    description:
-                        user.fullname +
-                        ' has submitted ' +
-                        type +
-                        ' between ' +
-                        startDate +
-                        ' and ' +
-                        returnDate
-                });
-
-                activityUser.save();
-
-                console.log('New acitivity submitted', activityUser);
-
-                // notifications save has been turn off
-                if (sendNoti.length > 0) {
-                    for (const recipientId of sendNoti) {
-                        const newNotification = new Notification({
-                            sender: user._id,
-                            recipient: new mongoose.Types.ObjectId(recipientId),
-                            type: 'Leave request',
-                            url: '/leave/details/' + currentLeave._id,
-                            message: 'Leave request needs approval.'
-                        });
-
-                        newNotification.save();
-
-                        // Fetch subscriptions for the recipient user
-                        const subscriptions = await Subscriptions.find({ user: recipientId });
-
-                        if (subscriptions) {
-                            // Map through the subscriptions to send notifications
-                            const sendNotificationPromises = subscriptions.map(async (subscription) => {
-                                const payload = JSON.stringify({
-                                    "title": "Leave request",
-                                    "body": "Leave request need your attention and approval.",
-                                    "url": "https://www.lakmnsportal.com/",
-                                    "vibrate": [100, 50, 100],
-                                    "requireInteraction": true,
-                                    "silent": false
-                                });
-
-                                const options = {
-                                    vapidDetails: {
-                                        subject: 'mailto:protech@lakmns.org', // Replace with your email
-                                        publicKey: publicVapidKey, // Use actual public VAPID key here
-                                        privateKey: privateVapidKey // Use actual private VAPID key here
-                                    },
-                                    TTL: 60 // Time to live for the notification (in seconds)
-                                };
-
-                                try {
-                                    await webPush.sendNotification(subscription, payload, options);
-                                    console.log('Push notification sent successfully to:', subscription.endpoint);
-                                } catch (error) {
-                                    console.error('Error sending notification to:', subscription.endpoint, error);
-                                }
-                            });
-
-                            // Wait for all notifications to be sent
-                            await Promise.all(sendNotificationPromises);
-                        } else {
-                            console.log('The user doesnt subscribe for push notifications');
-                        }
-
-                    }
-
-                    console.log('Done send notifications!');
-                }
-
-                // send via email
-                const emailData = {
-                    content: 'The leave request has been submitted by ' + user.fullname + ' with work ID ' + user.username + ' , please click the button above to open the leave details.',
-                    id: currentLeave._id,
-                };
-
-                const emailHTML = await new Promise((resolve, reject) => {
-                    app.render('email-leave', { emailData: emailData }, (err, html) => {
-                        if (err) reject(err);
-                        else resolve(html);
-                    });
-                });
-
-                console.log(emailHTML);
-
-                let mailOptions = {
-                    from: 'protech@lakmns.org',
-                    to: sendEmail,
-                    subject: 'lakmnsportal - Leave Request Approval',
-                    html: emailHTML,
-                };
-
-                const sendEmailTo = transporter.sendMail(mailOptions, (error, info) => {
-                    if (error) {
-                        console.log(error);
-                    }
-
-                    console.log('Message %s sent: %s', info.messageId, info.response);
-                });
-
-                if (sendEmailTo) {
-                    console.log('Email sent successfully to:', sendEmail);
-                } else {
-                    console.log('Email sending failed');
-                }
-
-                // for home dashboard
-                const allUser = await User.find().sort({ timestamp: -1 });
-                const allLeave = await Leave.find().sort({ timestamp: -1 });
-                const allUserLeave = await UserLeave.find().sort({ timestamp: -1 });
-                const allInfo = await Info.find();
-                const taskHome = await Task.find({ assignee: { $in: [user._id] } })
-                    .sort({ timestamp: -1 })
-                    .populate('assignee')
-                    .exec();
-                const fileHome = await File.find();
-                const sevenDaysAgo = moment().utcOffset(8).subtract(7, 'days').toDate();
-                const otherTaskHome = await Task.find({
-                    assignee: { $ne: [user._id] }
-                });
-                const otherActivitiesHome = await Activity.find();
-                const info = await Info.findOne({ user: user._id });
-
-                const today = moment().utcOffset(8).startOf('day');
-                const firstDayOfWeek = today.clone().startOf('week').add(1, 'day');
-                const lastDayOfWeek = today.clone().endOf('week');
-                const firstDayOfMonth = today.clone().startOf('month');
-                const lastDayOfMonth = today.clone().endOf('month');
-
-                let todayLeaves = [];
-                let weekLeaves = [];
-                let monthLeaves = [];
-                let staffOnLeave = '';
-
-                if (user.isAdmin || user.isChiefExec || user.isDeputyChiefExec) {
-                    staffOnLeave = await Leave.find({
-                        user: { $ne: user._id },
-                        status: 'approved'
-                    });
-
-                    staffOnLeave = await Leave.find({
-                        status: 'approved',
-                        user: { $ne: user._id },
-                        department: user.department
-                    });
-
-                    staffOnLeave.forEach(leave => {
-                        if (leave.date.start >= today && today <= leave.date.return) {
-                            todayLeaves.push(leave);
-                        }
-
-                        if (
-                            leave.date.start <= lastDayOfWeek &&
-                            leave.date.return >= firstDayOfWeek
-                        ) {
-                            weekLeaves.push(leave);
-                        }
-
-                        if (
-                            leave.date.start <= lastDayOfMonth &&
-                            leave.date.return >= firstDayOfMonth
-                        ) {
-                            monthLeaves.push(leave);
-                        }
-                    });
-                } else {
-                    staffOnLeave = await Leave.find({
-                        status: 'approved',
-                        user: { $ne: user._id },
-                        department: user.department
-                    });
-
-                    staffOnLeave.forEach(leave => {
-                        if (leave.date.start >= today && today <= leave.date.return) {
-                            todayLeaves.push(leave);
-                        }
-
-                        if (
-                            leave.date.start <= lastDayOfWeek &&
-                            leave.date.return >= firstDayOfWeek
-                        ) {
-                            weekLeaves.push(leave);
-                        }
-
-                        if (
-                            leave.date.start <= lastDayOfMonth &&
-                            leave.date.return >= firstDayOfMonth
-                        ) {
-                            monthLeaves.push(leave);
-                        }
-                    });
-                }
-                let userTeamMembers = '';
-
-                if (user.isChiefExec || user.isDeputyChiefExec) {
-                    userTeamMembers = await User.find({
-                        isManagement: true,
-                        _id: { $ne: user._id }
-                    });
-                } else {
-                    if (user.isHeadOfDepartment) {
-                        userTeamMembers = await User.find({
-                            department: user.department,
-                            _id: { $ne: user._id }
-                        });
-                    } else {
-                        userTeamMembers = await User.find({
-                            section: user.section,
-                            _id: { $ne: user._id }
-                        });
-                    }
-                }
-
-                const activitiesHome = await Activity.find({
-                    date: { $gte: sevenDaysAgo }
-                })
-                    .populate({
-                        path: 'user'
-                    })
-                    .sort({ date: -1 })
-                    .exec();
-
-                // leave approvals
-                let filteredApprovalLeaves;
-
-                if (user.isAdmin) {
-                    // If the user is an admin, show all leave approvals except for 'approved' and 'denied'
-                    filteredApprovalLeaves = allLeave.filter(
-                        leave => leave.status !== 'approved' && leave.status !== 'denied'
-                    );
-                } else {
-                    // If the user is not an admin, show leave approvals based on your existing logic
-                    filteredApprovalLeaves = allLeave.filter(leave => {
-                        return (
-                            leave.user.toString() !== user._id.toString() &&
-                            leave.approvals.some(
-                                approval =>
-                                    approval.recipient.toString() === user._id.toString() &&
-                                    leave.status !== 'approved' &&
-                                    leave.status !== 'denied'
-                            )
-                        );
-                    });
-                }
-
-                const uniqueDepartments = new Set();
-                const uniqueSection = new Set();
-
-                allUser.forEach(user => {
-                    if (user.department) {
-                        uniqueDepartments.add(user.department);
-                    }
-                });
-
-                allUser.forEach(user => {
-                    if (user.section) {
-                        uniqueSection.add(user.section);
-                    }
-                });
-
-                const departments = Array.from(uniqueDepartments);
-                const sections = Array.from(uniqueSection);
-
-                const renderDataSuccess = {
-                    user: user,
-                    uuid: uuidv4(),
-                    notifications: notifications,
-                    userTeamMembers: userTeamMembers,
-                    otherTasks: otherTaskHome,
-                    otherActivities: otherActivitiesHome,
-                    staffOnLeave: staffOnLeave,
-                    todayLeaves: todayLeaves,
-                    weekLeaves: weekLeaves,
-                    monthLeaves: monthLeaves,
-                    filteredApprovalLeaves: filteredApprovalLeaves,
-                    departments: departments,
-                    sections: sections,
-                    // all data
-                    allUser: allUser,
-                    allUserLeave: allUserLeave,
-                    allLeave: allLeave,
-                    allInfo: allInfo,
-                    userLeave: userLeave,
-                    leave: leave,
-                    tasks: taskHome,
-                    files: fileHome,
-                    info: info,
-                    activities: activitiesHome,
-                    selectedNames: '',
-                    show: 'show',
-                    alert:
-                        'Leave request submitted, please wait for approval 3 days from now',
-                    // addditional data
-                    clientIp: req.clientIp
-                };
-
                 try {
-                    res.render('home', renderDataSuccess);
+                    res.render('leave-request', {
+                        user: user,
+                        uuid: uuid,
+                        notifications: notifications,
+                        leave: leave,
+                        userLeave: userLeave,
+                        selectedNames: '',
+                        selectedSupervisors: '',
+                        // data
+                        type: '',
+                        startDate: startDate,
+                        returnDate: returnDate,
+                        purpose: purpose,
+                        // validation
+                        validationType: 'is-invalid',
+                        validationStartDate: 'is-invalid',
+                        validationReturnDate: 'is-invalid',
+                        validationPurpose: '',
+                        startDateFeedback: 'Please enter a valid start date',
+                        returnDateFeedback: 'Please select valid return date',
+                        // toast
+                        show: renderDataError.show,
+                        alert: renderDataError.alert
+                    });
+                } catch (renderError) {
+                    console.error('Rendering Error:', renderError);
+                    next(renderError);
+                }
+            } else {
+                try {
+                    res.render('leave-request', {
+                        user: user,
+                        uuid: uuid,
+                        notifications: notifications,
+                        leave: leave,
+                        userLeave: userLeave,
+                        selectedNames: '',
+                        selectedSupervisors: '',
+                        // data
+                        type: '',
+                        startDate: startDate,
+                        returnDate: returnDate,
+                        purpose: purpose,
+                        // validation
+                        validationType: 'is-invalid',
+                        validationStartDate: '',
+                        validationReturnDate: '',
+                        validationPurpose: '',
+                        startDateFeedback: 'Please select a start date',
+                        returnDateFeedback: 'Please select a return date',
+                        // toast
+                        show: renderDataError.show,
+                        alert: renderDataError.alert
+                    });
                 } catch (renderError) {
                     console.error('Rendering Error:', renderError);
                     next(renderError);
                 }
             }
+        } else {
+            console.log('success');
+            res.render('leave-request', {
+                user: user,
+                uuid: uuid,
+                notifications: notifications,
+                leave: leave,
+                userLeave: userLeave,
+                selectedNames: '',
+                selectedSupervisors: '',
+                // data
+                type: '',
+                startDate: startDate,
+                returnDate: returnDate,
+                purpose: purpose,
+                // validation
+                validationType: 'is-invalid',
+                validationStartDate: '',
+                validationReturnDate: '',
+                validationPurpose: '',
+                startDateFeedback: 'Please select a start date',
+                returnDateFeedback: 'Please select a return date',
+                // toast
+                show: renderDataError.show,
+                alert: renderDataError.alert
+            });
         }
-    });
+
+    } catch (error) {
+        console.error('Error fetching data for leave request:', error);
+        next(error);
+    }
+});
 
 // HISTORY
 app.get('/leave/history', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
+    const user = req.user;
     const notifications = await Notification.find({
         recipient: user._id,
         read: false
@@ -6573,8 +5652,7 @@ app.post('/api/data/all-attendance/today/human-resources', isAuthenticated, asyn
     const skip = (page - 1) * limit;
 
     try {
-        const username = req.user.username;
-        const user = await User.findOne({ username: username });
+        const user = req.user;
 
         const today = moment().startOf('day').toDate();
 
@@ -6880,8 +5958,7 @@ app.post('/api/data/all-attendance/today/department-section', isAuthenticated, a
     const skip = (page - 1) * limit; // Items to skip
 
     try {
-        const username = req.user.username;
-        const user = await User.findOne({ username: username });
+        const user = req.user;
 
         // Get today's date range
         const today = moment().startOf('day').toDate();
@@ -7011,8 +6088,7 @@ app.post('/api/data/all-attendance/per-date/department-section', isAuthenticated
     const skip = (page - 1) * limit;
 
     try {
-        const username = req.user.username;
-        const user = await User.findOne({ username: username });
+        const user = req.user;
 
         const selectedLocalDate = moment(selectedDate).utcOffset(8).startOf('day');
         const startDate = selectedLocalDate.clone().utc().toDate();
@@ -7110,8 +6186,7 @@ app.post('/api/data/all-attendance/per-month/department-section', isAuthenticate
     const skip = (page - 1) * limit;
 
     try {
-        const username = req.user.username;
-        const user = await User.findOne({ username: username });
+        const user = req.user;
 
         // Determine the first and last day of the month
         const startDate = moment(`${year}-${month}-01`).startOf('month').toDate();
@@ -7534,7 +6609,7 @@ app.get('/api/qrcode/get-latest', async (req, res) => {
 // * Route to get the latest scanned attendance data
 // * Retrieves the most recent attendance record from the TempAttendance collection
 // * and returns the related user and message.
-app.get('/api/attendance/latest', isAuthenticated, async function (req, res, next) {
+app.get('/api/attendance/latest', isAuthenticated, async (req, res, next) => {
     try {
         // Find the most recent attendance record from the TempAttendance collection
         const latestAttendance = await TempAttendance.findOne().sort({ timestamp: -1 }).populate('user').exec();
@@ -7557,13 +6632,30 @@ app.get('/api/attendance/latest', isAuthenticated, async function (req, res, nex
 // Fetch Data API (Echarts)
 // ============================
 
+// * Route to get leave balances for user
+app.get('/api/echarts/leaveType/:id', isAuthenticated, async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const userLeave = await UserLeave.findOne({ user: id })
+            .populate('user')
+            .exec();
+        9
+        if (!userLeave) {
+            return res.status(404).json({ error: 'User leave data not found' });
+        }
+        res.json(userLeave);
+    } catch (error) {
+        next(error); // Pass error to global error handler
+    }
+}
+);
+
 // * Route to get leave data for a selected month
 // * Retrieves leave records for the specified month and counts the number of approved and denied leave requests
 // * for each day of the month, then returns this data in a structured format.
-app.get('/api/leave/selectedmonth', isAuthenticated, async function (req, res, next) {
+app.get('/api/leave/selectedmonth', isAuthenticated, async (req, res, next) => {
     try {
-        const username = req.user.username;
-        const user = await User.findOne({ username: username });
+        const user = req.user;
 
         if (user) {
             const selectedMonth = req.query.month;
@@ -7615,10 +6707,9 @@ app.get('/api/leave/selectedmonth', isAuthenticated, async function (req, res, n
 
 // * Route to get the total approved leave count for a selected month
 // * Retrieves all approved leave records for the specified month and calculates the total number of approved leaves.
-app.get('/api/leave/totalcount', isAuthenticated, async function (req, res, next) {
+app.get('/api/leave/totalcount', isAuthenticated, async (req, res, next) => {
     try {
-        const username = req.user.username;
-        const user = await User.findOne({ username: username });
+        const user = req.user;
 
         if (user) {
             const selectedMonth = req.query.month;
@@ -7652,10 +6743,9 @@ app.get('/api/leave/totalcount', isAuthenticated, async function (req, res, next
 // * Route to get pending and invalid leave status for the last 7 days
 // * Retrieves leave data for the last 7 days and counts the number of pending and invalid leave requests for each day,
 // * and calculates the percentage of pending leaves relative to the total leaves for each day.
-app.get('/api/leave/pending-invalid', isAuthenticated, async function (req, res, next) {
+app.get('/api/leave/pending-invalid', isAuthenticated, async (req, res, next) => {
     try {
-        const username = req.user.username;
-        const user = await User.findOne({ username: username });
+        const user = req.user;
 
         if (user) {
             // Get the current date and seven days ago with UTC+8 offset
@@ -7815,10 +6905,9 @@ app.get('/api/leave/pending-invalid', isAuthenticated, async function (req, res,
 // * Retrieves leave data for the last 7 days and the previous 7 days (14 days ago to 7 days ago),
 // * counts the number of submitted leave requests for each day, and calculates the percentage change
 // * between the two periods.
-app.get('/api/leave/submitted', isAuthenticated, async function (req, res, next) {
+app.get('/api/leave/submitted', isAuthenticated, async (req, res, next) => {
     try {
-        const username = req.user.username;
-        const user = await User.findOne({ username: username });
+        const user = req.user;
 
         if (user) {
             // Get the current date and seven and fourteen days ago with UTC+8 offset
@@ -7913,6 +7002,126 @@ app.get('/api/leave/submitted', isAuthenticated, async function (req, res, next)
     }
 });
 
+// * Route to get all staf data
+// * counts the total number of executive and non executive, gender etc
+// * count number of department section
+app.get('/api/staff/overview/department-section', isAuthenticated, async (req, res, next) => {
+    try {
+        const user = req.user;
+        const allUser = await User.find();
+
+        // Create Sets to store unique departments and sections
+        const uniqueDepartments = new Set();
+        const uniqueSections = new Set();
+
+        // Iterate through the users and add their departments and sections to the sets
+        allUser.forEach(user => {
+            if (user.department) {
+                uniqueDepartments.add(user.department);
+            }
+
+            if (user.section) {
+                uniqueSections.add(user.section);
+            }
+        });
+
+        // Convert Sets to Arrays
+        const departments = Array.from(uniqueDepartments);
+        const sections = Array.from(uniqueSections);
+
+        // Create objects to store user counts for each department and section
+        const userCountByDepartment = {};
+        const userCountBySection = {};
+
+        // Initialize counts to zero for each department and section
+        departments.forEach(department => {
+            userCountByDepartment[department] = 0;
+        });
+
+        sections.forEach(section => {
+            userCountBySection[section] = 0;
+        });
+
+        // Update counts based on user data
+        allUser.forEach(user => {
+            if (user.department) {
+                userCountByDepartment[user.department]++;
+            }
+
+            if (user.section) {
+                userCountBySection[user.section]++;
+            }
+        });
+
+        const responseData = {
+            userCountByDepartment,
+            userCountBySection
+        };
+
+        res.json(responseData);
+
+    } catch (error) {
+        next(error); // Pass error to global error handler
+    }
+}
+);
+
+// * Route to auxiliary police schedule
+// * select the schedule data based on month and put it in formatted data (shift etc)
+app.get('/api/auxiliary-police/schedule/calendar-data', async (req, res, next) => {
+    try {
+        const { date, location } = req.query;
+
+        console.log(date, 'This is the date for find the schedule');
+
+        const selectedDate = moment(date);
+        const startOfMonth = selectedDate.startOf('month').toDate();
+        const endOfMonth = selectedDate.endOf('month').toDate();
+        console.log(endOfMonth);
+
+        const schedules = await ScheduleAux.aggregate([
+            {
+                $match: {
+                    date: { $gte: startOfMonth, $lte: endOfMonth },
+                    location: location
+                }
+            },
+            {
+                $unwind: "$shift"
+            },
+            {
+                $group: {
+                    _id: { date: "$date" },
+                    shifts: { $push: "$shift" },
+                    totalCount: { $sum: { $size: "$shift.staff" } }
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    date: { $dateToString: { format: "%Y-%m-%d", date: "$_id.date" } },
+                    shifts: 1,
+                    totalCount: 1
+                }
+            }
+        ]);
+
+        // Format the data as required
+        const formattedData = schedules.map(schedule => ({
+            date: schedule.date,
+            shifts: schedule.shifts,
+            totalCount: schedule.totalCount
+        }));
+
+        console.log(formattedData);
+        // Send the formatted data as JSON response
+        res.json(formattedData);
+    } catch (err) {
+        next(error);
+    }
+});
+
+
 // ============================
 // Super Admin
 // ============================
@@ -7923,7 +7132,6 @@ app.get('/api/leave/submitted', isAuthenticated, async function (req, res, next)
 // * and sets its initial leave value to 7 days. If a user does not have an existing leave record,
 // * a new record is created with various leave categories, including the new Umrah leave.
 app.get('/super-admin/update', isAuthenticated, async (req, res, next) => {
-    const username = req.user.username;
     const user = req.user;
 
     // Check if the authenticated user is a super admin
@@ -8046,20 +7254,245 @@ app.get('/temp', isAuthenticated, async (req, res, next) => {
 // * It retrieves the user's data and unread notifications,
 // * and renders the 'email-leave' view with the user data, notifications, and a unique UUID.
 app.get('/testing', isAuthenticated, async (req, res, next) => {
-    const username = req.user.username;
-    const user = req.user;
-
     try {
-        // Retrieve unread notifications for the user
-        const notifications = await Notification.find({
-            recipient: user._id,
-            read: false
-        })
-            .populate('sender')
-            .sort({ timestamp: -1 });
+        const { user, notifications } = req;
+
+        // Replace req.body with dummy data
+        const dummyData = {
+            uuid: 'dummy-uuid',
+            type: 'Annual Leave',
+            startDate: moment().add(5, 'days').format('YYYY-MM-DD'),
+            returnDate: moment().add(10, 'days').format('YYYY-MM-DD'),
+            purpose: 'Testing purpose',
+            selectedNames: 'Test User 1',
+            selectedSupervisors: ''
+        };
+        // Set today's date, adjusted for UTC+8 timezone
+        const today = moment().utcOffset(8).startOf('day').toDate();
+
+        const [headOfSection, headOfDepartment, chiefExec, depChiefExec, adminHR, userLeave, assignee, supervisors, leaveRecords] = await Promise.all([
+            // Determine head of section and department based on user data
+            ['P549', 'P548'].includes(user.username)
+                ? User.findOne({ isHeadOfSection: true, section: 'Administration and Communication Division' })
+                : User.findOne({ isHeadOfSection: true, section: user.section }),
+
+            ['P549', 'P548'].includes(user.username)
+                ? User.findOne({ isHeadOfDepartment: true, department: 'Management and Services Department' })
+                : User.findOne({ isHeadOfDepartment: true, department: user.department }),
+
+            // Fetch key organizational roles for leave approval routing
+            User.findOne({ isChiefExec: true }),
+            User.findOne({ isDeputyChiefExec: true }),
+            User.findOne({ isAdmin: true, isHeadOfSection: true, section: 'Human Resource Management Division' }),
+
+            // Fetch user leave balance and related information
+            UserLeave.findOne({ user: user._id }).populate('user').exec(),
+
+            // Fetch selected assignees and supervisors from names provided in request
+            User.find({ fullname: { $in: dummyData.selectedNames } }),
+            User.find({ fullname: { $in: dummyData.selectedSupervisors } }),
+
+            // Fetch all leave records for the current user
+            Leave.find({ user: user._id })
+        ]);
+
+
+        const calculateNumberOfDays = (type, startDate, returnDate, isNonOfficeHour) => {
+            const fullDayLeaves = [
+                'Annual Leave', 'Marriage Leave', 'Paternity Leave', 'Maternity Leave',
+                'Attend Exam Leave', 'Hajj Leave', 'Umrah Leave', 'Special Leave',
+                'Extended Sick Leave', 'Sick Leave', 'Unpaid Leave', 'Emergency Leave'
+            ];
+
+            if (fullDayLeaves.includes(type)) {
+                return moment(returnDate).diff(moment(startDate), 'days') + 1;
+            } else if (type === 'Half Day Leave') {
+                return isNonOfficeHour
+                    ? (moment(returnDate).diff(moment(startDate), 'days') + 1)
+                    : calculateBusinessDays(startDate, returnDate);
+            } else if (type === 'Annual Leave') {
+                return isNonOfficeHour
+                    ? (moment(returnDate).diff(moment(startDate), 'days') + 1) / 2
+                    : calculateBusinessDays(startDate, returnDate) / 2;
+            }
+
+            return 0; // Default return if type is not matched
+        };
+
+        const checkLeaveBalance = (leaveBalance, numberOfDays, minDays = 0) => {
+            if (leaveBalance < numberOfDays || numberOfDays <= minDays) {
+                console.log('Insufficient balance for the requested duration');
+                return false;
+            }
+            return true;
+        };
+
+        const checkFileAttachment = async (uuid, errorMessage = 'File attachment is required!') => {
+            // Simulate file attachment check
+            const fileExists = uuid === 'dummy-uuid'; // Mock file check
+            if (!fileExists) {
+                console.log(errorMessage);
+                return false;
+            }
+            return true;
+        };
+
+        const processLeaveRequest = async (type, user, userLeave, startDate, returnDate, uuid, approvers) => {
+            let numberOfDays = calculateNumberOfDays(type, startDate, returnDate, user.isNonOfficeHour);
+            const amountDayRequest = calculateBusinessDays(moment(), startDate);
+            let leaveBalance, leaveTaken;
+            let approvals = '';
+
+            const handleSpecialLeaveType = async (leaveType, balance, taken = 0, genderCheck = true) => {
+                if (checkLeaveBalance(balance, numberOfDays) && genderCheck) {
+                    if (amountDayRequest >= 3 || (leaveType === 'Special Leave' && amountDayRequest <= 1 && amountDayRequest >= -5)) {
+                        if (await checkFileAttachment(uuid, `There is no file attached for ${leaveType.toLowerCase()}!`)) {
+                            approvals = generateApprovals(
+                                user,
+                                approvers.headOfSection,
+                                approvers.headOfDepartment,
+                                approvers.depChiefExec,
+                                approvers.chiefExec,
+                                approvers.adminHR,
+                                approvers.assignee,
+                                approvers.supervisors,
+                                type
+                            );
+                            console.log('Approvals:', approvals); // Log approvals
+                        }
+                    } else {
+                        console.log('The leave date applied must be more than 3 days from today');
+                    }
+                }
+            };
+
+            switch (type) {
+                case 'Annual Leave':
+                case 'Half Day Leave':
+                    leaveBalance = userLeave.annual.leave - userLeave.annual.taken;
+                    if (checkLeaveBalance(leaveBalance, numberOfDays) && amountDayRequest >= 3) {
+                        approvals = generateApprovals(
+                            user,
+                            approvers.headOfSection,
+                            approvers.headOfDepartment,
+                            approvers.depChiefExec,
+                            approvers.chiefExec,
+                            approvers.adminHR,
+                            approvers.assignee,
+                            approvers.supervisors,
+                            type
+                        );
+                        console.log('Approvals:', approvals); // Log approvals
+                    } else {
+                        console.log('The leave date applied must be more than 3 days from today');
+                    }
+                    break;
+
+                case 'Sick Leave':
+                case 'Extended Sick Leave':
+                    leaveBalance = type === 'Sick Leave'
+                        ? userLeave.sick.leave - userLeave.sick.taken
+                        : userLeave.sickExtended.leave - userLeave.sickExtended.taken;
+                    if (checkLeaveBalance(leaveBalance, numberOfDays) && amountDayRequest <= 1 && amountDayRequest >= -5) {
+                        if (await checkFileAttachment(uuid, 'Supporting documents must be attached for sick leave')) {
+                            approvals = generateApprovals(
+                                user,
+                                approvers.headOfSection,
+                                approvers.headOfDepartment,
+                                approvers.depChiefExec,
+                                approvers.chiefExec,
+                                approvers.adminHR,
+                                approvers.assignee,
+                                approvers.supervisors,
+                                type
+                            );
+                            console.log('Approvals:', approvals); // Log approvals
+                        }
+                    } else {
+                        console.log('The sick leave request must be applied today or up to 5 days before');
+                    }
+                    break;
+
+                case 'Emergency Leave':
+                    if (amountDayRequest <= 1 && amountDayRequest >= -5) {
+                        if (await checkFileAttachment(uuid, 'Supporting documents must be attached accordingly')) {
+                            approvals = generateApprovals(
+                                user,
+                                approvers.headOfSection,
+                                approvers.headOfDepartment,
+                                approvers.depChiefExec,
+                                approvers.chiefExec,
+                                approvers.adminHR,
+                                approvers.assignee,
+                                approvers.supervisors,
+                                type
+                            );
+                            console.log('Approvals:', approvals); // Log approvals
+                        }
+                    } else {
+                        console.log('There is an error in requesting the emergency leave');
+                    }
+                    break;
+
+                case 'Attend Exam Leave':
+                case 'Marriage Leave':
+                case 'Hajj Leave':
+                case 'Umrah Leave':
+                case 'Special Leave':
+                    leaveBalance = userLeave[type.toLowerCase()].leave;
+                    leaveTaken = userLeave[type.toLowerCase()].taken;
+                    await handleSpecialLeaveType(type, leaveBalance, leaveTaken, true);
+                    break;
+
+                case 'Paternity Leave':
+                    leaveBalance = userLeave.paternity.leave;
+                    leaveTaken = userLeave.paternity.taken;
+                    await handleSpecialLeaveType(type, leaveBalance, leaveTaken, user.gender === 'Male' && leaveTaken <= 6);
+                    break;
+
+                case 'Maternity Leave':
+                    leaveBalance = userLeave.maternity.leave;
+                    leaveTaken = userLeave.maternity.taken;
+                    await handleSpecialLeaveType(type, leaveBalance, leaveTaken, user.gender === 'Female');
+                    break;
+
+                case 'Unpaid Leave':
+                    approvals = generateApprovals(
+                        user,
+                        approvers.headOfSection,
+                        approvers.headOfDepartment,
+                        approvers.depChiefExec,
+                        approvers.chiefExec,
+                        approvers.adminHR,
+                        approvers.assignee,
+                        approvers.supervisors,
+                        type
+                    );
+                    console.log('Approvals:', approvals); // Log approvals
+                    break;
+            }
+        };
+
+        processLeaveRequest(
+            dummyData.type,
+            user,
+            userLeave,
+            dummyData.startDate,
+            dummyData.returnDate,
+            dummyData.uuid,
+            {
+                headOfSection,
+                headOfDepartment,
+                depChiefExec,
+                chiefExec,
+                adminHR,
+                assignee,
+                supervisors
+            }
+        ).then(() => console.log('Process completed'));
 
         // Render the 'email-leave' page with user data and notifications
-        res.render('email-leave', {
+        res.render('error', {
             user: user,
             notifications: notifications,
             uuid: uuidv4(),
@@ -9418,6 +8851,187 @@ const generateApprovals = (
     }
 
     return approvals;
+};
+
+// * Helper function to calculate number of days based on leave type and user working hours
+const calculateNumberOfDays = (type, startDate, returnDate, isNonOfficeHour) => {
+    const fullDayLeaves = [
+        'Annual Leave', 'Marriage Leave', 'Paternity Leave', 'Maternity Leave',
+        'Attend Exam Leave', 'Hajj Leave', 'Umrah Leave', 'Special Leave',
+        'Extended Sick Leave', 'Sick Leave', 'Unpaid Leave', 'Emergency Leave'
+    ];
+
+    if (fullDayLeaves.includes(type)) {
+        return moment(returnDate).diff(moment(startDate), 'days') + 1;
+    } else if (type === 'Half Day Leave') {
+        return isNonOfficeHour
+            ? (moment(returnDate).diff(moment(startDate), 'days') + 1)
+            : calculateBusinessDays(startDate, returnDate);
+    } else if (type === 'Annual Leave') {
+        return isNonOfficeHour
+            ? (moment(returnDate).diff(moment(startDate), 'days') + 1) / 2
+            : calculateBusinessDays(startDate, returnDate) / 2;
+    }
+
+    return 0; // Default return if type is not matched
+};
+
+// * Helper function to check leave balance and set errors if insufficient
+const checkLeaveBalance = (leaveBalance, numberOfDays, minDays = 0) => {
+    if (leaveBalance < numberOfDays || numberOfDays <= minDays) {
+        renderDataError.show = 'show';
+        renderDataError.alert = 'Insufficient balance for the requested duration';
+        return false;
+    }
+    return true;
+};
+
+// * Helper function to check if files are attached
+const checkFileAttachment = async (uuid, errorMessage = 'File attachment is required!') => {
+    const findFile = await File.find({ uuid });
+    if (findFile.length === 0) {
+        renderDataError.show = 'show';
+        renderDataError.alert = errorMessage;
+        return false;
+    }
+    return true;
+};
+
+// * Main processing leave request
+const processLeaveRequest = async (type, user, userLeave, startDate, returnDate, uuid, approvers) => {
+    let numberOfDays = calculateNumberOfDays(type, startDate, returnDate, user.isNonOfficeHour);
+    const amountDayRequest = calculateBusinessDays(moment(), startDate);
+    let leaveBalance, leaveTaken;
+
+    const handleSpecialLeaveType = async (leaveType, balance, taken = 0, genderCheck = true) => {
+        if (checkLeaveBalance(balance, numberOfDays) && genderCheck) {
+            if (amountDayRequest >= 3 || (leaveType === 'Special Leave' && amountDayRequest <= 1 && amountDayRequest >= -5)) {
+                if (await checkFileAttachment(uuid, `There is no file attached for ${leaveType.toLowerCase()}!`)) {
+                    approvals = generateApprovals(
+                        user,
+                        approvers.headOfSection,
+                        approvers.headOfDepartment,
+                        approvers.depChiefExec,
+                        approvers.chiefExec,
+                        approvers.adminHR,
+                        approvers.assignee,
+                        approvers.supervisors,
+                        type
+                    );
+                    console.log('Approvals inside handleSpecialLeaveType:', approvals);  // Log approvals
+                    return approvals;  // Return approvals after logging
+                }
+            } else {
+                renderDataError.alert = 'The leave date applied must be more than 3 days from today';
+            }
+        }
+    };
+
+    switch (type) {
+        case 'Annual Leave':
+        case 'Half Day Leave':
+            leaveBalance = userLeave.annual.leave - userLeave.annual.taken;
+            if (checkLeaveBalance(leaveBalance, numberOfDays) && amountDayRequest >= 3) {
+                approvals = generateApprovals(
+                    user,
+                    approvers.headOfSection,
+                    approvers.headOfDepartment,
+                    approvers.depChiefExec,
+                    approvers.chiefExec,
+                    approvers.adminHR,
+                    approvers.assignee,
+                    approvers.supervisors,
+                    type
+                );
+                return approvals;
+            }
+            renderDataError.alert = 'The leave date applied must be more than 3 days from today';
+            break;
+
+        case 'Sick Leave':
+        case 'Extended Sick Leave':
+            leaveBalance = type === 'Sick Leave'
+                ? userLeave.sick.leave - userLeave.sick.taken
+                : userLeave.sickExtended.leave - userLeave.sickExtended.taken;
+            if (checkLeaveBalance(leaveBalance, numberOfDays) && amountDayRequest <= 1 && amountDayRequest >= -5) {
+                if (await checkFileAttachment(uuid, 'Supporting documents must be attached for sick leave')) {
+                    approvals = generateApprovals(
+                        user,
+                        approvers.headOfSection,
+                        approvers.headOfDepartment,
+                        approvers.depChiefExec,
+                        approvers.chiefExec,
+                        approvers.adminHR,
+                        approvers.assignee,
+                        approvers.supervisors,
+                        type
+                    );
+                    return approvals;
+                }
+            } else {
+                renderDataError.alert = 'The sick leave request must be applied today or up to 5 days before';
+            }
+            break;
+
+        case 'Emergency Leave':
+            if (amountDayRequest <= 1 && amountDayRequest >= -5) {
+                if (await checkFileAttachment(uuid, 'Supporting documents must be attached accordingly')) {
+                    approvals = generateApprovals(
+                        user,
+                        approvers.headOfSection,
+                        approvers.headOfDepartment,
+                        approvers.depChiefExec,
+                        approvers.chiefExec,
+                        approvers.adminHR,
+                        approvers.assignee,
+                        approvers.supervisors,
+                        type
+                    );
+                    return approvals;
+                }
+            } else {
+                renderDataError.alert = 'There is an error in requesting the emergency leave';
+            }
+            break;
+
+        case 'Attend Exam Leave':
+        case 'Marriage Leave':
+        case 'Hajj Leave':
+        case 'Umrah Leave':
+        case 'Special Leave':
+            leaveBalance = userLeave[type.toLowerCase()].leave;
+            leaveTaken = userLeave[type.toLowerCase()].taken;
+            approvals = await handleSpecialLeaveType(type, leaveBalance, leaveTaken, true);
+            return approvals;
+
+        case 'Paternity Leave':
+            leaveBalance = userLeave.paternity.leave;
+            leaveTaken = userLeave.paternity.taken;
+            approvals = await handleSpecialLeaveType(type, leaveBalance, leaveTaken, user.gender === 'Male' && leaveTaken <= 6);
+            return approvals;
+
+        case 'Maternity Leave':
+            leaveBalance = userLeave.maternity.leave;
+            leaveTaken = userLeave.maternity.taken;
+            approvals = await handleSpecialLeaveType(type, leaveBalance, leaveTaken, user.gender === 'Female');
+            return approvals;
+
+        case 'Unpaid Leave':
+            approvals = generateApprovals(
+                user,
+                approvers.headOfSection,
+                approvers.headOfDepartment,
+                approvers.depChiefExec,
+                approvers.chiefExec,
+                approvers.adminHR,
+                approvers.assignee,
+                approvers.supervisors,
+                type
+            );
+            return approvals;
+    }
+
+    renderDataError.show = 'show';
 };
 
 // Port initialization route - Port 5002
