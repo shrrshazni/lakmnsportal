@@ -1,99 +1,250 @@
-const adminUsers = await User.find({
-    isAdmin: true,
-    section: 'Human Resource Management Division',
-    _id: { $ne: adminHR._id }
-});
+const handleLeaveRequest = async (req, res) => {
+    try {
+        const { id, approval } = req.params;  // Extract leave ID and approval action from request parameters
+        const user = req.user;  // Get the authenticated user from the request object
+        const checkLeave = await Leave.findOne({ _id: id });  // Find the leave request by its ID
 
-// Push the IDs of admin users to sendNoti
-adminUsers.forEach(user => {
-    if (!sendNoti.includes(user._id)) {
-        sendNoti.push(user._id);
+        if (!checkLeave) {  // If no leave request found, respond with a 404 error
+            return res.status(404).send('Leave request not found.');
+        }
+
+        // Find the indices of approvals corresponding to the current user
+        const recipientIndices = checkLeave.approvals
+            .map((approval, index) => (approval.recipient.equals(user._id) ? index : -1))
+            .filter(index => index !== -1);
+
+        // Determine the action to take based on the approval status
+        switch (approval) {
+            case 'approved':
+                await handleApproved(checkLeave, recipientIndices, user, res);
+                break;
+            case 'denied':
+                await handleDenied(checkLeave, recipientIndices, user, res);
+                break;
+            case 'cancelled':
+                await handleCancelled(checkLeave, user, res);
+                break;
+            case 'acknowledged':
+                await handleAcknowledged(checkLeave, user, res);
+                break;
+            default:
+                return res.status(400).send('Invalid approval status.');  // Respond with a 400 error for invalid actions
+        }
+    } catch (error) {
+        console.error('Error handling leave request:', error);  // Log the error for debugging purposes
+        res.status(500).send('Internal Server Error');  // Respond with a 500 error for any unexpected issues
     }
-});
+};
 
-const nextRecipient = approvals[1].recipient;
-sendNoti.push(nextRecipient);
-console.log(sendNoti);
+// Helper function for handling approved status
+const handleApproved = async (checkLeave, recipientIndices, user, res) => {
+    try {
+        // Determine the index of the approval recipient to update
+        let indexOfRecipient = recipientIndices[0];
+        if (recipientIndices.length > 1) {
+            indexOfRecipient = recipientIndices.find(index => checkLeave.approvals[index].timestamp === null);
+        }
 
-let i = 0;
-// set user id to be send
-for (const approval of approvals) {
-    const recipientId = approval.recipient;
+        const recipientApproval = checkLeave.approvals[indexOfRecipient];
+        const role = recipientApproval.role;
+        const isReliefStaff = role === 'Relief Staff';
+        const isSupervisor = role === 'Supervisor';
 
-    // Fetch the user by recipient ID
-    const email = await User.findById(recipientId);
+        // Update leave approval status in the database
+        await Leave.findOneAndUpdate(
+            {
+                _id: checkLeave._id, // Match the leave request ID
+                'approvals.recipient': user._id, // Match the current user
+                'approvals.timestamp': null // Ensure it's the correct approval (pending)
+            },
+            {
+                $set: {
+                    'approvals.$.status': 'approved', // Set status to approved
+                    'approvals.$.comment': `The request has been approved by ${isReliefStaff || isSupervisor ? user.fullname : ''}`, // Add a comment
+                    'approvals.$.timestamp': moment().utcOffset(8).toDate(), // Record the timestamp
+                    status: 'pending' // Keep the overall status pending until all approvals are complete
+                }
+            },
+            { new: true } // Return the updated document
+        );
 
-    // Check if the user is found and has an email
-    if (email && user.email) {
-        // Add the user's email to sendEmail
-        sendEmail.push(email.email);
+        // Determine the next approval recipient
+        const nextIndex = indexOfRecipient + 1;
+        const nextApprovalRecipientId = checkLeave.approvals[nextIndex]?.recipient;
+
+        if (nextApprovalRecipientId) {
+            // Create and save a new notification for the next recipient
+            await createAndSendNotification(user, nextApprovalRecipientId, checkLeave._id);
+            // Log the approval activity
+            await logActivity(user._id, 'Leave application approved', 'Leave request', 'Approved a leave request');
+            // Send an email notification to the next recipient
+            await sendEmailNotification(nextApprovalRecipientId, user, checkLeave);
+
+        } else {
+            console.log('The leave has been approved by all recipients.');
+        }
+
+        // Redirect to leave details page after approval
+        res.redirect(`/leave/details/${checkLeave._id}`);
+    } catch (error) {
+        console.error('Error handling approved leave request:', error);
+        res.status(500).send('Internal Server Error');  // Handle any errors gracefully
     }
+};
 
-    i++;
-}
 
-const leave = new Leave({
-    fileId: uuid,
-    user: user._id,
-    department: user.department,
-    grade: user.grade,
-    assignee: assignee,
-    type: type,
-    date: newDate,
-    status: 'submitted',
-    purpose: purpose,
-    approvals: approvals
-});
+// Helper function for handling denied status
+const handleDenied = async (checkLeave, recipientIndices, user, res) => {
+    try {
+        // Find the index of the recipient who denied the leave
+        let indexOfRecipient = recipientIndices[0]; // Default to the first found recipient
 
-const currentLeave = await Leave.create(leave);
-console.log('Leave request submitted');
+        // If there are multiple recipients, choose the one with a null timestamp
+        if (recipientIndices.length > 1) {
+            indexOfRecipient = recipientIndices.find(index => checkLeave.approvals[index].timestamp === null);
+        }
 
-// activity
-const activityUser = new Activity({
-    user: user._id,
-    date: moment().utcOffset(8).toDate(),
-    title: 'Submitted a leave application',
-    type: 'Leave request',
-    description:
-        user.fullname +
-        ' has submitted ' +
-        type +
-        ' between ' +
-        startDate +
-        ' and ' +
-        returnDate
-});
+        // Update leave denial status
+        await Leave.findOneAndUpdate(
+            {
+                _id: checkLeave._id,
+                'approvals.recipient': user._id,
+                'approvals.timestamp': null // Ensure to update the correct approval with null timestamp
+            },
+            {
+                $set: {
+                    'approvals.$.status': 'denied',
+                    'approvals.$.comment': `The request has been denied by ${user.fullname}`,
+                    'approvals.$.timestamp': moment().utcOffset(8).toDate(),
+                    status: 'denied' // Update the overall leave status to denied
+                }
+            },
+            { new: true }
+        );
 
-activityUser.save();
+        // Log denial activity
+        await logActivity(user._id, 'Leave application denied', 'Leave request', 'Denied a leave request');
 
-console.log('New acitivity submitted', activityUser);
+        // Notify the requester about the denial
+        const requesterId = checkLeave.user;
+        await createAndSendNotification(user._id, requesterId, 'Leave', `/leave/details/${checkLeave._id}`, 'Your leave request has been denied.');
 
-// notifications save has been turn off
-if (sendNoti.length > 0) {
-    for (const recipientId of sendNoti) {
-        const newNotification = new Notification({
-            sender: user._id,
-            recipient: new mongoose.Types.ObjectId(recipientId),
-            type: 'Leave request',
-            url: '/leave/details/' + currentLeave._id,
-            message: 'Leave request needs approval.'
-        });
+        // Send an email notification to the requester about the denial
+        const requesterEmail = await User.findOne({ _id: requesterId });
+        if (requesterEmail) {
+            const emailData = {
+                content: `The leave request has been denied by ${user.fullname} with work ID ${user.username}. Please click the button above to open the leave details.`,
+                id: checkLeave._id,
+            };
+            await sendEmailNotification(requesterEmail.email, emailData);
+        }
 
-        newNotification.save();
+        // Redirect to the leave details page after denial
+        res.redirect(`/leave/details/${checkLeave._id}`);
+    } catch (error) {
+        console.error('Error denying leave request:', error);
+        res.status(500).send('Internal Server Error');
+    }
+};
 
-        // Fetch subscriptions for the recipient user
-        const subscriptions = await Subscriptions.find({ user: recipientId });
+
+// Helper function for handling cancelled status
+const handleCancelled = async (checkLeave, user, res) => {
+    try {
+        // Identifying the first and last recipient of the leave approval process
+        const firstRecipientId = checkLeave.approvals[0].recipient;
+        const lastRecipientId = checkLeave.approvals[checkLeave.approvals.length - 1].recipient;
+
+        if (checkLeave.status === 'approved') {
+            // Fetch user leave data to adjust leave balances upon cancellation
+            const userLeave = await UserLeave.findOne({
+                user: firstRecipientId
+            });
+
+            // Calculate the number of days affected by the leave using the provided function
+            const daysDifference = calculateNumberOfDays(checkLeave.type, checkLeave.date.start, checkLeave.date.return, checkLeave.isNonOfficeHour);
+
+            // Adjust leave balances based on the leave type and days difference
+            switch (checkLeave.type) {
+                case 'Annual Leave':
+                    userLeave.annual.taken -= daysDifference;
+                    userLeave.annual.taken = Math.max(0, userLeave.annual.taken);
+                    break;
+                case 'Sick Leave':
+                    userLeave.sick.taken -= daysDifference;
+                    userLeave.sick.taken = Math.max(0, userLeave.sick.taken);
+                    break;
+                case 'Sick Extended Leave':
+                    userLeave.sickExtended.taken -= daysDifference;
+                    userLeave.sickExtended.taken = Math.max(0, userLeave.sickExtended.taken);
+                    break;
+                case 'Emergency Leave':
+                    userLeave.annual.taken -= daysDifference;
+                    userLeave.annual.taken = Math.max(0, userLeave.annual.taken);
+                    userLeave.emergency.taken -= daysDifference;
+                    userLeave.emergency.taken = Math.max(0, userLeave.emergency.taken);
+                    break;
+                case 'Attend Exam Leave':
+                    userLeave.attendExam.leave += daysDifference;
+                    userLeave.attendExam.leave = Math.max(0, userLeave.attendExam.leave);
+                    userLeave.attendExam.taken = userLeave.attendExam.taken - 1;
+                    break;
+                case 'Maternity Leave':
+                    userLeave.maternity.leave += daysDifference;
+                    userLeave.maternity.leave = Math.max(0, userLeave.maternity.leave);
+                    userLeave.maternity.taken = userLeave.maternity.taken - 1;
+                    break;
+                case 'Paternity Leave':
+                    userLeave.paternity.leave += daysDifference;
+                    userLeave.paternity.leave = Math.max(0, userLeave.paternity.leave);
+                    userLeave.paternity.taken = userLeave.paternity.taken - 1;
+                    break;
+                case 'Hajj Leave':
+                    userLeave.hajj.taken = userLeave.hajj.taken - 1;
+                    break;
+                case 'Unpaid Leave':
+                    userLeave.unpaid.taken = userLeave.unpaid.taken - 1;
+                    break;
+                case 'Special Leave':
+                    userLeave.special.taken = userLeave.special.taken - 1;
+                    break;
+                default:
+                    break;
+            }
+
+            // Save the updated leave balances for the user
+            await userLeave.save();
+        }
+
+        // Update the leave status to "cancelled" in the database
+        await Leave.findOneAndUpdate(
+            { _id: checkLeave._id },
+            {
+                $set: {
+                    status: 'cancelled',
+                    comment: `The request has been cancelled by the ${checkLeave.approvals[0].role} ${user.username}`
+                }
+            },
+            { new: true }
+        );
+
+        // Notify the first and last recipients about the cancellation
+        await createAndSendNotification(user._id, firstRecipientId, 'Leave approval', `/leave/details/${checkLeave._id}`, `This leave has been cancelled by ${user.fullname}`);
+        await createAndSendNotification(user._id, lastRecipientId, 'Leave approval', `/leave/details/${checkLeave._id}`, `This leave has been cancelled by ${user.fullname}`);
+
+        // Fetch subscriptions for the first recipient to send push notifications
+        const subscriptions = await Subscriptions.find({ user: firstRecipientId });
 
         if (subscriptions) {
-            // Map through the subscriptions to send notifications
+            // Send push notifications to all subscribers
             const sendNotificationPromises = subscriptions.map(async (subscription) => {
                 const payload = JSON.stringify({
-                    "title": "Leave request",
-                    "body": "Leave request need your attention and approval.",
-                    "url": "https://www.lakmnsportal.com/",
-                    "vibrate": [100, 50, 100],
-                    "requireInteraction": true,
-                    "silent": false
+                    title: "Leave request",
+                    body: "Leave request has been cancelled.",
+                    url: "https://www.lakmnsportal.com/",
+                    vibrate: [100, 50, 100],
+                    requireInteraction: true,
+                    silent: false
                 });
 
                 const options = {
@@ -116,243 +267,136 @@ if (sendNoti.length > 0) {
             // Wait for all notifications to be sent
             await Promise.all(sendNotificationPromises);
         } else {
-            console.log('The user doesnt subscribe for push notifications');
+            console.log('The user doesn’t subscribe for push notifications');
         }
 
+        // Log the cancellation activity
+        await logActivity(user._id, 'Leave cancelled', 'Leave approval', 'Cancel the leave request');
+
+        // Send an email notification to the first recipient about the cancellation
+        const firstRecipientEmail = await User.findOne({ _id: firstRecipientId });
+
+        if (firstRecipientEmail) {
+            const emailData = {
+                content: `The leave request has been cancelled by ${user.fullname} with work ID ${user.username}. Please click the button above to open the leave details.`,
+                id: checkLeave._id,
+            };
+
+            await sendEmailNotification(firstRecipientEmail.email, emailData);
+        }
+
+        console.log('The leave has been officially cancelled');
+        res.redirect(`/leave/details/${checkLeave._id}`);
+    } catch (error) {
+        console.error('Error cancelling leave request:', error);
+        res.status(500).send('Internal Server Error');
     }
-
-    console.log('Done send notifications!');
-}
-
-// send via email
-const emailData = {
-    content: 'The leave request has been submitted by ' + user.fullname + ' with work ID ' + user.username + ' , please click the button above to open the leave details.',
-    id: currentLeave._id,
 };
 
-const emailHTML = await new Promise((resolve, reject) => {
-    app.render('email-leave', { emailData: emailData }, (err, html) => {
-        if (err) reject(err);
-        else resolve(html);
-    });
-});
 
-console.log(emailHTML);
-
-let mailOptions = {
-    from: 'protech@lakmns.org',
-    to: sendEmail,
-    subject: 'lakmnsportal - Leave Request Approval',
-    html: emailHTML,
-};
-
-const sendEmailTo = transporter.sendMail(mailOptions, (error, info) => {
-    if (error) {
-        console.log(error);
-    }
-
-    console.log('Message %s sent: %s', info.messageId, info.response);
-});
-
-if (sendEmailTo) {
-    console.log('Email sent successfully to:', sendEmail);
-} else {
-    console.log('Email sending failed');
-}
-
-// for home dashboard
-const allUser = await User.find().sort({ timestamp: -1 });
-const allLeave = await Leave.find().sort({ timestamp: -1 });
-const allUserLeave = await UserLeave.find().sort({ timestamp: -1 });
-const allInfo = await Info.find();
-const taskHome = await Task.find({ assignee: { $in: [user._id] } })
-    .sort({ timestamp: -1 })
-    .populate('assignee')
-    .exec();
-const fileHome = await File.find();
-const sevenDaysAgo = moment().utcOffset(8).subtract(7, 'days').toDate();
-const otherTaskHome = await Task.find({
-    assignee: { $ne: [user._id] }
-});
-const otherActivitiesHome = await Activity.find();
-const info = await Info.findOne({ user: user._id });
-
-const today = moment().utcOffset(8).startOf('day');
-const firstDayOfWeek = today.clone().startOf('week').add(1, 'day');
-const lastDayOfWeek = today.clone().endOf('week');
-const firstDayOfMonth = today.clone().startOf('month');
-const lastDayOfMonth = today.clone().endOf('month');
-
-let todayLeaves = [];
-let weekLeaves = [];
-let monthLeaves = [];
-let staffOnLeave = '';
-
-if (user.isAdmin || user.isChiefExec || user.isDeputyChiefExec) {
-    staffOnLeave = await Leave.find({
-        user: { $ne: user._id },
-        status: 'approved'
-    });
-
-    staffOnLeave = await Leave.find({
-        status: 'approved',
-        user: { $ne: user._id },
-        department: user.department
-    });
-
-    staffOnLeave.forEach(leave => {
-        if (leave.date.start >= today && today <= leave.date.return) {
-            todayLeaves.push(leave);
-        }
-
-        if (
-            leave.date.start <= lastDayOfWeek &&
-            leave.date.return >= firstDayOfWeek
-        ) {
-            weekLeaves.push(leave);
-        }
-
-        if (
-            leave.date.start <= lastDayOfMonth &&
-            leave.date.return >= firstDayOfMonth
-        ) {
-            monthLeaves.push(leave);
-        }
-    });
-} else {
-    staffOnLeave = await Leave.find({
-        status: 'approved',
-        user: { $ne: user._id },
-        department: user.department
-    });
-
-    staffOnLeave.forEach(leave => {
-        if (leave.date.start >= today && today <= leave.date.return) {
-            todayLeaves.push(leave);
-        }
-
-        if (
-            leave.date.start <= lastDayOfWeek &&
-            leave.date.return >= firstDayOfWeek
-        ) {
-            weekLeaves.push(leave);
-        }
-
-        if (
-            leave.date.start <= lastDayOfMonth &&
-            leave.date.return >= firstDayOfMonth
-        ) {
-            monthLeaves.push(leave);
-        }
-    });
-}
-let userTeamMembers = '';
-
-if (user.isChiefExec || user.isDeputyChiefExec) {
-    userTeamMembers = await User.find({
-        isManagement: true,
-        _id: { $ne: user._id }
-    });
-} else {
-    if (user.isHeadOfDepartment) {
-        userTeamMembers = await User.find({
-            department: user.department,
-            _id: { $ne: user._id }
-        });
-    } else {
-        userTeamMembers = await User.find({
-            section: user.section,
-            _id: { $ne: user._id }
-        });
-    }
-}
-
-const activitiesHome = await Activity.find({
-    date: { $gte: sevenDaysAgo }
-})
-    .populate({
-        path: 'user'
-    })
-    .sort({ date: -1 })
-    .exec();
-
-// leave approvals
-let filteredApprovalLeaves;
-
-if (user.isAdmin) {
-    // If the user is an admin, show all leave approvals except for 'approved' and 'denied'
-    filteredApprovalLeaves = allLeave.filter(
-        leave => leave.status !== 'approved' && leave.status !== 'denied'
-    );
-} else {
-    // If the user is not an admin, show leave approvals based on your existing logic
-    filteredApprovalLeaves = allLeave.filter(leave => {
-        return (
-            leave.user.toString() !== user._id.toString() &&
-            leave.approvals.some(
-                approval =>
-                    approval.recipient.toString() === user._id.toString() &&
-                    leave.status !== 'approved' &&
-                    leave.status !== 'denied'
-            )
+// Helper function for handling acknowledged status
+const handleAcknowledged = async (checkLeave, user, res) => {
+    try {
+        // Find the index of the Human Resource recipient in the approvals array
+        const humanResourceIndex = checkLeave.approvals.findIndex(
+            approval => approval.recipient.section === 'Human Resource Management Division'
         );
-    });
-}
 
-const uniqueDepartments = new Set();
-const uniqueSection = new Set();
+        // Check if the previous approver has approved and the current user is an HR admin
+        if (
+            checkLeave.approvals[humanResourceIndex - 1].status === 'approved' &&
+            user.isAdmin && user.section === 'Human Resource Management Division'
+        ) {
+            // Update the approval status of the HR recipient to 'approved'
+            const findRecipient = await Leave.findOneAndUpdate(
+                {
+                    _id: checkLeave._id,
+                    'approvals.recipient': checkLeave.approvals[humanResourceIndex].recipient
+                },
+                {
+                    $set: {
+                        'approvals.$.status': 'approved',
+                        'approvals.$.comment': 'The request has been officially approved',
+                        'approvals.$.timestamp': moment().utcOffset(8).toDate()
+                    }
+                },
+                { new: true }
+            );
 
-allUser.forEach(user => {
-    if (user.department) {
-        uniqueDepartments.add(user.department);
+            // Log if the recipient has been updated
+            if (findRecipient) {
+                console.log('The recipient has been updated', findRecipient);
+            } else {
+                console.log('No update was made');
+            }
+
+            // Fetch the ID of the first recipient in the approvals array
+            const firstRecipientId = checkLeave.approvals[0].recipient;
+
+            // Retrieve the leave details and user data for the first recipient
+            const userLeave = await UserLeave.findOne({ user: firstRecipientId });
+            const checkUser = await User.findById(firstRecipientId);
+
+            const startDate = checkLeave.date.start;
+            const returnDate = checkLeave.date.return;
+
+            // Use calculateNumberOfDays to get the days difference
+            const daysDifference = calculateNumberOfDays(
+                checkLeave.type,
+                startDate,
+                returnDate,
+                checkUser.isNonOfficeHour
+            );
+
+            // Update the user's leave balance based on the type of leave
+            switch (checkLeave.type) {
+                case 'Annual Leave':
+                    userLeave.annual.taken += daysDifference;
+                    break;
+                case 'Sick Leave':
+                    userLeave.sick.taken += daysDifference;
+                    break;
+                case 'Sick Extended Leave':
+                    userLeave.sickExtended.taken += daysDifference;
+                    break;
+                case 'Emergency Leave':
+                    userLeave.annual.taken += daysDifference;
+                    userLeave.emergency.taken += daysDifference;
+                    break;
+                case 'Attend Exam Leave':
+                    userLeave.attendExam.leave -= daysDifference;
+                    userLeave.attendExam.taken += 1;
+                    break;
+                case 'Maternity Leave':
+                    userLeave.maternity.leave -= daysDifference;
+                    userLeave.maternity.taken += 1;
+                    break;
+                case 'Paternity Leave':
+                    userLeave.paternity.leave -= daysDifference;
+                    userLeave.paternity.taken += 1;
+                    break;
+                case 'Hajj Leave':
+                    userLeave.hajj.taken += 1;
+                    break;
+                case 'Unpaid Leave':
+                    userLeave.unpaid.taken += 1;
+                    break;
+                case 'Special Leave':
+                    userLeave.special.taken += 1;
+                    break;
+                default:
+                    console.log('Leave type does not require balance update.');
+                    break;
+            }
+
+            // Save updated user leave data
+            await userLeave.save();
+        }
+
+        res.redirect(`/leave/details/${checkLeave._id}`);
+    } catch (error) {
+        console.error('Error handling acknowledgment:', error);
+        // Use your existing global error handler middleware
+        next(error);
     }
-});
-
-allUser.forEach(user => {
-    if (user.section) {
-        uniqueSection.add(user.section);
-    }
-});
-
-const departments = Array.from(uniqueDepartments);
-const sections = Array.from(uniqueSection);
-
-const renderDataSuccess = {
-    user: user,
-    uuid: uuidv4(),
-    notifications: notifications,
-    userTeamMembers: userTeamMembers,
-    otherTasks: otherTaskHome,
-    otherActivities: otherActivitiesHome,
-    staffOnLeave: staffOnLeave,
-    todayLeaves: todayLeaves,
-    weekLeaves: weekLeaves,
-    monthLeaves: monthLeaves,
-    filteredApprovalLeaves: filteredApprovalLeaves,
-    departments: departments,
-    sections: sections,
-    // all data
-    allUser: allUser,
-    allUserLeave: allUserLeave,
-    allLeave: allLeave,
-    allInfo: allInfo,
-    userLeave: userLeave,
-    leave: leave,
-    tasks: taskHome,
-    files: fileHome,
-    info: info,
-    activities: activitiesHome,
-    selectedNames: '',
-    show: 'show',
-    alert:
-        'Leave request submitted, please wait for approval 3 days from now',
-    // addditional data
-    clientIp: req.clientIp
 };
-
-try {
-    res.render('home', renderDataSuccess);
-} catch (renderError) {
-    console.error('Rendering Error:', renderError);
-    next(renderError);
-}
