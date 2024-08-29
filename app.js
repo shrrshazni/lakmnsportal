@@ -310,9 +310,9 @@ const app = express();
 //                 notifications: notifications,
 //                 uuid: uuidv4(),
 //             });
-//         } catch (renderError) {
-//             console.error('Rendering Error:', renderError);
-//             next(renderError);
+//         } catch (error) {
+//             console.error('Error:', error);
+//             next(error);
 //         }
 //     }
 // });
@@ -335,9 +335,9 @@ const app = express();
 //                 notifications: notifications,
 //                 uuid: uuidv4(),
 //             });
-//         } catch (renderError) {
-//             console.error('Rendering Error:', renderError);
-//             next(renderError);
+//         } catch (error) {
+//             console.error('Error:', error);
+//             next(error);
 //         }
 //     }
 // });
@@ -864,17 +864,6 @@ let transporter = nodemailer.createTransport({
     }
 });
 
-// Global error handler middleware
-app.use((err, req, res, next) => {
-    // Log the error details to the console
-    console.error('Global Error Handler:', err);
-
-    // Respond with a 500 status and render the global error page
-    res.status(500).render('global-error', {
-        errorMessage: 'Something went wrong!'
-    });
-});
-
 // ============================
 // Utility
 // ============================
@@ -897,7 +886,7 @@ const logActivity = async (userId, title, type, description) => {
     }
 };
 
-// save notifcation to database & use push notifcation to other user
+// Save notifcation to database & use push notifcation to other user
 const createAndSendNotification = async (userId, recipientId, type, url, message) => {
     try {
         // Create a new notification
@@ -954,7 +943,7 @@ const createAndSendNotification = async (userId, recipientId, type, url, message
     }
 };
 
-// save notifcation to database & send email to other user using transporter
+// Save notifcation to database & send email to other user using transporter
 const sendEmailNotification = async (recipientEmail, emailData) => {
     try {
         // Generate the HTML content for the email using EJS template rendering
@@ -989,6 +978,146 @@ const sendEmailNotification = async (recipientEmail, emailData) => {
     }
 };
 
+// Helper function to accept `show` and `alert` as parameters
+const renderHomePage = async (req, res, next, show = '', alert = '') => {
+    try {
+        const user = req.user;
+        const notifications = req.notifications;
+
+        // Fetch dynamic data needed per request
+        const [
+            allUser,
+            allLeave,
+            allUserLeave,
+            allInfo,
+            userLeave,
+            leave,
+            task,
+            file,
+            info,
+            otherTask,
+            otherActivities,
+            staffOnLeave,
+            userTeamMembers,
+            activities
+        ] = await Promise.all([
+            User.find().sort({ timestamp: -1 }),
+            Leave.find().sort({ timestamp: -1 }),
+            UserLeave.find().sort({ timestamp: -1 }),
+            Info.find(),
+            UserLeave.findOne({ user: user._id }).populate('user').exec(),
+            Leave.find({ user: user._id }),
+            Task.find({ assignee: { $in: [user._id] } }).sort({ timestamp: -1 }).populate('assignee').exec(),
+            File.find(),
+            Info.findOne({ user: user._id }),
+            Task.find({ assignee: { $ne: [user._id] } }),
+            Activity.find(),
+            user.isAdmin || user.isChiefExec || user.isDeputyChiefExec
+                ? Leave.find({ status: 'approved' })
+                : Leave.find({ status: 'approved', department: user.department }),
+            user.isChiefExec || user.isDeputyChiefExec
+                ? User.find({ isManagement: true, _id: { $ne: user._id } })
+                : user.isHeadOfDepartment
+                    ? User.find({ department: user.department, _id: { $ne: user._id } })
+                    : User.find({ section: user.section, _id: { $ne: user._id } }),
+            Activity.find({ date: { $gte: moment().utcOffset(8).startOf('day').clone().subtract(7, 'days') } })
+                .populate({ path: 'user' })
+                .sort({ date: -1 })
+                .exec()
+        ]);
+
+        // Process leave data
+        const today = moment().utcOffset(8).startOf('day');
+        const firstDayOfWeek = today.clone().startOf('isoWeek');
+        const lastDayOfWeek = today.clone().endOf('isoWeek');
+        const firstDayOfMonth = today.clone().startOf('month');
+        const lastDayOfMonth = today.clone().endOf('month');
+
+        let todayLeaves = [];
+        let weekLeaves = [];
+        let monthLeaves = [];
+
+        staffOnLeave.forEach(leave => {
+            if (isDateInRange(leave.date.start, leave.date.return)) {
+                todayLeaves.push(leave);
+            }
+            if (leave.date.start <= lastDayOfWeek && leave.date.return >= firstDayOfWeek) {
+                weekLeaves.push(leave);
+            }
+            if (leave.date.start <= lastDayOfMonth && leave.date.return >= firstDayOfMonth) {
+                monthLeaves.push(leave);
+            }
+        });
+
+        // Filter approval leaves based on user role
+        let filteredApprovalLeaves;
+        if (user.isAdmin) {
+            filteredApprovalLeaves = allLeave.filter(
+                leave => leave.status !== 'approved' && leave.status !== 'denied'
+            );
+        } else {
+            filteredApprovalLeaves = allLeave.filter(leave => {
+                return (
+                    leave.user.toString() !== user._id.toString() &&
+                    leave.approvals.some(
+                        approval =>
+                            approval.recipient.toString() === user._id.toString() &&
+                            leave.status !== 'approved' &&
+                            leave.status !== 'denied'
+                    )
+                );
+            });
+        }
+
+        // Collect unique departments and sections
+        const uniqueDepartments = new Set();
+        const uniqueSections = new Set();
+
+        allUser.forEach(user => {
+            if (user.department) uniqueDepartments.add(user.department);
+            if (user.section) uniqueSections.add(user.section);
+        });
+
+        const departments = Array.from(uniqueDepartments);
+        const sections = Array.from(uniqueSections);
+
+        // Render the home page
+        res.render('home', {
+            user,
+            notifications,
+            uuid: uuidv4(),
+            userTeamMembers,
+            otherTasks: otherTask,
+            otherActivities,
+            todayLeaves,
+            weekLeaves,
+            monthLeaves,
+            filteredApprovalLeaves,
+            departments,
+            sections,
+            allUser,
+            allUserLeave,
+            allLeave,
+            allInfo,
+            userLeave,
+            leave,
+            tasks: task,
+            files: file,
+            activities,
+            selectedNames: '',
+            info,
+            show,  // Include the show variable
+            alert, // Include the alert variable
+            clientIp: req.clientIp // Assuming clientIp middleware is in use
+        });
+
+    } catch (error) {
+        console.error('Error in rendering home page:', error);
+        next(error);  // Pass the error to the global error handler
+    }
+};
+
+
 // Allowed IP addresses for restricted access
 const allowedIPs = [
     '175.140.45.73', '104.28.242.42', '210.186.48.79',
@@ -1015,12 +1144,12 @@ app.get('/landing', async (req, res, next) => {
     try {
         // Render the landing page
         res.render('landing-page');
-    } catch (renderError) {
+    } catch (error) {
         // Log any errors that occur during rendering
-        console.error('Rendering Error:', renderError);
+        console.error('Error:', error);
 
         // Pass the error to the global error handler middleware
-        next(renderError);
+        next(error);
     }
 });
 
@@ -1064,10 +1193,10 @@ app.get('/sign-in', async (req, res, next) => {
             toastShow: '',
             toastMsg: ''
         });
-    } catch (renderError) {
+    } catch (error) {
         // Log rendering errors and pass to global error handler
-        console.error('Rendering Error:', renderError);
-        next(renderError);
+        console.error('Error:', error);
+        next(error);
     }
 }).post('/sign-in', async (req, res, next) => {
     const { username, password, rememberMe } = req.body;
@@ -1145,10 +1274,9 @@ app.get('/sign-in', async (req, res, next) => {
             });
         }
     } catch (error) {
-        // End timing and handle unexpected errors
-        console.timeEnd('Sign-in Process');
-        console.error('Sign-in Error:', error);
-        res.status(500).send('Internal Server Error');
+        // Log rendering errors and pass to global error handler
+        console.error('Error:', error);
+        next(error);
     }
 });
 
@@ -1159,10 +1287,10 @@ app.get('/forgot-password', async (req, res, next) => {
             show: '',
             alert: ''
         });
-    } catch (renderError) {
+    } catch (error) {
         // Log rendering errors and pass to global error handler
-        console.error('Rendering Error:', renderError);
-        next(renderError);
+        console.error('Error:', error);
+        next(error);
     }
 }).post('/forgot-password', async (req, res, next) => {
     const email = req.body.email;
@@ -1244,10 +1372,10 @@ app.get('/reset-password/:id', async (req, res, next) => {
             show: '',
             alert: ''
         });
-    } catch (renderError) {
+    } catch (error) {
         // Log rendering errors and pass to global error handler
-        console.error('Rendering Error:', renderError);
-        next(renderError);
+        console.error('Error:', error);
+        next(error);
     }
 }).post('/reset-password/:id', async (req, res, next) => {
     const id = req.params.id;
@@ -1289,10 +1417,10 @@ app.get('/reset-password/:id', async (req, res, next) => {
                     alert: 'Update password failed!'
                 });
             }
-        } catch (renderError) {
+        } catch (error) {
             // Log errors during password update and rendering
-            console.error('Rendering Error:', renderError);
-            next(renderError);
+            console.error('Error:', error);
+            next(error);
         }
     } else {
         // Render the reset password page with a mismatch alert
@@ -1341,7 +1469,7 @@ app.get('/sign-out/:id', async (req, res, next) => {
         });
     } catch (error) {
         // Handle any unexpected errors
-        console.error('Sign-out Error:', error);
+        console.error('Error:', error);
         next(error);
     }
 });
@@ -1352,163 +1480,7 @@ app.get('/sign-out/:id', async (req, res, next) => {
 
 // Dashboard route
 app.get('/', isAuthenticated, async (req, res, next) => {
-    const user = req.user; // User data from the middleware
-    const notifications = req.notifications; // Notifications data from the middleware
-
-    const startTotal = performance.now();
-
-    // Helper function to log execution time
-    const logTime = (label, start) => {
-        const end = performance.now();
-        console.log(`${label} took ${end - start}ms`);
-    };
-
-    try {
-        // Remove notifications older than one month
-        const oneMonthAgo = moment().subtract(1, 'months').toDate();
-        await Notification.deleteMany({ createdAt: { $lt: oneMonthAgo } });
-
-        // Start fetching data in parallel
-        const [
-            allUser,
-            allLeave,
-            allUserLeave,
-            allInfo,
-            userLeave,
-            leave,
-            task,
-            file,
-            info,
-            otherTask,
-            otherActivities,
-            staffOnLeave,
-            userTeamMembers,
-            activities
-        ] = await Promise.all([
-            User.find().sort({ timestamp: -1 }),
-            Leave.find().sort({ timestamp: -1 }),
-            UserLeave.find().sort({ timestamp: -1 }),
-            Info.find(),
-            UserLeave.findOne({ user: user._id }).populate('user').exec(),
-            Leave.find({ user: user._id }),
-            Task.find({ assignee: { $in: [user._id] } })
-                .sort({ timestamp: -1 })
-                .populate('assignee')
-                .exec(),
-            File.find(),
-            Info.findOne({ user: user._id }),
-            Task.find({ assignee: { $ne: [user._id] } }),
-            Activity.find(),
-            user.isAdmin || user.isChiefExec || user.isDeputyChiefExec
-                ? Leave.find({ status: 'approved' })
-                : Leave.find({ status: 'approved', department: user.department }),
-            user.isChiefExec || user.isDeputyChiefExec
-                ? User.find({ isManagement: true, _id: { $ne: user._id } })
-                : user.isHeadOfDepartment
-                    ? User.find({ department: user.department, _id: { $ne: user._id } })
-                    : User.find({ section: user.section, _id: { $ne: user._id } }),
-            Activity.find({ date: { $gte: moment().utcOffset(8).startOf('day').clone().subtract(7, 'days') } })
-                .populate({ path: 'user' })
-                .sort({ date: -1 })
-                .exec()
-        ]);
-
-        // Process leave data
-        const startLeaveProcessing = performance.now();
-        let todayLeaves = [];
-        let weekLeaves = [];
-        let monthLeaves = [];
-        const today = moment().utcOffset(8).startOf('day');
-        const firstDayOfWeek = today.clone().startOf('isoWeek');
-        const lastDayOfWeek = today.clone().endOf('isoWeek');
-        const firstDayOfMonth = today.clone().startOf('month');
-        const lastDayOfMonth = today.clone().endOf('month');
-
-        staffOnLeave.forEach(leave => {
-            if (isDateInRange(leave.date.start, leave.date.return)) {
-                todayLeaves.push(leave);
-            }
-            if (leave.date.start <= lastDayOfWeek && leave.date.return >= firstDayOfWeek) {
-                weekLeaves.push(leave);
-            }
-            if (leave.date.start <= lastDayOfMonth && leave.date.return >= firstDayOfMonth) {
-                monthLeaves.push(leave);
-            }
-        });
-        logTime('Leave Processing', startLeaveProcessing);
-
-        // Filter approval leaves based on user role
-        const startLeaveApprovals = performance.now();
-        let filteredApprovalLeaves;
-        if (user.isAdmin) {
-            filteredApprovalLeaves = allLeave.filter(
-                leave => leave.status !== 'approved' && leave.status !== 'denied'
-            );
-        } else {
-            filteredApprovalLeaves = allLeave.filter(leave => {
-                return (
-                    leave.user.toString() !== user._id.toString() &&
-                    leave.approvals.some(
-                        approval =>
-                            approval.recipient.toString() === user._id.toString() &&
-                            leave.status !== 'approved' &&
-                            leave.status !== 'denied'
-                    )
-                );
-            });
-        }
-        logTime('Leave Approvals', startLeaveApprovals);
-
-        // Collect unique departments and sections
-        const startUniqueCollections = performance.now();
-        const uniqueDepartments = new Set();
-        const uniqueSections = new Set();
-
-        allUser.forEach(user => {
-            if (user.department) uniqueDepartments.add(user.department);
-            if (user.section) uniqueSections.add(user.section);
-        });
-
-        const departments = Array.from(uniqueDepartments);
-        const sections = Array.from(uniqueSections);
-        logTime('Unique Collections', startUniqueCollections);
-
-        // Render the home page
-        res.render('home', {
-            user,
-            notifications,
-            uuid: uuidv4(),
-            userTeamMembers,
-            otherTasks: otherTask,
-            otherActivities,
-            todayLeaves,
-            weekLeaves,
-            monthLeaves,
-            filteredApprovalLeaves,
-            departments,
-            sections,
-            allUser,
-            allUserLeave,
-            allLeave,
-            allInfo,
-            userLeave,
-            leave,
-            tasks: task,
-            files: file,
-            activities,
-            selectedNames: '',
-            info,
-            show: '',
-            alert: '',
-            clientIp: req.clientIp // Assuming clientIp middleware is in use
-        });
-
-        logTime('Total', startTotal);
-    } catch (error) {
-        // Pass any unexpected errors to the global error handler middleware
-        console.error('Route Error:', error);
-        next(error);
-    }
+    await renderHomePage(req, res, next, '', '');
 });
 
 // Guide route
@@ -1524,9 +1496,9 @@ app.get('/guide', isAuthenticated, async (req, res, next) => {
             notifications: notifications,
             uuid: uuidv4() // Generate a unique ID for the session or content
         });
-    } catch (renderError) {
-        console.error('Rendering Error:', renderError);
-        next(renderError); // Pass errors to the global error handler
+    } catch (error) {
+        console.error('Error:', error);
+        next(error); // Pass errors to the global error handler
     }
 });
 
@@ -1543,9 +1515,9 @@ app.get('/changelog', isAuthenticated, async (req, res, next) => {
             notifications: notifications,
             uuid: uuidv4() // Generate a unique ID for the session or content
         });
-    } catch (renderError) {
-        console.error('Rendering Error:', renderError);
-        next(renderError); // Pass errors to the global error handler
+    } catch (error) {
+        console.error('Error:', error);
+        next(error); // Pass errors to the global error handler
     }
 });
 
@@ -1561,9 +1533,9 @@ app.get('/calendar', isAuthenticated, async (req, res, next) => {
             user: user,
             notifications: notifications
         });
-    } catch (renderError) {
-        console.error('Rendering Error:', renderError);
-        next(renderError); // Pass errors to the global error handler
+    } catch (error) {
+        console.error('Error:', error);
+        next(error); // Pass errors to the global error handler
     }
 });
 
@@ -1638,9 +1610,9 @@ app.get('/settings', isAuthenticated, async (req, res, next) => {
             show: '',
             alert: ''
         });
-    } catch (renderError) {
-        console.error('Rendering Error:', renderError);
-        next(renderError);
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
     }
 });
 
@@ -2804,10 +2776,8 @@ app.get('/leave/request', isAuthenticated, async (req, res, next) => {
         const selectedSupervisors = req.body.selectedSupervisors ? req.body.selectedSupervisors.split(',') : [];
 
         // Initialize variables for leave request processing
-        let approvals = '';
         let sendNoti = [];
         let sendEmail = [];
-        let renderDataError = {};
 
         // Prepare leave dates in the required format
         const newDate = {
@@ -2841,7 +2811,7 @@ app.get('/leave/request', isAuthenticated, async (req, res, next) => {
             Leave.find({ user: user._id })
         ]);
 
-        await processLeaveRequest(type, user, userLeave, startDate, returnDate, uuid, {
+        const checkProcess = await processLeaveRequest(type, user, userLeave, startDate, returnDate, uuid, {
             headOfSection,
             headOfDepartment,
             depChiefExec,
@@ -2851,10 +2821,9 @@ app.get('/leave/request', isAuthenticated, async (req, res, next) => {
             supervisors
         });
 
-        console.log('Render data error: ', renderDataError);
-        console.log('Approvals: ', approvals);
+        console.log(checkProcess.renderDataError.show);
 
-        if (approvals.length === 0) {
+        if (!checkProcess.approvals) {
             console.log('Leave request requirements have not met');
 
             const filesToDelete = await File.find({ uuid: uuid });
@@ -2867,215 +2836,135 @@ app.get('/leave/request', isAuthenticated, async (req, res, next) => {
                     const filePath = __dirname + '/public/uploads/' + deletedFile.name;
                     await fs.unlink(filePath);
                 }
-                try {
-                    res.render('leave-request', {
-                        user: user,
-                        uuid: uuid,
-                        notifications: notifications,
-                        leave: leave,
-                        userLeave: userLeave,
-                        selectedNames: '',
-                        selectedSupervisors: '',
-                        // data
-                        type: '',
-                        startDate: startDate,
-                        returnDate: returnDate,
-                        purpose: purpose,
-                        // validation
-                        validationType: 'is-invalid',
-                        validationStartDate: 'is-invalid',
-                        validationReturnDate: 'is-invalid',
-                        validationPurpose: '',
-                        startDateFeedback: 'Please enter a valid start date',
-                        returnDateFeedback: 'Please select valid return date',
-                        // toast
-                        show: renderDataError.show,
-                        alert: renderDataError.alert
-                    });
-                } catch (renderError) {
-                    console.error('Rendering Error:', renderError);
-                    next(renderError);
-                }
+
+                res.render('leave-request', {
+                    user: user,
+                    uuid: uuid,
+                    notifications: notifications,
+                    leave: leave,
+                    userLeave: userLeave,
+                    selectedNames: '',
+                    selectedSupervisors: '',
+                    // data
+                    type: '',
+                    startDate: startDate,
+                    returnDate: returnDate,
+                    purpose: purpose,
+                    // validation
+                    validationType: 'is-invalid',
+                    validationStartDate: 'is-invalid',
+                    validationReturnDate: 'is-invalid',
+                    validationPurpose: '',
+                    startDateFeedback: 'Please enter a valid start date',
+                    returnDateFeedback: 'Please select valid return date',
+                    // toast
+                    show: checkProcess.renderDataError.show,
+                    alert: checkProcess.renderDataError.alert
+                });
             } else {
-                try {
-                    res.render('leave-request', {
-                        user: user,
-                        uuid: uuid,
-                        notifications: notifications,
-                        leave: leave,
-                        userLeave: userLeave,
-                        selectedNames: '',
-                        selectedSupervisors: '',
-                        // data
-                        type: '',
-                        startDate: startDate,
-                        returnDate: returnDate,
-                        purpose: purpose,
-                        // validation
-                        validationType: 'is-invalid',
-                        validationStartDate: '',
-                        validationReturnDate: '',
-                        validationPurpose: '',
-                        startDateFeedback: 'Please select a start date',
-                        returnDateFeedback: 'Please select a return date',
-                        // toast
-                        show: renderDataError.show,
-                        alert: renderDataError.alert
-                    });
-                } catch (renderError) {
-                    console.error('Rendering Error:', renderError);
-                    next(renderError);
-                }
+                console.log('No files to delete!');
+                res.render('leave-request', {
+                    user: user,
+                    uuid: uuid,
+                    notifications: notifications,
+                    leave: leave,
+                    userLeave: userLeave,
+                    selectedNames: '',
+                    selectedSupervisors: '',
+                    // data
+                    type: '',
+                    startDate: startDate,
+                    returnDate: returnDate,
+                    purpose: purpose,
+                    // validation
+                    validationType: 'is-invalid',
+                    validationStartDate: '',
+                    validationReturnDate: '',
+                    validationPurpose: '',
+                    startDateFeedback: 'Please select a start date',
+                    returnDateFeedback: 'Please select a return date',
+                    // toast
+                    show: checkProcess.renderDataError.show,
+                    alert: checkProcess.renderDataError.alert
+                });
             }
         } else {
 
-            const adminUsers = await User.find({
-                isAdmin: true,
-                section: 'Human Resource Management Division',
-                _id: { $ne: adminHR._id }
-            });
+            console.log('Sucess leave request!');
+            res.redirect('/leave/request');
 
-            // Push the IDs of admin users to sendNoti
-            adminUsers.forEach(user => {
-                if (!sendNoti.includes(user._id)) {
-                    sendNoti.push(user._id);
-                }
-            });
+            // const adminUsers = await User.find({
+            //     isAdmin: true,
+            //     section: 'Human Resource Management Division',
+            //     _id: { $ne: adminHR._id }
+            // });
 
-            const nextRecipient = approvals[1].recipient;
-            sendNoti.push(nextRecipient);
-            console.log(sendNoti);
+            // // Push the IDs of admin users to sendNoti
+            // adminUsers.forEach(user => {
+            //     if (!sendNoti.includes(user._id)) {
+            //         sendNoti.push(user._id);
+            //     }
+            // });
 
-            let i = 0;
-            // set user id to be send
-            for (const approval of approvals) {
-                const recipientId = approval.recipient;
+            // const nextRecipient = approvals[1].recipient;
+            // sendNoti.push(nextRecipient);
+            // console.log(sendNoti);
 
-                // Fetch the user by recipient ID
-                const email = await User.findById(recipientId);
+            // let i = 0;
+            // // set user id to be send
+            // for (const approval of approvals) {
+            //     const recipientId = approval.recipient;
 
-                // Check if the user is found and has an email
-                if (email && user.email) {
-                    // Add the user's email to sendEmail
-                    sendEmail.push(email.email);
-                }
+            //     // Fetch the user by recipient ID
+            //     const email = await User.findById(recipientId);
 
-                i++;
-            }
+            //     // Check if the user is found and has an email
+            //     if (email && user.email) {
+            //         // Add the user's email to sendEmail
+            //         sendEmail.push(email.email);
+            //     }
 
-            const leave = new Leave({
-                fileId: uuid,
-                user: user._id,
-                department: user.department,
-                grade: user.grade,
-                assignee: assignee,
-                type: type,
-                date: newDate,
-                status: 'submitted',
-                purpose: purpose,
-                approvals: approvals
-            });
+            //     i++;
+            // }
 
-            const currentLeave = await Leave.create(leave);
-            console.log('Leave request submitted');
+            // const leave = new Leave({
+            //     fileId: uuid,
+            //     user: user._id,
+            //     department: user.department,
+            //     grade: user.grade,
+            //     assignee: assignee,
+            //     type: type,
+            //     date: newDate,
+            //     status: 'submitted',
+            //     purpose: purpose,
+            //     approvals: approvals
+            // });
 
-            // Send notification via web push and portal
-            if (sendNoti.length > 0) {
-                for (const recipientId of sendNoti) {
-                    // Send push notification
-                    await createAndSendNotification(
-                        user._id, // Sender
-                        recipientId, // Recipient
-                        'Leave request',
-                        `www.lakmnsportal.com/leave/details/${currentLeave._id}`,
-                        `${user.fullname} (${user.username}) has submitted their leave application. Please check for further action.`
-                    );
+            // const currentLeave = await Leave.create(leave);
+            // console.log('Leave request submitted');
 
-                }
-            }
+            // // Send notification via web push and portal
+            // if (sendNoti.length > 0) {
+            //     for (const recipientId of sendNoti) {
+            //         // Send push notification
+            //         await createAndSendNotification(
+            //             user._id, // Sender
+            //             recipientId, // Recipient
+            //             'Leave request',
+            //             `www.lakmnsportal.com/leave/details/${currentLeave._id}`,
+            //             `${user.fullname} (${user.username}) has submitted their leave application. Please check for further action.`
+            //         );
 
-            // Send email notification
-            await sendEmailNotification(assignee.email, {
-                content: `${user.fullname} (${user.username}) has submitted their leave application. Please check for further action.`,
-                url: `www.lakmnsportal.com/leave/details/${currentLeave}`
-            });
+            //     }
+            // }
 
-            // Fetch and prepare dashboard data
-            const [allUser, allLeave, allUserLeave, allInfo, taskHome, fileHome, otherTaskHome, otherActivitiesHome, info] = await Promise.all([
-                User.find().sort({ timestamp: -1 }),
-                Leave.find().sort({ timestamp: -1 }),
-                UserLeave.find().sort({ timestamp: -1 }),
-                Info.find(),
-                Task.find({ assignee: user._id }).sort({ timestamp: -1 }).populate('assignee').exec(),
-                File.find(),
-                Task.find({ assignee: { $ne: user._id } }),
-                Activity.find(),
-                Info.findOne({ user: user._id })
-            ]);
+            // // Send email notification
+            // await sendEmailNotification(assignee.email, {
+            //     content: `${user.fullname} (${user.username}) has submitted their leave application. Please check for further action.`,
+            //     url: `www.lakmnsportal.com/leave/details/${currentLeave}`
+            // });
 
-            const today = moment().utcOffset(8).startOf('day');
-            const firstDayOfWeek = today.clone().startOf('week').add(1, 'day');
-            const lastDayOfWeek = today.clone().endOf('week');
-            const firstDayOfMonth = today.clone().startOf('month');
-            const lastDayOfMonth = today.clone().endOf('month');
-
-            const todayLeaves = allLeave.filter(leave =>
-                leave.date.start >= today && today <= leave.date.return
-            );
-
-            const weekLeaves = allLeave.filter(leave =>
-                leave.date.start <= lastDayOfWeek && leave.date.return >= firstDayOfWeek
-            );
-
-            const monthLeaves = allLeave.filter(leave =>
-                leave.date.start <= lastDayOfMonth && leave.date.return >= firstDayOfMonth
-            );
-
-            const filteredApprovalLeaves = user.isAdmin
-                ? allLeave.filter(leave => leave.status !== 'approved' && leave.status !== 'denied')
-                : allLeave.filter(leave =>
-                    leave.user.toString() !== user._id.toString() &&
-                    leave.approvals.some(
-                        approval => approval.recipient.toString() === user._id.toString() &&
-                            leave.status !== 'approved' && leave.status !== 'denied'
-                    )
-                );
-
-            const uniqueDepartments = Array.from(new Set(allUser.map(user => user.department).filter(Boolean)));
-            const uniqueSections = Array.from(new Set(allUser.map(user => user.section).filter(Boolean)));
-
-            // Render home dashboard
-            const renderDataSuccess = {
-                user,
-                uuid: uuidv4(),
-                notifications: notifications,
-                userTeamMembers,
-                otherTasks: otherTaskHome,
-                otherActivities: otherActivitiesHome,
-                staffOnLeave: staffOnLeave,
-                todayLeaves,
-                weekLeaves,
-                monthLeaves,
-                filteredApprovalLeaves,
-                departments: uniqueDepartments,
-                sections: uniqueSections,
-                allUser,
-                allUserLeave,
-                allLeave,
-                allInfo,
-                userLeave,
-                leave: currentLeave,
-                tasks: taskHome,
-                files: fileHome,
-                info,
-                activities: activitiesHome,
-                selectedNames: '',
-                show: 'show',
-                alert: 'Leave request submitted, please wait for approval 3 days from now',
-                clientIp: req.clientIp
-            };
-
-            res.render('home', renderDataSuccess);
+            await renderHomePage(req, res, next, 'show', 'Leave requested successfully! Please wait within 3 days for approvals, thank you.');
         }
 
     } catch (error) {
@@ -3091,15 +2980,11 @@ app.get('/leave/history', isAuthenticated, async (req, res, next) => {
         const user = req.user;
 
         // Fetch unread notifications for the user
-        const notifications = await Notification.find({
-            recipient: user._id,
-            read: false
-        })
-            .populate('sender')
-            .sort({ timestamp: -1 });
+        const notifications = req.notifications;
 
         // Fetch the user's leave history
         const leave = await Leave.find({ user: user._id }).sort({ timestamp: -1 });
+        const allUser = await User.find({});
 
         // Fetch additional leave details for the user
         const userLeave = await UserLeave.findOne({ user: user._id }).populate('user').exec();
@@ -3109,12 +2994,13 @@ app.get('/leave/history', isAuthenticated, async (req, res, next) => {
             user: user,
             notifications: notifications,
             leave: leave,
-            userLeave: userLeave
+            userLeave: userLeave,
+            allUser: allUser
         });
-    } catch (renderError) {
+    } catch (error) {
         // Handle errors that occur during rendering
-        console.error('Rendering Error:', renderError);
-        next(renderError);
+        console.error('Error:', error);
+        next(error);
     }
 });
 
@@ -3180,10 +3066,10 @@ app.get('/leave/details/:id', isAuthenticated, async (req, res, next) => {
             files: file,
             leaveDays: daysDifference
         });
-    } catch (renderError) {
+    } catch (error) {
         // Handle errors that occur during rendering
-        console.error('Rendering Error:', renderError);
-        next(renderError);
+        console.error('Error:', error);
+        next(error);
     }
 });
 
@@ -3239,9 +3125,9 @@ app.get('/attendance', async function (req, res, next) {
             uuid: uuidv4(),
             uniqueIdentifier: uniqueIdentifier
         });
-    } catch (renderError) {
-        console.error('Rendering Error:', renderError);
-        next(renderError); // Pass error to global error handler
+    } catch (error) {
+        console.error('Error:', error);
+        next(error); // Pass error to global error handler
     }
 });
 
@@ -3253,9 +3139,9 @@ app.get('/scan-qr', isAuthenticated, async function (req, res, next) {
             notifications: req.notifications,
             uuid: uuidv4()
         });
-    } catch (renderError) {
-        console.error('Rendering Error:', renderError);
-        next(renderError); // Pass error to global error handler
+    } catch (error) {
+        console.error('Error:', error);
+        next(error); // Pass error to global error handler
     }
 });
 
@@ -3267,9 +3153,9 @@ app.get('/attendance/today/department/section', isAuthenticated, async function 
             notifications: req.notifications,
             uuid: uuidv4()
         });
-    } catch (renderError) {
-        console.error('Rendering Error:', renderError);
-        next(renderError); // Pass error to global error handler
+    } catch (error) {
+        console.error('Error:', error);
+        next(error); // Pass error to global error handler
     }
 });
 
@@ -3355,7 +3241,7 @@ app.get('/attendance/acknowledged/:id', isAuthenticated, async function (req, re
             };
             await sendEmailNotification(user.email, emailData);
 
-            res.redirect('/');
+            await renderHomePage(req, res, next, 'show', 'Attendance has been acknowledged!');
         } else {
             throw new Error('Failed to update attendance status');
         }
@@ -3400,9 +3286,9 @@ app.get('/human-resource/staff-members/overview', isAuthenticated, async functio
             show: '',
             alert: ''
         });
-    } catch (renderError) {
-        console.error('Rendering Error:', renderError);
-        next(renderError);
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
     }
 });
 
@@ -3420,9 +3306,9 @@ app.get('/human-resource/staff-members/overview/update/:id', isAuthenticated, as
             uuid: uuidv4(),
             otherUser: otherUser
         });
-    } catch (renderError) {
-        console.error('Rendering Error:', renderError);
-        next(renderError);
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
     }
 }).post('/human-resource/staff-members/overview/update/:id', isAuthenticated, async function (req, res) {
     const userId = req.params.id;
@@ -3497,9 +3383,9 @@ app.get('/human-resource/staff-members/add-staff', isAuthenticated, async functi
             notifications: notifications,
             uuid: uuidv4()
         });
-    } catch (renderError) {
-        console.error('Rendering Error:', renderError);
-        next(renderError);
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
     }
 }).post('/human-resource/staff-members/add-staff', isAuthenticated, async function (req, res) {
     const { user, notifications } = req;
@@ -3659,9 +3545,9 @@ app.get('/human-resource/leave/overview', isAuthenticated, async function (req, 
             allLeave: allLeave,
             allUser: allUser
         });
-    } catch (renderError) {
-        console.error('Rendering Error:', renderError);
-        next(renderError);
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
     }
 });
 
@@ -3682,9 +3568,9 @@ app.get('/human-resource/leave/balances', isAuthenticated, async function (req, 
             show: '',
             alert: ''
         });
-    } catch (renderError) {
-        console.error('Rendering Error:', renderError);
-        next(renderError);
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
     }
 });
 
@@ -3702,9 +3588,9 @@ app.get('/human-resource/leave/balances/update/:id', isAuthenticated, async func
             uuid: uuidv4(),
             userLeave: userLeave
         });
-    } catch (renderError) {
-        console.error('Rendering Error:', renderError);
-        next(renderError);
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
     }
 }).post('/human-resource/leave/balances/update/:id', isAuthenticated, async function (req, res) {
     const { user, notifications } = req;
@@ -3809,9 +3695,9 @@ app.get('/human-resource/attendance/overview', isAuthenticated, async (req, res,
             allUser: allUser,
             attendance: attendance
         });
-    } catch (renderError) {
-        console.error('Rendering Error:', renderError);
-        next(renderError);
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
     }
 });
 
@@ -3838,9 +3724,9 @@ app.get('/auxiliary-police/duty-handover/view', isAuthenticated, async (req, res
             cm: cm,
             rs: rs
         });
-    } catch (renderError) {
-        console.error('Rendering Error:', renderError);
-        next(renderError);
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
     }
 });
 
@@ -3854,9 +3740,9 @@ app.get('/auxiliary-police/duty-handover/submit', isAuthenticated, async (req, r
             show: '',
             alert: '',
         });
-    } catch (renderError) {
-        console.error('Rendering Error:', renderError);
-        next(renderError);
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
     }
 }).post('/auxiliary-police/duty-handover/submit', isAuthenticated, async (req, res, next) => {
     const { location, date, shift, time, notes, shiftStaff, dutyHandoverId } = req.body;
@@ -3927,9 +3813,9 @@ app.get('/auxiliary-police/schedule/view', isAuthenticated, async (req, res, nex
             notifications: req.notifications,
             uuid: uuidv4(),
         });
-    } catch (renderError) {
-        console.error('Rendering Error:', renderError);
-        next(renderError);
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
     }
 });
 
@@ -3943,9 +3829,9 @@ app.get('/auxiliary-police/schedule/add', isAuthenticated, async (req, res, next
             show: '',
             alert: ''
         });
-    } catch (renderError) {
-        console.error('Rendering Error:', renderError);
-        next(renderError);
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
     }
 }).post('/auxiliary-police/schedule/add', isAuthenticated, async (req, res, next) => {
     const {
@@ -4115,10 +4001,10 @@ app.get('/auxiliary-police/case/view', isAuthenticated, async (req, res, next) =
             uuid: uuidv4(),
             caseReport: caseReport
         });
-    } catch (renderError) {
+    } catch (error) {
         // Log and handle any rendering errors.
-        console.error('Rendering Error:', renderError);
-        next(renderError);
+        console.error('Error:', error);
+        next(error);
     }
 });
 
@@ -4137,10 +4023,10 @@ app.get('/auxiliary-police/case/details/:id', isAuthenticated, async (req, res, 
             uuid: uuidv4(),
             caseReport: caseReport
         });
-    } catch (renderError) {
+    } catch (error) {
         // Log and handle any rendering errors.
-        console.error('Rendering Error:', renderError);
-        next(renderError);
+        console.error('Error:', error);
+        next(error);
     }
 });
 
@@ -4155,10 +4041,10 @@ app.get('/auxiliary-police/case/add', isAuthenticated, async (req, res, next) =>
             show: '',
             alert: ''
         });
-    } catch (renderError) {
+    } catch (error) {
         // Log and handle any rendering errors.
-        console.error('Rendering Error:', renderError);
-        next(renderError);
+        console.error('Error:', error);
+        next(error);
     }
 }).post('/auxiliary-police/schedule/add', isAuthenticated, async (req, res, next) => {
     const {
@@ -4187,9 +4073,9 @@ app.get('/auxiliary-police/case/add', isAuthenticated, async (req, res, next) =>
                 show: 'show',
                 alert: 'All form fields must be filled; there is an empty input.'
             });
-        } catch (renderError) {
-            console.error('Rendering Error:', renderError);
-            next(renderError);
+        } catch (error) {
+            console.error('Error:', error);
+            next(error);
         }
         return;
     }
@@ -4243,9 +4129,9 @@ app.get('/auxiliary-police/case/add', isAuthenticated, async (req, res, next) =>
                         show: 'show',
                         alert: 'Successfully updated auxiliary police schedule.'
                     });
-                } catch (renderError) {
-                    console.error('Rendering Error:', renderError);
-                    next(renderError);
+                } catch (error) {
+                    console.error('Error:', error);
+                    next(error);
                 }
             }
         } else {
@@ -4270,9 +4156,9 @@ app.get('/auxiliary-police/case/add', isAuthenticated, async (req, res, next) =>
                         show: 'show',
                         alert: 'Successfully added auxiliary police schedule on ' + date
                     });
-                } catch (renderError) {
-                    console.error('Rendering Error:', renderError);
-                    next(renderError);
+                } catch (error) {
+                    console.error('Error:', error);
+                    next(error);
                 }
             } else {
                 console.log('Failed to add auxiliary police schedule on ' + date);
@@ -4284,9 +4170,9 @@ app.get('/auxiliary-police/case/add', isAuthenticated, async (req, res, next) =>
                         show: 'show',
                         alert: 'Failed to add auxiliary police schedule on ' + date
                     });
-                } catch (renderError) {
-                    console.error('Rendering Error:', renderError);
-                    next(renderError);
+                } catch (error) {
+                    console.error('Error:', error);
+                    next(error);
                 }
             }
         }
@@ -4634,9 +4520,9 @@ app.get('/map-coordinates/:reportId', async (req, res, next) => {
 app.get('/submit-success', async (req, res, next) => {
     try {
         res.render('submit-success');
-    } catch (renderError) {
-        console.error('Rendering Error:', renderError);
-        next(renderError);
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
     }
 });
 
@@ -4644,9 +4530,9 @@ app.get('/submit-success', async (req, res, next) => {
 app.get('/submit-failed', async (req, res, next) => {
     try {
         res.render('submit-failed');
-    } catch (renderError) {
-        console.error('Rendering Error:', renderError);
-        next(renderError);
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
     }
 });
 
@@ -4674,13 +4560,13 @@ app.get('/submit-failed', async (req, res, next) => {
 //                 },
 //                 errors: {}
 //             });
-//         } catch (renderError) {
-//             console.error('Rendering Error:', renderError);
-//             next(renderError);
+//         } catch (error) {
+//             console.error('Error:', error);
+//             next(error);
 //         }
-//     } catch (renderError) {
-//         console.error('Rendering Error:', renderError);
-//         next(renderError);
+//     } catch (error) {
+//         console.error('Error:', error);
+//         next(error);
 //     }
 // }).post('/visitor/submit', async (req, res) => {
 //     const kualaLumpurTimeZoneOffset1 = 8; // Kuala Lumpur is UTC+8
@@ -4719,9 +4605,9 @@ app.get('/submit-failed', async (req, res, next) => {
 //                     fields: fields,
 //                     errors: {}
 //                 });
-//             } catch (renderError) {
-//                 console.error('Rendering Error:', renderError);
-//                 next(renderError);
+//             } catch (error) {
+//                 console.error('Error:', error);
+//                 next(error);
 //             }
 //         } catch (err) {
 //             console.error('Error saving visitor:', err);
@@ -4731,9 +4617,9 @@ app.get('/submit-failed', async (req, res, next) => {
 //                     fields: fields,
 //                     errors: {}
 //                 });
-//             } catch (renderError) {
-//                 console.error('Rendering Error:', renderError);
-//                 next(renderError);
+//             } catch (error) {
+//                 console.error('Error:', error);
+//                 next(error);
 //             }
 //         }
 //     } else {
@@ -4743,9 +4629,9 @@ app.get('/submit-failed', async (req, res, next) => {
 //                 fields: fields,
 //                 errors: errors
 //             });
-//         } catch (renderError) {
-//             console.error('Rendering Error:', renderError);
-//             next(renderError);
+//         } catch (error) {
+//             console.error('Error:', error);
+//             next(error);
 //         }
 //     }
 // });
@@ -4789,9 +4675,9 @@ app.get('/submit-failed', async (req, res, next) => {
 //                 timeInVisitorsToday,
 //                 timeOutVisitorsToday
 //             });
-//         } catch (renderError) {
-//             console.error('Rendering Error:', renderError);
-//             next(renderError);
+//         } catch (error) {
+//             console.error('Error:', error);
+//             next(error);
 //         }
 //     }
 // });
@@ -6564,10 +6450,10 @@ app.get('/temp', isAuthenticated, async (req, res, next) => {
             notifications: notifications,
             uuid: uuidv4(),
         });
-    } catch (renderError) {
+    } catch (error) {
         // Pass rendering errors to global error handler
-        console.error('Rendering Error:', renderError);
-        next(renderError);
+        console.error('Error:', error);
+        next(error);
     }
 });
 
@@ -6819,10 +6705,10 @@ app.get('/testing', isAuthenticated, async (req, res, next) => {
             notifications: notifications,
             uuid: uuidv4(),
         });
-    } catch (renderError) {
+    } catch (error) {
         // Pass rendering errors to global error handler
-        console.error('Rendering Error:', renderError);
-        next(renderError);
+        console.error('Error:', error);
+        next(error);
     }
 });
 
@@ -8204,6 +8090,8 @@ const processLeaveRequest = async (type, user, userLeave, startDate, returnDate,
     let numberOfDays = calculateNumberOfDays(type, startDate, returnDate, user.isNonOfficeHour);
     const amountDayRequest = calculateBusinessDays(moment(), startDate);
     let leaveBalance, leaveTaken;
+    let renderDataError = { show: '', alert: '' };
+    let approvals = null;
 
     const handleSpecialLeaveType = async (leaveType, balance, taken = 0, genderCheck = true) => {
         if (checkLeaveBalance(balance, numberOfDays) && genderCheck) {
@@ -8220,13 +8108,14 @@ const processLeaveRequest = async (type, user, userLeave, startDate, returnDate,
                         approvers.supervisors,
                         type
                     );
-                    console.log('Approvals inside handleSpecialLeaveType:', approvals);  // Log approvals
-                    return approvals;  // Return approvals after logging
+                    return { approvals, renderDataError };
                 }
             } else {
                 renderDataError.alert = 'The leave date applied must be more than 3 days from today';
             }
         }
+        renderDataError.show = 'show';
+        return { approvals, renderDataError };
     };
 
     switch (type) {
@@ -8245,7 +8134,7 @@ const processLeaveRequest = async (type, user, userLeave, startDate, returnDate,
                     approvers.supervisors,
                     type
                 );
-                return approvals;
+                return { approvals, renderDataError };
             }
             renderDataError.alert = 'The leave date applied must be more than 3 days from today';
             break;
@@ -8268,7 +8157,7 @@ const processLeaveRequest = async (type, user, userLeave, startDate, returnDate,
                         approvers.supervisors,
                         type
                     );
-                    return approvals;
+                    return { approvals, renderDataError };
                 }
             } else {
                 renderDataError.alert = 'The sick leave request must be applied today or up to 5 days before';
@@ -8289,7 +8178,7 @@ const processLeaveRequest = async (type, user, userLeave, startDate, returnDate,
                         approvers.supervisors,
                         type
                     );
-                    return approvals;
+                    return { approvals, renderDataError };
                 }
             } else {
                 renderDataError.alert = 'There is an error in requesting the emergency leave';
@@ -8303,20 +8192,17 @@ const processLeaveRequest = async (type, user, userLeave, startDate, returnDate,
         case 'Special Leave':
             leaveBalance = userLeave[type.toLowerCase()].leave;
             leaveTaken = userLeave[type.toLowerCase()].taken;
-            approvals = await handleSpecialLeaveType(type, leaveBalance, leaveTaken, true);
-            return approvals;
+            return await handleSpecialLeaveType(type, leaveBalance, leaveTaken, true);
 
         case 'Paternity Leave':
             leaveBalance = userLeave.paternity.leave;
             leaveTaken = userLeave.paternity.taken;
-            approvals = await handleSpecialLeaveType(type, leaveBalance, leaveTaken, user.gender === 'Male' && leaveTaken <= 6);
-            return approvals;
+            return await handleSpecialLeaveType(type, leaveBalance, leaveTaken, user.gender === 'Male' && leaveTaken <= 6);
 
         case 'Maternity Leave':
             leaveBalance = userLeave.maternity.leave;
             leaveTaken = userLeave.maternity.taken;
-            approvals = await handleSpecialLeaveType(type, leaveBalance, leaveTaken, user.gender === 'Female');
-            return approvals;
+            return await handleSpecialLeaveType(type, leaveBalance, leaveTaken, user.gender === 'Female');
 
         case 'Unpaid Leave':
             approvals = generateApprovals(
@@ -8330,11 +8216,17 @@ const processLeaveRequest = async (type, user, userLeave, startDate, returnDate,
                 approvers.supervisors,
                 type
             );
-            return approvals;
+            return { approvals, renderDataError };
+
+        default:
+            renderDataError.alert = 'Invalid leave type.';
+            break;
     }
 
     renderDataError.show = 'show';
+    return { approvals, renderDataError };
 };
+
 
 // * Leave approval
 // Helper function for handling approved status
@@ -8741,6 +8633,30 @@ const calculateNumberOfDays = (type, startDate, returnDate, isNonOfficeHour) => 
 
     return 0; // Default return if type is not matched
 };
+
+// Global error handler middleware
+app.use((error, req, res, next) => {
+    // Log the error details to the console for debugging
+    console.error('Global Error Handler:', error);
+
+    // Check if the user is authenticated
+    if (req.isAuthenticated && req.isAuthenticated()) {
+        // Check if the user has a super admin role
+        if (req.user && req.user.role === 'super admin') {
+            // Render error page with detailed error message for super admins
+            return res.status(500).render('global-error', {
+                errorMessage: 'A detailed error has occurred. Please check the error details below.',
+                error: error.message // Show full error details
+            });
+        }
+    }
+
+    // For all other users, render a generic error message
+    res.status(500).render('global-error', {
+        errorMessage: 'Something went wrong!',
+        error: null // Do not show error details to non-super admins
+    });
+});
 
 // Port initialization route - Port 5002
 const PORT = process.env.PORT || 5002;
