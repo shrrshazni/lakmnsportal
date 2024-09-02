@@ -20,9 +20,10 @@
     });
 }
 
-var showApproval = 'd-none';
-var showAcknowledge = 'd-none';
-var showCancel = 'd-none';
+let showApproval = 'd-none';
+let showAcknowledge = 'd-none';
+let showCancel = 'd-none';
+let showComment = 'd-none';
 
 // Determine user's position in the approval process
 const userApprovals = approvals.filter(approval => approval.recipient.equals(user._id));
@@ -96,6 +97,11 @@ if (leave.status === 'approved' && leaveStartDateUTCPlus8 > new Date()) {
     }
 }
 
+if (leave.user.toString() === user._id.toString() || anyApprovalIndex !== -1 || (user.isAdmin && user.section === 'Human Resource Management Division')) {
+    showComment = '';
+}
+
+
 console.log(showCancel);
 
 %>
@@ -127,6 +133,7 @@ console.log(showCancel);
       <ul class="dropdown-menu dropdown-menu-end p-0" style="z-index: 9999;">
         <li><a class="dropdown-item d-none" href="/leave/history">Leave History</a></li>
         <li><a class="dropdown-item <%= showCancel %>" href="/leave/cancelled/<%= leave._id %>">Cancel Request</a></li>
+        <li><a class="dropdown-item <%= showComment %>" href="#!" data-bs-target="#add-comment" data-bs-toggle="modal">Add Remarks</a></li>
         <li><a class="dropdown-item" href="#!">Print</a></li>
       </ul>
     </div>
@@ -511,6 +518,26 @@ console.log(showCancel);
       <div class="modal-footer border-top-0">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
         <button type="button" class="btn btn-primary">Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- add comment -->
+<div class="modal fade" id="add-comment" tabindex="-1" aria-labelledby="add-comment" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-md">
+    <div class="modal-content">
+      <div class="modal-header border-bottom-0">
+        <h1 class="modal-title fs-6" id="add-comment">Add comment</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form action="/leave/comment/<%= leave._id %>" method="post">
+          <label class="form-label" for="addDescription">Comment</label>
+          <textarea class="form-control scrollbar-overlay mb-3" id="addComment" placeholder="Leave a comment here" style="height: 100px" name="comment"></textarea>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="submit" class="btn btn-primary">Save Comment</button>
+        </form>
       </div>
     </div>
   </div>

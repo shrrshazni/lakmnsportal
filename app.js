@@ -984,6 +984,8 @@ const renderHomePage = async (req, res, next, show = '', alert = '') => {
         const user = req.user;
         const notifications = req.notifications;
 
+        const startTime = performance.now();
+
         // Fetch dynamic data needed per request
         const [
             allUser,
@@ -1110,6 +1112,10 @@ const renderHomePage = async (req, res, next, show = '', alert = '') => {
             alert, // Include the alert variable
             clientIp: req.clientIp // Assuming clientIp middleware is in use
         });
+
+        const endTime = performance.now();
+        const executionTimeInSeconds = ((endTime - startTime) / 1000).toFixed(2);
+        console.log(`Execution time: ${executionTimeInSeconds} seconds`);
 
     } catch (error) {
         console.error('Error in rendering home page:', error);
@@ -2426,7 +2432,7 @@ app.post('/update/:content/:id', isAuthenticated, async (req, res, next) => {
                             url: 'https://www.lakmnsportal.com/'
                         };
 
-                        const checkAssignee = await User.findOne({ assignee: assignee });
+                        const checkAssignee = await User.findOne({ _id: assignee });
 
                         // Send email notification to each assignee
                         await sendEmailNotification(checkAssignee.email, emailData); // Assuming assignee.email is the recipient email
@@ -2476,7 +2482,7 @@ app.post('/update/:content/:id', isAuthenticated, async (req, res, next) => {
                             url: 'https://www.lakmnsportal.com/'
                         };
 
-                        const checkAssignee = await User.findOne({ assignee: assignee });
+                        const checkAssignee = await User.findOne({ _id: assignee });
 
                         // Send email notification to each assignee
                         await sendEmailNotification(checkAssignee.email, emailData);// Assuming assignee.email is the recipient email
@@ -2544,7 +2550,7 @@ app.post('/update/:content/:id', isAuthenticated, async (req, res, next) => {
                             url: 'https://www.lakmnsportal.com/'
                         };
 
-                        const checkAssignee = await User.findOne({ assignee: assignee });
+                        const checkAssignee = await User.findOne({ _id: assignee });
 
                         // Send email notification to each assignee
                         await sendEmailNotification(checkAssignee.email, emailData); // Assuming assignee.email is the recipient email
@@ -2617,7 +2623,7 @@ app.post('/update/:content/:id', isAuthenticated, async (req, res, next) => {
                             url: 'https://www.lakmnsportal.com/'
                         };
 
-                        const checkAssignee = await User.findOne({ assignee: assignee });
+                        const checkAssignee = await User.findOne({ _id: assignee });
 
                         // Send email notification to each assignee
                         await sendEmailNotification(checkAssignee.email, emailData); // Assuming assignee.email is the recipient email
@@ -2684,7 +2690,7 @@ app.get('/delete/:content/:id', isAuthenticated, async (req, res, next) => {
                                 url: 'https://www.lakmnsportal.com/'
                             };
 
-                            const checkAssignee = await User.findOne({ assignee: assignee });
+                            const checkAssignee = await User.findOne({ _id: assignee });
 
                             // Send email notification to each assignee
                             await sendEmailNotification(checkAssignee.email, emailData); // Assuming assignee.email is the recipient email
@@ -2731,7 +2737,7 @@ app.get('/delete/:content/:id', isAuthenticated, async (req, res, next) => {
 // Leave
 // ============================
 
-// Leave request 
+// Leave request route
 app.get('/leave/request', isAuthenticated, async (req, res, next) => {
     try {
         // Retrieve user and notifications data from the request object
@@ -2913,7 +2919,7 @@ app.get('/leave/request', isAuthenticated, async (req, res, next) => {
                 }
             });
 
-            const nextRecipient = approvals[1].recipient;
+            const nextRecipient = checkProcess.approvals[1].recipient;
             sendNoti.push(nextRecipient);
 
             console.log(sendNoti);
@@ -2981,7 +2987,7 @@ app.get('/leave/request', isAuthenticated, async (req, res, next) => {
     }
 });
 
-// HISTORY
+// Leave history route
 app.get('/leave/history', isAuthenticated, async (req, res, next) => {
     try {
         // Extract user from the request object
@@ -3012,7 +3018,7 @@ app.get('/leave/history', isAuthenticated, async (req, res, next) => {
     }
 });
 
-// DETAILS
+// Leave details route
 app.get('/leave/details/:id', isAuthenticated, async (req, res, next) => {
     try {
         // Extract leave ID from request parameters and user from request object
@@ -3041,25 +3047,7 @@ app.get('/leave/details/:id', isAuthenticated, async (req, res, next) => {
         // Calculate the number of leave days
         const startDate = leave.date.start;
         const returnDate = leave.date.return;
-        let daysDifference = '';
-
-        // Determine the number of leave days based on leave type
-        if (leave.type === 'Annual Leave' || leave.type === 'Emergency Leave') {
-            daysDifference = userReq.isNonOfficeHour
-                ? moment(returnDate).diff(moment(startDate), 'days') + 1
-                : calculateBusinessDays(startDate, returnDate);
-        } else if ([
-            'Marriage Leave',
-            'Paternity Leave',
-            'Maternity Leave',
-            'Study Leave',
-            'Hajj Leave',
-            'Unpaid Leave',
-            'Special Leave',
-            'Sick Leave'
-        ].includes(leave.type)) {
-            daysDifference = moment(returnDate).diff(moment(startDate), 'days') + 1;
-        }
+        const daysDifference = calculateNumberOfDays(leave.type, leave.date.start, leave.date.return, userReq.isNonOfficeHour);
 
         // Find associated files for the leave
         const file = await File.find({ uuid: leave.fileId });
@@ -3083,8 +3071,8 @@ app.get('/leave/details/:id', isAuthenticated, async (req, res, next) => {
 });
 
 
-// APPROVE
-app.get('/leave/:approval/:id', async (req, res, next) => {
+// Leave approval route
+app.get('/leave/:approval/:id', isAuthenticated, async (req, res, next) => {
     try {
         const { id, approval } = req.params;  // Extract leave ID and approval action from request parameters
         const user = req.user;  // Get the authenticated user from the request object
@@ -3119,6 +3107,22 @@ app.get('/leave/:approval/:id', async (req, res, next) => {
     } catch (error) {
         console.error('Error handling leave request:', error);  // Log the error for debugging purposes
         res.status(500).send('Internal Server Error');  // Respond with a 500 error for any unexpected issues
+    }
+});
+
+// Leave comment route
+app.post('/leave/comment/:id', isAuthenticated, async (req, res, next) => {
+    try {
+        const user = req.user;
+        const id = req.params.id;
+        const comment = req.body.comment;
+
+        const checkLeave = await Leave.findOne({ _id: id });
+
+        await addComment(checkLeave, user, comment, res);
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
     }
 });
 
@@ -6354,45 +6358,22 @@ app.get('/super-admin/update', isAuthenticated, async (req, res, next) => {
     // Check if the authenticated user is a super admin
     if (user.isSuperAdmin) {
         try {
-            // Retrieve all users from the database
-            const users = await User.find();
+            // Step 1: Find users with usernames 'Test1', 'Test2', 'Test3', and 'Test4'
+            const users = await User.find({
+                username: { $in: ['Test1', 'Test2', 'Test3', 'Test4'] }
+            }).select('_id'); // Only select the '_id' field to optimize the query
 
-            // Iterate through each user to update their leave records
-            for (let user of users) {
-                // Find existing leave record for the user
-                const userLeave = await UserLeave.findOne({ user: user._id });
+            // Step 2: Extract the user IDs
+            const userIds = users.map(user => user._id);
 
-                if (userLeave) {
-                    // Update existing leave record with new Umrah leave category
-                    userLeave.umrah = {
-                        leave: 7,
-                        taken: 0
-                    };
-                    await userLeave.save();
-                } else {
-                    // Create a new leave record for the user if none exists
-                    const newUserLeave = new UserLeave({
-                        user: user._id,
-                        annual: { leave: 14, taken: 0 },
-                        sick: { leave: 14, taken: 0 },
-                        sickExtended: { leave: 60, taken: 0 },
-                        emergency: { leave: 0, taken: 0 },
-                        paternity: { leave: 3, taken: 0 },
-                        maternity: { leave: 60, taken: 0 },
-                        bereavement: { leave: 3, taken: 0 },
-                        study: { leave: 3, taken: 0 },
-                        marriage: { leave: 3, taken: 0 },
-                        attendExam: { leave: 5, taken: 0 },
-                        hajj: { leave: 40, taken: 0 },
-                        umrah: { leave: 7, taken: 0 }, // new Umrah leave category
-                        unpaid: { taken: 0 },
-                        special: { leave: 3, taken: 0 }
-                    });
-                    await newUserLeave.save();
-                }
+            if (userIds.length > 0) {
+                // Step 3: Delete leave records with these user IDs
+                const result = await Leave.deleteMany({ user: { $in: userIds } });
+
+                console.log(`${result.deletedCount} leave(s) deleted for users with usernames: Test1, Test2, Test3, and Test4.`);
+            } else {
+                console.log('No users found with usernames: Test1, Test2, Test3, and Test4.');
             }
-
-            console.log('User leaves updated successfully');
         } catch (error) {
             // Pass error to global error handler
             return next(error);
@@ -8071,7 +8052,7 @@ const generateApprovals = (
 
 // * Leave request
 // * Helper function to check leave balance and set errors if insufficient
-const checkLeaveBalance = (leaveBalance, numberOfDays, minDays = 0) => {
+const checkLeaveBalance = (leaveBalance, numberOfDays, minDays = 0, renderDataError) => {
     if (leaveBalance < numberOfDays || numberOfDays <= minDays) {
         renderDataError.show = 'show';
         renderDataError.alert = 'Insufficient balance for the requested duration';
@@ -8080,9 +8061,10 @@ const checkLeaveBalance = (leaveBalance, numberOfDays, minDays = 0) => {
     return true;
 };
 
+
 // * Leave request
 // * Helper function to check if files are attached
-const checkFileAttachment = async (uuid, errorMessage = 'File attachment is required!') => {
+const checkFileAttachment = async (uuid, renderDataError, errorMessage = 'File attachment is required!') => {
     const findFile = await File.find({ uuid });
     if (findFile.length === 0) {
         renderDataError.show = 'show';
@@ -8101,12 +8083,31 @@ const processLeaveRequest = async (type, user, userLeave, startDate, returnDate,
     let renderDataError = { show: '', alert: '' };
     let approvals = null;
 
+
+    // Helper function to map leave type names to userLeave keys
+    const getUserLeaveKey = (leaveType) => {
+        switch (leaveType) {
+            case 'Attend Exam Leave':
+                return 'attendExam';
+            case 'Marriage Leave':
+                return 'marriage';
+            case 'Hajj Leave':
+                return 'hajj';
+            case 'Umrah Leave':
+                return 'umrah';
+            case 'Special Leave':
+                return 'special';
+            default:
+                return leaveType.toLowerCase();
+        }
+    };
+
     // * Handle special leave type
     const handleSpecialLeaveType = async (leaveType, balance, taken = 0, genderCheck = true) => {
-        if (checkLeaveBalance(balance, numberOfDays) && genderCheck) {
+        if (checkLeaveBalance(balance, numberOfDays, 3, renderDataError) && genderCheck) {
             // Separate handling for "Special Leave" type
             if (leaveType === 'Special Leave' && amountDayRequest <= 1 && amountDayRequest >= -5) {
-                if (await checkFileAttachment(uuid, `There is no file attached for ${leaveType.toLowerCase()}!`)) {
+                if (await checkFileAttachment(uuid, renderDataError, `There is no file attached for ${leaveType.toLowerCase()}!`)) {
                     approvals = generateApprovals(
                         user,
                         approvers.headOfSection,
@@ -8122,7 +8123,7 @@ const processLeaveRequest = async (type, user, userLeave, startDate, returnDate,
                 }
             } else if (leaveType === 'Paternity Leave' || leaveType === 'Maternity Leave') {
                 // For Paternity and Maternity Leave, check only genderCheck and file attachment
-                if (await checkFileAttachment(uuid, `There is no file attached for ${leaveType.toLowerCase()}!`)) {
+                if (await checkFileAttachment(uuid, renderDataError, `There is no file attached for ${leaveType.toLowerCase()}!`)) {
                     approvals = generateApprovals(
                         user,
                         approvers.headOfSection,
@@ -8139,7 +8140,7 @@ const processLeaveRequest = async (type, user, userLeave, startDate, returnDate,
             } else {
                 // For other special leave types like Umrah, Hajj, Attend Exam, Marriage Leave
                 if (amountDayRequest >= 3) {
-                    if (await checkFileAttachment(uuid, `There is no file attached for ${leaveType.toLowerCase()}!`)) {
+                    if (await checkFileAttachment(uuid, renderDataError, `There is no file attached for ${leaveType.toLowerCase()}!`)) {
                         approvals = generateApprovals(
                             user,
                             approvers.headOfSection,
@@ -8166,7 +8167,7 @@ const processLeaveRequest = async (type, user, userLeave, startDate, returnDate,
         case 'Annual Leave':
         case 'Half Day Leave':
             leaveBalance = userLeave.annual.leave - userLeave.annual.taken;
-            if (checkLeaveBalance(leaveBalance, numberOfDays) && amountDayRequest >= 3) {
+            if (checkLeaveBalance(leaveBalance, numberOfDays, 3, renderDataError)) {
                 approvals = generateApprovals(
                     user,
                     approvers.headOfSection,
@@ -8188,8 +8189,8 @@ const processLeaveRequest = async (type, user, userLeave, startDate, returnDate,
             leaveBalance = type === 'Sick Leave'
                 ? userLeave.sick.leave - userLeave.sick.taken
                 : userLeave.sickExtended.leave - userLeave.sickExtended.taken;
-            if (checkLeaveBalance(leaveBalance, numberOfDays) && amountDayRequest <= 1 && amountDayRequest >= -5) {
-                if (await checkFileAttachment(uuid, 'Supporting documents must be attached for sick leave')) {
+            if (checkLeaveBalance(leaveBalance, numberOfDays, 0, renderDataError) && amountDayRequest <= 1 && amountDayRequest >= -5) {
+                if (await checkFileAttachment(uuid, renderDataError, `There is no file attached for ${type.toLowerCase()}!`)) {
                     approvals = generateApprovals(
                         user,
                         approvers.headOfSection,
@@ -8211,7 +8212,7 @@ const processLeaveRequest = async (type, user, userLeave, startDate, returnDate,
         case 'Half Day Emergency Leave':
         case 'Emergency Leave':
             if (amountDayRequest <= 1 && amountDayRequest >= -5) {
-                if (await checkFileAttachment(uuid, 'Supporting documents must be attached accordingly')) {
+                if (await checkFileAttachment(uuid, renderDataError, `There is no file attached for ${type.toLowerCase()}!`)) {
                     approvals = generateApprovals(
                         user,
                         approvers.headOfSection,
@@ -8235,8 +8236,9 @@ const processLeaveRequest = async (type, user, userLeave, startDate, returnDate,
         case 'Hajj Leave':
         case 'Umrah Leave':
         case 'Special Leave':
-            leaveBalance = userLeave[type.toLowerCase()].leave;
-            leaveTaken = userLeave[type.toLowerCase()].taken;
+            const leaveKey = getUserLeaveKey(type);
+            leaveBalance = userLeave[leaveKey].leave;
+            leaveTaken = userLeave[leaveKey].taken;
             return await handleSpecialLeaveType(type, leaveBalance, leaveTaken, true);
 
         case 'Paternity Leave':
@@ -8612,10 +8614,60 @@ const handleAcknowledged = async (checkLeave, user, res) => {
         const userReqEmail = await User.findOne({ _id: firstRecipientId });
         if (userReqEmail) {
             const emailData = {
-                content: `The leave request has been denied by ${user.fullname} with work ID ${user.username}. Please click the button above to open the leave details.`,
+                content: `The leave request has been acknowledged by ${user.fullname} with work ID ${user.username}. Please click the button above to open the leave details.`,
                 url: 'www.lakmnsportal.com/leave/details/' + checkLeave._id,
             };
             await sendEmailNotification(userReqEmail.email, emailData);
+        }
+
+        res.redirect(`/leave/details/${checkLeave._id}`);
+    } catch (error) {
+        console.error('Error handling acknowledgment:', error);
+        // Use your existing global error handler middleware
+        next(error);
+    }
+};
+
+// * Leave approval
+// Helper function for add remarks on leave
+const addComment = async (checkLeave, user, comment, res) => {
+    try {
+        // Update the approval status of the HR recipient to 'approved'
+        const update = await Leave.findOneAndUpdate(
+            {
+                _id: checkLeave._id,
+            },
+            {
+                $set: {
+                    comment: comment,
+                    timestamp: moment().utcOffset(8).toDate()
+                }
+            },
+            { new: true }
+        );
+
+        const firstRecipientId = checkLeave.approvals[0].recipient;
+
+        if (update) {
+            // Log denial activity
+            await logActivity(user._id, 'Leave Comment', 'Adding Comment', 'Leave commented by ' + user.fullname + ' with ' + user.username);
+
+            // Notify the requester about the denial
+            await createAndSendNotification(user._id, firstRecipientId, 'Leave Comment', `/leave/details/${checkLeave._id}`, 'Your leave request has been approved officially.');
+
+            // Send an email notification to the requester about the denial
+            const userReqEmail = await User.findOne({ _id: firstRecipientId });
+            if (userReqEmail) {
+                const emailData = {
+                    content: `The leave request has been commented by ${user.fullname} with work ID ${user.username}. Please click the button above to open the leave details.`,
+                    url: 'www.lakmnsportal.com/leave/details/' + checkLeave._id,
+                };
+                await sendEmailNotification(userReqEmail.email, emailData);
+            }
+
+            console.log('Update successful!');
+        } else {
+            console.log('Update failed!');
         }
 
         res.redirect(`/leave/details/${checkLeave._id}`);
