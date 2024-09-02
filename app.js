@@ -1879,10 +1879,10 @@ app.post('/status-update', isAuthenticated, async (req, res, next) => {
 
         if (updatedInfo) {
             console.log('Status update accomplished!');
-            res.redirect('/');
+            await renderHomePage(req, res, next, 'show', 'Your status udpated!');
         } else {
             console.log('Status update failed!');
-            res.redirect('/');
+            await renderHomePage(req, res, next, 'show', 'Update status failed!');
         }
     } catch (error) {
         next(error);  // Use global error handler
@@ -2012,7 +2012,7 @@ app.get('/markAsRead/:id', isAuthenticated, async (req, res, next) => {
             res.redirect(update.url);
         } else {
             console.log('Error updating notification');
-            res.redirect('/');
+            await renderHomePage(req, res, next, 'show', 'Error updating notification!');
         }
     } catch (error) {
         next(error);  // Use global error handler
@@ -2031,7 +2031,7 @@ app.get('/markAllAsRead', isAuthenticated, async (req, res, next) => {
             { read: true }
         );
 
-        res.redirect('/');
+        await renderHomePage(req, res, next, 'show', 'Done mark all your notification as read!');
     } catch (error) {
         next(error);  // Use global error handler
     }
@@ -2184,7 +2184,7 @@ app.get('/files/delete/:id', async (req, res, next) => {
                 await fs.unlink(filePath);
             }
 
-            res.redirect('/');
+            await renderHomePage(req, res, next, 'show', deletedFile.name + ' has been deleted');
         } else {
             console.log('Error deleting the file');
             res.status(404).send('Error deleting the file');
@@ -2370,10 +2370,10 @@ app.post('/task/add', isAuthenticated, async (req, res, next) => {
             }
 
             console.log('New task added');
-            res.redirect('/');
+            await renderHomePage(req, res, next, 'show', 'New task added!');
         } else {
             console.log('Input was not valid or complete, please try again!');
-            res.redirect('/');
+            await renderHomePage(req, res, next, 'show', 'Input was not valid or complete, please try again!');
         }
     } catch (error) {
         console.error('Error adding task:', error);
@@ -2426,18 +2426,20 @@ app.post('/update/:content/:id', isAuthenticated, async (req, res, next) => {
                             url: 'https://www.lakmnsportal.com/'
                         };
 
+                        const checkAssignee = await User.findOne({ assignee: assignee });
+
                         // Send email notification to each assignee
-                        await sendEmailNotification(assignee.email, emailData); // Assuming assignee.email is the recipient email
+                        await sendEmailNotification(checkAssignee.email, emailData); // Assuming assignee.email is the recipient email
                     });
 
                     // Wait for all notifications and emails to be sent
                     await Promise.all(notificationPromises);
 
                     console.log('Description task has been updated');
-                    res.redirect('/');
+                    await renderHomePage(req, res, next, 'show', 'Description task has been updated!');
                 } else {
                     console.log('Description task has not been updated.');
-                    res.redirect('/');
+                    await renderHomePage(req, res, next, 'show', 'Description task has been updated!');
                 }
             } else if (content === 'subtask') {
                 const subtask = req.body.subtask;
@@ -2474,18 +2476,20 @@ app.post('/update/:content/:id', isAuthenticated, async (req, res, next) => {
                             url: 'https://www.lakmnsportal.com/'
                         };
 
+                        const checkAssignee = await User.findOne({ assignee: assignee });
+
                         // Send email notification to each assignee
-                        await sendEmailNotification(assignee.email, emailData); // Assuming assignee.email is the recipient email
+                        await sendEmailNotification(checkAssignee.email, emailData);// Assuming assignee.email is the recipient email
                     });
 
                     // Wait for all notifications and emails to be sent
                     await Promise.all(notificationPromises);
 
                     console.log('Subtask added');
-                    res.redirect('/');
+                    await renderHomePage(req, res, next, 'show', 'Subtask added!');
                 } else {
                     console.log('Subtask failed to be added.');
-                    res.redirect('/');
+                    await renderHomePage(req, res, next, 'show', 'Subtask failed to be added!');
                 }
             } else if (content === 'task') {
                 const subtask = req.body.subtaskCheckbox;
@@ -2540,18 +2544,20 @@ app.post('/update/:content/:id', isAuthenticated, async (req, res, next) => {
                             url: 'https://www.lakmnsportal.com/'
                         };
 
+                        const checkAssignee = await User.findOne({ assignee: assignee });
+
                         // Send email notification to each assignee
-                        await sendEmailNotification(assignee.email, emailData); // Assuming assignee.email is the recipient email
+                        await sendEmailNotification(checkAssignee.email, emailData); // Assuming assignee.email is the recipient email
                     });
 
                     // Wait for all notifications and emails to be sent
                     await Promise.all(notificationPromises);
 
                     console.log('Update task success');
-                    res.redirect('/');
+                    await renderHomePage(req, res, next, 'show', 'Update task success!');
                 } else {
                     console.log('There must be something wrong in the update');
-                    res.redirect('/');
+                    await renderHomePage(req, res, next, 'show', 'Failed to update task!');
                 }
             } else if (content === 'file') {
                 if (!req.files || Object.keys(req.files).length === 0) {
@@ -2611,8 +2617,10 @@ app.post('/update/:content/:id', isAuthenticated, async (req, res, next) => {
                             url: 'https://www.lakmnsportal.com/'
                         };
 
+                        const checkAssignee = await User.findOne({ assignee: assignee });
+
                         // Send email notification to each assignee
-                        await sendEmailNotification(assignee.email, emailData); // Assuming assignee.email is the recipient email
+                        await sendEmailNotification(checkAssignee.email, emailData); // Assuming assignee.email is the recipient email
                     });
 
                     // Wait for all notifications and emails to be sent
@@ -2676,8 +2684,10 @@ app.get('/delete/:content/:id', isAuthenticated, async (req, res, next) => {
                                 url: 'https://www.lakmnsportal.com/'
                             };
 
+                            const checkAssignee = await User.findOne({ assignee: assignee });
+
                             // Send email notification to each assignee
-                            await sendEmailNotification(assignee.email, emailData); // Assuming assignee.email is the recipient email
+                            await sendEmailNotification(checkAssignee.email, emailData); // Assuming assignee.email is the recipient email
                         });
 
                         // Wait for all notifications and emails to be sent
@@ -2691,7 +2701,7 @@ app.get('/delete/:content/:id', isAuthenticated, async (req, res, next) => {
                         );
 
                         console.log('Task and related files deleted');
-                        res.redirect('/');
+                        await renderHomePage(req, res, next, 'show', 'Task and related files deleted!');
                     } else {
                         await logActivity(
                             user._id,
@@ -2701,11 +2711,11 @@ app.get('/delete/:content/:id', isAuthenticated, async (req, res, next) => {
                         );
 
                         console.log('Task deleted');
-                        res.redirect('/');
+                        await renderHomePage(req, res, next, 'show', 'Only task deleted!');
                     }
                 } else {
                     console.log('Task not found for deletion');
-                    res.redirect('/');
+                    await renderHomePage(req, res, next, 'show', 'Task not found for deletion!');
                 }
             }
         } catch (error) {
@@ -2890,79 +2900,77 @@ app.get('/leave/request', isAuthenticated, async (req, res, next) => {
             }
         } else {
 
-            console.log('Sucess leave request!');
-            res.redirect('/leave/request');
+            const adminUsers = await User.find({
+                isAdmin: true,
+                section: 'Human Resource Management Division',
+                _id: { $ne: adminHR._id }
+            });
 
-            // const adminUsers = await User.find({
-            //     isAdmin: true,
-            //     section: 'Human Resource Management Division',
-            //     _id: { $ne: adminHR._id }
-            // });
+            // Push the IDs of admin users to sendNoti
+            adminUsers.forEach(user => {
+                if (!sendNoti.includes(user._id)) {
+                    sendNoti.push(user._id);
+                }
+            });
 
-            // // Push the IDs of admin users to sendNoti
-            // adminUsers.forEach(user => {
-            //     if (!sendNoti.includes(user._id)) {
-            //         sendNoti.push(user._id);
-            //     }
-            // });
+            const nextRecipient = approvals[1].recipient;
+            sendNoti.push(nextRecipient);
 
-            // const nextRecipient = approvals[1].recipient;
-            // sendNoti.push(nextRecipient);
-            // console.log(sendNoti);
+            console.log(sendNoti);
 
-            // let i = 0;
-            // // set user id to be send
-            // for (const approval of approvals) {
-            //     const recipientId = approval.recipient;
+            let i = 0;
+            // set user id to be send
+            for (const recipient of sendNoti) {
+                const recipientId = recipient;
 
-            //     // Fetch the user by recipient ID
-            //     const email = await User.findById(recipientId);
+                // Fetch the user by recipient ID
+                const email = await User.findById(recipientId);
 
-            //     // Check if the user is found and has an email
-            //     if (email && user.email) {
-            //         // Add the user's email to sendEmail
-            //         sendEmail.push(email.email);
-            //     }
+                // Check if the user is found and has an email
+                if (email && user.email) {
+                    // Add the user's email to sendEmail
+                    sendEmail.push(email.email);
+                }
 
-            //     i++;
-            // }
+                i++;
+            }
 
-            // const leave = new Leave({
-            //     fileId: uuid,
-            //     user: user._id,
-            //     department: user.department,
-            //     grade: user.grade,
-            //     assignee: assignee,
-            //     type: type,
-            //     date: newDate,
-            //     status: 'submitted',
-            //     purpose: purpose,
-            //     approvals: approvals
-            // });
+            const leave = new Leave({
+                fileId: uuid,
+                user: user._id,
+                department: user.department,
+                grade: user.grade,
+                assignee: assignee,
+                type: type,
+                date: newDate,
+                status: 'submitted',
+                purpose: purpose,
+                approvals: checkProcess.approvals
+            });
 
-            // const currentLeave = await Leave.create(leave);
-            // console.log('Leave request submitted');
+            const currentLeave = await Leave.create(leave);
+            console.log('Leave request submitted');
 
-            // // Send notification via web push and portal
-            // if (sendNoti.length > 0) {
-            //     for (const recipientId of sendNoti) {
-            //         // Send push notification
-            //         await createAndSendNotification(
-            //             user._id, // Sender
-            //             recipientId, // Recipient
-            //             'Leave request',
-            //             `www.lakmnsportal.com/leave/details/${currentLeave._id}`,
-            //             `${user.fullname} (${user.username}) has submitted their leave application. Please check for further action.`
-            //         );
+            // Send notification via web push and portal
+            if (sendNoti.length > 0) {
+                for (const recipientId of sendNoti) {
+                    // Send push notification
+                    await createAndSendNotification(
+                        user._id, // Sender
+                        recipientId, // Recipient
+                        'Leave request',
+                        `www.lakmnsportal.com/leave/details/${currentLeave._id}`,
+                        `${user.fullname} (${user.username}) has submitted their leave application. Please check for further action.`
+                    );
 
-            //     }
-            // }
+                }
+            }
 
-            // // Send email notification
-            // await sendEmailNotification(assignee.email, {
-            //     content: `${user.fullname} (${user.username}) has submitted their leave application. Please check for further action.`,
-            //     url: `www.lakmnsportal.com/leave/details/${currentLeave}`
-            // });
+            // Send email notification
+            await sendEmailNotification(sendEmail, {
+                content: `${user.fullname} (${user.username}) has submitted their leave application. Please check for further action.`,
+                url: `www.lakmnsportal.com/leave/details/${currentLeave}`
+            });
 
             await renderHomePage(req, res, next, 'show', 'Leave requested successfully! Please wait within 3 days for approvals, thank you.');
         }
@@ -3043,6 +3051,7 @@ app.get('/leave/details/:id', isAuthenticated, async (req, res, next) => {
         } else if ([
             'Marriage Leave',
             'Paternity Leave',
+            'Maternity Leave',
             'Study Leave',
             'Hajj Leave',
             'Unpaid Leave',
@@ -6390,10 +6399,10 @@ app.get('/super-admin/update', isAuthenticated, async (req, res, next) => {
         }
 
         console.log('Update process completed');
-        res.redirect('/');
+        await renderHomePage(req, res, next, 'show', 'Update for has been made for superadmin!');
     } else {
         // Redirect to home if the user is not a super admin
-        res.redirect('/');
+        await renderHomePage(req, res, next, 'show', 'Access denied, youre not the superadmin!');
     }
 });
 
@@ -6402,7 +6411,6 @@ app.get('/super-admin/update', isAuthenticated, async (req, res, next) => {
 // * It performs actions necessary to log out all users (details not implemented in this snippet).
 // * After logging out all users, it redirects to the home page.
 app.get('/super-admin/logout', isAuthenticated, async (req, res, next) => {
-    const username = req.user.username;
     const user = req.user;
 
     // Check if the authenticated user is a super admin
@@ -6416,10 +6424,10 @@ app.get('/super-admin/logout', isAuthenticated, async (req, res, next) => {
         }
 
         console.log('All users have been logged out.');
-        res.redirect('/');
+        await renderHomePage(req, res, next, 'show', 'All users have been logged out.');
     } else {
         // Redirect to home if the user is not a super admin
-        res.redirect('/');
+        await renderHomePage(req, res, next, 'show', 'Access denied, youre not the superadmin!');
     }
 });
 
@@ -8093,9 +8101,11 @@ const processLeaveRequest = async (type, user, userLeave, startDate, returnDate,
     let renderDataError = { show: '', alert: '' };
     let approvals = null;
 
+    // * Handle special leave type
     const handleSpecialLeaveType = async (leaveType, balance, taken = 0, genderCheck = true) => {
         if (checkLeaveBalance(balance, numberOfDays) && genderCheck) {
-            if (amountDayRequest >= 3 || (leaveType === 'Special Leave' && amountDayRequest <= 1 && amountDayRequest >= -5)) {
+            // Separate handling for "Special Leave" type
+            if (leaveType === 'Special Leave' && amountDayRequest <= 1 && amountDayRequest >= -5) {
                 if (await checkFileAttachment(uuid, `There is no file attached for ${leaveType.toLowerCase()}!`)) {
                     approvals = generateApprovals(
                         user,
@@ -8106,12 +8116,46 @@ const processLeaveRequest = async (type, user, userLeave, startDate, returnDate,
                         approvers.adminHR,
                         approvers.assignee,
                         approvers.supervisors,
-                        type
+                        leaveType
+                    );
+                    return { approvals, renderDataError };
+                }
+            } else if (leaveType === 'Paternity Leave' || leaveType === 'Maternity Leave') {
+                // For Paternity and Maternity Leave, check only genderCheck and file attachment
+                if (await checkFileAttachment(uuid, `There is no file attached for ${leaveType.toLowerCase()}!`)) {
+                    approvals = generateApprovals(
+                        user,
+                        approvers.headOfSection,
+                        approvers.headOfDepartment,
+                        approvers.depChiefExec,
+                        approvers.chiefExec,
+                        approvers.adminHR,
+                        approvers.assignee,
+                        approvers.supervisors,
+                        leaveType
                     );
                     return { approvals, renderDataError };
                 }
             } else {
-                renderDataError.alert = 'The leave date applied must be more than 3 days from today';
+                // For other special leave types like Umrah, Hajj, Attend Exam, Marriage Leave
+                if (amountDayRequest >= 3) {
+                    if (await checkFileAttachment(uuid, `There is no file attached for ${leaveType.toLowerCase()}!`)) {
+                        approvals = generateApprovals(
+                            user,
+                            approvers.headOfSection,
+                            approvers.headOfDepartment,
+                            approvers.depChiefExec,
+                            approvers.chiefExec,
+                            approvers.adminHR,
+                            approvers.assignee,
+                            approvers.supervisors,
+                            leaveType
+                        );
+                        return { approvals, renderDataError };
+                    }
+                } else {
+                    renderDataError.alert = 'The leave date applied must be more than 3 days from today';
+                }
             }
         }
         renderDataError.show = 'show';
@@ -8164,6 +8208,7 @@ const processLeaveRequest = async (type, user, userLeave, startDate, returnDate,
             }
             break;
 
+        case 'Half Day Emergency Leave':
         case 'Emergency Leave':
             if (amountDayRequest <= 1 && amountDayRequest >= -5) {
                 if (await checkFileAttachment(uuid, 'Supporting documents must be attached accordingly')) {
@@ -8227,7 +8272,6 @@ const processLeaveRequest = async (type, user, userLeave, startDate, returnDate,
     return { approvals, renderDataError };
 };
 
-
 // * Leave approval
 // Helper function for handling approved status
 const handleApproved = async (checkLeave, recipientIndices, user, res) => {
@@ -8265,13 +8309,20 @@ const handleApproved = async (checkLeave, recipientIndices, user, res) => {
         const nextIndex = indexOfRecipient + 1;
         const nextApprovalRecipientId = checkLeave.approvals[nextIndex]?.recipient;
 
+        console.log(nextApprovalRecipientId);
+
         if (nextApprovalRecipientId) {
             // Create and save a new notification for the next recipient
-            await createAndSendNotification(user, nextApprovalRecipientId, checkLeave._id);
+            await createAndSendNotification(user, nextApprovalRecipientId, 'Leave Approval', '/leave/details/' + checkLeave._id, 'Leave has been approved by ' + user.fullname);
             // Log the approval activity
             await logActivity(user._id, 'Leave application approved', 'Leave request', 'Approved a leave request');
+
+            const nextRecipientEmail = await User.findOne({ _id: nextApprovalRecipientId });
             // Send an email notification to the next recipient
-            await sendEmailNotification(nextApprovalRecipientId, user, checkLeave);
+            await sendEmailNotification(nextRecipientEmail.email, {
+                content: 'Leave has been approved by ' + user.fullname,
+                url: 'www.lakmnsportal.com/leave/details/' + checkLeave._id
+            });
 
         } else {
             console.log('The leave has been approved by all recipients.');
@@ -8318,14 +8369,14 @@ const handleDenied = async (checkLeave, recipientIndices, user, res) => {
 
         // Notify the requester about the denial
         const requesterId = checkLeave.user;
-        await createAndSendNotification(user._id, requesterId, 'Leave', `/leave/details/${checkLeave._id}`, 'Your leave request has been denied.');
+        await createAndSendNotification(user._id, requesterId, 'Leave Denied', `/leave/details/${checkLeave._id}`, 'Your leave request has been denied.');
 
         // Send an email notification to the requester about the denial
         const requesterEmail = await User.findOne({ _id: requesterId });
         if (requesterEmail) {
             const emailData = {
                 content: `The leave request has been denied by ${user.fullname} with work ID ${user.username}. Please click the button above to open the leave details.`,
-                id: checkLeave._id,
+                url: 'www.lakmnsportal.com/leave/request/' + checkLeave._id,
             };
             await sendEmailNotification(requesterEmail.email, emailData);
         }
@@ -8420,46 +8471,8 @@ const handleCancelled = async (checkLeave, user, res) => {
         );
 
         // Notify the first and last recipients about the cancellation
-        await createAndSendNotification(user._id, firstRecipientId, 'Leave approval', `/leave/details/${checkLeave._id}`, `This leave has been cancelled by ${user.fullname}`);
-        await createAndSendNotification(user._id, lastRecipientId, 'Leave approval', `/leave/details/${checkLeave._id}`, `This leave has been cancelled by ${user.fullname}`);
-
-        // Fetch subscriptions for the first recipient to send push notifications
-        const subscriptions = await Subscriptions.find({ user: firstRecipientId });
-
-        if (subscriptions) {
-            // Send push notifications to all subscribers
-            const sendNotificationPromises = subscriptions.map(async (subscription) => {
-                const payload = JSON.stringify({
-                    title: "Leave request",
-                    body: "Leave request has been cancelled.",
-                    url: "https://www.lakmnsportal.com/",
-                    vibrate: [100, 50, 100],
-                    requireInteraction: true,
-                    silent: false
-                });
-
-                const options = {
-                    vapidDetails: {
-                        subject: 'mailto:protech@lakmns.org', // Replace with your email
-                        publicKey: publicVapidKey, // Use actual public VAPID key here
-                        privateKey: privateVapidKey // Use actual private VAPID key here
-                    },
-                    TTL: 60 // Time to live for the notification (in seconds)
-                };
-
-                try {
-                    await webPush.sendNotification(subscription, payload, options);
-                    console.log('Push notification sent successfully to:', subscription.endpoint);
-                } catch (error) {
-                    console.error('Error sending notification to:', subscription.endpoint, error);
-                }
-            });
-
-            // Wait for all notifications to be sent
-            await Promise.all(sendNotificationPromises);
-        } else {
-            console.log('The user doesn’t subscribe for push notifications');
-        }
+        await createAndSendNotification(user._id, firstRecipientId, 'Leave Cancellation', `/leave/details/${checkLeave._id}`, `This leave has been cancelled by ${user.fullname}`);
+        await createAndSendNotification(user._id, lastRecipientId, 'Leave Cancellation', `/leave/details/${checkLeave._id}`, `This leave has been cancelled by ${user.fullname}`);
 
         // Log the cancellation activity
         await logActivity(user._id, 'Leave cancelled', 'Leave approval', 'Cancel the leave request');
@@ -8470,7 +8483,7 @@ const handleCancelled = async (checkLeave, user, res) => {
         if (firstRecipientEmail) {
             const emailData = {
                 content: `The leave request has been cancelled by ${user.fullname} with work ID ${user.username}. Please click the button above to open the leave details.`,
-                id: checkLeave._id,
+                url: 'www.lakmnsportal.com/leave/details/' + checkLeave._id,
             };
 
             await sendEmailNotification(firstRecipientEmail.email, emailData);
@@ -8502,10 +8515,11 @@ const handleAcknowledged = async (checkLeave, user, res) => {
             const findRecipient = await Leave.findOneAndUpdate(
                 {
                     _id: checkLeave._id,
-                    'approvals.recipient': checkLeave.approvals[humanResourceIndex].recipient
+                    'approvals.recipient': checkLeave.approvals[humanResourceIndex].recipient,
                 },
                 {
                     $set: {
+                        status: 'approved',
                         'approvals.$.status': 'approved',
                         'approvals.$.comment': 'The request has been officially approved',
                         'approvals.$.timestamp': moment().utcOffset(8).toDate()
@@ -8554,6 +8568,10 @@ const handleAcknowledged = async (checkLeave, user, res) => {
                     userLeave.annual.taken += daysDifference;
                     userLeave.emergency.taken += daysDifference;
                     break;
+                case 'Half Day Emergency Leave':
+                    userLeave.annual.taken += daysDifference;
+                    userLeave.emergency.taken += daysDifference;
+                    break;
                 case 'Attend Exam Leave':
                     userLeave.attendExam.leave -= daysDifference;
                     userLeave.attendExam.taken += 1;
@@ -8585,20 +8603,19 @@ const handleAcknowledged = async (checkLeave, user, res) => {
         }
 
         // Log denial activity
-        await logActivity(user._id, 'Leave application denied', 'Leave request', 'Denied a leave request');
+        await logActivity(user._id, 'Leave Approved', 'Leave Approved', 'Leave acknowledged by ' + user.fullname + ' with ' + user.username);
 
         // Notify the requester about the denial
-        const humanResourceId = checkLeave.approvals[humanResourceIndex].recipient;
-        await createAndSendNotification(user._id, humanResourceId, 'Leave', `/leave/details/${checkLeave._id}`, 'Your leave request has been denied.');
+        await createAndSendNotification(user._id, firstRecipientId, 'Leave Approved', `/leave/details/${checkLeave._id}`, 'Your leave request has been approved officially.');
 
         // Send an email notification to the requester about the denial
-        const humanResourceEmail = await User.findOne({ _id: humanResourceId });
-        if (humanResourceEmail) {
+        const userReqEmail = await User.findOne({ _id: firstRecipientId });
+        if (userReqEmail) {
             const emailData = {
                 content: `The leave request has been denied by ${user.fullname} with work ID ${user.username}. Please click the button above to open the leave details.`,
-                id: checkLeave._id,
+                url: 'www.lakmnsportal.com/leave/details/' + checkLeave._id,
             };
-            await sendEmailNotification(humanResourceEmail.email, emailData);
+            await sendEmailNotification(userReqEmail.email, emailData);
         }
 
         res.redirect(`/leave/details/${checkLeave._id}`);
@@ -8616,12 +8633,12 @@ const calculateNumberOfDays = (type, startDate, returnDate, isNonOfficeHour) => 
     const fullDayLeaves = [
         'Annual Leave', 'Marriage Leave', 'Paternity Leave', 'Maternity Leave',
         'Attend Exam Leave', 'Hajj Leave', 'Umrah Leave', 'Special Leave',
-        'Extended Sick Leave', 'Sick Leave', 'Unpaid Leave', 'Emergency Leave'
+        'Extended Sick Leave', 'Sick Leave', 'Unpaid Leave', 'Emergency Leave', 'Half Day Emergency Leave'
     ];
 
     if (fullDayLeaves.includes(type)) {
         return moment(returnDate).diff(moment(startDate), 'days') + 1;
-    } else if (type === 'Half Day Leave') {
+    } else if (type === 'Half Day Leave' || type === 'Half Day Emergency Leave') {
         return isNonOfficeHour
             ? (moment(returnDate).diff(moment(startDate), 'days') + 1)
             : calculateBusinessDays(startDate, returnDate);
