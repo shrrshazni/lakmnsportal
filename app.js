@@ -1928,7 +1928,7 @@ app.get('/staff/details/:id', isAuthenticated, async (req, res, next) => {
             otherUser,
             tasks,
             files,
-            allUsers,
+            allUser : allUsers,
             info,
             leave,
             activities,
