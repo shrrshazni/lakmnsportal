@@ -1928,7 +1928,7 @@ app.get('/staff/details/:id', isAuthenticated, async (req, res, next) => {
             otherUser,
             tasks,
             files,
-            allUser : allUsers,
+            allUser: allUsers,
             info,
             leave,
             activities,
@@ -2965,7 +2965,7 @@ app.get('/leave/request', isAuthenticated, async (req, res, next) => {
                         user._id, // Sender
                         recipientId, // Recipient
                         'Leave request',
-                        `www.lakmnsportal.com/leave/details/${currentLeave._id}`,
+                        `/leave/details/${currentLeave._id}`,
                         `${user.fullname} (${user.username}) has submitted their leave application. Please check for further action.`
                     );
 
@@ -2975,7 +2975,7 @@ app.get('/leave/request', isAuthenticated, async (req, res, next) => {
             // Send email notification
             await sendEmailNotification(sendEmail, {
                 content: `${user.fullname} (${user.username}) has submitted their leave application. Please check for further action.`,
-                url: `www.lakmnsportal.com/leave/details/${currentLeave}`
+                url: `www.lakmnsportal.com/leave/details/${currentLeave._id}`
             });
 
             await renderHomePage(req, res, next, 'show', 'Leave requested successfully! Please wait within 3 days for approvals, thank you.');
@@ -7332,18 +7332,6 @@ const getTotalVisitorsToday = async () => {
     return await Vms.countDocuments({ time_in: { $gte: today } });
 };
 
-// * Function to get the total number of visitors who checked in today and have not checked out
-const getTotalVisitorsTimeInToday = async () => {
-    const today = moment().startOf('day').toDate();
-    return await Vms.countDocuments({ time_in: { $gte: today }, time_out: null });
-};
-
-// * Function to get the total number of visitors who checked out today
-const getTotalVisitorsTimeOutToday = async () => {
-    const today = moment().startOf('day').toDate();
-    return await Vms.countDocuments({ time_out: { $gte: today } });
-};
-
 // * Function to generate approvals hierachy based on the user grade/position
 const generateApprovals = (
     user,
@@ -8083,7 +8071,6 @@ const processLeaveRequest = async (type, user, userLeave, startDate, returnDate,
     let renderDataError = { show: '', alert: '' };
     let approvals = null;
 
-
     // Helper function to map leave type names to userLeave keys
     const getUserLeaveKey = (leaveType) => {
         switch (leaveType) {
@@ -8167,7 +8154,7 @@ const processLeaveRequest = async (type, user, userLeave, startDate, returnDate,
         case 'Annual Leave':
         case 'Half Day Leave':
             leaveBalance = userLeave.annual.leave - userLeave.annual.taken;
-            if (checkLeaveBalance(leaveBalance, numberOfDays, 3, renderDataError)) {
+            if (checkLeaveBalance(leaveBalance, numberOfDays, 0.5, renderDataError) && amountDayRequest >= 3) {
                 approvals = generateApprovals(
                     user,
                     approvers.headOfSection,
@@ -8181,6 +8168,9 @@ const processLeaveRequest = async (type, user, userLeave, startDate, returnDate,
                 );
                 return { approvals, renderDataError };
             }
+
+            console.log(checkLeaveBalance);
+
             renderDataError.alert = 'The leave date applied must be more than 3 days from today';
             break;
 
@@ -8189,7 +8179,7 @@ const processLeaveRequest = async (type, user, userLeave, startDate, returnDate,
             leaveBalance = type === 'Sick Leave'
                 ? userLeave.sick.leave - userLeave.sick.taken
                 : userLeave.sickExtended.leave - userLeave.sickExtended.taken;
-            if (checkLeaveBalance(leaveBalance, numberOfDays, 0, renderDataError) && amountDayRequest <= 1 && amountDayRequest >= -5) {
+            if (checkLeaveBalance(leaveBalance, numberOfDays, 1, renderDataError) && amountDayRequest <= 1 && amountDayRequest >= -5) {
                 if (await checkFileAttachment(uuid, renderDataError, `There is no file attached for ${type.toLowerCase()}!`)) {
                     approvals = generateApprovals(
                         user,
@@ -8701,6 +8691,18 @@ const calculateNumberOfDays = (type, startDate, returnDate, isNonOfficeHour) => 
     }
 
     return 0; // Default return if type is not matched
+};
+
+// * Function to get the total number of visitors who checked in today and have not checked out
+const getTotalVisitorsTimeInToday = async () => {
+    const today = moment().startOf('day').toDate();
+    return await Vms.countDocuments({ time_in: { $gte: today }, time_out: null });
+};
+
+// * Function to get the total number of visitors who checked out today
+const getTotalVisitorsTimeOutToday = async () => {
+    const today = moment().startOf('day').toDate();
+    return await Vms.countDocuments({ time_out: { $gte: today } });
 };
 
 // Global error handler middleware
