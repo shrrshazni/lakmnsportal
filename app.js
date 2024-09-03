@@ -2977,7 +2977,7 @@ app.get('/leave/request', isAuthenticated, async (req, res, next) => {
 
             // Send email notification
             await sendEmailNotification(sendEmail, {
-                content: `${user.fullname} (${user.username}) has submitted their leave application. Please check for further action.`,
+                content: `${user.fullname} (${user.username}) has submitted their leave application ( ${currentLeave.type}). Please check for further action.`,
                 url: `www.lakmnsportal.com/leave/details/${currentLeave._id}`
             });
 
@@ -8173,7 +8173,7 @@ const processLeaveRequest = async (type, user, userLeave, startDate, returnDate,
             break;
         case 'Half Day Leave':
             leaveBalance = userLeave.annual.leave - userLeave.annual.taken;
-            if (checkLeaveBalance(leaveBalance, numberOfDays, 0, renderDataError) && amountDayRequest >= 3 && numberOfDays <= 1) {
+            if (checkLeaveBalance(leaveBalance, Math.abs(numberOfDays), 0, renderDataError) && amountDayRequest >= 3 && numberOfDays <= 1) {
                 approvals = generateApprovals(
                     user,
                     approvers.headOfSection,
