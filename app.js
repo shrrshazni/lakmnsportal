@@ -8173,7 +8173,7 @@ const processLeaveRequest = async (type, user, userLeave, startDate, returnDate,
             break;
         case 'Half Day Leave':
             leaveBalance = userLeave.annual.leave - userLeave.annual.taken;
-            if (checkLeaveBalance(leaveBalance, Math.abs(numberOfDays), 0, renderDataError) && amountDayRequest >= 3 && numberOfDays <= 1) {
+            if (checkLeaveBalance(leaveBalance, numberOfDays, 0, renderDataError) && amountDayRequest >= 3 && numberOfDays <= 1) {
                 approvals = generateApprovals(
                     user,
                     approvers.headOfSection,
@@ -8765,20 +8765,41 @@ const calculateNumberOfDays = (type, startDate, returnDate, isNonOfficeHour) => 
     const fullDayLeaves = [
         'Marriage Leave', 'Paternity Leave', 'Maternity Leave',
         'Attend Exam Leave', 'Hajj Leave', 'Umrah Leave', 'Special Leave',
-        'Extended Sick Leave', 'Sick Leave', 'Unpaid Leave', 'Emergency Leave'
+        'Extended Sick Leave', 'Sick Leave', 'Unpaid Leave', 'Emergency Leave',
+        'Annual Leave'
     ];
 
-    if (halfDayTypes.includes(type)) {
-        return isNonOfficeHour
-            ? (moment(returnDate).diff(moment(startDate), 'days') + 1) / 2
-            : calculateBusinessDays(startDate, returnDate) / 2;
-    } else if (fullDayLeaves.includes(type) || type === 'Annual Leave') {
-        return isNonOfficeHour
-            ? (moment(returnDate).diff(moment(startDate), 'days') + 1)
-            : calculateBusinessDays(startDate, returnDate);
+    console.log(`Calculating number of days for type: ${type}`);
+    console.log(`Start Date: ${startDate}, Return Date: ${returnDate}, Is Non-Office Hour: ${isNonOfficeHour}`);
+
+    let daysDifference;
+    const startMoment = moment(startDate).startOf('day');
+    const endMoment = moment(returnDate).startOf('day');
+
+    // Check if the start and end dates are the same
+    if (startMoment.isSame(endMoment, 'day')) {
+        if (halfDayTypes.includes(type)) {
+            daysDifference = 0.5;
+        } else if (fullDayLeaves.includes(type)) {
+            daysDifference = 1;
+        } else {
+            daysDifference = 0; // Default case if the leave type is not matched
+        }
+    } else {
+        if (halfDayTypes.includes(type)) {
+            daysDifference = isNonOfficeHour
+                ? (endMoment.diff(startMoment, 'days') + 1) / 2
+                : calculateBusinessDays(startDate, returnDate) / 2;
+        } else if (fullDayLeaves.includes(type)) {
+            daysDifference = isNonOfficeHour
+                ? (endMoment.diff(startMoment, 'days') + 1)
+                : calculateBusinessDays(startDate, returnDate);
+        } else {
+            daysDifference = 0; // Default return if type is not matched
+        }
     }
 
-    return 0; // Default return if type is not matched
+    return daysDifference;
 };
 
 // * Function to get the total number of visitors who checked in today and have not checked out

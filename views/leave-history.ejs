@@ -11,12 +11,6 @@ function formatDate(inputDate) {
 }
 %>
 
-<style>
-  #title {
-    color: #3874ff;
-  }
-</style>
-
 <div class="mb-3">
 
   <div class="row align-items-center justify-content-between g-3 mb-4">
@@ -42,7 +36,508 @@ function formatDate(inputDate) {
 
   <div class="row">
 
-    <div class="col-12 col-xxl-9 order-1 order-xxl-0">
+    <div class="col-12 col-xxl-8">
+
+      <div class="card">
+        <div class="card-body">
+          <h5 class="mb-3">Leave Entitlements</h5>
+
+          <div class="row g-3">
+            <div class="col-xxl-4 col-12">
+              <div class="mx-auto mt-n4" id="leave-type-chart-carousel" style="height:325px; width: 275px;"></div>
+            </div>
+            <div class="col-xxl-8 col-12 row g-3">
+              <% 
+                let annual = ((userLeave.annual.leave - userLeave.annual.taken) / userLeave.annual.leave) * 100;
+                annual = annual > 0 ? annual : 0;
+    
+                let sick = ((userLeave.sick.leave - userLeave.sick.taken) / userLeave.sick.leave) * 100;
+                sick = sick > 0 ? sick : 0;
+    
+                let sickExtended = ((userLeave.sickExtended.leave - userLeave.sickExtended.taken) / userLeave.sickExtended.leave) * 100;
+                sickExtended = sickExtended > 0 ? sickExtended : 0;
+    
+                let attendExam = ((userLeave.attendExam.leave - userLeave.attendExam.taken) / userLeave.attendExam.leave) * 100;
+                attendExam = attendExam > 0 ? attendExam : 0;
+    
+                console.log(sick);
+    
+                var showMarriage = '';
+                var showPaternity = '';
+                var showMaternity = '';
+                var showHajj = '';
+                var showSpecial = '';
+    
+                if(userLeave.user.gender === 'Male'){
+                 showMaternity = 'd-none';
+                }else{
+                 showMaternity = '';
+                }
+    
+                if(userLeave.user.gender == 'Female' || userLeave.paternity.taken > 6){
+                 showPaternity = 'd-none';
+                }else{
+                 showPaternity = '';
+                }
+    
+                if(userLeave.marriage.taken > 0){
+                 showMarriage = 'd-none';
+                }else{
+                 showMarriage = '';
+                }
+    
+                if(userLeave.hajj.taken > 0){
+                 showHajj = 'd-none';
+                }else{
+                 showHajj = '';
+                }
+    
+                if(userLeave.umrah.taken > 0){
+                 showUmrah = 'd-none';
+                }else{
+                 showUmrah = '';
+                }
+    
+                if(userLeave.special.taken > 7){
+                 showSpecial = 'd-none';
+                }else{
+                 showSpecial = '';
+                }
+               %>
+
+              <div class="col-xxl-6 col-12">
+
+                <div class="align-items-center justify-content-between d-flex mb-0">
+
+                  <div class="d-flex align-items-center mb-1">
+                    <span class="d-inline-block bg-info-light bullet-item me-2"></span>
+                    <p class="mb-0 fw-semibold text-body lh-sm flex-1">Annual Leave</p>
+                  </div>
+
+                  <div style="position: relative;">
+                    <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:<%= annual %>">
+                      <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
+                        <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
+                        <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
+                      </svg>
+                    </div>
+                    <span <% /* eslint-disable css-propertyvalueexpected */ %> class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(<%= (userLeave.annual.leave - userLeave.annual.taken).toString().length === 1 ? '30%' : '-10%' %>, -25%); z-index: 1; font-size: 20px; color: #3874ff;">
+                      <%= userLeave.annual.leave - userLeave.annual.taken %>
+                    </span>
+                  </div>
+
+                </div>
+
+                <div class="align-items-center justify-content-between d-flex mb-0 mt-n2">
+
+                  <div class="d-flex align-items-center mb-1">
+                    <span class="d-inline-block bg-warning-darker bullet-item me-2"></span>
+                    <p class="mb-0 fw-semibold text-body lh-sm flex-1">Sick Leave</p>
+                  </div>
+
+                  <div style="position: relative;">
+                    <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:<%= sick %>">
+                      <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
+                        <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
+                        <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
+                      </svg>
+                    </div>
+                    <span <% /* eslint-disable css-propertyvalueexpected */ %> class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(<%= (userLeave.sick.leave - userLeave.sick.taken).toString().length === 1 ? '30%' : '-10%' %>, -25%); z-index: 1; font-size: 20px; color: #3874ff;">
+                      <%= userLeave.sick.leave - userLeave.sick.taken %>
+                    </span>
+                  </div>
+
+                </div>
+
+                <div class="align-items-center justify-content-between d-flex mb-0 mt-n2">
+
+                  <div class="d-flex align-items-center mb-1">
+                    <span class="d-inline-block bg-warning-light bullet-item me-2"></span>
+                    <p class="mb-0 fw-semibold text-body lh-sm flex-1">Sick Extended Leave</p>
+                  </div>
+
+                  <div style="position: relative;">
+                    <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:<%= sickExtended %>">
+                      <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
+                        <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
+                        <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
+                      </svg>
+                    </div>
+                    <span <% /* eslint-disable css-propertyvalueexpected */ %> class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(<%= (userLeave.sickExtended.leave - userLeave.sickExtended.taken).toString().length === 1 ? '30%' : '-10%' %>, -25%); z-index: 1; font-size: 20px; color: #3874ff;">
+                      <%= userLeave.sickExtended.leave - userLeave.sickExtended.taken %>
+                    </span>
+                  </div>
+
+                </div>
+
+                <div class="align-items-center justify-content-between d-flex mb-0 mt-n2 <%= showMarriage %>">
+
+                  <div class="d-flex align-items-center mb-1">
+                    <span class="d-inline-block bg-danger-dark bullet-item me-2"></span>
+                    <p class="mb-0 fw-semibold text-body lh-sm flex-1">Marriage Leave</p>
+                  </div>
+
+                  <div style="position: relative;">
+                    <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:100">
+                      <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
+                        <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
+                        <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
+                      </svg>
+                    </div>
+                    <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.marriage.leave %></span>
+                  </div>
+
+                </div>
+
+                <div class="align-items-center justify-content-between d-flex mb-0 mt-n2 <%= showPaternity %>">
+
+                  <div class="d-flex align-items-center mb-1">
+                    <span class="d-inline-block bg-success-light bullet-item me-2"></span>
+                    <p class="mb-0 fw-semibold text-body lh-sm flex-1">Paternity Leave</p>
+                  </div>
+
+                  <div style="position: relative;">
+                    <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:100">
+                      <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
+                        <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
+                        <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
+                      </svg>
+                    </div>
+                    <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.paternity.leave %></span>
+                  </div>
+
+                </div>
+
+                <div class="align-items-center justify-content-between d-flex mb-0 mt-n2 <%= showMaternity %>">
+
+                  <div class="d-flex align-items-center mb-1">
+                    <span class="d-inline-block bg-success-dark bullet-item me-2"></span>
+                    <p class="mb-0 fw-semibold text-body lh-sm flex-1">Maternity Leave</p>
+                  </div>
+
+                  <div style="position: relative;">
+                    <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:100">
+                      <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
+                        <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
+                        <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
+                      </svg>
+                    </div>
+                    <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(-10%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.maternity.leave %></span>
+                  </div>
+
+                </div>
+
+                <div class="align-items-center justify-content-between d-flex mb-0 mt-n2">
+
+                  <div class="d-flex align-items-center mb-1">
+                    <span class="d-inline-block bg-info-dark bullet-item me-2"></span>
+                    <p class="mb-0 fw-semibold text-body lh-sm flex-1">Attend Exam Leave</p>
+                  </div>
+
+                  <div style="position: relative;">
+                    <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:<%= attendExam %>">
+                      <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
+                        <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
+                        <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
+                      </svg>
+                    </div>
+                    <span <% /* eslint-disable css-propertyvalueexpected */ %> class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(<%= (userLeave.attendExam.leave - userLeave.attendExam.taken).toString().length === 1 ? '30%' : '-10%' %>, -25%); z-index: 1; font-size: 20px; color: #3874ff;">
+                      <%= userLeave.attendExam.leave - userLeave.attendExam.taken %>
+                    </span>
+                  </div>
+
+                </div>
+              </div>
+
+              <div class="col-xxl-6 col-12">
+                <div class="align-items-center justify-content-between d-flex mb-0 mt-n2 <%= showHajj %>">
+
+                  <div class="d-flex align-items-center mb-1">
+                    <span class="d-inline-block bg-info-lighter bullet-item me-2"></span>
+                    <p class="mb-0 fw-semibold text-body lh-sm flex-1">Hajj Leave</p>
+                  </div>
+
+                  <div style="position: relative;">
+                    <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:100">
+                      <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
+                        <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
+                        <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
+                      </svg>
+                    </div>
+                    <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(-10%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.hajj.leave %></span>
+                  </div>
+
+                </div>
+
+                <div class="align-items-center justify-content-between d-flex mb-0 mt-n2 <%= showUmrah %>">
+
+                  <div class="d-flex align-items-center mb-1">
+                    <span class="d-inline-block bg-success-lighter bullet-item me-2"></span>
+                    <p class="mb-0 fw-semibold text-body lh-sm flex-1">Umrah Leave</p>
+                  </div>
+
+                  <div style="position: relative;">
+                    <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:100">
+                      <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
+                        <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
+                        <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
+                      </svg>
+                    </div>
+                    <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.umrah.leave %></span>
+                  </div>
+
+                </div>
+
+                <div class="align-items-center justify-content-between d-flex mb-0 mt-n2">
+
+                  <div class="d-flex align-items-center mb-1">
+                    <span class="d-inline-block bg-danger-light bullet-item me-2"></span>
+                    <p class="mb-0 fw-semibold text-body lh-sm flex-1">Emergency Leave Taken</p>
+                  </div>
+
+                  <div style="position: relative;">
+                    <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:100">
+                      <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
+                        <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
+                        <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
+                      </svg>
+                    </div>
+                    <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.emergency.taken %></span>
+                  </div>
+
+                </div>
+
+                <div class="align-items-center justify-content-between d-flex mb-0">
+
+                  <div class="d-flex align-items-center mb-1">
+                    <span class="d-inline-block bg-primary bullet-item me-2"></span>
+                    <p class="mb-0 fw-semibold text-body lh-sm flex-1">Unpaid Leave Taken</p>
+                  </div>
+
+                  <div style="position: relative;">
+                    <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:100">
+                      <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
+                        <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
+                        <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
+                      </svg>
+                    </div>
+                    <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.unpaid.taken %></span>
+                  </div>
+
+                </div>
+
+                <div class="align-items-center justify-content-between d-flex mb-0 <%= showSpecial %>">
+
+                  <div class="d-flex align-items-center mb-1">
+                    <span class="d-inline-block bg-warning-lighter bullet-item me-2"></span>
+                    <p class="mb-0 fw-semibold text-body lh-sm flex-1">Special Leave</p>
+                  </div>
+
+                  <div style="position: relative;">
+                    <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:100">
+                      <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
+                        <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
+                        <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
+                      </svg>
+                    </div>
+                    <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.special.leave %></span>
+                  </div>
+
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+        <script>
+          // take the root of the colour from css for echarts
+          const style = getComputedStyle(document.body);
+          const theme = {
+            primary: style.getPropertyValue('--phoenix-primary'),
+            secondary: style.getPropertyValue('--phoenix-secondary'),
+            success: style.getPropertyValue('--phoenix-success'),
+            info: style.getPropertyValue('--phoenix-info'),
+            warning: style.getPropertyValue('--phoenix-warning'),
+            danger: style.getPropertyValue('--phoenix-danger'),
+            bg_primary_subtle: style.getPropertyValue('--phoenix-primary-bg-subtle'),
+            tertiary: style.getPropertyPriority('--phoenix-tertiary-color'),
+            light: style.getPropertyValue('--phoenix-light'),
+            dark: style.getPropertyValue('--phoenix-dark')
+          };
+
+          //   take css class color based on their property color/bg-colour for echarts
+          function getColor(className, property) {
+            var element = document.createElement('div');
+            element.className = className;
+            document.body.appendChild(element);
+
+            var computedStyle = window.getComputedStyle(element);
+            var color = computedStyle.getPropertyValue(property);
+
+            document.body.removeChild(element);
+
+            return color;
+          }
+        </script>
+
+        <script>
+          const leaveTypeURL = '/api/echarts/leaveType/<%= userLeave.user._id %>';
+
+          fetch(leaveTypeURL)
+            .then(response => response.json())
+            .then(fetchLeaveTypeData => {
+              updateLeaveTypeChart(fetchLeaveTypeData, 'leave-type-chart-carousel');
+            })
+            .catch(error => {
+              console.error('Error fetching user leave data:', error);
+            });
+
+          function updateLeaveTypeChart(fetchLeaveTypeData, echartsId) {
+
+            var genderFemale = '';
+            if (fetchLeaveTypeData.user.gender === 'Male') {
+              genderFemale = 60;
+            } else if (fetchLeaveTypeData.user.gender === 'Female' && fetchLeaveTypeData.maternity.taken > 0) {
+              genderFemale = 60;
+            } else {
+              genderFemale = 0;
+            }
+
+            var genderMale = '';
+            if (fetchLeaveTypeData.user.gender === 'Female' || fetchLeaveTypeData.paternity.taken > 6) {
+              genderMale = 3;
+            } else {
+              genderMale = 0;
+            }
+
+            var marriage = '';
+            if (fetchLeaveTypeData.marriage.taken > 0) {
+              marriage = 3;
+            } else {
+              marriage = 0;
+            }
+
+            var hajj = '';
+            if (fetchLeaveTypeData.hajj.taken > 0) {
+              hajj = 40;
+            } else {
+              hajj = 0;
+            }
+
+            var umrah = '';
+            if (fetchLeaveTypeData.umrah.taken > 0) {
+              umrah = 40;
+            } else {
+              umrah = 0;
+            }
+
+            var special = '';
+            if (fetchLeaveTypeData.special.taken > 7) {
+              special = 3;
+            } else {
+              special = 0;
+            }
+
+            var leaveTypeData = {
+              labels: ['Annual Leave', 'Sick Leave', 'Sick Extended Leave', 'Emergency Leave Taken', 'Marriage Leave', 'Paternity Leave', 'Maternity Leave', 'Attend Exam Leave', 'Hajj Leave', 'Umrah Leave', 'Unpaid Leave Taken', 'Special Leave'],
+              data: [
+                fetchLeaveTypeData.annual.leave - fetchLeaveTypeData.annual.taken,
+                fetchLeaveTypeData.sick.leave - fetchLeaveTypeData.sick.taken,
+                fetchLeaveTypeData.sickExtended.leave - fetchLeaveTypeData.sickExtended.taken,
+                fetchLeaveTypeData.emergency.taken,
+                fetchLeaveTypeData.marriage.leave - marriage,
+                fetchLeaveTypeData.paternity.leave - genderMale,
+                fetchLeaveTypeData.maternity.leave - genderFemale,
+                fetchLeaveTypeData.attendExam.leave - fetchLeaveTypeData.attendExam.taken,
+                fetchLeaveTypeData.hajj.leave - hajj,
+                fetchLeaveTypeData.umrah.leave - umrah,
+                fetchLeaveTypeData.unpaid.taken,
+                fetchLeaveTypeData.special.leave - special,
+              ],
+            };
+            // Initialize ECharts instance
+            var leaveTypeChart = echarts.init(document.getElementById(echartsId), null, {
+              devicePixelRatio: window.devicePixelRatio > 1 ? 2 : 1,
+              renderer: 'canvas',
+              width: 'auto',
+              height: 'auto'
+            });
+
+            var option = {
+              color: [getColor('bg-info-light', 'background-color'), getColor('bg-warning-darker', 'background-color'),
+                getColor('bg-warning-light', 'background-color'), getColor('bg-danger-light', 'background-color'), getColor('bg-danger-dark', 'background-color'), getColor('bg-success-light', 'background-color'),
+                getColor('bg-success-dark', 'background-color'), getColor('bg-info-dark', 'background-color'), getColor('bg-info-lighter', 'background-color'), getColor('bg-success-lighter', 'background-color'), getColor('bg-primary', 'background-color'), getColor('bg-warning-lighter', 'background-color')
+              ],
+              series: [{
+                name: 'Tasks assigned to me',
+                type: 'pie',
+                radius: ['70%', '85%'],
+                startAngle: 30,
+                avoidLabelOverlap: false,
+                label: {
+                  show: false,
+                  position: 'center',
+                  formatter: '{x|{c} } \n {y|{b}}',
+                  rich: {
+                    x: {
+                      fontSize: 31.25,
+                      fontWeight: 800,
+                      color: '#3874ff',
+                      padding: [0, 0, 5, 15]
+                    },
+                    y: {
+                      fontSize: 12,
+                      color: '#3874ff',
+                      fontWeight: 600
+                    }
+                  }
+                },
+                emphasis: {
+                  label: {
+                    show: true
+                  }
+                },
+                // itemStyle: {
+                //   borderWidth: 1, 
+                //   borderColor: getColor('bg-body', 'background-color'), 
+                // },
+                labelLine: {
+                  show: false
+                },
+                data: leaveTypeData.labels.map((label, index) => ({
+                  value: leaveTypeData.data[index],
+                  name: label,
+                  emphasis: index === 0 ? {
+                    label: {
+                      show: true,
+                    },
+                  } : {},
+                })),
+              }, ],
+              grid: {
+                bottom: 0,
+                top: 0,
+                left: 0,
+                right: 0,
+                containLabel: false
+              },
+            };
+
+            leaveTypeChart.setOption(option);
+
+            window.addEventListener('resize', function() {
+              leaveTypeChart.resize();
+            });
+
+          }
+        </script>
+      </div>
+
+    </div>
+
+    <div class="col-12 col-xxl-12">
       <div class="mb-6 p-4">
         <div class="border-bottom-0 border-translucent mt-3" id="leaves" data-list='{"valueNames":["type","reliefstaff","startdate","returndate","status"],"page":5,"pagination":true}'>
           <div class="row align-items-end justify-content-between pb-4 g-3">
@@ -170,496 +665,6 @@ function formatDate(inputDate) {
           </div>
         </div>
       </div>
-    </div>
-
-    <div class="col-12 col-xxl-3 mb-6 order-0 order-xxl-1">
-
-      <div class="card mb-3">
-        <div class="card-body">
-          <h5 class="mb-3 text-center">Leave Entitlements</h5>
-
-          <div class="mx-auto mt-n5" id="leave-type-chart-carousel" style="height:300px; width: 250px;"></div>
-
-          <script>
-            // take the root of the colour from css for echarts
-            const style = getComputedStyle(document.body);
-            const theme = {
-              primary: style.getPropertyValue('--phoenix-primary'),
-              secondary: style.getPropertyValue('--phoenix-secondary'),
-              success: style.getPropertyValue('--phoenix-success'),
-              info: style.getPropertyValue('--phoenix-info'),
-              warning: style.getPropertyValue('--phoenix-warning'),
-              danger: style.getPropertyValue('--phoenix-danger'),
-              bg_primary_subtle: style.getPropertyValue('--phoenix-primary-bg-subtle'),
-              tertiary: style.getPropertyPriority('--phoenix-tertiary-color'),
-              light: style.getPropertyValue('--phoenix-light'),
-              dark: style.getPropertyValue('--phoenix-dark')
-            };
-
-            //   take css class color based on their property color/bg-colour for echarts
-            function getColor(className, property) {
-              var element = document.createElement('div');
-              element.className = className;
-              document.body.appendChild(element);
-
-              var computedStyle = window.getComputedStyle(element);
-              var color = computedStyle.getPropertyValue(property);
-
-              document.body.removeChild(element);
-
-              return color;
-            }
-          </script>
-
-          <script>
-            const leaveTypeURL = '/api/echarts/leaveType/<%= userLeave.user._id %>';
-
-            fetch(leaveTypeURL)
-              .then(response => response.json())
-              .then(fetchLeaveTypeData => {
-                updateLeaveTypeChart(fetchLeaveTypeData, 'leave-type-chart-carousel');
-              })
-              .catch(error => {
-                console.error('Error fetching user leave data:', error);
-              });
-
-            function updateLeaveTypeChart(fetchLeaveTypeData, echartsId) {
-
-              var genderFemale = '';
-              if (fetchLeaveTypeData.user.gender === 'Male') {
-                genderFemale = 60;
-              } else if (fetchLeaveTypeData.user.gender === 'Female' && fetchLeaveTypeData.maternity.taken > 0) {
-                genderFemale = 60;
-              } else {
-                genderFemale = 0;
-              }
-
-              var genderMale = '';
-              if (fetchLeaveTypeData.user.gender === 'Female' || fetchLeaveTypeData.paternity.taken > 6) {
-                genderMale = 3;
-              } else {
-                genderMale = 0;
-              }
-
-              var marriage = '';
-              if (fetchLeaveTypeData.marriage.taken > 0) {
-                marriage = 3;
-              } else {
-                marriage = 0;
-              }
-
-              var hajj = '';
-              if (fetchLeaveTypeData.hajj.taken > 0) {
-                hajj = 40;
-              } else {
-                hajj = 0;
-              }
-
-              var umrah = '';
-              if (fetchLeaveTypeData.umrah.taken > 0) {
-                umrah = 40;
-              } else {
-                umrah = 0;
-              }
-
-              var special = '';
-              if (fetchLeaveTypeData.special.taken > 7) {
-                special = 3;
-              } else {
-                special = 0;
-              }
-
-              var leaveTypeData = {
-                labels: ['Annual Leave', 'Sick Leave', 'Sick Extended Leave', 'Emergency Leave Taken', 'Marriage Leave', 'Paternity Leave', 'Maternity Leave', 'Attend Exam Leave', 'Hajj Leave', 'Umrah Leave', 'Unpaid Leave Taken', 'Special Leave'],
-                data: [
-                  fetchLeaveTypeData.annual.leave - fetchLeaveTypeData.annual.taken,
-                  fetchLeaveTypeData.sick.leave - fetchLeaveTypeData.sick.taken,
-                  fetchLeaveTypeData.sickExtended.leave - fetchLeaveTypeData.sickExtended.taken,
-                  fetchLeaveTypeData.emergency.taken,
-                  fetchLeaveTypeData.marriage.leave - marriage,
-                  fetchLeaveTypeData.paternity.leave - genderMale,
-                  fetchLeaveTypeData.maternity.leave - genderFemale,
-                  fetchLeaveTypeData.attendExam.leave - fetchLeaveTypeData.attendExam.taken,
-                  fetchLeaveTypeData.hajj.leave - hajj,
-                  fetchLeaveTypeData.umrah.leave - umrah,
-                  fetchLeaveTypeData.unpaid.taken,
-                  fetchLeaveTypeData.special.leave - special,
-                ],
-              };
-              // Initialize ECharts instance
-              var leaveTypeChart = echarts.init(document.getElementById(echartsId), null, {
-                devicePixelRatio: window.devicePixelRatio > 1 ? 2 : 1,
-                renderer: 'canvas',
-                width: 'auto',
-                height: 'auto'
-              });
-
-              var option = {
-                color: [getColor('bg-info-light', 'background-color'), getColor('bg-warning-darker', 'background-color'),
-                  getColor('bg-warning-light', 'background-color'), getColor('bg-danger-light', 'background-color'), getColor('bg-danger-dark', 'background-color'), getColor('bg-success-light', 'background-color'),
-                  getColor('bg-success-dark', 'background-color'), getColor('bg-info-dark', 'background-color'), getColor('bg-info-lighter', 'background-color'), getColor('bg-success-lighter', 'background-color'), getColor('bg-primary', 'background-color'), getColor('bg-warning-lighter', 'background-color')
-                ],
-                series: [{
-                  name: 'Tasks assigned to me',
-                  type: 'pie',
-                  radius: ['70%', '85%'],
-                  startAngle: 30,
-                  avoidLabelOverlap: false,
-                  label: {
-                    show: false,
-                    position: 'center',
-                    formatter: '{x|{c} } \n {y|{b}}',
-                    rich: {
-                      x: {
-                        fontSize: 31.25,
-                        fontWeight: 800,
-                        color: '#3874ff',
-                        padding: [0, 0, 5, 15]
-                      },
-                      y: {
-                        fontSize: 12,
-                        color: '#3874ff',
-                        fontWeight: 600
-                      }
-                    }
-                  },
-                  emphasis: {
-                    label: {
-                      show: true
-                    }
-                  },
-                  // itemStyle: {
-                  //   borderWidth: 1, 
-                  //   borderColor: getColor('bg-body', 'background-color'), 
-                  // },
-                  labelLine: {
-                    show: false
-                  },
-                  data: leaveTypeData.labels.map((label, index) => ({
-                    value: leaveTypeData.data[index],
-                    name: label,
-                    emphasis: index === 0 ? {
-                      label: {
-                        show: true,
-                      },
-                    } : {},
-                  })),
-                }, ],
-                grid: {
-                  bottom: 0,
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  containLabel: false
-                },
-              };
-
-              leaveTypeChart.setOption(option);
-
-              window.addEventListener('resize', function() {
-                leaveTypeChart.resize();
-              });
-
-            }
-          </script>
-
-          <% 
-                let annual = ((userLeave.annual.leave - userLeave.annual.taken) / userLeave.annual.leave) * 100;
-                annual = annual > 0 ? annual : 0;
-    
-                let sick = ((userLeave.sick.leave - userLeave.sick.taken) / userLeave.sick.leave) * 100;
-                sick = sick > 0 ? sick : 0;
-    
-                let sickExtended = ((userLeave.sickExtended.leave - userLeave.sickExtended.taken) / userLeave.sickExtended.leave) * 100;
-                sickExtended = sickExtended > 0 ? sickExtended : 0;
-    
-                let attendExam = ((userLeave.attendExam.leave - userLeave.attendExam.taken) / userLeave.attendExam.leave) * 100;
-                attendExam = attendExam > 0 ? attendExam : 0;
-    
-                console.log(sick);
-    
-                var showMarriage = '';
-                var showPaternity = '';
-                var showMaternity = '';
-                var showHajj = '';
-                var showSpecial = '';
-    
-                if(userLeave.user.gender === 'Male'){
-                 showMaternity = 'd-none';
-                }else{
-                 showMaternity = '';
-                }
-    
-                if(userLeave.user.gender == 'Female' || userLeave.paternity.taken > 6){
-                 showPaternity = 'd-none';
-                }else{
-                 showPaternity = '';
-                }
-    
-                if(userLeave.marriage.taken > 0){
-                 showMarriage = 'd-none';
-                }else{
-                 showMarriage = '';
-                }
-    
-                if(userLeave.hajj.taken > 0){
-                 showHajj = 'd-none';
-                }else{
-                 showHajj = '';
-                }
-    
-                if(userLeave.umrah.taken > 0){
-                 showUmrah = 'd-none';
-                }else{
-                 showUmrah = '';
-                }
-    
-                if(userLeave.special.taken > 7){
-                 showSpecial = 'd-none';
-                }else{
-                 showSpecial = '';
-                }
-               %>
-
-          <div class="align-items-center justify-content-between d-flex mb-0">
-
-            <div class="d-flex align-items-center mb-1">
-              <span class="d-inline-block bg-info-light bullet-item me-2"></span>
-              <p class="mb-0 fw-semibold text-body lh-sm flex-1">Annual Leave</p>
-            </div>
-
-            <div style="position: relative;">
-              <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:<%= annual %>">
-                <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
-                  <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
-                  <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
-                </svg>
-              </div>
-              <span <% /* eslint-disable css-propertyvalueexpected */ %> class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(<%= (userLeave.annual.leave - userLeave.annual.taken).toString().length === 1 ? '30%' : '-10%' %>, -25%); z-index: 1; font-size: 20px; color: #3874ff;">
-                <%= userLeave.annual.leave - userLeave.annual.taken %>
-              </span>
-            </div>
-
-          </div>
-
-          <div class="align-items-center justify-content-between d-flex mb-0 mt-n2">
-
-            <div class="d-flex align-items-center mb-1">
-              <span class="d-inline-block bg-warning-darker bullet-item me-2"></span>
-              <p class="mb-0 fw-semibold text-body lh-sm flex-1">Sick Leave</p>
-            </div>
-
-            <div style="position: relative;">
-              <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:<%= sick %>">
-                <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
-                  <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
-                  <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
-                </svg>
-              </div>
-              <span <% /* eslint-disable css-propertyvalueexpected */ %> class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(<%= (userLeave.sick.leave - userLeave.sick.taken).toString().length === 1 ? '30%' : '-10%' %>, -25%); z-index: 1; font-size: 20px; color: #3874ff;">
-                <%= userLeave.sick.leave - userLeave.sick.taken %>
-              </span>
-            </div>
-
-          </div>
-
-          <div class="align-items-center justify-content-between d-flex mb-0 mt-n2">
-
-            <div class="d-flex align-items-center mb-1">
-              <span class="d-inline-block bg-warning-light bullet-item me-2"></span>
-              <p class="mb-0 fw-semibold text-body lh-sm flex-1">Sick Extended Leave</p>
-            </div>
-
-            <div style="position: relative;">
-              <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:<%= sickExtended %>">
-                <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
-                  <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
-                  <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
-                </svg>
-              </div>
-              <span <% /* eslint-disable css-propertyvalueexpected */ %> class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(<%= (userLeave.sickExtended.leave - userLeave.sickExtended.taken).toString().length === 1 ? '30%' : '-10%' %>, -25%); z-index: 1; font-size: 20px; color: #3874ff;">
-                <%= userLeave.sickExtended.leave - userLeave.sickExtended.taken %>
-              </span>
-            </div>
-
-          </div>
-
-          <div class="align-items-center justify-content-between d-flex mb-0 mt-n2 <%= showMarriage %>">
-
-            <div class="d-flex align-items-center mb-1">
-              <span class="d-inline-block bg-danger-dark bullet-item me-2"></span>
-              <p class="mb-0 fw-semibold text-body lh-sm flex-1">Marriage Leave</p>
-            </div>
-
-            <div style="position: relative;">
-              <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:100">
-                <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
-                  <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
-                  <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
-                </svg>
-              </div>
-              <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.marriage.leave %></span>
-            </div>
-
-          </div>
-
-          <div class="align-items-center justify-content-between d-flex mb-0 mt-n2 <%= showPaternity %>">
-
-            <div class="d-flex align-items-center mb-1">
-              <span class="d-inline-block bg-success-light bullet-item me-2"></span>
-              <p class="mb-0 fw-semibold text-body lh-sm flex-1">Paternity Leave</p>
-            </div>
-
-            <div style="position: relative;">
-              <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:100">
-                <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
-                  <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
-                  <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
-                </svg>
-              </div>
-              <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.paternity.leave %></span>
-            </div>
-
-          </div>
-
-          <div class="align-items-center justify-content-between d-flex mb-0 mt-n2 <%= showMaternity %>">
-
-            <div class="d-flex align-items-center mb-1">
-              <span class="d-inline-block bg-success-dark bullet-item me-2"></span>
-              <p class="mb-0 fw-semibold text-body lh-sm flex-1">Maternity Leave</p>
-            </div>
-
-            <div style="position: relative;">
-              <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:100">
-                <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
-                  <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
-                  <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
-                </svg>
-              </div>
-              <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(-10%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.maternity.leave %></span>
-            </div>
-
-          </div>
-
-          <div class="align-items-center justify-content-between d-flex mb-0 mt-n2">
-
-            <div class="d-flex align-items-center mb-1">
-              <span class="d-inline-block bg-info-dark bullet-item me-2"></span>
-              <p class="mb-0 fw-semibold text-body lh-sm flex-1">Attend Exam Leave</p>
-            </div>
-
-            <div style="position: relative;">
-              <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:<%= attendExam %>">
-                <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
-                  <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
-                  <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
-                </svg>
-              </div>
-              <span <% /* eslint-disable css-propertyvalueexpected */ %> class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(<%= (userLeave.attendExam.leave - userLeave.attendExam.taken).toString().length === 1 ? '30%' : '-10%' %>, -25%); z-index: 1; font-size: 20px; color: #3874ff;">
-                <%= userLeave.attendExam.leave - userLeave.attendExam.taken %>
-              </span>
-            </div>
-
-          </div>
-
-          <div class="align-items-center justify-content-between d-flex mb-0 mt-n2 <%= showHajj %>">
-
-            <div class="d-flex align-items-center mb-1">
-              <span class="d-inline-block bg-info-lighter bullet-item me-2"></span>
-              <p class="mb-0 fw-semibold text-body lh-sm flex-1">Hajj Leave</p>
-            </div>
-
-            <div style="position: relative;">
-              <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:100">
-                <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
-                  <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
-                  <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
-                </svg>
-              </div>
-              <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(-10%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.hajj.leave %></span>
-            </div>
-
-          </div>
-
-          <div class="align-items-center justify-content-between d-flex mb-0 mt-n2 <%= showUmrah %>">
-
-            <div class="d-flex align-items-center mb-1">
-              <span class="d-inline-block bg-success-lighter bullet-item me-2"></span>
-              <p class="mb-0 fw-semibold text-body lh-sm flex-1">Umrah Leave</p>
-            </div>
-
-            <div style="position: relative;">
-              <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:100">
-                <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
-                  <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
-                  <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
-                </svg>
-              </div>
-              <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.umrah.leave %></span>
-            </div>
-
-          </div>
-
-          <div class="align-items-center justify-content-between d-flex mb-0 mt-n2">
-
-            <div class="d-flex align-items-center mb-1">
-              <span class="d-inline-block bg-danger-light bullet-item me-2"></span>
-              <p class="mb-0 fw-semibold text-body lh-sm flex-1">Emergency Leave Taken</p>
-            </div>
-
-            <div style="position: relative;">
-              <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:100">
-                <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
-                  <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
-                  <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
-                </svg>
-              </div>
-              <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.emergency.taken %></span>
-            </div>
-
-          </div>
-
-          <div class="align-items-center justify-content-between d-flex mb-0">
-
-            <div class="d-flex align-items-center mb-1">
-              <span class="d-inline-block bg-primary bullet-item me-2"></span>
-              <p class="mb-0 fw-semibold text-body lh-sm flex-1">Unpaid Leave Taken</p>
-            </div>
-
-            <div style="position: relative;">
-              <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:100">
-                <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
-                  <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
-                  <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
-                </svg>
-              </div>
-              <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.unpaid.taken %></span>
-            </div>
-
-          </div>
-
-          <div class="align-items-center justify-content-between d-flex mb-0 <%= showSpecial %>">
-
-            <div class="d-flex align-items-center mb-1">
-              <span class="d-inline-block bg-warning-lighter bullet-item me-2"></span>
-              <p class="mb-0 fw-semibold text-body lh-sm flex-1">Special Leave</p>
-            </div>
-
-            <div style="position: relative;">
-              <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:100">
-                <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
-                  <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
-                  <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
-                </svg>
-              </div>
-              <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.special.leave %></span>
-            </div>
-
-          </div>
-
-        </div>
-      </div>
-
     </div>
 
   </div>
