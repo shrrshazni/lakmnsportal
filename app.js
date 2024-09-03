@@ -2957,6 +2957,9 @@ app.get('/leave/request', isAuthenticated, async (req, res, next) => {
             const currentLeave = await Leave.create(leave);
             console.log('Leave request submitted');
 
+            // Log the approval activity
+            await logActivity(user._id, 'Leave application submitted', 'Leave request', 'Submitted a leave request');
+
             // Send notification via web push and portal
             if (sendNoti.length > 0) {
                 for (const recipientId of sendNoti) {
@@ -3047,7 +3050,7 @@ app.get('/leave/details/:id', isAuthenticated, async (req, res, next) => {
         // Calculate the number of leave days
         const startDate = leave.date.start;
         const returnDate = leave.date.return;
-        const daysDifference = calculateNumberOfDays(leave.type, leave.date.start, leave.date.return, userReq.isNonOfficeHour);
+        const daysDifference = Math.abs(calculateNumberOfDays(leave.type, leave.date.start, leave.date.return, userReq.isNonOfficeHour));
 
         // Find associated files for the leave
         const file = await File.find({ uuid: leave.fileId });
@@ -8049,7 +8052,6 @@ const checkLeaveBalance = (leaveBalance, numberOfDays, minDays = 0, renderDataEr
     return true;
 };
 
-
 // * Leave request
 // * Helper function to check if files are attached
 const checkFileAttachment = async (uuid, renderDataError, errorMessage = 'File attachment is required!') => {
@@ -8152,9 +8154,8 @@ const processLeaveRequest = async (type, user, userLeave, startDate, returnDate,
 
     switch (type) {
         case 'Annual Leave':
-        case 'Half Day Leave':
             leaveBalance = userLeave.annual.leave - userLeave.annual.taken;
-            if (checkLeaveBalance(leaveBalance, numberOfDays, 0.5, renderDataError) && amountDayRequest >= 3) {
+            if (checkLeaveBalance(leaveBalance, numberOfDays, 0, renderDataError) && amountDayRequest >= 3) {
                 approvals = generateApprovals(
                     user,
                     approvers.headOfSection,
@@ -8168,12 +8169,26 @@ const processLeaveRequest = async (type, user, userLeave, startDate, returnDate,
                 );
                 return { approvals, renderDataError };
             }
-
-            console.log(checkLeaveBalance);
-
             renderDataError.alert = 'The leave date applied must be more than 3 days from today';
             break;
-
+        case 'Half Day Leave':
+            leaveBalance = userLeave.annual.leave - userLeave.annual.taken;
+            if (checkLeaveBalance(leaveBalance, numberOfDays, 0, renderDataError) && amountDayRequest >= 3 && numberOfDays <= 1) {
+                approvals = generateApprovals(
+                    user,
+                    approvers.headOfSection,
+                    approvers.headOfDepartment,
+                    approvers.depChiefExec,
+                    approvers.chiefExec,
+                    approvers.adminHR,
+                    approvers.assignee,
+                    approvers.supervisors,
+                    type
+                );
+                return { approvals, renderDataError };
+            }
+            renderDataError.alert = 'Required only 1 day of leave date and applied date must be more than 3 days from today.';
+            break;
         case 'Sick Leave':
         case 'Extended Sick Leave':
             leaveBalance = type === 'Sick Leave'
@@ -8198,8 +8213,6 @@ const processLeaveRequest = async (type, user, userLeave, startDate, returnDate,
                 renderDataError.alert = 'The sick leave request must be applied today or up to 5 days before';
             }
             break;
-
-        case 'Half Day Emergency Leave':
         case 'Emergency Leave':
             if (amountDayRequest <= 1 && amountDayRequest >= -5) {
                 if (await checkFileAttachment(uuid, renderDataError, `There is no file attached for ${type.toLowerCase()}!`)) {
@@ -8220,7 +8233,26 @@ const processLeaveRequest = async (type, user, userLeave, startDate, returnDate,
                 renderDataError.alert = 'There is an error in requesting the emergency leave';
             }
             break;
-
+        case 'Half Day Emergency Leave':
+            if (amountDayRequest <= 1 && amountDayRequest >= -5 && numberOfDays <= 1) {
+                if (await checkFileAttachment(uuid, renderDataError, `There is no file attached for ${type.toLowerCase()}!`)) {
+                    approvals = generateApprovals(
+                        user,
+                        approvers.headOfSection,
+                        approvers.headOfDepartment,
+                        approvers.depChiefExec,
+                        approvers.chiefExec,
+                        approvers.adminHR,
+                        approvers.assignee,
+                        approvers.supervisors,
+                        type
+                    );
+                    return { approvals, renderDataError };
+                }
+            } else {
+                renderDataError.alert = 'Required only 1 day of leave date in requesting the half day emergency leave';
+            }
+            break;
         case 'Attend Exam Leave':
         case 'Marriage Leave':
         case 'Hajj Leave':
@@ -8268,6 +8300,7 @@ const processLeaveRequest = async (type, user, userLeave, startDate, returnDate,
 // Helper function for handling approved status
 const handleApproved = async (checkLeave, recipientIndices, user, res) => {
     try {
+        console.log(recipientIndices);
         // Determine the index of the approval recipient to update
         let indexOfRecipient = recipientIndices[0];
         if (recipientIndices.length > 1) {
@@ -8297,21 +8330,67 @@ const handleApproved = async (checkLeave, recipientIndices, user, res) => {
             { new: true } // Return the updated document
         );
 
+        // initialize the next approvals
+        let nextApprovalRecipientId;
+        let sendNoti = [];
+        let sendEmail = [];
+
         // Determine the next approval recipient
         const nextIndex = indexOfRecipient + 1;
-        const nextApprovalRecipientId = checkLeave.approvals[nextIndex]?.recipient;
 
-        console.log(nextApprovalRecipientId);
+        // Check if next approval is Admin HR
+        if (checkLeave.approvals[nextIndex].role === 'Human Resource') {
+            const adminHR = await User.findOne({ isAdmin: true, isHeadOfSection: true, section: 'Human Resource Management Division' })
+            const adminUsers = await User.find({
+                isAdmin: true,
+                section: 'Human Resource Management Division',
+                _id: { $ne: adminHR._id }
+            });
 
-        if (nextApprovalRecipientId) {
-            // Create and save a new notification for the next recipient
-            await createAndSendNotification(user, nextApprovalRecipientId, 'Leave Approval', '/leave/details/' + checkLeave._id, 'Leave has been approved by ' + user.fullname);
+            // Push the IDs of admin users to sendNoti
+            adminUsers.forEach(user => {
+                if (!sendNoti.includes(user._id)) {
+                    sendNoti.push(user._id);
+                }
+            });
+        } else {
+            nextApprovalRecipientId = checkLeave.approvals[nextIndex]?.recipient;
+            sendNoti.push(nextApprovalRecipientId);
+        }
+
+        // find and push email to sendEmail
+        let i = 0;
+        for (const recipient of sendNoti) {
+            const recipientId = recipient;
+
+            // Fetch the user by recipient ID
+            const email = await User.findById(recipientId);
+
+            // Check if the user is found and has an email
+            if (email && user.email) {
+                // Add the user's email to sendEmail
+                sendEmail.push(email.email);
+            }
+
+            i++;
+        }
+
+        console.log('This is index of recipient: ', indexOfRecipient);
+        console.log('This is next index of recipient: ', nextApprovalRecipientId);
+        console.log('Send noti array :', sendNoti);
+
+        if (sendNoti.length > 0) {
+
+            // Create and save a new notification for the next multiple recipient
+            for (const recipientId of sendNoti) {
+                await createAndSendNotification(user, recipientId, 'Leave Approval', '/leave/details/' + checkLeave._id, 'Leave has been approved by ' + user.fullname);
+            }
+
             // Log the approval activity
             await logActivity(user._id, 'Leave application approved', 'Leave request', 'Approved a leave request');
 
-            const nextRecipientEmail = await User.findOne({ _id: nextApprovalRecipientId });
             // Send an email notification to the next recipient
-            await sendEmailNotification(nextRecipientEmail.email, {
+            await sendEmailNotification(sendEmail, {
                 content: 'Leave has been approved by ' + user.fullname,
                 url: 'www.lakmnsportal.com/leave/details/' + checkLeave._id
             });
@@ -8324,7 +8403,7 @@ const handleApproved = async (checkLeave, recipientIndices, user, res) => {
         res.redirect(`/leave/details/${checkLeave._id}`);
     } catch (error) {
         console.error('Error handling approved leave request:', error);
-        res.status(500).send('Internal Server Error');  // Handle any errors gracefully
+        next(error);  // Handle any errors gracefully
     }
 };
 
@@ -8396,10 +8475,11 @@ const handleCancelled = async (checkLeave, user, res) => {
             });
 
             // Calculate the number of days affected by the leave using the provided function
-            const daysDifference = calculateNumberOfDays(checkLeave.type, checkLeave.date.start, checkLeave.date.return, checkLeave.isNonOfficeHour);
+            const daysDifference = Math.abs(calculateNumberOfDays(checkLeave.type, checkLeave.date.start, checkLeave.date.return, checkLeave.isNonOfficeHour));
 
             // Adjust leave balances based on the leave type and days difference
             switch (checkLeave.type) {
+                case 'Half Day Leave':
                 case 'Annual Leave':
                     userLeave.annual.taken -= daysDifference;
                     userLeave.annual.taken = Math.max(0, userLeave.annual.taken);
@@ -8412,6 +8492,7 @@ const handleCancelled = async (checkLeave, user, res) => {
                     userLeave.sickExtended.taken -= daysDifference;
                     userLeave.sickExtended.taken = Math.max(0, userLeave.sickExtended.taken);
                     break;
+                case 'Half Day Emergency Leave':
                 case 'Emergency Leave':
                     userLeave.annual.taken -= daysDifference;
                     userLeave.annual.taken = Math.max(0, userLeave.annual.taken);
@@ -8495,8 +8576,15 @@ const handleAcknowledged = async (checkLeave, user, res) => {
     try {
         // Find the index of the Human Resource recipient in the approvals array
         const humanResourceIndex = checkLeave.approvals.findIndex(
-            approval => approval.recipient.section === 'Human Resource Management Division'
+            approval => approval.role === 'Human Resource'
         );
+
+        console.log('Human resource index : ', humanResourceIndex);
+
+        // Fetch the ID of the first recipient in the approvals array
+        const firstRecipientId = checkLeave.approvals[0].recipient;
+
+        console.log('The first recipient', firstRecipientId);
 
         // Check if the previous approver has approved and the current user is an HR admin
         if (
@@ -8527,9 +8615,6 @@ const handleAcknowledged = async (checkLeave, user, res) => {
                 console.log('No update was made');
             }
 
-            // Fetch the ID of the first recipient in the approvals array
-            const firstRecipientId = checkLeave.approvals[0].recipient;
-
             // Retrieve the leave details and user data for the first recipient
             const userLeave = await UserLeave.findOne({ user: firstRecipientId });
             const checkUser = await User.findById(firstRecipientId);
@@ -8538,16 +8623,19 @@ const handleAcknowledged = async (checkLeave, user, res) => {
             const returnDate = checkLeave.date.return;
 
             // Use calculateNumberOfDays to get the days difference
-            const daysDifference = calculateNumberOfDays(
+            const daysDifference = Math.abs(calculateNumberOfDays(
                 checkLeave.type,
                 startDate,
                 returnDate,
                 checkUser.isNonOfficeHour
-            );
+            ));
+
+            console.log('This is the day differences for acknowledged: ', daysDifference);
 
             // Update the user's leave balance based on the type of leave
             switch (checkLeave.type) {
                 case 'Annual Leave':
+                case 'Half Day Leave':
                     userLeave.annual.taken += daysDifference;
                     break;
                 case 'Sick Leave':
@@ -8592,6 +8680,7 @@ const handleAcknowledged = async (checkLeave, user, res) => {
 
             // Save updated user leave data
             await userLeave.save();
+
         }
 
         // Log denial activity
@@ -8672,22 +8761,21 @@ const addComment = async (checkLeave, user, comment, res) => {
 // * Helper function to calculate number of days based on leave type and user working hours
 // * Use helper function calculateBussinessDays
 const calculateNumberOfDays = (type, startDate, returnDate, isNonOfficeHour) => {
+    const halfDayTypes = ['Half Day Leave', 'Half Day Emergency Leave'];
     const fullDayLeaves = [
-        'Annual Leave', 'Marriage Leave', 'Paternity Leave', 'Maternity Leave',
+        'Marriage Leave', 'Paternity Leave', 'Maternity Leave',
         'Attend Exam Leave', 'Hajj Leave', 'Umrah Leave', 'Special Leave',
-        'Extended Sick Leave', 'Sick Leave', 'Unpaid Leave', 'Emergency Leave', 'Half Day Emergency Leave'
+        'Extended Sick Leave', 'Sick Leave', 'Unpaid Leave', 'Emergency Leave'
     ];
 
-    if (fullDayLeaves.includes(type)) {
-        return moment(returnDate).diff(moment(startDate), 'days') + 1;
-    } else if (type === 'Half Day Leave' || type === 'Half Day Emergency Leave') {
-        return isNonOfficeHour
-            ? (moment(returnDate).diff(moment(startDate), 'days') + 1)
-            : calculateBusinessDays(startDate, returnDate);
-    } else if (type === 'Annual Leave') {
+    if (halfDayTypes.includes(type)) {
         return isNonOfficeHour
             ? (moment(returnDate).diff(moment(startDate), 'days') + 1) / 2
             : calculateBusinessDays(startDate, returnDate) / 2;
+    } else if (fullDayLeaves.includes(type) || type === 'Annual Leave') {
+        return isNonOfficeHour
+            ? (moment(returnDate).diff(moment(startDate), 'days') + 1)
+            : calculateBusinessDays(startDate, returnDate);
     }
 
     return 0; // Default return if type is not matched
