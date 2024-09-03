@@ -34,7 +34,7 @@ function formatDate(inputDate) {
     </div>
   </div>
 
-  <div class="row">
+  <div class="row g-3">
 
     <div class="col-12 col-xxl-8">
 
@@ -537,10 +537,378 @@ function formatDate(inputDate) {
 
     </div>
 
+    <div class="col-12 col-xxl-4">
+      <div class="card pt-3">
+        <div class=" card-body h-100">
+
+          <div class="d-flex mb-6">
+            <div class="btn btn-phoenix-primary py-2 px-2 me-1 active" onclick="toggleSection('today-on-leave', this)">Today</div>
+            <div class="btn btn-phoenix-primary py-2 px-2 me-1" onclick="toggleSection('week-on-leave', this)">Week</div>
+            <div class="btn btn-phoenix-primary py-2 px-2 me-1" onclick="toggleSection('month-on-leave', this)">Month</div>
+          </div>
+
+          <div class="d-flex justify-content-center px-4 py-4">
+            <div class="px-3" id="current-leave-bar-charts" style="height: 195px;width: 350px;"></div>
+          </div>
+
+          <script>
+            document.addEventListener('DOMContentLoaded', function() {
+              // Set the initial state to show "Today's Leave" section and make the corresponding button active
+              toggleSection('today-on-leave', document.querySelector('.btn-phoenix-primary.active'));
+
+              updateBarCharts('<%= todayLeaves.length %>', '<%= weekLeaves.length %>', '<%= monthLeaves.length %>');
+            });
+
+            function toggleSection(sectionId, button) {
+              // Hide all leave sections
+              document.querySelectorAll('.leave-section').forEach(section => {
+                section.style.display = 'none';
+              });
+
+              // Show the selected leave section
+              document.getElementById(sectionId).style.display = 'block';
+
+              // Remove active class from all buttons
+              document.querySelectorAll('.btn-phoenix-primary').forEach(btn => {
+                btn.classList.remove('active');
+              });
+
+              // Add active class to the clicked button
+              button.classList.add('active');
+            }
+
+            function updateBarCharts(today, week, month) {
+              const leaveBarCharts = echarts.init(document.getElementById('current-leave-bar-charts'), null, {
+                devicePixelRatio: window.devicePixelRatio > 1 ? 2 : 1,
+                renderer: 'canvas',
+                width: 'auto',
+                height: 'auto'
+              });
+
+              // Process the data and create series for bar charts
+              const todayCount = today;
+              const weekCount = week;
+              const monthCount = month;
+
+              const option = {
+                color: theme.primary,
+                tooltip: {
+                  trigger: 'item',
+                  padding: [7, 10],
+                  backgroundColor: getColor('bg-body', 'background-color'),
+                  borderColor: theme.secondary_subtle,
+                  textStyle: {
+                    color: getColor('link-primary', 'color')
+                  },
+                  borderWidth: 1,
+                  transitionDuration: 0,
+                  axisPointer: {
+                    type: 'none'
+                  },
+                  formatter: function(params) {
+                    return `${params.name} (${params.value})`;
+                  }
+                },
+                xAxis: {
+                  type: 'category',
+                  data: ['Today', 'This Week', 'This Month'],
+                  boundaryGap: false,
+                  axisLine: {
+                    show: true,
+                    lineStyle: {
+                      color: '#e3e6ed'
+                    }
+                  },
+                  axisTick: {
+                    show: false
+                  },
+                  axisLabel: {
+                    interval: 6,
+                    showMinLabel: true,
+                    showMaxLabel: true,
+                    color: '#949db5',
+                  }
+                },
+                yAxis: {
+                  show: false, // Set show to false to hide y-axis
+                },
+                series: [{
+                  name: 'Leave Count',
+                  type: 'bar',
+                  data: [todayCount, weekCount, monthCount],
+                  barWidth: '10px',
+                  showBackground: true,
+                  symbol: 'none',
+                  itemStyle: {
+                    borderRadius: 10
+                  },
+                  backgroundStyle: {
+                    borderRadius: 10,
+                    color: theme.bg_primary_subtle,
+                    opacity: 1.0
+                  }
+                }],
+                grid: {
+                  right: 10,
+                  left: 10,
+                  bottom: 0,
+                  top: 0
+                }
+              };
+
+              // Set the option and render the chart
+              leaveBarCharts.setOption(option);
+
+              window.addEventListener('resize', function() {
+                leaveBarCharts.resize();
+              });
+            }
+          </script>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-xxl-12">
+      <div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis pt-7 pb-3 border-y mb-6">
+        <div id="today-on-leave" class="leave-section" data-list='{"valueNames":["staff","type","startdate","returndate"],"page":4,"pagination":true}'>
+
+          <div class="row d-flex justify-content-between pb-4 g-3">
+
+            <div class="col-12 col-xxl-auto">
+              <h3>On leave today</h3>
+              <p class="text-body-tertiary lh-sm mb-0">Employees taking leave on today.</p>
+            </div>
+
+            <div class="col-12 col-xxl-auto mt-xxl-4">
+              <div class="search-box px-lg-0 pe-4">
+                <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
+                  <input class="form-control search-input search form-control-sm" type="search" placeholder="Search on leave" aria-label="Search" />
+                  <span class="fas fa-search search-box-icon"></span>
+                </form>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="table-responsive ms-n1 ps-1 scrollbar h-100">
+            <table class="table fs-9 mb-0 border-top border-translucent">
+              <thead>
+                <tr>
+                  <th class="sort white-space-nowrap align-middle text-start" scope="col" data-sort="staff" style="width:auto;">STAFF</th>
+                  <th class="sort align-middle text-start" scope="col" data-sort="type" style="width:auto;">TYPE</th>
+                  <th class="sort align-middle text-center" scope="col" data-sort="startdate" style="width:auto;">START</th>
+                  <th class="sort align-middle text-center" scope="col" data-sort="returndate" style="width:auto;">END</th>
+                </tr>
+              </thead>
+              <tbody class="list" id="project-summary-table-body">
+                <% if(todayLeaves && todayLeaves.length>0){ %>
+                <% todayLeaves.forEach(onLeave => { %>
+
+                <tr class="position-static">
+
+                  <td class="align-middle text-body white-space-nowrap ps-0 staff">
+                    <% const staffToday = allUser.find(staff => staff._id.toString() === onLeave.user.toString()); %>
+                    <a class="mb-0 fw-bold fs-8 ps-2 py-4 notranslate" href="/staff/details/<%= onLeave.user %>"><%= staffToday.fullname %></a>
+                  </td>
+
+
+                  <td class="align-middle text-body white-space-nowrap ps-0 type">
+                    <a class="mb-0 fw-bold fs-8 ps-2" href="/leave/details/<%= onLeave._id %>"><%= onLeave.type %></a>
+                  </td>
+
+                  <td class="align-middle text-body white-space-nowrap ps-0 startdate">
+                    <p class="mb-0 fs-9 text-center"><%= formatDate(onLeave.date.start) %></p>
+                  </td>
+
+                  <td class="align-middle text-body white-space-nowrap ps-0 returndate">
+                    <p class="mb-0 fs-9 text-center"><%= formatDate(onLeave.date.return) %></p>
+                  </td>
+                </tr>
+                <% }); %>
+                <% }else { %>
+                <tr>
+                  <td colspan="4" class="text-center fw-bold fs-9">No staff on leave today</td>
+                </tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+          <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
+            <div class="col-auto d-flex">
+              <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p><a class="fw-semibold" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semibold d-none" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
+            </div>
+            <div class="col-auto d-flex">
+              <button class="page-link" data-list-pagination="prev"><span class="fas fa-chevron-left"></span></button>
+              <ul class="mb-0 pagination"></ul>
+              <button class="page-link pe-0" data-list-pagination="next"><span class="fas fa-chevron-right"></span></button>
+            </div>
+          </div>
+
+        </div>
+
+        <div id="week-on-leave" class="leave-section" data-list='{"valueNames":["staff","type","startdate","returndate"],"page":4,"pagination":true}'>
+
+          <div class="row d-flex justify-content-between pb-4 g-3">
+
+            <div class="col-12 col-xxl-auto">
+              <h3>On leave this week</h3>
+              <p class="text-body-tertiary lh-sm mb-0">Employees taking leave current week.</p>
+            </div>
+
+            <div class="col-12 col-xxl-auto mt-xxl-4">
+              <div class="search-box px-lg-0 pe-4">
+                <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
+                  <input class="form-control search-input search form-control-sm" type="search" placeholder="Search on leave" aria-label="Search" />
+                  <span class="fas fa-search search-box-icon"></span>
+                </form>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="table-responsive ms-n1 ps-1 scrollbar h-100">
+            <table class="table fs-9 mb-0 border-top border-translucent">
+              <thead>
+                <tr>
+                  <th class="sort white-space-nowrap align-middle text-start" scope="col" data-sort="staff" style="width:auto;">STAFF</th>
+                  <th class="sort align-middle text-start" scope="col" data-sort="type" style="width:auto;">TYPE</th>
+                  <th class="sort align-middle text-center" scope="col" data-sort="startdate" style="width:auto;">START</th>
+                  <th class="sort align-middle text-center" scope="col" data-sort="returndate" style="width:auto;">END</th>
+                </tr>
+              </thead>
+              <tbody class="list" id="project-summary-table-body">
+                <% if(weekLeaves && weekLeaves.length>0){ %>
+                <% weekLeaves.forEach(onLeave => { %>
+
+                <tr class="position-static">
+
+                  <td class="align-middle text-body white-space-nowrap ps-0 staff">
+                    <% const staffWeek = allUser.find(staff => staff._id.toString() === onLeave.user.toString()); %>
+                    <a class="mb-0 fw-bold fs-8 ps-2 py-4 notranslate" href="/staff/details/<%= onLeave.user %>"><%= staffWeek.fullname %></a>
+                  </td>
+
+
+                  <td class="align-middle text-body white-space-nowrap ps-0 type">
+                    <a class="mb-0 fw-bold fs-8 ps-2" href="/leave/details/<%= onLeave._id %>"><%= onLeave.type %></a>
+                  </td>
+
+                  <td class="align-middle text-body white-space-nowrap ps-0 startdate">
+                    <p class="mb-0 fs-9 text-center"><%= formatDate(onLeave.date.start) %></p>
+                  </td>
+
+                  <td class="align-middle text-body white-space-nowrap ps-0 returndate">
+                    <p class="mb-0 fs-9 text-center"><%= formatDate(onLeave.date.return) %></p>
+                  </td>
+                </tr>
+                <% }); %>
+                <% }else { %>
+                <tr>
+                  <td colspan="4" class="text-center fw-bold fs-9">No staff on leave this week</td>
+                </tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+          <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
+            <div class="col-auto d-flex">
+              <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p><a class="fw-semibold" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semibold d-none" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
+            </div>
+            <div class="col-auto d-flex">
+              <button class="page-link" data-list-pagination="prev"><span class="fas fa-chevron-left"></span></button>
+              <ul class="mb-0 pagination"></ul>
+              <button class="page-link pe-0" data-list-pagination="next"><span class="fas fa-chevron-right"></span></button>
+            </div>
+          </div>
+
+        </div>
+
+        <div id="month-on-leave" class="leave-section" data-list='{"valueNames":["staff","type","startdate","returndate"],"page":4,"pagination":true}'>
+
+          <div class="row d-flex justify-content-between pb-4 g-3">
+
+            <div class="col-12 col-xxl-auto">
+              <h3>On leave month</h3>
+              <p class="text-body-tertiary lh-sm mb-0">Employees taking leave current month.</p>
+            </div>
+
+            <div class="col-12 col-xxl-auto mt-xxl-4">
+              <div class="search-box px-lg-0 pe-4">
+                <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
+                  <input class="form-control search-input search form-control-sm" type="search" placeholder="Search on leave" aria-label="Search" />
+                  <span class="fas fa-search search-box-icon"></span>
+                </form>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="table-responsive ms-n1 ps-1 scrollbar h-100">
+            <table class="table fs-9 mb-0 border-top border-translucent">
+              <thead>
+                <tr>
+                  <th class="sort white-space-nowrap align-middle text-start" scope="col" data-sort="staff" style="width:auto;">STAFF</th>
+                  <th class="sort align-middle text-start" scope="col" data-sort="type" style="width:auto;">TYPE</th>
+                  <th class="sort align-middle text-center" scope="col" data-sort="startdate" style="width:auto;">START</th>
+                  <th class="sort align-middle text-center" scope="col" data-sort="returndate" style="width:auto;">END</th>
+                </tr>
+              </thead>
+              <tbody class="list" id="project-summary-table-body">
+                <% if(monthLeaves && monthLeaves.length>0){ %>
+                <% monthLeaves.forEach(onLeave => { %>
+
+                <tr class="position-static">
+
+                  <td class="align-middle text-body white-space-nowrap ps-0 staff">
+                    <% const staffMonth = allUser.find(staff => staff._id.toString() === onLeave.user.toString());%>
+                    <a class="mb-0 fw-bold fs-8 ps-2 py-4 notranslate" href="/staff/details/<%= onLeave.user %>"><%= staffMonth.fullname %></a>
+                  </td>
+
+
+                  <td class="align-middle text-body white-space-nowrap ps-0 type">
+                    <a class="mb-0 fw-bold fs-8 ps-2" href="/leave/details/<%= onLeave._id %>"><%= onLeave.type %></a>
+                  </td>
+
+                  <td class="align-middle text-body white-space-nowrap ps-0 startdate">
+                    <p class="mb-0 fs-9 text-center"><%= formatDate(onLeave.date.start) %></p>
+                  </td>
+
+                  <td class="align-middle text-body white-space-nowrap ps-0 returndate">
+                    <p class="mb-0 fs-9 text-center"><%= formatDate(onLeave.date.return) %></p>
+                  </td>
+                </tr>
+                <% }); %>
+                <% }else { %>
+                <tr>
+                  <td colspan="4" class="text-center fw-bold fs-9">No staff on leave this month</td>
+                </tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+          <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
+            <div class="col-auto d-flex">
+              <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p><a class="fw-semibold" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semibold d-none" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
+            </div>
+            <div class="col-auto d-flex">
+              <button class="page-link" data-list-pagination="prev"><span class="fas fa-chevron-left"></span></button>
+              <ul class="mb-0 pagination"></ul>
+              <button class="page-link pe-0" data-list-pagination="next"><span class="fas fa-chevron-right"></span></button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
     <div class="col-12 col-xxl-12">
       <div class="mb-6 p-4">
-        <div class="border-bottom-0 border-translucent mt-3" id="leaves" data-list='{"valueNames":["type","reliefstaff","startdate","returndate","status"],"page":5,"pagination":true}'>
+        <div class="border-bottom-0 border-translucent mt-3" id="history" data-list='{"valueNames":["type","reliefstaff","startdate","returndate","status"],"page":5,"pagination":true}'>
           <div class="row align-items-end justify-content-between pb-4 g-3">
+            <div class="col-12 col-xxl-auto">
+              <h3>History</h3>
+              <p class="text-body-tertiary lh-sm mb-0">Your leave history.</p>
+            </div>
 
             <div class="col-12 col-md-auto">
               <div class="search-box">

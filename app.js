@@ -2999,20 +2999,118 @@ app.get('/leave/history', isAuthenticated, async (req, res, next) => {
         // Fetch unread notifications for the user
         const notifications = req.notifications;
 
-        // Fetch the user's leave history
-        const leave = await Leave.find({ user: user._id }).sort({ timestamp: -1 });
-        const allUser = await User.find({});
+        // Fetch dynamic data needed per request
+        const [
+            allUser,
+            allLeave,
+            allUserLeave,
+            allInfo,
+            userLeave,
+            leave,
+            task,
+            file,
+            info,
+            otherTask,
+            otherActivities,
+            staffOnLeave,
+            userTeamMembers,
+            activities
+        ] = await Promise.all([
+            User.find().sort({ timestamp: -1 }),
+            Leave.find().sort({ timestamp: -1 }),
+            UserLeave.find().sort({ timestamp: -1 }),
+            Info.find(),
+            UserLeave.findOne({ user: user._id }).populate('user').exec(),
+            Leave.find({ user: user._id }),
+            Task.find({ assignee: { $in: [user._id] } }).sort({ timestamp: -1 }).populate('assignee').exec(),
+            File.find(),
+            Info.findOne({ user: user._id }),
+            Task.find({ assignee: { $ne: [user._id] } }),
+            Activity.find(),
+            user.isAdmin || user.isChiefExec || user.isDeputyChiefExec
+                ? Leave.find({ status: 'approved' })
+                : Leave.find({ status: 'approved', department: user.department }),
+            user.isChiefExec || user.isDeputyChiefExec
+                ? User.find({ isManagement: true, _id: { $ne: user._id } })
+                : user.isHeadOfDepartment
+                    ? User.find({ department: user.department, _id: { $ne: user._id } })
+                    : User.find({ section: user.section, _id: { $ne: user._id } }),
+            Activity.find({ date: { $gte: moment().utcOffset(8).startOf('day').clone().subtract(7, 'days') } })
+                .populate({ path: 'user' })
+                .sort({ date: -1 })
+                .exec()
+        ]);
 
-        // Fetch additional leave details for the user
-        const userLeave = await UserLeave.findOne({ user: user._id }).populate('user').exec();
+        // Process leave data
+        const today = moment().utcOffset(8).startOf('day');
+        const firstDayOfWeek = today.clone().startOf('isoWeek');
+        const lastDayOfWeek = today.clone().endOf('isoWeek');
+        const firstDayOfMonth = today.clone().startOf('month');
+        const lastDayOfMonth = today.clone().endOf('month');
+
+        let todayLeaves = [];
+        let weekLeaves = [];
+        let monthLeaves = [];
+
+        staffOnLeave.forEach(leave => {
+            if (isDateInRange(leave.date.start, leave.date.return)) {
+                todayLeaves.push(leave);
+            }
+            if (leave.date.start <= lastDayOfWeek && leave.date.return >= firstDayOfWeek) {
+                weekLeaves.push(leave);
+            }
+            if (leave.date.start <= lastDayOfMonth && leave.date.return >= firstDayOfMonth) {
+                monthLeaves.push(leave);
+            }
+        });
+
+        // Filter approval leaves based on user role
+        let filteredApprovalLeaves;
+        if (user.isAdmin) {
+            filteredApprovalLeaves = allLeave.filter(
+                leave => leave.status !== 'approved' && leave.status !== 'denied'
+            );
+        } else {
+            filteredApprovalLeaves = allLeave.filter(leave => {
+                return (
+                    leave.user.toString() !== user._id.toString() &&
+                    leave.approvals.some(
+                        approval =>
+                            approval.recipient.toString() === user._id.toString() &&
+                            leave.status !== 'approved' &&
+                            leave.status !== 'denied'
+                    )
+                );
+            });
+        }
+
+        // Collect unique departments and sections
+        const uniqueDepartments = new Set();
+        const uniqueSections = new Set();
+
+        allUser.forEach(user => {
+            if (user.department) uniqueDepartments.add(user.department);
+            if (user.section) uniqueSections.add(user.section);
+        });
+
+        const departments = Array.from(uniqueDepartments);
+        const sections = Array.from(uniqueSections);
 
         // Render the leave history page with the fetched data
         res.render('leave-history', {
             user: user,
             notifications: notifications,
-            leave: leave,
-            userLeave: userLeave,
-            allUser: allUser
+            todayLeaves,
+            weekLeaves,
+            monthLeaves,
+            filteredApprovalLeaves,
+            departments,
+            sections,
+            leave,
+            userLeave,
+            allUser,
+            allUserLeave,
+            allLeave,
         });
     } catch (error) {
         // Handle errors that occur during rendering
@@ -7036,7 +7134,7 @@ const scheduler = async (data) => {
 const calculateAge = (birthdate) => moment().utcOffset('+08:00').diff(moment(birthdate), 'years');
 
 // * Default public holidays for the year
-const defaultPublicHolidays = ['2024-02-16', '2024-05-01', '2024-05-07'];
+const defaultPublicHolidays = ['2024-02-16', '2024-05-01', '2024-05-07', '2024-09-16', '2024-12-25'];
 const allPublicHolidays = defaultPublicHolidays.map(date => moment(date).startOf('day').toDate());
 
 // * Check if a date is a public holiday
