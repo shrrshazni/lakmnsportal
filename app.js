@@ -3418,7 +3418,7 @@ app.get('/human-resource/staff-members/overview/update/:id', isAuthenticated, as
             user: user,
             notifications: notifications,
             uuid: uuidv4(),
-            otherUser: otherUser
+            otherUser: otherUser,
         });
     } catch (error) {
         console.error('Error:', error);
@@ -3492,10 +3492,12 @@ app.get('/human-resource/staff-members/overview/update/:id', isAuthenticated, as
 app.get('/human-resource/staff-members/add-staff', isAuthenticated, async function (req, res, next) {
     const { user, notifications } = req;
     try {
-        res.render('hr-staffmembers-add-staff', {
+        res.render('hr-staffmembers-addstaff', {
             user: user,
             notifications: notifications,
-            uuid: uuidv4()
+            uuid: uuidv4(),
+            show: '',
+            alert: ''
         });
     } catch (error) {
         console.error('Error:', error);
