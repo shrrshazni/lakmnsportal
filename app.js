@@ -3759,7 +3759,7 @@ app.get('/human-resource/leave/balances/update/:id', isAuthenticated, async func
             await logActivity(user._id, 'Update Leave Balance', 'Admin',
                 `${user.fullname} has update leave balances ${findUser.username} at ${getDateFormat2(moment().utcOffset(8).toDate())}`);
 
-            await createAndSendNotification(user._id, headOfDepartment._id, 'Leave Balances Updated', `/human-resource/leave/balances/update/${upddatedLeave._id}`,
+            await createAndSendNotification(user._id, headOfDepartment._id, 'Leave Balances Updated', `/human-resource/leave/balances/update/${updatedLeave._id}`,
                 `${user.fullname} has registered staff ${findUser.username}`);
 
             const message = `Your staff (${user.fullname}) has registered new staff, ${findUser.fullname} (${findUser.username}) at ${getDateFormat2(moment().utcOffset(8).toDate())}.`
@@ -8891,9 +8891,14 @@ const calculateNumberOfDays = (type, startDate, returnDate, isNonOfficeHour) => 
                 ? (endMoment.diff(startMoment, 'days') + 1) / 2
                 : calculateBusinessDays(startDate, returnDate) / 2;
         } else if (fullDayLeaves.includes(type)) {
-            daysDifference = isNonOfficeHour
-                ? (endMoment.diff(startMoment, 'days') + 1)
-                : calculateBusinessDays(startDate, returnDate);
+            if (type === 'Annual Leave') {
+                daysDifference = isNonOfficeHour
+                    ? (endMoment.diff(startMoment, 'days') + 1)
+                    : calculateBusinessDays(startDate, returnDate);
+            } else {
+                daysDifference = endMoment.diff(startMoment, 'days') + 1;
+            }
+
         } else {
             daysDifference = 0; // Default return if type is not matched
         }
