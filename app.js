@@ -999,7 +999,6 @@ const renderHomePage = async (req, res, next, show = '', alert = '') => {
             info,
             otherTask,
             otherActivities,
-            staffOnLeave,
             userTeamMembers,
             activities
         ] = await Promise.all([
@@ -1014,9 +1013,6 @@ const renderHomePage = async (req, res, next, show = '', alert = '') => {
             Info.findOne({ user: user._id }),
             Task.find({ assignee: { $ne: [user._id] } }),
             Activity.find(),
-            user.isAdmin || user.isChiefExec || user.isDeputyChiefExec
-                ? Leave.find({ status: 'approved' })
-                : Leave.find({ status: 'approved', department: user.department }),
             user.isChiefExec || user.isDeputyChiefExec
                 ? User.find({ isManagement: true, _id: { $ne: user._id } })
                 : user.isHeadOfDepartment
@@ -1027,49 +1023,6 @@ const renderHomePage = async (req, res, next, show = '', alert = '') => {
                 .sort({ date: -1 })
                 .exec()
         ]);
-
-        // Process leave data
-        const today = moment().utcOffset(8).startOf('day');
-        const firstDayOfWeek = today.clone().startOf('isoWeek');
-        const lastDayOfWeek = today.clone().endOf('isoWeek');
-        const firstDayOfMonth = today.clone().startOf('month');
-        const lastDayOfMonth = today.clone().endOf('month');
-
-        let todayLeaves = [];
-        let weekLeaves = [];
-        let monthLeaves = [];
-
-        staffOnLeave.forEach(leave => {
-            if (isDateInRange(leave.date.start, leave.date.return)) {
-                todayLeaves.push(leave);
-            }
-            if (leave.date.start <= lastDayOfWeek && leave.date.return >= firstDayOfWeek) {
-                weekLeaves.push(leave);
-            }
-            if (leave.date.start <= lastDayOfMonth && leave.date.return >= firstDayOfMonth) {
-                monthLeaves.push(leave);
-            }
-        });
-
-        // Filter approval leaves based on user role
-        let filteredApprovalLeaves;
-        if (user.isAdmin) {
-            filteredApprovalLeaves = allLeave.filter(
-                leave => leave.status !== 'approved' && leave.status !== 'denied'
-            );
-        } else {
-            filteredApprovalLeaves = allLeave.filter(leave => {
-                return (
-                    leave.user.toString() !== user._id.toString() &&
-                    leave.approvals.some(
-                        approval =>
-                            approval.recipient.toString() === user._id.toString() &&
-                            leave.status !== 'approved' &&
-                            leave.status !== 'denied'
-                    )
-                );
-            });
-        }
 
         // Collect unique departments and sections
         const uniqueDepartments = new Set();
@@ -1091,10 +1044,6 @@ const renderHomePage = async (req, res, next, show = '', alert = '') => {
             userTeamMembers,
             otherTasks: otherTask,
             otherActivities,
-            todayLeaves,
-            weekLeaves,
-            monthLeaves,
-            filteredApprovalLeaves,
             departments,
             sections,
             allUser,
@@ -3004,41 +2953,18 @@ app.get('/leave/history', isAuthenticated, async (req, res, next) => {
             allUser,
             allLeave,
             allUserLeave,
-            allInfo,
             userLeave,
             leave,
-            task,
-            file,
-            info,
-            otherTask,
-            otherActivities,
             staffOnLeave,
-            userTeamMembers,
-            activities
         ] = await Promise.all([
             User.find().sort({ timestamp: -1 }),
             Leave.find().sort({ timestamp: -1 }),
             UserLeave.find().sort({ timestamp: -1 }),
-            Info.find(),
             UserLeave.findOne({ user: user._id }).populate('user').exec(),
             Leave.find({ user: user._id }),
-            Task.find({ assignee: { $in: [user._id] } }).sort({ timestamp: -1 }).populate('assignee').exec(),
-            File.find(),
-            Info.findOne({ user: user._id }),
-            Task.find({ assignee: { $ne: [user._id] } }),
-            Activity.find(),
             user.isAdmin || user.isChiefExec || user.isDeputyChiefExec
                 ? Leave.find({ status: 'approved' })
                 : Leave.find({ status: 'approved', department: user.department }),
-            user.isChiefExec || user.isDeputyChiefExec
-                ? User.find({ isManagement: true, _id: { $ne: user._id } })
-                : user.isHeadOfDepartment
-                    ? User.find({ department: user.department, _id: { $ne: user._id } })
-                    : User.find({ section: user.section, _id: { $ne: user._id } }),
-            Activity.find({ date: { $gte: moment().utcOffset(8).startOf('day').clone().subtract(7, 'days') } })
-                .populate({ path: 'user' })
-                .sort({ date: -1 })
-                .exec()
         ]);
 
         // Process leave data
@@ -6557,242 +6483,242 @@ app.get('/testing', isAuthenticated, async (req, res, next) => {
     try {
         const { user, notifications } = req;
 
-        // Replace req.body with dummy data
-        const dummyData = {
-            uuid: 'dummy-uuid',
-            type: 'Annual Leave',
-            startDate: moment().add(5, 'days').format('YYYY-MM-DD'),
-            returnDate: moment().add(10, 'days').format('YYYY-MM-DD'),
-            purpose: 'Testing purpose',
-            selectedNames: 'Test User 1',
-            selectedSupervisors: ''
-        };
-        // Set today's date, adjusted for UTC+8 timezone
-        const today = moment().utcOffset(8).startOf('day').toDate();
+        // // Replace req.body with dummy data
+        // const dummyData = {
+        //     uuid: 'dummy-uuid',
+        //     type: 'Annual Leave',
+        //     startDate: moment().add(5, 'days').format('YYYY-MM-DD'),
+        //     returnDate: moment().add(10, 'days').format('YYYY-MM-DD'),
+        //     purpose: 'Testing purpose',
+        //     selectedNames: 'Test User 1',
+        //     selectedSupervisors: ''
+        // };
+        // // Set today's date, adjusted for UTC+8 timezone
+        // const today = moment().utcOffset(8).startOf('day').toDate();
 
-        const [headOfSection, headOfDepartment, chiefExec, depChiefExec, adminHR, userLeave, assignee, supervisors, leaveRecords] = await Promise.all([
-            // Determine head of section and department based on user data
-            ['P549', 'P548'].includes(user.username)
-                ? User.findOne({ isHeadOfSection: true, section: 'Administration and Communication Division' })
-                : User.findOne({ isHeadOfSection: true, section: user.section }),
+        // const [headOfSection, headOfDepartment, chiefExec, depChiefExec, adminHR, userLeave, assignee, supervisors, leaveRecords] = await Promise.all([
+        //     // Determine head of section and department based on user data
+        //     ['P549', 'P548'].includes(user.username)
+        //         ? User.findOne({ isHeadOfSection: true, section: 'Administration and Communication Division' })
+        //         : User.findOne({ isHeadOfSection: true, section: user.section }),
 
-            ['P549', 'P548'].includes(user.username)
-                ? User.findOne({ isHeadOfDepartment: true, department: 'Management and Services Department' })
-                : User.findOne({ isHeadOfDepartment: true, department: user.department }),
+        //     ['P549', 'P548'].includes(user.username)
+        //         ? User.findOne({ isHeadOfDepartment: true, department: 'Management and Services Department' })
+        //         : User.findOne({ isHeadOfDepartment: true, department: user.department }),
 
-            // Fetch key organizational roles for leave approval routing
-            User.findOne({ isChiefExec: true }),
-            User.findOne({ isDeputyChiefExec: true }),
-            User.findOne({ isAdmin: true, isHeadOfSection: true, section: 'Human Resource Management Division' }),
+        //     // Fetch key organizational roles for leave approval routing
+        //     User.findOne({ isChiefExec: true }),
+        //     User.findOne({ isDeputyChiefExec: true }),
+        //     User.findOne({ isAdmin: true, isHeadOfSection: true, section: 'Human Resource Management Division' }),
 
-            // Fetch user leave balance and related information
-            UserLeave.findOne({ user: user._id }).populate('user').exec(),
+        //     // Fetch user leave balance and related information
+        //     UserLeave.findOne({ user: user._id }).populate('user').exec(),
 
-            // Fetch selected assignees and supervisors from names provided in request
-            User.find({ fullname: { $in: dummyData.selectedNames } }),
-            User.find({ fullname: { $in: dummyData.selectedSupervisors } }),
+        //     // Fetch selected assignees and supervisors from names provided in request
+        //     User.find({ fullname: { $in: dummyData.selectedNames } }),
+        //     User.find({ fullname: { $in: dummyData.selectedSupervisors } }),
 
-            // Fetch all leave records for the current user
-            Leave.find({ user: user._id })
-        ]);
+        //     // Fetch all leave records for the current user
+        //     Leave.find({ user: user._id })
+        // ]);
 
 
-        const calculateNumberOfDays = (type, startDate, returnDate, isNonOfficeHour) => {
-            const fullDayLeaves = [
-                'Annual Leave', 'Marriage Leave', 'Paternity Leave', 'Maternity Leave',
-                'Attend Exam Leave', 'Hajj Leave', 'Umrah Leave', 'Special Leave',
-                'Extended Sick Leave', 'Sick Leave', 'Unpaid Leave', 'Emergency Leave'
-            ];
+        // const calculateNumberOfDays = (type, startDate, returnDate, isNonOfficeHour) => {
+        //     const fullDayLeaves = [
+        //         'Annual Leave', 'Marriage Leave', 'Paternity Leave', 'Maternity Leave',
+        //         'Attend Exam Leave', 'Hajj Leave', 'Umrah Leave', 'Special Leave',
+        //         'Extended Sick Leave', 'Sick Leave', 'Unpaid Leave', 'Emergency Leave'
+        //     ];
 
-            if (fullDayLeaves.includes(type)) {
-                return moment(returnDate).diff(moment(startDate), 'days') + 1;
-            } else if (type === 'Half Day Leave') {
-                return isNonOfficeHour
-                    ? (moment(returnDate).diff(moment(startDate), 'days') + 1)
-                    : calculateBusinessDays(startDate, returnDate);
-            } else if (type === 'Annual Leave') {
-                return isNonOfficeHour
-                    ? (moment(returnDate).diff(moment(startDate), 'days') + 1) / 2
-                    : calculateBusinessDays(startDate, returnDate) / 2;
-            }
+        //     if (fullDayLeaves.includes(type)) {
+        //         return moment(returnDate).diff(moment(startDate), 'days') + 1;
+        //     } else if (type === 'Half Day Leave') {
+        //         return isNonOfficeHour
+        //             ? (moment(returnDate).diff(moment(startDate), 'days') + 1)
+        //             : calculateBusinessDays(startDate, returnDate);
+        //     } else if (type === 'Annual Leave') {
+        //         return isNonOfficeHour
+        //             ? (moment(returnDate).diff(moment(startDate), 'days') + 1) / 2
+        //             : calculateBusinessDays(startDate, returnDate) / 2;
+        //     }
 
-            return 0; // Default return if type is not matched
-        };
+        //     return 0; // Default return if type is not matched
+        // };
 
-        const checkLeaveBalance = (leaveBalance, numberOfDays, minDays = 0) => {
-            if (leaveBalance < numberOfDays || numberOfDays <= minDays) {
-                console.log('Insufficient balance for the requested duration');
-                return false;
-            }
-            return true;
-        };
+        // const checkLeaveBalance = (leaveBalance, numberOfDays, minDays = 0) => {
+        //     if (leaveBalance < numberOfDays || numberOfDays <= minDays) {
+        //         console.log('Insufficient balance for the requested duration');
+        //         return false;
+        //     }
+        //     return true;
+        // };
 
-        const checkFileAttachment = async (uuid, errorMessage = 'File attachment is required!') => {
-            // Simulate file attachment check
-            const fileExists = uuid === 'dummy-uuid'; // Mock file check
-            if (!fileExists) {
-                console.log(errorMessage);
-                return false;
-            }
-            return true;
-        };
+        // const checkFileAttachment = async (uuid, errorMessage = 'File attachment is required!') => {
+        //     // Simulate file attachment check
+        //     const fileExists = uuid === 'dummy-uuid'; // Mock file check
+        //     if (!fileExists) {
+        //         console.log(errorMessage);
+        //         return false;
+        //     }
+        //     return true;
+        // };
 
-        const processLeaveRequest = async (type, user, userLeave, startDate, returnDate, uuid, approvers) => {
-            let numberOfDays = calculateNumberOfDays(type, startDate, returnDate, user.isNonOfficeHour);
-            const amountDayRequest = calculateBusinessDays(moment(), startDate);
-            let leaveBalance, leaveTaken;
-            let approvals = '';
+        // const processLeaveRequest = async (type, user, userLeave, startDate, returnDate, uuid, approvers) => {
+        //     let numberOfDays = calculateNumberOfDays(type, startDate, returnDate, user.isNonOfficeHour);
+        //     const amountDayRequest = calculateBusinessDays(moment(), startDate);
+        //     let leaveBalance, leaveTaken;
+        //     let approvals = '';
 
-            const handleSpecialLeaveType = async (leaveType, balance, taken = 0, genderCheck = true) => {
-                if (checkLeaveBalance(balance, numberOfDays) && genderCheck) {
-                    if (amountDayRequest >= 3 || (leaveType === 'Special Leave' && amountDayRequest <= 1 && amountDayRequest >= -5)) {
-                        if (await checkFileAttachment(uuid, `There is no file attached for ${leaveType.toLowerCase()}!`)) {
-                            approvals = generateApprovals(
-                                user,
-                                approvers.headOfSection,
-                                approvers.headOfDepartment,
-                                approvers.depChiefExec,
-                                approvers.chiefExec,
-                                approvers.adminHR,
-                                approvers.assignee,
-                                approvers.supervisors,
-                                type
-                            );
-                            console.log('Approvals:', approvals); // Log approvals
-                        }
-                    } else {
-                        console.log('The leave date applied must be more than 3 days from today');
-                    }
-                }
-            };
+        //     const handleSpecialLeaveType = async (leaveType, balance, taken = 0, genderCheck = true) => {
+        //         if (checkLeaveBalance(balance, numberOfDays) && genderCheck) {
+        //             if (amountDayRequest >= 3 || (leaveType === 'Special Leave' && amountDayRequest <= 1 && amountDayRequest >= -5)) {
+        //                 if (await checkFileAttachment(uuid, `There is no file attached for ${leaveType.toLowerCase()}!`)) {
+        //                     approvals = generateApprovals(
+        //                         user,
+        //                         approvers.headOfSection,
+        //                         approvers.headOfDepartment,
+        //                         approvers.depChiefExec,
+        //                         approvers.chiefExec,
+        //                         approvers.adminHR,
+        //                         approvers.assignee,
+        //                         approvers.supervisors,
+        //                         type
+        //                     );
+        //                     console.log('Approvals:', approvals); // Log approvals
+        //                 }
+        //             } else {
+        //                 console.log('The leave date applied must be more than 3 days from today');
+        //             }
+        //         }
+        //     };
 
-            switch (type) {
-                case 'Annual Leave':
-                case 'Half Day Leave':
-                    leaveBalance = userLeave.annual.leave - userLeave.annual.taken;
-                    if (checkLeaveBalance(leaveBalance, numberOfDays) && amountDayRequest >= 3) {
-                        approvals = generateApprovals(
-                            user,
-                            approvers.headOfSection,
-                            approvers.headOfDepartment,
-                            approvers.depChiefExec,
-                            approvers.chiefExec,
-                            approvers.adminHR,
-                            approvers.assignee,
-                            approvers.supervisors,
-                            type
-                        );
-                        console.log('Approvals:', approvals); // Log approvals
-                    } else {
-                        console.log('The leave date applied must be more than 3 days from today');
-                    }
-                    break;
+        //     switch (type) {
+        //         case 'Annual Leave':
+        //         case 'Half Day Leave':
+        //             leaveBalance = userLeave.annual.leave - userLeave.annual.taken;
+        //             if (checkLeaveBalance(leaveBalance, numberOfDays) && amountDayRequest >= 3) {
+        //                 approvals = generateApprovals(
+        //                     user,
+        //                     approvers.headOfSection,
+        //                     approvers.headOfDepartment,
+        //                     approvers.depChiefExec,
+        //                     approvers.chiefExec,
+        //                     approvers.adminHR,
+        //                     approvers.assignee,
+        //                     approvers.supervisors,
+        //                     type
+        //                 );
+        //                 console.log('Approvals:', approvals); // Log approvals
+        //             } else {
+        //                 console.log('The leave date applied must be more than 3 days from today');
+        //             }
+        //             break;
 
-                case 'Sick Leave':
-                case 'Extended Sick Leave':
-                    leaveBalance = type === 'Sick Leave'
-                        ? userLeave.sick.leave - userLeave.sick.taken
-                        : userLeave.sickExtended.leave - userLeave.sickExtended.taken;
-                    if (checkLeaveBalance(leaveBalance, numberOfDays) && amountDayRequest <= 1 && amountDayRequest >= -5) {
-                        if (await checkFileAttachment(uuid, 'Supporting documents must be attached for sick leave')) {
-                            approvals = generateApprovals(
-                                user,
-                                approvers.headOfSection,
-                                approvers.headOfDepartment,
-                                approvers.depChiefExec,
-                                approvers.chiefExec,
-                                approvers.adminHR,
-                                approvers.assignee,
-                                approvers.supervisors,
-                                type
-                            );
-                            console.log('Approvals:', approvals); // Log approvals
-                        }
-                    } else {
-                        console.log('The sick leave request must be applied today or up to 5 days before');
-                    }
-                    break;
+        //         case 'Sick Leave':
+        //         case 'Extended Sick Leave':
+        //             leaveBalance = type === 'Sick Leave'
+        //                 ? userLeave.sick.leave - userLeave.sick.taken
+        //                 : userLeave.sickExtended.leave - userLeave.sickExtended.taken;
+        //             if (checkLeaveBalance(leaveBalance, numberOfDays) && amountDayRequest <= 1 && amountDayRequest >= -5) {
+        //                 if (await checkFileAttachment(uuid, 'Supporting documents must be attached for sick leave')) {
+        //                     approvals = generateApprovals(
+        //                         user,
+        //                         approvers.headOfSection,
+        //                         approvers.headOfDepartment,
+        //                         approvers.depChiefExec,
+        //                         approvers.chiefExec,
+        //                         approvers.adminHR,
+        //                         approvers.assignee,
+        //                         approvers.supervisors,
+        //                         type
+        //                     );
+        //                     console.log('Approvals:', approvals); // Log approvals
+        //                 }
+        //             } else {
+        //                 console.log('The sick leave request must be applied today or up to 5 days before');
+        //             }
+        //             break;
 
-                case 'Emergency Leave':
-                    if (amountDayRequest <= 1 && amountDayRequest >= -5) {
-                        if (await checkFileAttachment(uuid, 'Supporting documents must be attached accordingly')) {
-                            approvals = generateApprovals(
-                                user,
-                                approvers.headOfSection,
-                                approvers.headOfDepartment,
-                                approvers.depChiefExec,
-                                approvers.chiefExec,
-                                approvers.adminHR,
-                                approvers.assignee,
-                                approvers.supervisors,
-                                type
-                            );
-                            console.log('Approvals:', approvals); // Log approvals
-                        }
-                    } else {
-                        console.log('There is an error in requesting the emergency leave');
-                    }
-                    break;
+        //         case 'Emergency Leave':
+        //             if (amountDayRequest <= 1 && amountDayRequest >= -5) {
+        //                 if (await checkFileAttachment(uuid, 'Supporting documents must be attached accordingly')) {
+        //                     approvals = generateApprovals(
+        //                         user,
+        //                         approvers.headOfSection,
+        //                         approvers.headOfDepartment,
+        //                         approvers.depChiefExec,
+        //                         approvers.chiefExec,
+        //                         approvers.adminHR,
+        //                         approvers.assignee,
+        //                         approvers.supervisors,
+        //                         type
+        //                     );
+        //                     console.log('Approvals:', approvals); // Log approvals
+        //                 }
+        //             } else {
+        //                 console.log('There is an error in requesting the emergency leave');
+        //             }
+        //             break;
 
-                case 'Attend Exam Leave':
-                case 'Marriage Leave':
-                case 'Hajj Leave':
-                case 'Umrah Leave':
-                case 'Special Leave':
-                    leaveBalance = userLeave[type.toLowerCase()].leave;
-                    leaveTaken = userLeave[type.toLowerCase()].taken;
-                    await handleSpecialLeaveType(type, leaveBalance, leaveTaken, true);
-                    break;
+        //         case 'Attend Exam Leave':
+        //         case 'Marriage Leave':
+        //         case 'Hajj Leave':
+        //         case 'Umrah Leave':
+        //         case 'Special Leave':
+        //             leaveBalance = userLeave[type.toLowerCase()].leave;
+        //             leaveTaken = userLeave[type.toLowerCase()].taken;
+        //             await handleSpecialLeaveType(type, leaveBalance, leaveTaken, true);
+        //             break;
 
-                case 'Paternity Leave':
-                    leaveBalance = userLeave.paternity.leave;
-                    leaveTaken = userLeave.paternity.taken;
-                    await handleSpecialLeaveType(type, leaveBalance, leaveTaken, user.gender === 'Male' && leaveTaken <= 6);
-                    break;
+        //         case 'Paternity Leave':
+        //             leaveBalance = userLeave.paternity.leave;
+        //             leaveTaken = userLeave.paternity.taken;
+        //             await handleSpecialLeaveType(type, leaveBalance, leaveTaken, user.gender === 'Male' && leaveTaken <= 6);
+        //             break;
 
-                case 'Maternity Leave':
-                    leaveBalance = userLeave.maternity.leave;
-                    leaveTaken = userLeave.maternity.taken;
-                    await handleSpecialLeaveType(type, leaveBalance, leaveTaken, user.gender === 'Female');
-                    break;
+        //         case 'Maternity Leave':
+        //             leaveBalance = userLeave.maternity.leave;
+        //             leaveTaken = userLeave.maternity.taken;
+        //             await handleSpecialLeaveType(type, leaveBalance, leaveTaken, user.gender === 'Female');
+        //             break;
 
-                case 'Unpaid Leave':
-                    approvals = generateApprovals(
-                        user,
-                        approvers.headOfSection,
-                        approvers.headOfDepartment,
-                        approvers.depChiefExec,
-                        approvers.chiefExec,
-                        approvers.adminHR,
-                        approvers.assignee,
-                        approvers.supervisors,
-                        type
-                    );
-                    console.log('Approvals:', approvals); // Log approvals
-                    break;
-            }
-        };
+        //         case 'Unpaid Leave':
+        //             approvals = generateApprovals(
+        //                 user,
+        //                 approvers.headOfSection,
+        //                 approvers.headOfDepartment,
+        //                 approvers.depChiefExec,
+        //                 approvers.chiefExec,
+        //                 approvers.adminHR,
+        //                 approvers.assignee,
+        //                 approvers.supervisors,
+        //                 type
+        //             );
+        //             console.log('Approvals:', approvals); // Log approvals
+        //             break;
+        //     }
+        // };
 
-        processLeaveRequest(
-            dummyData.type,
-            user,
-            userLeave,
-            dummyData.startDate,
-            dummyData.returnDate,
-            dummyData.uuid,
-            {
-                headOfSection,
-                headOfDepartment,
-                depChiefExec,
-                chiefExec,
-                adminHR,
-                assignee,
-                supervisors
-            }
-        ).then(() => console.log('Process completed'));
+        // processLeaveRequest(
+        //     dummyData.type,
+        //     user,
+        //     userLeave,
+        //     dummyData.startDate,
+        //     dummyData.returnDate,
+        //     dummyData.uuid,
+        //     {
+        //         headOfSection,
+        //         headOfDepartment,
+        //         depChiefExec,
+        //         chiefExec,
+        //         adminHR,
+        //         assignee,
+        //         supervisors
+        //     }
+        // ).then(() => console.log('Process completed'));
 
         // Render the 'email-leave' page with user data and notifications
-        res.render('error', {
+        res.render('testing', {
             user: user,
             notifications: notifications,
             uuid: uuidv4(),

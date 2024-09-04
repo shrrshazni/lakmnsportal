@@ -537,28 +537,33 @@ function formatDate(inputDate) {
 
     </div>
 
-    <div class="col-12 col-xxl-4">
+    <div class="col-12 col-xxl-4 mb-6">
       <div class="card pt-3">
         <div class=" card-body h-100">
-
-          <div class="d-flex mb-6 justify-content-center">
-            <div class="btn btn-primary py-2 px-2 me-1 active" onclick="toggleSection('history', this)">History</div>
-            <div class="btn btn-primary py-2 px-2 me-1" onclick="toggleSection('leave-approvals', this)">Approvals</div>
-            <div class="btn btn-primary py-2 px-2 me-1" onclick="toggleSection('today-on-leave', this)">Today</div>
-            <div class="btn btn-primary py-2 px-2 me-1" onclick="toggleSection('week-on-leave', this)">Week</div>
-            <div class="btn btn-primary py-2 px-2 me-1" onclick="toggleSection('month-on-leave', this)">Month</div>
-          </div>
+          <h5 class="mb-6">
+            Staff member on leave
+          </h5>
 
           <div class="d-flex justify-content-center px-4 py-4">
-            <div class="px-3" id="current-leave-bar-charts" style="height: 195px;width: 350px;"></div>
+            <div class="px-3" id="current-leave-bar-charts" style="height: 212px;width: 350px;"></div>
           </div>
 
         </div>
       </div>
     </div>
 
+    <div class="mb-0">
+      <div class="btn btn-primary me-2 active" onclick="toggleSection('history', this)">History</div>
+      <div class="btn btn-primary me-2" onclick="toggleSection('leave-approvals', this)">Approvals</div>
+      <div class="btn btn-primary me-2" onclick="toggleSection('today-on-leave', this)">Today</div>
+      <div class="btn btn-primary me-2" onclick="toggleSection('week-on-leave', this)">Week</div>
+      <div class="btn btn-primary me-2" onclick="toggleSection('month-on-leave', this)">Month</div>
+    </div>
+
+    <hr>
+
     <div class="col-12 col-xxl-12">
-      <div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis pt-7 pb-3 border-y mb-6">
+      <div class="mb-6">
 
         <div id="history" class="leave-section" data-list='{"valueNames":["type","reliefstaff","startdate","returndate","status"],"page":10,"pagination":true}'>
           <div class="row align-items-end justify-content-between pb-4 g-3">
@@ -1056,14 +1061,17 @@ function formatDate(inputDate) {
         // Show the selected leave section
         document.getElementById(sectionId).style.display = 'block';
 
-        // Remove active class from all buttons
-        document.querySelectorAll('.btn-primary').forEach(btn => {
-          btn.classList.remove('active');
+        // Update button classes
+        document.querySelectorAll('.btn-primary, .btn-outline-secondary').forEach(btn => {
+          btn.classList.remove('btn-primary', 'active');
+          btn.classList.add('btn-outline-secondary');
         });
 
-        // Add active class to the clicked button
-        button.classList.add('active');
+        // Add active class and primary style to the clicked button
+        button.classList.remove('btn-outline-secondary');
+        button.classList.add('btn-primary', 'active');
       }
+
 
       function updateBarCharts(today, week, month) {
         const leaveBarCharts = echarts.init(document.getElementById('current-leave-bar-charts'), null, {
