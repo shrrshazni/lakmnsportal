@@ -105,7 +105,7 @@
           })
           .then(response => response.json())
           .then(data => {
-            displaySchedules(data.schedules, year, month, location);
+            displaySchedules(data.schedules, data.staffDetails, year, month, location);
             displayStaffDetails(data.staffDetails, date, location);
           })
           .catch(error => {
@@ -129,17 +129,17 @@
       return `${endHour}${endMinute}`;
     }
 
-    function displaySchedules(schedules, year, month, location) {
+    function displaySchedules(schedules, staffDetails, year, month, location) {
       const resultContainer = document.getElementById('schedule-results');
       resultContainer.innerHTML = '';
 
       const daysInMonth = moment(`${year}-${month}`, "YYYY-MM").daysInMonth();
-      const firstDayOfWeek = moment(`${year}-${month}-01`).day(); // 0: Sunday, 1: Monday, ..., 6: Saturday
+      const firstDayOfWeek = moment(`${year}-${month}-01`).day();
 
       const table = document.createElement('table');
       table.className = 'table table-bordered';
-      table.style.width = '100%'; // Ensures the table takes full width
-      table.style.tableLayout = 'fixed'; // Ensures fixed column width
+      table.style.width = '100%';
+      table.style.tableLayout = 'fixed';
 
       const thead = document.createElement('thead');
       const tbody = document.createElement('tbody');
@@ -150,7 +150,7 @@
         const th = document.createElement('th');
         th.innerText = day;
         th.className = 'text-center';
-        th.style.width = '14.2857142857%'; // Adjusts width to fit 7 columns
+        th.style.width = '14.2857142857%';
         headerRow.appendChild(th);
       });
       thead.appendChild(headerRow);
@@ -167,51 +167,55 @@
           currentRow = document.createElement('tr');
         }
         const cell = document.createElement('td');
-        cell.className = 'p-0 fs-9 fw-bold'; // No padding
+        cell.className = 'p-0 fs-9 fw-bold';
         cell.style.backgroundColor = '#fff';
         cell.style.height = '175px';
-        cell.style.minHeight = '175px'; // Fixed height for cells
+        cell.style.minHeight = '175px';
 
-        // Create a container for the date and location
         const container = document.createElement('div');
-        container.style.position = 'relative'; // Position relative for the date and location
+        container.style.position = 'relative';
 
-        // Add the full date
-        const fullDate = moment(`${year}-${month}-${day}`).format('DD.MM.YYYY'); // Format as "01.07.2024"
+        const fullDate = moment(`${year}-${month}-${day}`).format('DD.MM.YYYY');
         const dateDiv = document.createElement('div');
-        dateDiv.className = 'px-1 py-0 text-center bg-light fst-italic'; // Light background for visibility
-        dateDiv.style.width = '100%'; // Make sure it takes the full width of the container
+        dateDiv.className = 'px-1 py-0 text-center bg-light fst-italic';
+        dateDiv.style.width = '100%';
         dateDiv.innerHTML = `<strong>${fullDate}</strong>`;
         container.appendChild(dateDiv);
 
-        // Add location row
         const locationRow = document.createElement('div');
-        locationRow.className = 'px-1 py-0 text-center bg-light notranslate'; // Light background for visibility
-        locationRow.style.width = '100%'; // Make sure it takes the full width of the container
+        locationRow.className = 'px-1 py-0 text-center bg-light notranslate';
+        locationRow.style.width = '100%';
         locationRow.innerHTML = `<strong>${location}</strong>`;
         container.appendChild(locationRow);
 
-        // Create the inner table
         const innerTable = document.createElement('table');
-        innerTable.className = 'table table-sm table-borderless'; // Bootstrap classes
-        innerTable.style.width = '100%'; // Ensures the inner table takes full width
-        innerTable.style.tableLayout = 'fixed'; // Ensures fixed column width
+        innerTable.className = 'table table-sm table-borderless';
+        innerTable.style.width = '100%';
+        innerTable.style.tableLayout = 'fixed';
+
+        // Build a map of staff names to their indices for the current date
+        const staffMap = new Map();
+        staffDetails.forEach((detail, index) => {
+          if (new Date(detail.date).toDateString() === new Date(`${year}-${month}-${day}`).toDateString()) {
+            detail.staff.forEach(staffMember => {
+              if (!staffMap.has(staffMember)) {
+                staffMap.set(staffMember, index + 1);
+              }
+            });
+          }
+        });
 
         const schedulesForDay = schedules.filter(schedule => new Date(schedule.date).getDate() === day);
 
         if (schedulesForDay.length === 0) {
-          // Display "No schedule yet" if there are no schedules for the day
           const noScheduleRow = document.createElement('tr');
           const noScheduleCell = document.createElement('td');
-          noScheduleCell.colSpan = 2; // Span across the inner table columns
-          noScheduleCell.className = 'text-center text-muted my-auto'; // Centered and muted text
-
-          // Style for centering text vertically and horizontally
+          noScheduleCell.colSpan = 2;
+          noScheduleCell.className = 'text-center text-muted my-auto';
           noScheduleCell.style.display = 'flex';
-          noScheduleCell.style.alignItems = 'center'; // Vertical center
-          noScheduleCell.style.justifyContent = 'center'; // Horizontal center
-          noScheduleCell.style.height = '130px'; // Ensure the cell takes full height
-
+          noScheduleCell.style.alignItems = 'center';
+          noScheduleCell.style.justifyContent = 'center';
+          noScheduleCell.style.height = '130px';
           noScheduleCell.innerHTML = 'No schedule yet';
           noScheduleRow.appendChild(noScheduleCell);
           innerTable.appendChild(noScheduleRow);
@@ -219,32 +223,32 @@
           schedulesForDay.forEach(schedule => {
             schedule.shift.forEach((shiftDetail, index) => {
               const row = document.createElement('tr');
-              row.style.height = '30px'; // Fixed height for rows
+              row.style.height = '30px';
 
-              // Create the shift cell
               const shiftCell = document.createElement('td');
-              shiftCell.className = 'p-1 py-0'; // Minimal padding
-              shiftCell.style.border = '1px solid #dee2e6'; // Border for inner table cells
-              shiftCell.style.borderLeft = 'none'; // No left border
-              shiftCell.style.borderRight = 'none'; // No right border
-              shiftCell.style.width = '10%'; // Minimal width for the shift letter
-              shiftCell.style.minWidth = '0'; // Ensures it doesn't take up more space
-              shiftCell.style.maxWidth = '10%'; // Ensures it doesn't exceed 10% width
-              shiftCell.style.whiteSpace = 'nowrap'; // Prevents wrapping
-              shiftCell.innerHTML = String.fromCharCode(65 + index); // A, B, C, D for shifts
+              shiftCell.className = 'p-1 py-0';
+              shiftCell.style.border = '1px solid #dee2e6';
+              shiftCell.style.borderLeft = 'none';
+              shiftCell.style.borderRight = 'none';
+              shiftCell.style.width = '10%';
+              shiftCell.style.minWidth = '0';
+              shiftCell.style.maxWidth = '10%';
+              shiftCell.style.whiteSpace = 'nowrap';
+              shiftCell.innerHTML = String.fromCharCode(65 + index);
 
-              // Create the staff cell
               const staffCell = document.createElement('td');
               staffCell.style.border = '1px solid #dee2e6';
-              staffCell.style.borderRight = 'none'; // Border for inner table cells
-              staffCell.style.width = '90%'; // Allows staff cell to take up remaining space
-              staffCell.style.whiteSpace = 'nowrap'; // Prevents wrapping
-              // Create a span for each staff member index with a right border
-              staffCell.innerHTML = shiftDetail.staff.map((staffMember, idx) => {
-                return `<span style="display: inline-block; border-right: 1px solid #dee2e6;" class="px-2">${idx + 1}</span>`;
+              staffCell.style.borderRight = 'none';
+              staffCell.style.width = '90%';
+              staffCell.style.whiteSpace = 'nowrap';
+
+              staffCell.innerHTML = shiftDetail.staff.map(staffMember => {
+                // Get the index from the staffMap
+                const staffIndex = staffMap.get(staffMember);
+
+                return `<span style="display: inline-block; border-right: 1px solid #dee2e6;" class="px-2">${staffIndex || ''}</span>`;
               }).join('');
 
-              // Append cells to the row
               row.appendChild(shiftCell);
               row.appendChild(staffCell);
               innerTable.appendChild(row);
@@ -252,12 +256,8 @@
           });
         }
 
-        // Append the inner table to the container
         container.appendChild(innerTable);
-
-        // Append the container to the cell
         cell.appendChild(container);
-
         currentRow.appendChild(cell);
       }
 
