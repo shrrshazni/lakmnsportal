@@ -702,8 +702,8 @@ const checkpointSchema = new mongoose.Schema({
     longitude: { type: Number },
     checkpointName: { type: String },
     time: { type: String },
-    logReport: { type: String, required: true },
-    fullName: { type: String, required: true },
+    logReport: { type: String },
+    fullName: { type: String },
     username: { type: String }
 }, { _id: false });
 
@@ -2855,18 +2855,18 @@ app.get('/leave/request', isAuthenticated, async (req, res, next) => {
             }
         } else {
 
-            const adminUsers = await User.find({
-                isAdmin: true,
-                section: 'Human Resource Management Division',
-                _id: { $ne: adminHR._id }
-            });
+            // const adminUsers = await User.find({
+            //     isAdmin: true,
+            //     section: 'Human Resource Management Division',
+            //     _id: { $ne: adminHR._id }
+            // });
 
-            // Push the IDs of admin users to sendNoti
-            adminUsers.forEach(user => {
-                if (!sendNoti.includes(user._id)) {
-                    sendNoti.push(user._id);
-                }
-            });
+            // // Push the IDs of admin users to sendNoti
+            // adminUsers.forEach(user => {
+            //     if (!sendNoti.includes(user._id)) {
+            //         sendNoti.push(user._id);
+            //     }
+            // });
 
             const nextRecipient = checkProcess.approvals[1].recipient;
             sendNoti.push(nextRecipient);
@@ -3787,7 +3787,7 @@ app.get('/auxiliary-police/duty-handover/submit', isAuthenticated, async (req, r
         next(error);
     }
 }).post('/auxiliary-police/duty-handover/submit', isAuthenticated, async (req, res, next) => {
-    const { location, date, shift, time, notes, shiftStaff, dutyHandoverId } = req.body;
+    const { location, date, shift, time, notes, shiftStaff } = req.body;
 
     try {
         let dutyHandover = await DutyHandoverAux.findOne({
@@ -3814,8 +3814,6 @@ app.get('/auxiliary-police/duty-handover/submit', isAuthenticated, async (req, r
                 alert: 'Existing handover updated',
             });
         } else {
-            // Update duty handover based on ID and create a new one if needed
-            await DutyHandoverAux.findByIdAndUpdate(dutyHandoverId, { status: 'completed' }, { new: true });
 
             dutyHandover = new DutyHandoverAux({
                 headShift: req.user.fullname,
@@ -3830,8 +3828,19 @@ app.get('/auxiliary-police/duty-handover/submit', isAuthenticated, async (req, r
             });
 
             const create = await dutyHandover.save();
-            const newReport = await createPatrolReport(dutyHandoverId, location, date, shift, time, shiftStaff);
 
+            // Example validation before creating the patrol report
+            if (!location || !date || !shift || !time || !shiftStaff) {
+                return next(new Error('Missing required fields for patrol report creation.'));
+            }
+
+            try {
+                const newReport = await createPatrolReport(create._id, location, date, shift, time, shiftStaff);
+                console.log('New patrol report created', newReport);
+            } catch (error) {
+                console.error('Error creating patrol report:', error);
+                return next(new Error('Failed to create patrol report.'));
+            }
             console.log('New duty handover and patrol report created', create, newReport);
             res.render('auxiliarypolice-dutyhandover-submit', {
                 user: req.user,
@@ -3893,7 +3902,7 @@ app.get('/auxiliary-police/schedule/add', isAuthenticated, async (req, res, next
 
     console.log('Received form data:', { location, date, selectedNames1, selectedNames2, selectedNames3, selectedNames4, time1, time2, time3, time4, selectedNames5, selectedNames6 });
 
-    if (!location || !date || !selectedNames1 || !selectedNames2 || !selectedNames3 || time1 === 'Select shift time' || time2 === 'Select shift time' || time3 === 'Select shift time' || (selectedNames4 && time4 === 'Select shift time')) {
+    if (!location || !date || !selectedNames1 || !selectedNames2 || !selectedNames3 || time1 === 'Select shift time' || time2 === 'Select shift time' || time3 === 'Select shift time') {
         console.log('Failed to add auxiliary police schedule');
         res.render('auxiliarypolice-schedule-add', {
             user: req.user,
@@ -3920,7 +3929,7 @@ app.get('/auxiliary-police/schedule/add', isAuthenticated, async (req, res, next
     ];
 
     console.log('Constructed shifts array:', shifts);
-
+    3
     try {
         const findSchedule = await ScheduleAux.findOne({ location: location, date: moment(date).utcOffset(8).toDate() });
 
@@ -6769,7 +6778,7 @@ app.post('/search-schedule-temp', async (req, res) => {
             staffDetails.map(detail => [`${detail.staff}-${detail.date}`, detail])
         ).values());
 
-        console.log(schedules[0]);
+        console.log(uniqueStaffDetails);
 
         // Send the schedules and unique staff details as JSON response
         res.json({ schedules, staffDetails: uniqueStaffDetails });
@@ -6828,119 +6837,6 @@ cron.schedule('* * * * *', async () => {
         }
     } catch (error) {
         console.error('Error removing expired sessions:', error);
-    }
-}, {
-    scheduled: true,
-    timezone: 'Asia/Kuala_Lumpur'
-});
-
-// Scheduler to check leave validity every day at midnight
-cron.schedule('0 0 * * *', async () => {
-    const today = moment().utcOffset(8).toDate();
-
-    try {
-        // Find and process invalid leaves
-        const invalidLeaves = await Leave.find({ status: 'pending' });
-
-        for (const leave of invalidLeaves) {
-            const amountDay = calculateBusinessDays(today, leave.timestamp);
-
-            if (amountDay < -3) {
-                console.log('Leave is invalid.');
-
-                const user = await User.findById(leave.user);
-                const isDeputyChiefExec = user.isDeputyChiefExec;
-
-                leave.status = 'invalid';
-
-                if (!isDeputyChiefExec) {
-                    // Update leave approvals if not a Deputy Chief Executive
-                    let lastValidIndex = leave.approvals.reduce((lastIndex, approval, index) =>
-                        (approval.status === 'approved' || approval.status === 'submitted') ? index : lastIndex, -1);
-
-                    const nextApprovalIndex = lastValidIndex + 1;
-
-                    if (nextApprovalIndex < leave.approvals.length) {
-                        const nextApproval = leave.approvals[nextApprovalIndex];
-                        if (nextApproval.role !== 'Human Resource') {
-                            leave.approvals.splice(nextApprovalIndex, 1);
-                        }
-                    }
-                }
-
-                await leave.save();
-
-                // Send notifications
-                const sendNoti = leave.approvals.map(approval => approval.recipient);
-                if (sendNoti.length > 0) {
-                    for (const recipientId of sendNoti) {
-                        const newNotification = new Notification({
-                            sender: user._id,
-                            recipient: new mongoose.Types.ObjectId(recipientId),
-                            type: 'Leave request',
-                            url: '/leave/details/' + leave._id,
-                            message: 'Leave has become invalid due to it already past 3 days of approval, please do check the leave request.'
-                        });
-
-                        await newNotification.save();
-
-                        // Fetch subscriptions and send push notifications
-                        const subscriptions = await Subscriptions.find({ user: recipientId });
-                        if (subscriptions.length > 0) {
-                            await Promise.all(subscriptions.map(async (subscription) => {
-                                const payload = JSON.stringify({
-                                    title: "Leave request",
-                                    body: "Leave request needs your attention and approval.",
-                                    url: "https://www.lakmnsportal.com/leave/request/" + leave._id,
-                                    vibrate: [100, 50, 100],
-                                    requireInteraction: true,
-                                    silent: false
-                                });
-
-                                const options = {
-                                    vapidDetails: {
-                                        subject: 'mailto:protech@lakmns.org',
-                                        publicKey: publicVapidKey,
-                                        privateKey: privateVapidKey
-                                    },
-                                    TTL: 60
-                                };
-
-                                try {
-                                    await webPush.sendNotification(subscription, payload, options);
-                                    console.log('Push notification sent successfully to:', subscription.endpoint);
-                                } catch (error) {
-                                    console.error('Error sending notification to:', subscription.endpoint, error);
-                                }
-                            }));
-                        } else {
-                            console.log('The user doesn\'t subscribe for push notifications');
-                        }
-
-                        console.log('Done sending notifications!');
-                    }
-                }
-            } else {
-                console.log('Leave is still valid.');
-            }
-        }
-
-        // Update status of pending leaves
-        const threeDaysFromNow = moment().add(3, 'days').toDate();
-        const pendingLeaves = await Leave.find({
-            estimated: { $lte: threeDaysFromNow },
-            status: 'submitted'
-        });
-
-        for (const pending of pendingLeaves) {
-            pending.status = 'pending';
-            await pending.save();
-        }
-
-        console.log('Invalid leaves updated:', invalidLeaves.length);
-        console.log('Pending leaves updated:', pendingLeaves.length);
-    } catch (error) {
-        console.error('Error checking leave validity:', error);
     }
 }, {
     scheduled: true,
@@ -7060,31 +6956,6 @@ const scheduler = async (data) => {
 
 // * Calculate age based on birthdate
 const calculateAge = (birthdate) => moment().utcOffset('+08:00').diff(moment(birthdate), 'years');
-
-// * Default public holidays for the year
-const defaultPublicHolidays = ['2024-02-16', '2024-05-01', '2024-05-07', '2024-09-16', '2024-12-25'];
-const allPublicHolidays = defaultPublicHolidays.map(date => moment(date).startOf('day').toDate());
-
-// * Check if a date is a public holiday
-const isPublicHoliday = (date, holidays) => holidays.some(holiday => moment(date).isSame(moment(holiday), 'day'));
-
-// * Calculate business days between two dates
-const calculateBusinessDays = (startDateString, endDateString) => {
-    const start = moment(startDateString).startOf('day');
-    const end = moment(endDateString).startOf('day');
-    const increment = start.isBefore(end) ? 1 : -1;
-    let count = 0;
-
-    while (start.isSameOrBefore(end)) {
-        if (start.day() >= 1 && start.day() <= 5 && !isPublicHoliday(start.toDate(), allPublicHolidays)) {
-            count++;
-        }
-        if (start.isSame(end)) break;
-        start.add(increment, 'days');
-    }
-
-    return increment === -1 ? -count : count;
-};
 
 // * Check if a date is a weekend (Saturday or Sunday)
 const isWeekend = (date) => moment(date).day() % 6 === 0;
@@ -7227,6 +7098,82 @@ const updateAbsentAttendance = async () => {
     }
 };
 
+const updateInvalidLeave = async () => {
+    const today = moment().utcOffset(8).toDate();
+
+    try {
+        // Find and process invalid leaves
+        const invalidLeave = await Leave.findOne({ status: 'pending' });
+
+        for (const leave of invalidLeave) {
+            const amountDay = calculateBusinessDays(today, leave.timestamp);
+            if (amountDay < -3) {
+                console.log('Leave is invalid.');
+
+                const user = await User.findById(leave.user);
+                const isDeputyChiefExec = user.isDeputyChiefExec;
+
+                leave.status = 'invalid';
+
+                if (!isDeputyChiefExec) {
+                    // Update leave approvals if not a Deputy Chief Executive
+                    let lastValidIndex = leave.approvals.reduce((lastIndex, approval, index) =>
+                        (approval.status === 'approved' || approval.status === 'submitted') ? index : lastIndex, -1);
+
+                    const nextApprovalIndex = lastValidIndex + 1;
+                    const nextApproval = leave.approvals[nextApprovalIndex];
+
+                    if (nextApprovalIndex < leave.approvals.length) {
+                        if (nextApproval.role === 'Human Resource') {
+                            console.log('There is nothing to be cut off the approvals here');
+                        } else {
+                            leave.approvals.splice(nextApprovalIndex, 1);
+                        }
+                    }
+                    console.log('After splice:', leave.approvals);
+                    await leave.save();
+
+                    const nextApprover = await User.findOne({ _id: nextApproval.recipient });
+
+                    // Log activity
+                    await logActivity(leave.user, 'Leave Invalid', 'Leave Invalid', `Leave request on ${leave.createdAt}, has become invalid due to past 3 bussiness day without fully approved.`);
+
+                    const message = 'Your attendance record has been updated.';
+                    await createAndSendNotification(leave.user, nextApprover._id, 'Attendance Updated', `/profile`, message);
+
+                    // Prepare email data
+                    const emailData = {
+                        content: message,
+                        url: 'https://www.lakmnsportal.com/profile'
+                    };
+                    await sendEmailNotification(nextApprover.email, emailData);
+                }
+
+
+            } else {
+                console.log('Leave is still valid.');
+            }
+        }
+
+        // // Update status of pending leaves
+        // const threeDaysFromNow = moment().add(3, 'days').toDate();
+        // const pendingLeaves = await Leave.find({
+        //     estimated: { $lte: threeDaysFromNow },
+        //     status: 'submitted'
+        // });
+
+        // for (const pending of pendingLeaves) {
+        //     pending.status = 'pending';
+        //     await pending.save();
+        // }
+
+        // console.log('Invalid leaves updated:', invalidLeaves.length);
+        // console.log('Pending leaves updated:', pendingLeaves.length);
+    } catch (error) {
+        console.error('Error checking leave validity:', error);
+    }
+};
+
 // * Delete all QR code data from the QRCode and TempAttendance collections
 const clearQRCodeData = async () => {
     try {
@@ -7310,7 +7257,6 @@ const calculateCycleAmount = (index) => index === 8 ? 8 : 4; // Example logic
 const createPatrolReport = async (dutyHandoverId, location, date, shift, startTime, selectedNames) => {
     const endTime = startTime === '0700' ? '1500' :
         startTime === '1500' ? '2300' : '0700';
-    const cycleAmount = startTime === '2300' ? 8 : '';
 
     const checkpoints = locationMappings[location] || [];
     checkpoints.forEach(checkpoint => checkpoint.fullName = '');
@@ -7318,7 +7264,6 @@ const createPatrolReport = async (dutyHandoverId, location, date, shift, startTi
     const cycles = [];
     const cycleAmounts = { '0700': 4, '1500': 4, '2300': 8 };
     const timeSlotIncrements = { '0700': 200, '1500': 200, '2300': 100 };
-
     const timeSlotIncrement = timeSlotIncrements[startTime];
 
     for (let i = 0; i < cycleAmounts[startTime]; i++) {
@@ -7333,18 +7278,20 @@ const createPatrolReport = async (dutyHandoverId, location, date, shift, startTi
         });
     }
 
+    // Create the new patrol report
     const newPatrolReport = new PatrolAux({
-        reportId: dutyHandoverId,
-        type: 'Shift Member Location',
-        shift: shift,
-        startShift: startTime,
-        endShift: endTime,
-        date: moment(date).utcOffset(8).toDate(),
-        location: location,
-        status: 'Open',
-        staff: selectedNames,
-        shiftMember: { cycle: cycles },
-        timestamp: moment().utcOffset(8).toDate()
+        reportId: dutyHandoverId,              // Ensure this is provided
+        type: 'Shift Member Location',         // Hardcoded but required
+        shift: shift,                          // Ensure this is provided
+        startShift: startTime,                 // Ensure this is provided
+        endShift: endTime,                     // Calculated, ensure it's correct
+        date: moment(date).utcOffset(8).toDate(), // Ensure this is provided and correctly formatted
+        location: location,                    // Ensure this is provided
+        status: 'Open',                        // Hardcoded but required
+        staff: selectedNames,                  // Ensure this is provided or handle as an optional field
+        shiftMember: { cycle: cycles },        // Ensure this matches shiftMemberSchema
+        timestamp: moment().utcOffset(8).toDate(), // Automatically generated
+        patrolUnit: ''
     });
 
     try {
@@ -8326,7 +8273,6 @@ const processLeaveRequest = async (type, user, userLeave, startDate, returnDate,
 // Helper function for handling approved status
 const handleApproved = async (checkLeave, recipientIndices, user, res) => {
     try {
-        console.log(recipientIndices);
         // Determine the index of the approval recipient to update
         let indexOfRecipient = recipientIndices[0];
         if (recipientIndices.length > 1) {
@@ -8338,25 +8284,26 @@ const handleApproved = async (checkLeave, recipientIndices, user, res) => {
         const isReliefStaff = role === 'Relief Staff';
         const isSupervisor = role === 'Supervisor';
 
-        // Update leave approval status in the database
+        // Update the current approval (only the one at indexOfRecipient)
+        const updateQuery = {};
+        updateQuery[`approvals.${indexOfRecipient}.status`] = 'approved'; // Set status to approved
+        updateQuery[`approvals.${indexOfRecipient}.comment`] = `The request has been approved${(isReliefStaff || isSupervisor) ? ` by ${user.fullname}` : ''}`; // Add a comment
+        updateQuery[`approvals.${indexOfRecipient}.timestamp`] = moment().utcOffset(8).toDate(); // Record the timestamp
+
         await Leave.findOneAndUpdate(
             {
                 _id: checkLeave._id, // Match the leave request ID
-                'approvals.recipient': user._id, // Match the current user
-                'approvals.timestamp': null // Ensure it's the correct approval (pending)
+                [`approvals.${indexOfRecipient}.recipient`]: user._id, // Match the current recipient
+                [`approvals.${indexOfRecipient}.timestamp`]: null // Ensure it's the correct approval (pending)
             },
             {
-                $set: {
-                    'approvals.$.status': 'approved', // Set status to approved
-                    'approvals.$.comment': `The request has been approved by ${isReliefStaff || isSupervisor ? user.fullname : ''}`, // Add a comment
-                    'approvals.$.timestamp': moment().utcOffset(8).toDate(), // Record the timestamp
-                    status: 'pending' // Keep the overall status pending until all approvals are complete
-                }
+                $set: updateQuery,
+                status: 'pending' // Keep the overall status pending until all approvals are complete
             },
             { new: true } // Return the updated document
         );
 
-        // initialize the next approvals
+        // Initialize the next approvals
         let nextApprovalRecipientId;
         let sendNoti = [];
         let sendEmail = [];
@@ -8364,9 +8311,9 @@ const handleApproved = async (checkLeave, recipientIndices, user, res) => {
         // Determine the next approval recipient
         const nextIndex = indexOfRecipient + 1;
 
-        // Check if next approval is Admin HR
-        if (checkLeave.approvals[nextIndex].role === 'Human Resource') {
-            const adminHR = await User.findOne({ isAdmin: true, isHeadOfSection: true, section: 'Human Resource Management Division' })
+        // Check if the next approval is Admin HR
+        if (checkLeave.approvals[nextIndex] && checkLeave.approvals[nextIndex].role === 'Human Resource') {
+            const adminHR = await User.findOne({ isAdmin: true, isHeadOfSection: true, section: 'Human Resource Management Division' });
             const adminUsers = await User.find({
                 isAdmin: true,
                 section: 'Human Resource Management Division',
@@ -8379,37 +8326,29 @@ const handleApproved = async (checkLeave, recipientIndices, user, res) => {
                     sendNoti.push(user._id);
                 }
             });
-        } else {
-            nextApprovalRecipientId = checkLeave.approvals[nextIndex]?.recipient;
+        } else if (checkLeave.approvals[nextIndex]) {
+            nextApprovalRecipientId = checkLeave.approvals[nextIndex].recipient;
             sendNoti.push(nextApprovalRecipientId);
         }
 
-        // find and push email to sendEmail
-        let i = 0;
+        // Find and push email to sendEmail
         for (const recipient of sendNoti) {
-            const recipientId = recipient;
-
-            // Fetch the user by recipient ID
-            const email = await User.findById(recipientId);
+            const email = await User.findById(recipient);
 
             // Check if the user is found and has an email
-            if (email && user.email) {
-                // Add the user's email to sendEmail
+            if (email && email.email) {
                 sendEmail.push(email.email);
             }
-
-            i++;
         }
 
-        console.log('This is index of recipient: ', indexOfRecipient);
-        console.log('This is next index of recipient: ', nextApprovalRecipientId);
-        console.log('Send noti array :', sendNoti);
+        console.log('Index of recipient:', indexOfRecipient);
+        console.log('Next recipient index:', nextApprovalRecipientId);
+        console.log('Send notification array:', sendNoti);
 
         if (sendNoti.length > 0) {
-
-            // Create and save a new notification for the next multiple recipient
+            // Create and save a new notification for the next multiple recipients
             for (const recipientId of sendNoti) {
-                await createAndSendNotification(user, recipientId, 'Leave Approval', '/leave/details/' + checkLeave._id, 'Leave has been approved by ' + user.fullname);
+                await createAndSendNotification(user, recipientId, 'Leave Approval', `/leave/details/${checkLeave._id}`, `Leave has been approved by ${user.fullname}`);
             }
 
             // Log the approval activity
@@ -8417,10 +8356,9 @@ const handleApproved = async (checkLeave, recipientIndices, user, res) => {
 
             // Send an email notification to the next recipient
             await sendEmailNotification(sendEmail, {
-                content: 'Leave has been approved by ' + user.fullname,
-                url: 'www.lakmnsportal.com/leave/details/' + checkLeave._id
+                content: `Leave has been approved by ${user.fullname}`,
+                url: `www.lakmnsportal.com/leave/details/${checkLeave._id}`
             });
-
         } else {
             console.log('The leave has been approved by all recipients.');
         }
@@ -8843,6 +8781,44 @@ const getTotalVisitorsTimeInToday = async () => {
 const getTotalVisitorsTimeOutToday = async () => {
     const today = moment().startOf('day').toDate();
     return await Vms.countDocuments({ time_out: { $gte: today } });
+};
+
+// * Default public holidays for the year
+const defaultPublicHolidays = ['2024-02-16', '2024-05-01', '2024-05-07', '2024-09-16', '2024-12-25', '2024-09-05'];
+const allPublicHolidays = defaultPublicHolidays.map(date => moment(date).startOf('day').toDate());
+
+// * Check if a date is a public holiday
+const isPublicHoliday = (date, holidays) => holidays.some(holiday => moment(date).isSame(moment(holiday), 'day'));
+
+// * Calculate business days between two dates
+const calculateBusinessDays = (startDateString, endDateString) => {
+    let start = moment(startDateString).startOf('day');
+    let end = moment(endDateString).startOf('day');
+
+    // Determine the increment direction based on whether start is before or after end
+    const increment = start.isBefore(end) ? 1 : -1;
+
+    // Swap start and end if end is before start, so we can loop consistently
+    let earlier = increment === 1 ? start : end;
+    let later = increment === 1 ? end : start;
+
+    let count = 0;
+
+    // Iterate through the days between earlier and later dates
+    while (earlier.isBefore(later)) {
+        if (earlier.day() >= 1 && earlier.day() <= 5 && !isPublicHoliday(earlier.toDate(), allPublicHolidays)) {
+            count++;
+        }
+        earlier.add(1, 'days');
+    }
+
+    // Include the later day in the calculation if it's a business day
+    if (later.day() >= 1 && later.day() <= 5 && !isPublicHoliday(later.toDate(), allPublicHolidays)) {
+        count++;
+    }
+
+    // Return the correct sign for the difference
+    return increment === 1 ? count : -count;
 };
 
 // Global error handler middleware
