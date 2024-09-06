@@ -4818,6 +4818,36 @@ async function getTotalVisitorsTimeOutToday() {
     return await Vms.countDocuments({ timeOut: { $gte: today } });
 }
 
+// Endpoint to fetch the total number of visitors who have checked in today
+app.get('/total_visitors', async function (req, res) {
+    try {
+        const totalVisitors = await getTotalVisitorsToday();
+        res.send(totalVisitors.toString());
+    } catch (error) {
+        handleError(res, error);
+    }
+});
+
+// Endpoint to fetch the total number of visitors currently checked in today
+app.get('/total_timein_visitors', async function (req, res) {
+    try {
+        const totalTimeInVisitors = await getTotalVisitorsTimeInToday();
+        res.send(totalTimeInVisitors.toString());
+    } catch (error) {
+        handleError(res, error);
+    }
+});
+
+// Endpoint to fetch the total number of visitors who have checked out today
+app.get('/total_timeout_visitors', async function (req, res) {
+    try {
+        const totalTimeOutVisitors = await getTotalVisitorsTimeOutToday();
+        res.send(totalTimeOutVisitors.toString());
+    } catch (error) {
+        handleError(res, error);
+    }
+});
+
 // ============================
 // Fetch Data API
 // ============================

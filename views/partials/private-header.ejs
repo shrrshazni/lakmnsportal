@@ -41,6 +41,11 @@
   <link href="/assets/css/user.min.css" type="text/css" rel="stylesheet" id="user-style-default">
   <link href="/assets/css/user.css" type="text/css" rel="stylesheet" id="user-style-default" />
   <link href="/assets/css/visitor.css" type="text/css" rel="stylesheet" id="" />
+  <!-- CSS VMS -->
+  <!-- <link href="/assets/css/visitor.css" type="text/css" rel="stylesheet" id="" /> -->
+  <!-- Bootstrap VMS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/5.3.0/css/bootstrap.min.css">
 
   <script>
     var phoenixIsRTL = window.config.config.phoenixIsRTL;
@@ -711,13 +716,6 @@
                 </a>
               </div>
 
-              <!-- vms testing -->
-              <div class="nav-item-wrapper"><a class="nav-link label-1" href="/visitor/list" role="button" data-bs-toggle="" aria-expanded="false">
-                  <div class="d-flex align-items-center"><span class="nav-link-icon"><span data-feather="sun"></span></span><span class="nav-link-text-wrapper"><span class="nav-link-text">VMS</span></span>
-                  </div>
-                </a>
-              </div>
-
               <!-- level 1-->
               <div class="nav-item-wrapper"><a class="nav-link dropdown-indicator label-1" href="#nv-aux-police-patrol" role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-tables">
                   <div class="d-flex align-items-center">
@@ -743,6 +741,28 @@
                   </ul>
                 </div>
               </div>
+
+              <!-- VMS -->
+              <div class="nav-item-wrapper"><a class="nav-link dropdown-indicator label-1" href="#nv-visitor" role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-tables">
+                <div class="d-flex align-items-center">
+                  <div class="dropdown-indicator-icon"><span class="fas fa-caret-right"></span></div><span class="nav-link-icon"><span data-feather="sun"></span></span><span class="nav-link-text">VMS</span>
+                </div></a>
+                <div class="parent-wrapper label-1">
+                  <ul class="nav collapse parent" data-bs-parent="#navbarVerticalCollapse" id="nv-visitor">
+                    <li class="collapsed-nav-item-title d-none">VMS</li>
+                    <li class="nav-item"><a class="nav-link" href="/visitor/list" data-bs-toggle="" aria-expanded="false">
+                      <div class="d-flex align-items-center">
+                        <span class="nav-link-text">Visitor List</span>
+                      </div></a>
+                    </li>
+                    <li class="nav-item d-none"><a class="nav-link" href="/visitor/overview" data-bs-toggle="" aria-expanded="false">
+                      <div class="d-flex align-items-center">
+                        <span class="nav-link-text">Visitor Overview</span>
+                      </div></a>
+                    </li>
+                  </ul>
+                </div>
+               </div>
 
               <!-- multi level example-->
               <div class="nav-item-wrapper d-none"><a class="nav-link dropdown-indicator label-1" href="#nv-multi-level" role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-multi-level">
@@ -908,14 +928,6 @@
                   </div>
                 </a>
               </div>
-
-              <!-- vms testing -->
-              <div class="nav-item-wrapper d-none"><a class="nav-link label-1" href="/vms/list" role="button" data-bs-toggle="" aria-expanded="false">
-                  <div class="d-flex align-items-center"><span class="nav-link-icon"><span data-feather="sun"></span></span><span class="nav-link-text-wrapper"><span class="nav-link-text">VMS</span></span>
-                  </div>
-                </a>
-              </div>
-
             </li>
 
           </ul>
