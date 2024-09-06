@@ -3834,13 +3834,7 @@ app.get('/auxiliary-police/duty-handover/submit', isAuthenticated, async (req, r
                 return next(new Error('Missing required fields for patrol report creation.'));
             }
 
-            try {
-                const newReport = await createPatrolReport(create._id, location, date, shift, time, shiftStaff);
-                console.log('New patrol report created', newReport);
-            } catch (error) {
-                console.error('Error creating patrol report:', error);
-                return next(new Error('Failed to create patrol report.'));
-            }
+            const newReport = await createPatrolReport(create._id, location, date, shift, time, shiftStaff);
             console.log('New duty handover and patrol report created', create, newReport);
             res.render('auxiliarypolice-dutyhandover-submit', {
                 user: req.user,
@@ -4270,6 +4264,9 @@ app.get('/auxiliary-police/patrol/shift-member-location/details/:id', isAuthenti
         const { user, notifications } = req;
         const id = req.params.id;
 
+        // find all user
+        const allUser = await User.find();
+
         // Find the report and its shift member cycles
         const checkReport = await PatrolAux.findOne({ _id: id });
         const shiftMemberCycles = checkReport.shiftMember.cycle;
@@ -4304,6 +4301,7 @@ app.get('/auxiliary-police/patrol/shift-member-location/details/:id', isAuthenti
             cycle: shiftMemberCycles,
             currentTimeSlot,
             progressReport: percentageTimesWithValuesInShift.toFixed(0),
+            allUser: allUser
         });
     } catch (error) {
         console.error('Error fetching shift member location details:', error);
@@ -4344,41 +4342,51 @@ app.get('/shift-member/fullname-submit/:location/:checkpointName', async (req, r
         const checkpointName = _.startCase(req.params.checkpointName.replace(/-/g, ' '));
 
         const today = moment().utcOffset(8).startOf('day').toDate();
-        const kualaLumpurTimeZoneOffset1 = 8;
-        const now1 = moment().utcOffset(kualaLumpurTimeZoneOffset1 * 60);
+        const kualaLumpurTimeZoneOffset = 8;
+        const now = moment().utcOffset(kualaLumpurTimeZoneOffset * 60);
 
-        const currentTimeNumeric = now1.format('HHmm');
-        const isNightShift = currentTimeNumeric >= 2300 || currentTimeNumeric < 700;
+        // use alternate way which is uysing helper function isWithinTimeSlot
+        const currentTimeString = now.format('HHmm');
+        const currentTimeNumeric = parseInt(currentTimeString, 10);
 
-        // Fetch reports based on whether it's a night shift or not
-        if (isNightShift) {
-            const filteredReports1 = await PatrolAux.findOne({
+        console.log(currentTimeNumeric);
+
+        let filteredReports;
+        // testing the check time here to find the specific report
+        if (currentTimeNumeric >= 700 && currentTimeNumeric <= 1500) {
+
+            filteredReports = await PatrolAux.findOne({
                 location: location,
+                timestamp: { $gte: today },
+                status: 'Open',
+                startShift: '0700'
+            });
+
+        } else if (currentTimeNumeric >= 1500 && currentTimeNumeric <= 2300) {
+
+            filteredReports = await PatrolAux.findOne({
+                location: location,
+                timestamp: { $gte: today },
+                status: 'Open',
+                startShift: '1500'
+            });
+
+        } else {
+
+            filteredReports = await PatrolAux.findOne({
+                location: location,
+                status: 'Open',
                 startShift: '2300',
                 $or: [{ date: today }, { date: moment(today).subtract(1, 'days').toDate() }]
             });
-
-            console.log(filteredReports1);
-            res.render('shift-member-submit', {
-                patrolReport: filteredReports1,
-                location: location,
-                checkpointName: checkpointName
-            });
-        } else {
-            const filteredReports2 = await PatrolAux.findOne({
-                location: location,
-                date: { $gte: today },
-                startShift: { $gte: currentTimeNumeric },
-                endShift: { $gte: currentTimeNumeric }
-            });
-
-            console.log(filteredReports2);
-            res.render('shift-member-submit', {
-                patrolReport: filteredReports2,
-                location: location,
-                checkpointName: checkpointName
-            });
         }
+
+        res.render('shift-member-submit', {
+            patrolReport: filteredReports,
+            location: location,
+            checkpointName: checkpointName
+        });
+
     } catch (error) {
         console.error('Error selecting fullname:', error);
         next(error);
@@ -4398,7 +4406,9 @@ app.get('/shift-member/checkpoint-submit/:location/:checkpointName/:shiftMember/
         if (checkUser) {
             const patrolReport = await PatrolAux.findOne({ _id: reportId });
 
-            if (patrolReport && patrolReport.status === 'Pending') {
+            if (patrolReport && patrolReport.status === 'Open') {
+
+
                 // Find the relevant cycle based on checkpoint name and time slot
                 const cycleToUpdate = patrolReport.shiftMember.cycle.find(cycle =>
                     cycle.checkpoint.some(
@@ -6849,6 +6859,8 @@ cron.schedule('0 0 * * *', () => {
     updateAbsentAttendance();
     updateAttendanceForApprovedLeaves();
     updateTodayAttendance();
+    updateInvalidLeave();
+    clearQRCodeData();
 }, {
     scheduled: true,
     timezone: 'Asia/Kuala_Lumpur'
@@ -6865,15 +6877,6 @@ cron.schedule('59 23 * * *', async () => {
     } catch (error) {
         console.error('Error updating attendance and clearing QR codes:', error);
     }
-}, {
-    scheduled: true,
-    timezone: 'Asia/Kuala_Lumpur'
-});
-
-// Scheduler to clear QR code data at midnight
-cron.schedule('0 0 * * *', () => {
-    console.log('Running cron job to clear QR code data for today');
-    clearQRCodeData();
 }, {
     scheduled: true,
     timezone: 'Asia/Kuala_Lumpur'
@@ -7290,8 +7293,8 @@ const createPatrolReport = async (dutyHandoverId, location, date, shift, startTi
         status: 'Open',                        // Hardcoded but required
         staff: selectedNames,                  // Ensure this is provided or handle as an optional field
         shiftMember: { cycle: cycles },        // Ensure this matches shiftMemberSchema
-        timestamp: moment().utcOffset(8).toDate(), // Automatically generated
-        patrolUnit: ''
+        timestamp: moment().utcOffset(8).toDate(),
+        patrolUnit: []
     });
 
     try {
@@ -8820,6 +8823,41 @@ const calculateBusinessDays = (startDateString, endDateString) => {
     // Return the correct sign for the difference
     return increment === 1 ? count : -count;
 };
+
+// *Check if the current time shift for auxiliary police is within the given time slot
+const isWithinTimeSlot = (timeSlot) => {
+    // Parse the start and end times from the time slot
+    const [startTime, endTime] = timeSlot.split('-');
+
+    // Get the current time in numeric format (e.g., HHmm)
+    const currentTimeNumeric = new Date().toLocaleTimeString('en-MY', {
+        hour12: false,
+        timeZone: 'Asia/Kuala_Lumpur'
+    });
+    const currentTime = parseInt(currentTimeNumeric.replace(':', ''), 10);
+
+    var startNumeric = '';
+    var endNumeric = '';
+
+    // Convert start and end times to numeric format
+    startNumeric = parseInt(startTime.replace(':', ''), 10);
+    endNumeric = parseInt(endTime.replace(':', ''), 10);
+
+    console.log("Start Numeric:", startNumeric);
+    console.log("End Numeric:", endNumeric);
+    console.log("Current Time:", currentTime);
+
+    if (endNumeric === 0) {
+        endNumeric = 2400;
+    }
+
+    if (startNumeric <= endNumeric) {
+        return currentTime >= startNumeric && currentTime <= endNumeric;
+    } else {
+        // Handle the case where the time slot spans midnight
+        return currentTime >= startNumeric || currentTime <= endNumeric;
+    }
+}
 
 // Global error handler middleware
 app.use((error, req, res, next) => {

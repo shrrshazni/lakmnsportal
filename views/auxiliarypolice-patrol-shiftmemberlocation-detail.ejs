@@ -36,7 +36,11 @@
             <div id="giveShiftMemberDisplay" class="d-flex row g-1">
               <% if (patrolReport && patrolReport.staff && patrolReport.staff.length > 0) { %>
               <% patrolReport.staff.forEach(member => { %>
-              <a href="/social/profile/<%= member %>" class="btn btn-primary col-auto">
+
+              <% const findUser = allUser.find(user => user.fullname === member); 
+                 console.log(findUser);
+              %>
+              <a href="/staff/details/<%= findUser._id %>" class="btn btn-primary me-1 col-auto">
                 <%= member %>
               </a>
               <% }); %>
@@ -112,7 +116,7 @@
             <div class="d-flex justify-content-between py-3 px-2">
               <h2 class="card-title mb-3">
                 <div class="d-sm-block d-lg-flex">
-                  <div class="text1 me-2 fs-7 fs-lg-6 mb-2">Cycle <%= index+1 %></div>
+                  <div class="text1 me-2 fs-7 fs-lg-6 mb-2 d-none">Cycle <%= index+1 %></div>
                   <div class="text2 d-flex mt-n2">&nbsp;<span class="fw-normal text-700 ms-0 fs-9 my-auto badge badge-phoenix badge-phoenix-warning align-items-center ms-n2"><%= cycle.timeSlot %></span></div>
                 </div>
               </h2>
@@ -153,7 +157,7 @@
           <script>
             // Update countdown for this cycle
             setInterval(() => {
-              updateCountdown('<%= patrolReport.date %>','<%= cycle.timeSlot %>', 'countdown<%= index %>');
+              updateCountdown('<%= patrolReport.date %>', '<%= cycle.timeSlot %>', 'countdown<%= index %>');
             }, 1000);
           </script>
           <% }); %>
