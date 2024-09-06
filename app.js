@@ -784,18 +784,21 @@ caseSchema.index({ location: 1 });
 caseSchema.index({ fullname: 1 });
 
 const vmsSchema = new mongoose.Schema({
-    vis_firstname: String,
-    vis_lastname: String,
-    no_ic: String,
+    firstName: String,
+    lastName: String,
+    nric: String,
     address: String,
     level: String,
-    no_pas: String,
-    no_telephone: String,
-    pur_visit: String,
-    time_in: Date,
-    time_out: Date,
-    build_loc: String
+    pass: String,
+    phoneNum: String,
+    purpose: String,
+    timeIn: Date,
+    timeOut: Date,
+    location: String
 });
+vmsSchema.index({ firstName: 1 });
+vmsSchema.index({ lastName: 1 });
+
 
 const subscriptionSchema = new mongoose.Schema({
     endpoint: { type: String, required: true },
@@ -4602,249 +4605,218 @@ app.get('/submit-failed', async (req, res, next) => {
 // // Visitor Management System
 // // ============================
 
-// // VMS
-// // ROUTE FOR DISPLAYING THE FORM
-// app.get('/visitor/submit', (req, res) => {
-//     try {
-//         try {
-//             res.render('visitor_form', {
-//                 thank_you_message: null,
-//                 fields: {
-//                     vis_firstname: '',
-//                     vis_lastname: '',
-//                     no_ic: '',
-//                     address: '',
-//                     level: '',
-//                     no_pas: '',
-//                     no_telephone: '',
-//                     pur_visit: ''
-//                 },
-//                 errors: {}
-//             });
-//         } catch (error) {
-//             console.error('Error:', error);
-//             next(error);
-//         }
-//     } catch (error) {
-//         console.error('Error:', error);
-//         next(error);
-//     }
-// }).post('/visitor/submit', async (req, res) => {
-//     const kualaLumpurTimeZoneOffset1 = 8; // Kuala Lumpur is UTC+8
-//     const now1 = moment().utcOffset(kualaLumpurTimeZoneOffset1 * 60); // Convert hours to minutes
+// Handle GET request for displaying the visitor form
+app.get('/visitor/form', (req, res) => {
+    res.render('visitor-form', {
+        thank_you_message: null,
+        fields: {
+            firstName: '',
+            lastName: '',
+            nric: '',
+            address: '',
+            level: '',
+            pass: '',
+            phoneNum: '',
+            purpose: ''
+        },
+        errors: {}
+    });
+    // Handle POST request for form submission
+}).post('/visitor/form/submitted', async (req, res) => {
+    const kualaLumpurTimeZoneOffset1 = 8; // Kuala Lumpur is UTC+8
+    const now1 = moment().utcOffset(kualaLumpurTimeZoneOffset1 * 60); // Convert hours to minutes
 
-//     const fields = {
-//         vis_firstname: req.body.vis_firstname.trim(),
-//         vis_lastname: req.body.vis_lastname.trim(),
-//         no_ic: req.body.no_ic.trim(),
-//         address: req.body.address.trim(),
-//         level: req.body.level.trim(),
-//         no_pas: req.body.no_pas.trim(),
-//         no_telephone: req.body.no_telephone.trim(),
-//         pur_visit: req.body.pur_visit.trim(),
-//         time_in: now1.format('YYYY-MM-DD HH:mm:ss'), // Format as 'YYYY-MM-DD HH:mm:ss' for time_in
-//         build_loc: req.body.build_loc
-//     };
+    // Extract and trim form fields from the request body
+    const fields = {
+        firstName: req.body.firstName.trim(),
+        lastName: req.body.lastName.trim(),
+        nric: req.body.nric.trim(),
+        address: req.body.address.trim(),
+        level: req.body.level.trim(),
+        pass: req.body.pass.trim(),
+        phoneNum: req.body.phoneNum.trim(),
+        purpose: req.body.purpose.trim(),
+        timeIn: now1.format('YYYY-MM-DD HH:mm:ss'), // Format as 'YYYY-MM-DD HH:mm:ss' for time in
+        location: req.body.location
+    };
 
-//     let errors = {};
-//     if (!/^[a-zA-Z\s]+$/.test(fields.vis_firstname)) errors.vis_firstname = "Invalid first name format.";
-//     if (!/^[a-zA-Z\s]+$/.test(fields.vis_lastname)) errors.vis_lastname = "Invalid last name format.";
-//     if (!/^\d{12}$/.test(fields.no_ic)) errors.no_ic = "IC number must be 12 digits.";
-//     if (fields.address === '') errors.address = "Address is required.";
-//     if (!/^\d+$/.test(fields.level)) errors.level = "Level must be a number.";
-//     if (fields.no_pas === '') errors.no_pas = "No Pas is required.";
-//     if (!/^\d{10,15}$/.test(fields.no_telephone)) errors.no_telephone = "Phone number must be between 10 and 15 digits.";
-//     if (fields.pur_visit === '') errors.pur_visit = "Purpose of visit is required.";
+    // Initialize an empty errors object
+    let errors = {};
+    if (!/^[a-zA-Z\s]+$/.test(fields.firstName)) errors.firstName = "Invalid first name format.";
+    if (!/^[a-zA-Z\s]+$/.test(fields.lastName)) errors.lastName = "Invalid last name format.";
+    if (!/^\d{12}$/.test(fields.nric)) errors.nric = "IC number must be 12 digits.";
+    if (fields.address === '') errors.address = "Address is required.";
+    if (!/^\d+$/.test(fields.level)) errors.level = "Level must be a number.";
+    if (fields.pass === '') errors.pass = "No Pass is required.";
+    if (!/^\d{10,15}$/.test(fields.phoneNum)) errors.phoneNum = "Phone number must be between 10 and 15 digits.";
+    if (fields.purpose === '') errors.purpose = "Purpose of visit is required.";
 
-//     if (Object.keys(errors).length === 0) {
-//         const newVisitor = new Vms(fields);
-//         try {
-//             await newVisitor.save();
-//             try {
-//                 res.render('visitor_form', {
-//                     thank_you_message: 'Thank you for your submission!',
-//                     fields: fields,
-//                     errors: {}
-//                 });
-//             } catch (error) {
-//                 console.error('Error:', error);
-//                 next(error);
-//             }
-//         } catch (err) {
-//             console.error('Error saving visitor:', err);
-//             try {
-//                 res.render('visitor_form', {
-//                     thank_you_message: '',
-//                     fields: fields,
-//                     errors: {}
-//                 });
-//             } catch (error) {
-//                 console.error('Error:', error);
-//                 next(error);
-//             }
-//         }
-//     } else {
-//         try {
-//             res.render('visitor_form', {
-//                 thank_you_message: '',
-//                 fields: fields,
-//                 errors: errors
-//             });
-//         } catch (error) {
-//             console.error('Error:', error);
-//             next(error);
-//         }
-//     }
-// });
+    // If there are no validation errors, proceed to save the visitor data
+    if (Object.keys(errors).length === 0) {
+        const newVisitor = new Vms(fields);
+        try {
+            await newVisitor.save();
+            res.render('visitor-form', {
+                thank_you_message: 'Thank you for your submission!',
+                fields: fields,
+                errors: {}
+            });
+        } catch (err) {
+            console.error('Error saving visitor:', err);
+            res.render('visitor-form', {
+                thank_you_message: '',
+                fields: fields,
+                errors: {}
+            });
+        }
+    } else {
+        // If there are validation errors, re-render the form with the errors and current field values
+        res.render('visitor-form', {
+            thank_you_message: '',
+            fields: fields,
+            errors: errors
+        });
+    }
+});
 
-// // ROUTE FOR HANDLING FORM SUBMISSION
+// Handle GET request for displaying the visitor list, with authentication check
+app.get('/visitor/list', isAuthenticated, async function (req, res) {
+    // Retrieve the username from the authenticated user
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    })
+        .populate('sender')
+        .sort({ timestamp: -1 });
 
+    // Fetch all visitor data from the Vms collection
+    const visitors = await Vms.find().exec();
 
-// // ROUTE FOR DISPLAYING VISITOR LIST
-// app.get('/vms/list', isAuthenticated, async function (req, res) {
-//     const username = req.user.username;
-//     const user = await User.findOne({ username: username });
-//     const notifications = await Notification.find({
-//         recipient: user._id,
-//         read: false
-//     })
-//         .populate('sender')
-//         .sort({ timestamp: -1 });
+    // Format visitor data, particularly the timeIn and timeOut fields, for display
+    const formattedVisitors = visitors.map(visitor => ({
+        ...visitor.toObject(),
+        timeIn: visitor.timeIn ? moment(visitor.timeIn).format('YYYY-MM-DD HH:mm:ss') : '-',
+        timeOut: visitor.timeOut ? moment(visitor.timeOut).format('YYYY-MM-DD HH:mm:ss') : '-'
+    }));
 
-//     // Fetch visitor data with formatted dates
-//     const visitors = await Vms.find().exec();
-//     const formattedVisitors = visitors.map(visitor => ({
-//         ...visitor.toObject(),
-//         time_in: visitor.time_in ? moment(visitor.time_in).format('YYYY-MM-DD HH:mm:ss') : '-',
-//         time_out: visitor.time_out ? moment(visitor.time_out).format('YYYY-MM-DD HH:mm:ss') : '-'
-//     }));
+    // Calculate total visitors, time-in visitors, and time-out visitors for today
+    const totalVisitorsToday = await getTotalVisitorsToday();
+    const timeInVisitorsToday = await getTotalVisitorsTimeInToday();
+    const timeOutVisitorsToday = await getTotalVisitorsTimeOutToday();
 
+    // If the user is found, render the 'visitor-list' template with the necessary data
+    if (user) {
+        res.render('visitor-list', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4(),
+            visitors: formattedVisitors,  // Pass formatted visitor data
+            totalVisitorsToday,
+            timeInVisitorsToday,
+            timeOutVisitorsToday
+        });
+    }
+});
 
-//     // Calculate visitor counts
-//     const totalVisitorsToday = await getTotalVisitorsToday();
-//     const timeInVisitorsToday = await getTotalVisitorsTimeInToday();
-//     const timeOutVisitorsToday = await getTotalVisitorsTimeOutToday();
+// Handle POST request to toggle the status for time out action
+app.post('/toggle/status', isAuthenticated, async function (req, res) {
+    const visitorId = req.body.visitor_id;
+    const kualaLumpurTimeZoneOffset1 = 8;
+    const now1 = moment().utcOffset(kualaLumpurTimeZoneOffset1 * 60);
+    const timeOut = now1.format('YYYY-MM-DD HH:mm:ss');
 
-//     if (user) {
-//         try {
-//             res.render('vms-list', {
-//                 user: user,
-//                 notifications: notifications,
-//                 uuid: uuidv4(),
-//                 visitors: formattedVisitors,  // Pass formatted visitor data
-//                 totalVisitorsToday,
-//                 timeInVisitorsToday,
-//                 timeOutVisitorsToday
-//             });
-//         } catch (error) {
-//             console.error('Error:', error);
-//             next(error);
-//         }
-//     }
-// });
+    try {
+        await Vms.findByIdAndUpdate(visitorId, { timeOut: timeOut });
+        res.redirect('/visitor/list');
+    } catch (err) {
+        console.error('Error updating visitor time out:', err);
+        res.redirect('/visitor/list');
+    }
+});
 
-// // Handle time out action
-// app.post('/toggle_status', async (req, res) => {
-//     const visitorId = req.body.visitor_id;
-//     const kualaLumpurTimeZoneOffset1 = 8;
-//     const now1 = moment().utcOffset(kualaLumpurTimeZoneOffset1 * 60);
-//     const timeOut = now1.format('YYYY-MM-DD HH:mm:ss');
+// Handle POST request to delete a visitor
+app.post('/delete/visitor', isAuthenticated, async function (req, res) {
+    const { visitor_id } = req.body;
+    try {
+        await Vms.findByIdAndDelete(visitor_id);
+        res.json({ success: true, message: 'Visitor deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting visitor:', error);
+        res.status(500).json({ success: false, error: 'Error deleting visitor' });
+    }
+});
 
-//     try {
-//         await Vms.findByIdAndUpdate(visitorId, { time_out: timeOut });
-//         res.redirect('/vms/list');
-//     } catch (err) {
-//         console.error('Error updating visitor time out:', err);
-//         res.redirect('/vms/list');
-//     }
-// });
+// Handle POST request to update a visitor's details
+app.post('/updateVisitor/:id', isAuthenticated, async function (req, res) {
+    const visitorId = req.params.id;
+    const updatedData = req.body;
 
-// // Handle delete action
-// app.post('/delete_visitor', async (req, res) => {
-//     const { visitor_id } = req.body;
-//     try {
-//         await Vms.findByIdAndDelete(visitor_id);
-//         res.redirect('/vms/list');
-//     } catch (error) {
-//         handleError(res, error);
-//     }
-// });
+    try {
+        await Vms.findByIdAndUpdate(visitorId, updatedData);
+        res.json({ success: true, message: 'Visitor updated successfully' });
+    } catch (error) {
+        console.error('Error updating visitor:', error);
+        res.status(500).json({ success: false, error: 'Error updating visitor' });
+    }
+});
 
-// // Handle visitor update
-// app.post('/update_visitor/:id', async (req, res) => {
-//     const visitorId = req.params.id;
-//     const updatedData = req.body;
+// Handle GET request to fetch visitors based on various filters
+app.get('/fetch/visitors', async (req, res) => {
+    const { search_name, selected_date, status_filter, location } = req.query;
+    try {
+        const conditions = {};
+        // Add conditions for search by name 
+        if (search_name) {
+            conditions.$or = [
+                { firstName: new RegExp(search_name, 'i') },
+                { lastName: new RegExp(search_name, 'i') }
+            ];
+        }
+        // Add conditions for filtering by date 
+        if (selected_date) {
+            const startDate = moment(selected_date).startOf('day').toDate();
+            const endDate = moment(selected_date).endOf('day').toDate();
+            conditions.timeIn = { $gte: startDate, $lte: endDate };
+        }
+        // Add conditions for filtering by check-in/check-out status 
+        if (status_filter) {
+            if (status_filter === 'checked_in') {
+                conditions.timeIn = { $ne: null };
+                conditions.timeOut = null;
+            } else if (status_filter === 'checked_out') {
+                conditions.timeOut = { $ne: null };
+            }
+        }
+        // Add conditions for filtering by building location
+        if (location) {
+            conditions.location = location;
+        }
+        const visitors = await Vms.find(conditions).exec();
+        res.json(visitors);
+    } catch (error) {
+        handleError(res, error);
+    }
+});
 
-//     try {
-//         await Vms.findByIdAndUpdate(visitorId, updatedData);
-//         res.send('Visitor updated successfully');
-//     } catch (error) {
-//         console.error('Error updating visitor:', error);
-//         res.status(500).send('Error updating visitor');
-//     }
-// });
+// Helper function to get the total number of visitors who have checked in today
+async function getTotalVisitorsToday() {
+    const today = moment().startOf('day').toDate();
+    return await Vms.countDocuments({ timeIn: { $gte: today } });
+}
 
-// // Fetch visitors for AJAX requests
-// app.get('/fetch_visitors', async (req, res) => {
-//     const { search_name, selected_date, status_filter, build_loc } = req.query;
-//     try {
-//         const conditions = {};
-//         if (search_name) {
-//             conditions.$or = [
-//                 { vis_firstname: new RegExp(search_name, 'i') },
-//                 { vis_lastname: new RegExp(search_name, 'i') }
-//             ];
-//         }
-//         if (selected_date) {
-//             const startDate = moment(selected_date).startOf('day').toDate();
-//             const endDate = moment(selected_date).endOf('day').toDate();
-//             conditions.time_in = { $gte: startDate, $lte: endDate };
-//         }
-//         if (status_filter) {
-//             if (status_filter === 'checked_in') {
-//                 conditions.time_in = { $ne: null };
-//                 conditions.time_out = null;
-//             } else if (status_filter === 'checked_out') {
-//                 conditions.time_out = { $ne: null };
-//             }
-//         }
-//         if (build_loc) {
-//             conditions.build_loc = build_loc;
-//         }
-//         const visitors = await Vms.find(conditions).exec();
-//         res.json(visitors);
-//     } catch (error) {
-//         handleError(res, error);
-//     }
-// });
+// Helper function to get the total number of visitors who are currently checked in (checked in today but not checked out)
+async function getTotalVisitorsTimeInToday() {
+    const today = moment().startOf('day').toDate();
+    return await Vms.countDocuments({ timeIn: { $gte: today }, timeOut: null });
+}
 
-// // Fetch total visitors for AJAX requests
-// app.get('/total_visitors', async (req, res) => {
-//     try {
-//         const totalVisitors = await getTotalVisitorsToday();
-//         res.send(totalVisitors.toString());
-//     } catch (error) {
-//         handleError(res, error);
-//     }
-// });
-
-// app.get('/total_timein_visitors', async (req, res) => {
-//     try {
-//         const totalTimeInVisitors = await getTotalVisitorsTimeInToday();
-//         res.send(totalTimeInVisitors.toString());
-//     } catch (error) {
-//         handleError(res, error);
-//     }
-// });
-
-// app.get('/total_timeout_visitors', async (req, res) => {
-//     try {
-//         const totalTimeOutVisitors = await getTotalVisitorsTimeOutToday();
-//         res.send(totalTimeOutVisitors.toString());
-//     } catch (error) {
-//         handleError(res, error);
-//     }
-// });
+// Helper function to get the total number of visitors who have checked out today
+async function getTotalVisitorsTimeOutToday() {
+    const today = moment().startOf('day').toDate();
+    return await Vms.countDocuments({ timeOut: { $gte: today } });
+}
 
 // ============================
 // Fetch Data API
@@ -7305,11 +7277,6 @@ const createPatrolReport = async (dutyHandoverId, location, date, shift, startTi
     }
 };
 
-// * Function to get the total number of visitors today
-const getTotalVisitorsToday = async () => {
-    const today = moment().startOf('day').toDate();
-    return await Vms.countDocuments({ time_in: { $gte: today } });
-};
 
 // * Function to generate approvals hierachy based on the user grade/position
 const generateApprovals = (
@@ -8772,18 +8739,6 @@ const calculateNumberOfDays = (type, startDate, returnDate, isNonOfficeHour) => 
     }
 
     return daysDifference;
-};
-
-// * Function to get the total number of visitors who checked in today and have not checked out
-const getTotalVisitorsTimeInToday = async () => {
-    const today = moment().startOf('day').toDate();
-    return await Vms.countDocuments({ time_in: { $gte: today }, time_out: null });
-};
-
-// * Function to get the total number of visitors who checked out today
-const getTotalVisitorsTimeOutToday = async () => {
-    const today = moment().startOf('day').toDate();
-    return await Vms.countDocuments({ time_out: { $gte: today } });
 };
 
 // * Default public holidays for the year

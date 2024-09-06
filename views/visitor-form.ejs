@@ -1,0 +1,563 @@
+<%- include('partials/public-header') %>
+
+<style>
+    body {
+        background-color: #f5f7fa;
+    }
+
+    /* Side images */
+    .bg-holder {
+        position: relative;
+        width: 100%;
+        height: 500px; /* Adjust the height as needed */
+        overflow: hidden;
+    }
+
+    .bg-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-size: cover;
+        background-position: center;
+        opacity: 1;
+        transition: opacity 1s ease-in-out;
+    }
+
+    /* Building selection section */
+    .radio-container {
+        background-color: #f5f7fa;
+        color: #000000;
+    }
+
+    .radio-container {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+        padding: 10px;
+        border: 2px solid #77DD77;
+        border-radius: 8px;
+        background-color: rgba(255, 255, 255, 0.8);
+        position: relative;
+    }
+
+    .radio-container label {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        font-size: 16px;
+    }
+
+    .radio-container span {
+        flex: 1; 
+    }
+
+    .radio-container input[type="radio"] {
+        appearance: none;
+        -webkit-appearance: none;
+        background-color: #fff;
+        border: 2px solid #ccc;
+        border-radius: 50%;
+        width: 30px; 
+        height: 30px; 
+        margin-left: 20px; 
+        cursor: pointer;
+        position: relative;
+    }
+
+    .radio-container input[type="radio"]:checked::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 15px; 
+        height: 15px; 
+        background-color: #4caf50;
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+    }
+
+    .radio-container input[type="radio"]:focus {
+        outline: none;
+    }
+
+    .next-button {
+        width: 100px;
+        padding: 10px;
+        margin-top: 25px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        background-color: #4caf50;
+        color: white;
+        cursor: pointer;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .next-button:hover {
+        background-color: #45a049;
+    }
+
+    .alert {
+        color: #ff3860;
+        padding: 5px;
+        margin-top: 5px;
+        display: none;
+        text-align: left;
+    }
+
+    /* visitor form section */
+    .error-message {
+        color: #ff3860;
+        font-size: 12px;
+        margin-top: auto;
+        padding-left: 10px;
+    }
+
+    .valid-message {
+        color: #09c372;
+        font-size: 12px;
+        margin-top: auto;
+        padding-left: 10px;
+    }
+    
+    .name-fields {
+        display: flex;
+        gap: 20px; /* Adjust spacing between the two fields */
+    }
+
+    .name-container {
+        flex: 1; /* Allows both input fields to take up equal space */
+    }
+
+    .form-control {
+        width: 100%; /* Ensures the input fields span the full width of the container */
+    }
+
+    form label .required {
+        color: #ff0000;
+    }
+
+    /* Thank you message with visitors for submission details section */
+    .thank-you-message {
+        background-color: rgba(255, 255, 255, 0.8);
+        color: #000000;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .thank-you-message dotlottie-player {
+        margin-top: 20px;
+        margin-bottom: 20px;
+        align-items: center;
+    }
+
+    .visitor-details {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .visitor-details strong {
+        color: #333;
+    } 
+
+    .back-button {
+        display: inline-block;
+        padding: 10px 20px;
+        text-decoration: none;
+        border-radius: 5px;
+        margin-top: 20px;
+        margin-bottom: 20px;
+    }
+</style>
+
+<div class="row vh-100 g-0">
+    <% if (thank_you_message) { %>
+        <div class="row flex-center h-100 g-0 px-4 px-sm-0">
+            <div class="col col-sm-6 col-lg-7 col-xl-6">
+                <div class="thank-you-message">
+                    <script src="https://unpkg.com/@dotlottie/player-component@latest/dist/dotlottie-player.mjs" type="module"></script> 
+                    <dotlottie-player src="https://lottie.host/b492f7a3-df0c-4646-a4bb-b21face6c5c9/nweOHXpAHa.json" background="transparent" speed="1" style="width: 70px; height: 70px;" loop autoplay></dotlottie-player>
+                    <h2 style="color:#000000; font-size: 16px;"><%= thank_you_message %></h2>
+                    <p>Here are your details:</p>
+                    <ul class="visitor-details">
+                        <li><strong>Name:</strong> <%= fields.firstName %> <%= fields.lastName %></li>
+                        <li><strong>IC Number:</strong> <%= fields.nric %></li>
+                        <li><strong>Level:</strong> <%= fields.level %></li>
+                        <li><strong>No Pass:</strong> <%= fields.pass %></li>
+                    </ul>
+                    <a href="/visitor/form" class="btn btn-success back-button">Back to Form</a>
+                </div>
+            </div>
+        </div>
+    <% } else { %>
+        <!-- Side images -->
+        <div class="col-lg-6 position-relative d-none d-lg-block">
+            <div class="bg-holder" id="bgHolder" style="background-position: 48% 50%;">
+                <div class="bg-overlay" id="bgOverlay"></div>
+            </div>
+
+            <script>
+                // Array of image URLs
+                const images = [
+                    '../../../assets/img/gallery/IMG_3413.png',
+                    '../../../assets/img/gallery/IMG_3402.png',
+                    '../../../assets/img/gallery/IMG_3403.png',
+                    '../../../assets/img/gallery/IMG_3411.png',
+                    '../../../assets/img/gallery/IMG_3405.png',
+                ];
+
+                // Set the background image of the bg-overlay div
+                const bgOverlay = document.getElementById('bgOverlay');
+
+                // Initialize the current index
+                let currentIndex = 0;
+
+                // Function to change the image with a smooth transition
+                function changeImage() {
+                    // Fade out the current image
+                    bgOverlay.style.opacity = '0';
+
+                    // Change the image after the fade-out effect
+                    setTimeout(() => {
+                        currentIndex = (currentIndex + 1) % images.length; // Cycle through images
+                        bgOverlay.style.backgroundImage = `url(${images[currentIndex]})`;
+
+                        // Fade the image back in
+                        bgOverlay.style.opacity = '1';
+                    }, 1000); // Delay matching the CSS transition duration
+                }
+
+                // Start the image transition every 3 seconds
+                setInterval(changeImage, 3000);
+
+                // Immediately set the first image
+                bgOverlay.style.backgroundImage = `url(${images[currentIndex]})`;
+            </script>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="row flex-center h-100 g-0 px-4 px-sm-0">
+                <div class="col col-sm-6 col-lg-7 col-xl-6">
+                    <!-- Building location selection section -->
+                    <div id="building-selection">
+                        <a class="d-flex flex-center text-decoration-none mb-5">
+                            <div class="d-flex align-items-center fw-bolder fs-5 d-inline-block">
+                                <img src="../../assets/img/pb_vms/icon.png" alt="logo" width="75">
+                            </div>
+                        </a>
+                        <div id="building-loc">
+                            <div class="radio-container" id="bm1-container">
+                                <label>
+                                    <span>BaitulMakmur 1</span>
+                                    <input type="radio" name="buildLoc" value="baitulmakmur 1" id="bm1">
+                                </label>
+                            </div>
+                            <div class="radio-container" id="bm2-container">
+                                <label>
+                                    <span>BaitulMakmur 2</span>
+                                    <input type="radio" name="buildLoc" value="baitulmakmur 2" id="bm2">
+                                </label>
+                            </div>
+                            <div class="alert" id="building-alert">Please select a building location</div>
+                            <button type="button" class="btn btn-success next-button" id="next-button">Next</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Visitor form section -->
+                    <div id="visitor-form" style="display: none;">
+                        <a class="d-flex flex-center text-decoration-none mb-5">
+                            <div class="d-flex align-items-center fw-bolder fs-5 d-inline-block" style="cursor: pointer;">
+                                <img src="../../assets/img/pb_vms/icon.png" alt="logo" width="75" id="back-to-building-selection">
+                            </div>
+                        </a>
+                        <form method="POST" action="/visitor/form/submitted" onsubmit="return validateForm()" id="visitor-form-details">
+                            <div class="mb-3 text-start">
+                                <label class="form-label" for="vis_name">Visitor's Name<span class="required"> *</span></label>
+                                <div class="form-icon-container name-fields">
+                                    <div class="name-container">
+                                        <input class="form-control" type="text" id="firstName" name="firstName" placeholder="<%= fields.firstName || 'First Name' %>" value="<%= fields.firstName %>" required>
+                                        <div id="error_firstname" class="error-message"><%= errors.firstName || '' %></div>
+                                        <div id="valid_firstname" class="valid-message"></div>
+                                    </div>
+                                    <div class="name-container">
+                                        <input class="form-control" type="text" id="lastName" name="lastName" placeholder="<%= fields.lastName || 'Last Name' %>" value="<%= fields.lastName %>">
+                                        <div id="error_lastname" class="error-message"><%= errors.lastName || '' %></div>
+                                        <div id="valid_lastname" class="valid-message"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3 text-start">
+                                <label class="form-label" for="nric">Identification Card Number<span class="required"> *</span></label>
+                                <input class="form-control" type="text" id="nric" name="nric" placeholder="<%= fields.nric || 'Identification Card Number' %>" value="<%= fields.nric %>" required>
+                                <div id="error_no_ic" class="error-message"><%= errors.nric || '' %></div>
+                                <div id="valid_no_ic" class="valid-message"></div>
+                            </div>
+
+                            <div class="mb-3 text-start">
+                                <label class="form-label" for="address">Address<span class="required"> *</span></label>
+                                <input class="form-control" type="text" id="address" name="address" placeholder="<%= fields.address || 'Address' %>" value="<%= fields.address %>" required>
+                                <div id="error_address" class="error-message"><%= errors.address || '' %></div>
+                                <div id="valid_address" class="valid-message"></div>
+                            </div>
+
+                            <div class="mb-3 text-start">
+                                <label class="form-label" for="level">Level<span class="required"> *</span></label>
+                                <select class="form-control" id="level" name="level" required>
+                                    <option value="">Select Level</option>
+                                </select>
+                                <div id="error_level" class="error-message"><%= errors.level || '' %></div>
+                                <div id="valid_level" class="valid-message"></div>
+                            </div>
+
+                            <div class="mb-3 text-start">
+                                <label class="form-label" for="pass">No Pass<span class="required"> *</span></label>
+                                <input class="form-control" type="text" id="pass" name="pass" placeholder="<%= fields.pass || 'No Pass' %>" value="<%= fields.pass %>" required>
+                                <div id="error_no_pas" class="error-message"><%= errors.pass || '' %></div>
+                                <div id="valid_no_pas" class="valid-message"></div>
+                            </div>
+
+                            <div class="mb-3 text-start">
+                                <label class="form-label" for="phoneNum">Phone Number<span class="required"> *</span></label>
+                                <input class="form-control" type="text" id="phoneNum" name="phoneNum" placeholder="<%= fields.phoneNum || 'Phone Number' %>" value="<%= fields.phoneNum %>" required>
+                                <div id="error_no_telephone" class="error-message"><%= errors.phoneNum || '' %></div>
+                                <div id="valid_no_telephone" class="valid-message"></div>
+                            </div>
+
+                            <div class="mb-3 text-start">
+                                <label class="form-label" for="purpose">Purpose Of Visit<span class="required"> *</span></label>
+                                <textarea class="form-control" id="purpose" name="purpose" rows="4" placeholder="<%= fields.purpose || 'Purpose of Visit' %>" required><%= fields.purpose %></textarea>
+                                <div id="error_pur_visit" class="error-message"><%= errors.purpose || '' %></div>
+                                <div id="valid_pur_visit" class="valid-message"></div>
+                            </div>
+
+                            <!-- Hidden input for building location -->
+                            <input type="hidden" name="location" id="location" value="">
+
+                            <div style="margin-top: 3rem;">
+                                <button class="btn btn-success w-100 mb-2 loading-button" type="submit" name="submit">
+                                    <div class="content-button">Submit</div>
+                                </button>
+                                <button class="btn btn-secondary w-100 mb-2 loading-button" type="reset" name="reset">
+                                    <div class="content-button">Reset</div>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <% } %>
+</div>
+
+<script>
+    // To populate the level dropdown based on the selected building
+    document.addEventListener('DOMContentLoaded', function() {
+        const levelDropdown = document.getElementById('level');
+        const bm1Radio = document.getElementById('bm1');
+        const bm2Radio = document.getElementById('bm2');
+
+        // Levels for each building
+        const levelsBm1 = Array.from({ length: 8 }, (_, i) => `${i + 1}`);
+        const levelsBm2 = Array.from({ length: 17 }, (_, i) => `${i + 1}`);
+
+        function populateLevels(levels) {
+            levelDropdown.innerHTML = '<option value="">Select Level</option>';
+            levels.forEach(level => {
+                const option = document.createElement('option');
+                option.value = level;
+                option.textContent = level;
+                levelDropdown.appendChild(option);
+            });
+        }
+
+        bm1Radio.addEventListener('change', function() {
+            if (this.checked) {
+                populateLevels(levelsBm1);
+            }
+        });
+
+        bm2Radio.addEventListener('change', function() {
+            if (this.checked) {
+                populateLevels(levelsBm2);
+            }
+        });
+    });
+
+    document.getElementById('next-button').addEventListener('click', function () {
+        var selectedBuilding = document.querySelector('input[name="buildLoc"]:checked');
+        var alertMessage = document.getElementById('building-alert');
+        
+        if (selectedBuilding) {
+            document.getElementById('location').value = selectedBuilding.value; // Set the hidden field
+            document.getElementById('building-selection').style.display = 'none';
+            document.getElementById('visitor-form').style.display = 'block';
+        } else {
+            var bm1Container = document.getElementById('bm1-container');
+            var bm2Container = document.getElementById('bm2-container');
+            alertMessage.style.display = 'block';
+
+            bm1Container.style.border = '2px solid #ff3860';
+            bm2Container.style.border = '2px solid #ff3860';
+        }
+    });
+
+    // Add event listener for the back icon in the visitor form section
+    document.getElementById('back-to-building-selection').addEventListener('click', function () {
+        // Reset visitor form
+        document.getElementById('visitor-form-details').reset();
+
+        // Clear all error messages in the visitor form
+        var errorMessages = document.querySelectorAll('.error-message');
+        errorMessages.forEach(function(errorMessage) {
+            errorMessage.textContent = ''; // Clear error message text
+        });
+        
+        // Reset building selection form
+        document.getElementById('building-loc').reset();
+        
+        // Hide alert message and reset border colors
+        document.getElementById('building-alert').style.display = 'none';
+        document.getElementById('bm1-container').style.border = '2px solid #77DD77';
+        document.getElementById('bm2-container').style.border = '2px solid #77DD77';
+
+        // Reset the border color for each input field in the visitor form
+        var inputFields = document.querySelectorAll('#visitor-form-details input, #visitor-form-details select, #visitor-form-details textarea');
+        inputFields.forEach(function(input) {
+            input.classList.remove('error', 'valid'); // Remove error and valid classes
+            input.style.border = '1px solid #ccc'; // Reset to default border color
+        });
+
+        // Show building selection and hide visitor form
+        document.getElementById('visitor-form').style.display = 'none';
+        document.getElementById('building-selection').style.display = 'block';
+    });
+
+    function validateForm() {
+        let valid = true;
+        
+        // Clear previous error messages and styles
+        document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
+        document.querySelectorAll('input, textarea').forEach(el => {
+            el.classList.remove('error', 'valid');
+            el.style.border = '1px solid #ccc';
+        });
+
+        // Validate first name
+        let firstname = document.getElementById('firstName').value;
+        if (!/^[a-zA-Z\s]+$/.test(firstname)) {
+            valid = false;
+            document.getElementById('error_firstname').textContent = "Invalid first name format";
+            document.getElementById('firstName').classList.add('error');
+            document.getElementById('firstName').style.border = '1px solid #ff3860'; 
+        } else {
+            document.getElementById('valid_firstname').textContent = "Looks good!";
+            document.getElementById('firstName').classList.add('valid');
+            document.getElementById('firstName').style.border = '1px solid #09c372'; 
+        }
+
+        // Validate last name
+        let lastname = document.getElementById('lastName').value;
+        if (!/^[a-zA-Z\s]+$/.test(lastname)) {
+            valid = false;
+            document.getElementById('error_lastname').textContent = "Invalid last name format";
+            document.getElementById('lastName').classList.add('error');
+            document.getElementById('lastName').style.border = '1px solid #ff3860'; 
+        } else {
+            document.getElementById('valid_lastname').textContent = "Looks good!";
+            document.getElementById('lastName').classList.add('valid');
+            document.getElementById('lastName').style.border = '1px solid #09c372'; 
+        }
+
+        // Validate IC number
+        let icNumber = document.getElementById('nric').value;
+        if (!/^\d{12}$/.test(icNumber)) {
+            valid = false;
+            document.getElementById('error_no_ic').textContent = "IC number must be 12 digits";
+            document.getElementById('nric').classList.add('error');
+            document.getElementById('nric').style.border = '1px solid #ff3860'; 
+        } else {
+            document.getElementById('valid_no_ic').textContent = "Looks good!";
+            document.getElementById('nric').classList.add('valid');
+            document.getElementById('nric').style.border = '1px solid #09c372'; 
+        }
+
+        // Validate address
+        let address = document.getElementById('address').value;
+        if (address.trim() === "") {
+            valid = false;
+            document.getElementById('error_address').textContent = "Address is required";
+            document.getElementById('address').classList.add('error');
+            document.getElementById('address').style.border = '1px solid #ff3860'; 
+        } else {
+            document.getElementById('valid_address').textContent = "Looks good!";
+            document.getElementById('address').classList.add('valid');
+            document.getElementById('address').style.border = '1px solid #09c372'; 
+        }
+
+        // Validate level
+        let level = document.getElementById('level').value;
+        if (!/^\d+$/.test(level)) {
+            valid = false;
+            document.getElementById('error_level').textContent = "Level must be a number";
+            document.getElementById('level').classList.add('error');
+            document.getElementById('level').style.border = '1px solid #ff3860'; 
+        } else {
+            document.getElementById('valid_level').textContent = "Looks good!";
+            document.getElementById('level').classList.add('valid');
+            document.getElementById('level').style.border = '1px solid #09c372'; 
+        }
+
+        // Validate No Pass
+        let noPas = document.getElementById('pass').value;
+        if (!/^\d+$/.test(noPas)) {
+            valid = false;
+            document.getElementById('error_no_pas').textContent = "Pass must be a number";
+            document.getElementById('pass').classList.add('error');
+            document.getElementById('pass').style.border = '1px solid #ff3860'; 
+        } else {
+            document.getElementById('valid_no_pas').textContent = "Looks good!";
+            document.getElementById('pass').classList.add('valid');
+            document.getElementById('pass').style.border = '1px solid #09c372';
+        }
+
+        // Validate phone number
+        let phoneNumber = document.getElementById('phoneNum').value;
+        if (!/^\d{10,15}$/.test(phoneNumber)) {
+            valid = false;
+            document.getElementById('error_no_telephone').textContent = "Phone number must be between 10 and 15 digits";
+            document.getElementById('phoneNum').classList.add('error');
+            document.getElementById('phoneNum').style.border = '1px solid #ff3860';
+        } else {
+            document.getElementById('valid_no_telephone').textContent = "Looks good!";
+            document.getElementById('phoneNum').classList.add('valid');
+            document.getElementById('phoneNum').style.border = '1px solid #09c372';
+        }
+
+        // Validate purpose of visit
+        let purVisit = document.getElementById('purpose').value;
+        if (purVisit.trim() === "") {
+            valid = false;
+            document.getElementById('error_pur_visit').textContent = "Purpose of visit is required";
+            document.getElementById('purpose').classList.add('error');
+            document.getElementById('purpose').style.border = '1px solid #ff3860';
+        } else {
+            document.getElementById('valid_pur_visit').textContent = "Looks good!";
+            document.getElementById('purpose').classList.add('valid');
+            document.getElementById('purpose').style.border = '1px solid #09c372';
+        }
+
+        return valid;
+    }
+</script>
+
+<%- include('partials/public-footer.ejs') %>
+

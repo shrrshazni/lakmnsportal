@@ -1,0 +1,772 @@
+<%- include('partials/private-header') %>
+
+<style>
+    /* Media query for responsive */
+    @media (max-width: 768px) {
+        .visitors_card .card {
+            flex: 1 1 calc(50% - 20px);
+            max-width: calc(50% - 20px);
+        }
+
+        .status_checked_in,
+        .status_checked_out {
+            font-size: 0.75rem; 
+            padding: 4px 8px;
+        }
+
+        header {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .visitors_card .count {
+            flex: 100%;
+        }
+
+        .filters {
+            flex-direction: column;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .visitors_card .card {
+            flex: 1 1 calc(100% - 20px);
+            max-width: calc(100% - 20px);
+        }
+    }
+</style>
+
+<div class="row gy-3 mb-3 justify-content-between d-flex mt-0">
+    <div class="col-md-9 col-auto">
+        <h2 class="mb-2 text-body-emphasis">Visitor Management System</h2>
+        <h5 class="text-body-tertiary fw-semibold">We hope you have a great experience managing visitor entries and exits</h5>
+    </div>
+</div>
+
+<div class="visitors_info">
+    <div class="row row-cols-1 row-cols-md-3 g-3 mb-4">
+        <div class="col">
+            <div class="card task-list h-100">
+                <div class="total_visitors p-3">
+                    <p class="count" data-type="total_visitors">
+                        <h3 class="number display-3 fw-bold"><%= totalVisitorsToday %></h3>
+                        <p class="mb-0 lh-sm text-body-tertiary">Total Visitors Today</p>
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card task-list h-100">
+                <div class="timein_visitors p-3">
+                    <p class="count" data-type="timein_visitors">
+                        <h3 class="number display-3 fw-bold"><%= timeInVisitorsToday %></h3>
+                        <p class="mb-0 lh-sm text-body-tertiary">Visitors Time In Today</p>
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card task-list h-100">
+                <div class="timeout_visitors p-3">
+                    <p class="count" data-type="timeout_visitors">
+                        <h3 class="number display-3 fw-bold"><%= timeOutVisitorsToday %></h3>
+                        <p class="mb-0 lh-sm text-body-tertiary">Visitors Time Out Today</p>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis pt-7 pb-3 border-y mb-6">
+    <div id="" data-list=''>
+        <div class="row align-items-end justify-content-between pb-4 g-3">
+            <div class="col-auto">
+                <h3>Visitor Lists</h3>
+                <p class="text-body-tertiary lh-sm mb-0">The visitor list table in real-time updates, featuring a complete set of data on individuals currently visiting.</p>
+            </div>
+
+            <div class="filters d-flex justify-content-between align-items-center mb-3 gap-3">
+                <!-- search visitor name -->
+                <input type="search" class="form-control" id="search-input" placeholder="Search visitors" style="width: auto; padding: 5px; font-size: 14px; border-radius: 8px;">
+            
+                <!-- visitor status -->
+                <select id="statusFilter" name="statusFilter" class="form-select" style="width: 150px; padding: 5px; font-size: 14px; border-radius: 8px;">
+                    <option value="">All Status</option>
+                    <option value="checked_in">Checked-In</option>
+                    <option value="checked_out">Checked-Out</option>
+                </select>
+            
+                <!-- building location -->
+                <select id="buildLoc" name="buildLoc" class="form-select" style="width: 150px; padding: 5px; font-size: 14px; border-radius: 8px;">
+                    <option value="">All Buildings</option>
+                    <option value="baitulmakmur 1">BaitulMakmur 1</option>
+                    <option value="baitulmakmur 2">BaitulMakmur 2</option>
+                </select>
+            
+                <!-- datepicker -->
+                <div class="date ms-auto" style="padding-right: 0;">
+                    <input type="date" class="form-control" id="dateFilter" name="dateFilter" style="padding: 5px; font-size: 14px; border-radius: 8px;">
+                </div>
+            
+                <!-- print visitor list -->
+                <div class="print-table">
+                    <button type="button" id="printTable" class="btn btn-primary" style="padding: 5px; font-size: 14px; border-radius: 8px;">Print</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="vis-list" data-list='{"page":5,"pagination":true}'>
+            <div class="table-responsive ms-n1 ps-1 scrollbar">
+                <table id="vis-table" class="table fs-9 mb-0 border-top border-translucent">
+                    <thead>
+                        <tr>
+                        <th class="sort align-middle text-start" scope="col" style="width:5%;">No</th>
+                        <th class="sort align-middle text-center" scope="col" style="width:15%;">Visitor Name</th>
+                        <th class="sort align-middle text-center" scope="col" style="width:15%;">IC Number</th>
+                        <th class="sort align-middle text-center d-none" scope="col" style="width:15%;">Address</th>
+                        <th class="sort align-middle text-center d-none" scope="col" data-sort="level" style="width:15%;">Level</th>
+                        <th class="sort align-middle text-center d-none" scope="col" data-sort="pas" style="width:15%;">No Pas</th>
+                        <th class="sort align-middle text-center" scope="col" style="width:15%;">Phone Number</th>
+                        <th class="sort align-middle text-center d-none" scope="col" style="width:15%;">Purpose of Visit</th>
+                        <th class="sort align-middle text-center" scope="col" style="width:15%;">Status</th>
+                        <th class="sort align-middle text-center" scope="col" style="width:15%;">Time In</th>
+                        <th class="sort align-middle text-center" scope="col" style="width:15%;">Time Out</th>
+                        <th class="sort align-middle text-center d-none" scope="col" data-sort="buildloc" style="width:15%;">Building Location</th>
+                        <th class="sort align-middle text-end" scope="col" style="width:5%;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="visitorTableBody">
+                        <% if (visitors.length > 0) { %>
+                            <% visitors.forEach((visitor, index) => { %>
+                                <tr class="position-static">
+                                    <td class="align-middle text-start"><%= index + 1 %></td>
+                                    <td class="align-middle text-center"><a href="#" class="visitor-link" data-visitor='<%= JSON.stringify(visitor) %>'><%= visitor.firstName %> <%= visitor.lastName %></a></td>
+                                    <td class="align-middle text-center"><%= visitor.nric %></td>
+                                    <td class="align-middle text-center d-none"><%= visitor.address %></td>
+                                    <td class="align-middle text-center d-none"><%= visitor.level %></td>
+                                    <td class="align-middle text-center d-none"><%= visitor.pass %></td>
+                                    <td class="align-middle text-center"><%= visitor.phoneNum %></td>
+                                    <td class="align-middle text-center d-none"><%= visitor.purpose %></td>
+                                    <td class="align-middle text-center">
+                                        <span class="badge badge-phoenix <%= visitor.timeOut ? 'badge-phoenix-danger' : 'badge-phoenix-success' %> fs-10 align-items-center">
+                                            <%= visitor.timeOut ? 'Checked-Out' : 'Checked-In' %>
+                                        </span>
+                                    </td>
+                                    <td class="align-middle text-center"><%= visitor.timeIn %></td>
+                                    <td class="align-middle text-center"><%= visitor.timeOut ? visitor.timeOut : '-' %></td>
+                                    <td class="align-middle text-center d-none"><%= visitor.location %></td>
+                                    <td class="align-middle text-end">
+                                        <div class="d-flex justify-content-end align-items-center gap-1">
+                                            <% if (!visitor.timeOut) { %>
+                                                <form action="/toggle/status" method="POST" style="display:inline;" class="toggle-form">
+                                                    <input type="hidden" name="visitor_id" value="<%= visitor._id %>">
+                                                    <button type="submit" class="timeout_button btn p-0" style="background: none; border: none;">
+                                                        <i class="bi bi-clock-fill text-white bg-danger p-2 rounded" style="transition: background-color 0.3s, transform 0.3s; font-size: 1rem;"></i>
+                                                    </button>
+                                                </form>
+                                            <% } %>
+                                            <form action="/delete/visitor" method="POST" style="display:inline;" class="delete-form">
+                                                <input type="hidden" name="visitor_id" value="<%= visitor._id %>">
+                                                <button type="submit" class="delete_button btn p-0" style="background: none; border: none;">
+                                                    <i class="bi bi-trash text-white bg-secondary p-2 rounded" style="transition: background-color 0.3s, transform 0.3s; font-size: 1rem;"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        <% } else { %>
+                            <tr>
+                                <td colspan="12" style="text-align:center;">There is no visitor list found</td>
+                            </tr>
+                        <% } %>
+                    </tbody>  
+                </table>
+            </div>
+        </div>
+        <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
+            <!-- <div class="col-auto d-flex">
+                <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p><a class="fw-semibold" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semibold d-none" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
+            </div>
+            <div class="col-auto d-flex">
+                <button class="page-link" data-list-pagination="prev"><span class="fas fa-chevron-left"></span></button>
+                <ul class="mb-0 pagination"></ul>
+                <button class="page-link pe-0" data-list-pagination="next"><span class="fas fa-chevron-right"></span></button>
+            </div> -->
+        </div>
+    </div>
+</div>
+
+<!-- Modal Structure to edit visitor details -->
+<div class="modal fade" id="visitorModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Visitor Details</h5>
+                <button type="button" id="close-icon" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="visitorDetails"></p>
+            </div>
+            <div class="modal-footer d-flex justify-content-between">
+                <form id="modalDeleteForm" class="d-inline">
+                    <input type="hidden" id="modalVisitorId" name="visitor_id">
+                    <button id="deleteUser" class="btn btn-danger">Delete Visitor</button>
+                </form>
+                <div class="modal-button-group d-flex gap-3">
+                    <button id="editVisitor" class="btn btn-outline-primary">Edit Visitor</button>
+                    <button id="cancel" class="btn btn-outline-secondary" style="display: none;">Cancel</button>
+                    <button id="saveChanges" class="btn btn-outline-success" style="display: none;">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Structure to delete visitor list -->
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmModalLabel">Confirm Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete this visitor?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        async function fetchVisitors() {
+            const searchName = document.getElementById('search-input').value;
+            const selectedDate = document.getElementById('dateFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+            const buildLoc = document.getElementById('buildLoc').value;
+
+            try {
+                const response = await fetch(`/fetch/visitors?search_name=${encodeURIComponent(searchName)}&selected_date=${encodeURIComponent(selectedDate)}&status_filter=${encodeURIComponent(statusFilter)}&location=${encodeURIComponent(buildLoc)}`);
+                const data = await response.json();
+
+                if (data.length === 0) {
+                    document.getElementById('visitorTableBody').innerHTML = '<tr><td colspan="12" style="text-align:center;">There is no visitor list found</td></tr>';
+                } else {
+                    const rows = data.map((visitor, index) => `
+                        <tr>
+                            <td class="align-middle text-start">${index + 1}</td>
+                            <td class="align-middle text-center"><a href="#" class="visitor-link" data-visitor='${JSON.stringify(visitor)}'>${visitor.firstName} ${visitor.lastName}</a></td>
+                            <td class="align-middle text-center">${visitor.nric}</td>
+                            <td class="align-middle text-center d-none">${visitor.address}</td>
+                            <td class="align-middle text-center d-none">${visitor.level}</td>
+                            <td class="align-middle text-center d-none">${visitor.pass}</td>
+                            <td class="align-middle text-center">${visitor.phoneNum}</td>
+                            <td class="align-middle text-center d-none">${visitor.purpose}</td>
+                            <td class="align-middle text-center">
+                                <span class="badge badge-phoenix ${visitor.timeOut ? 'badge-phoenix-danger' : 'badge-phoenix-success'} fs-10 align-items-center">
+                                    ${visitor.timeOut ? 'Checked-Out' : 'Checked-In'}
+                                </span>
+                            </td>
+                            <td class="align-middle text-center">${moment(visitor.timeIn).format('D/M/YYYY h:mm A')}</td>
+                            <td class="align-middle text-center">${visitor.timeOut ? moment(visitor.timeOut).format('D/M/YYYY h:mm A') : '-'}</td>
+                            <td class="align-middle text-center d-none">${visitor.location}</td>
+                            <td class="align-middle text-end">
+                                <div class="d-flex justify-content-end align-items-center gap-1">
+                                    ${!visitor.timeOut ? `
+                                    <form action="/toggle/status" method="POST" style="display:inline;" class="toggle-form">
+                                        <input type="hidden" name="visitor_id" value="${visitor._id}">
+                                        <button type="submit" class="timeout_button btn p-0" style="background: none; border: none;">
+                                            <i class="bi bi-clock-fill text-white bg-danger p-2 rounded" style="transition: background-color 0.3s, transform 0.3s; font-size: 1rem;"></i>
+                                        </button>
+                                    </form>` : ''}
+                                    <form action="/delete/visitor" method="POST" style="display:inline;" class="delete-form">
+                                        <input type="hidden" name="visitor_id" value="${visitor._id}">
+                                        <button type="submit" class="delete_button btn p-0" style="background: none; border: none;">
+                                            <i class="bi bi-trash text-white bg-secondary p-2 rounded" style="transition: background-color 0.3s, transform 0.3s; font-size: 1rem;"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    `).join('');
+                    document.getElementById('visitorTableBody').innerHTML = rows;
+                }
+            } catch (error) {
+                console.error('Error fetching visitors:', error);
+                document.getElementById('visitorTableBody').innerHTML = '<tr><td colspan="12" style="text-align:center;">Error loading data</td></tr>';
+            }
+        }
+
+        async function updateVisitorCounts() {
+            try {
+                const totalVisitorsResponse = await fetch('/total_visitors');
+                const totalVisitors = await totalVisitorsResponse.json();
+                document.querySelector('.total_visitors .number').textContent = totalVisitors;
+
+                const timeinVisitorsResponse = await fetch('/total_timein_visitors');
+                const timeinVisitors = await timeinVisitorsResponse.json();
+                document.querySelector('.timein_visitors .number').textContent = timeinVisitors;
+
+                const timeoutVisitorsResponse = await fetch('/total_timeout_visitors');
+                const timeoutVisitors = await timeoutVisitorsResponse.json();
+                document.querySelector('.timeout_visitors .number').textContent = timeoutVisitors;
+            } catch (error) {
+                console.error('Error updating visitor counts:', error);
+            }
+        }
+
+        // Fetch visitors and update counts every 1 second
+        setInterval(() => {
+            fetchVisitors();
+            updateVisitorCounts();
+        }, 1000);
+
+        // Event handlers for filters and search
+        document.getElementById('search-input').addEventListener('keyup', fetchVisitors);
+        document.getElementById('dateFilter').addEventListener('change', fetchVisitors);
+        document.getElementById('statusFilter').addEventListener('change', fetchVisitors);
+        document.getElementById('buildLoc').addEventListener('change', fetchVisitors);
+
+        // Handle the "Time Out" button click 
+        document.body.addEventListener('submit', async (e) => {
+            if (e.target.classList.contains('toggle-form')) {
+                e.preventDefault();
+                const form = e.target;
+                const visitorId = form.querySelector('input[name="visitor_id"]').value;
+
+                try {
+                    const response = await fetch(form.action, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: `visitor_id=${encodeURIComponent(visitorId)}`,
+                    });
+                    const data = await response.json();
+
+                    const row = form.closest('tr');
+                    row.querySelector('.status_checked_in').classList.replace('status_checked_in', 'status_checked_out');
+                    row.querySelector('.status_checked_out').textContent = 'Checked-Out';
+                    row.querySelector('td:nth-child(11)').textContent = moment(data.timeOut).format('D/M/YYYY h:mm A');
+                    form.remove();
+                } catch (error) {
+                    console.error('Error updating visitor status:', error);
+                }
+            }
+        });
+
+        // Modal functionality to handle delete visitor from table list
+        document.body.addEventListener('submit', async (e) => {
+            if (e.target.classList.contains('delete-form')) {
+                e.preventDefault();
+                const form = e.target;
+                const visitorId = form.querySelector('input[name="visitor_id"]').value;
+
+                // Show the modal
+                const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
+                confirmModal.show();
+
+                // Handle the delete action when the "Delete" button is clicked
+                document.getElementById('confirmDeleteBtn').addEventListener('click', async () => {
+                    try {
+                        await fetch('/delete/visitor', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                            },
+                            body: `visitor_id=${encodeURIComponent(visitorId)}`,
+                        });
+                        fetchVisitors();
+                        updateVisitorCounts();
+                        confirmModal.hide(); // Hide the modal after deletion
+                    } catch (error) {
+                        console.error('Error deleting visitor:', error);
+                    }
+                }, { once: true }); // Ensure the event listener is attached only once
+            }
+        });
+
+        // Set the date picker to the current date on page load
+        function setDatePickerToCurrentDate() {
+            const today = new Date();
+            const day = String(today.getDate()).padStart(2, '0');
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const year = today.getFullYear();
+            const currentDate = `${year}-${month}-${day}`;
+
+            document.getElementById('dateFilter').value = currentDate;
+            fetchVisitors();
+        }
+
+        setDatePickerToCurrentDate();
+        updateVisitorCounts();
+
+        // Print table functionality
+        $('#printTable').on('click', function() {
+            // Save the current form values
+            var dateFilterValue = $('#dateFilter').val();
+            var statusFilterValue = $('#statusFilter').val();
+            var buildLocValue = $('#buildLoc').val();
+            var searchInputValue = $('#search-input').val();
+
+            // Clone the table to avoid modifying the original table
+            var tableClone = document.getElementById('vis-table').cloneNode(true);
+
+            // Remove the action column (assuming it's the last column)
+            var actionColumnIndex = tableClone.rows[0].cells.length - 1;
+            for (var i = 0; i < tableClone.rows.length; i++) {
+                tableClone.rows[i].deleteCell(actionColumnIndex);
+            }
+
+            // Convert the cloned table to HTML
+            var tableContent = tableClone.outerHTML;
+
+            // Open a new window for printing
+            var printWindow = window.open('', '', 'height=800,width=1200');
+
+            printWindow.document.write('<html><head><title>Visitor List</title>');
+            // Include CSS styles for the print layout
+            printWindow.document.write('<style>');
+            printWindow.document.write(`
+                body {
+                    font-family: Helvetica, Arial, sans-serif;
+                }
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-bottom: 20px;
+                }
+                th, td {
+                    border: 1px solid #ddd;
+                    padding: 8px;
+                    text-align: center;
+                }
+                th {
+                    background-color: #f2f2f2;
+                }
+                @media print {
+                    th, td {
+                        page-break-inside: avoid;
+                    }
+
+                    .visitor-link {
+                        text-decoration: none;
+                        color: black;
+                    }
+                }
+            `);
+            printWindow.document.write('</style></head><body>');
+            
+            // Add the modified table content to the print window
+            printWindow.document.write(tableContent);
+
+            // Close the document and trigger the print
+            printWindow.document.write('</body></html>');
+            printWindow.document.close();
+
+            // Wait for the content to load before printing
+            printWindow.onload = function() {
+                printWindow.focus(); // Ensure the print window has focus
+                printWindow.print(); // Trigger the print dialog
+                printWindow.close(); // Close the print window after printing
+            };
+
+            // Restore the form values
+            $('#dateFilter').val(dateFilterValue);
+            $('#statusFilter').val(statusFilterValue);
+            $('#buildLoc').val(buildLocValue);
+            $('#search-input').val(searchInputValue);
+        });
+
+        // Modal functionality to view more visitor details
+        $('body').on('click', '.visitor-link', function(e) {
+            e.preventDefault();
+            var visitor = $(this).data('visitor');
+            $('#modalVisitorId').val(visitor._id);
+            showVisitorDetails(visitor);
+            $('#visitorModal').modal('show');
+        });
+
+        function showVisitorDetails(visitor) {
+            var timeIn = moment(visitor.timeIn).format('D/M/YYYY h:mm A');
+            var timeOut = visitor.timeOut ? moment(visitor.timeOut).format('D/M/YYYY h:mm A') : '-';
+            var visitorDetails = `
+                <form id="visitorEditForm">
+                    <!-- Section 1 (modal-sec1) -->
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="form-group modal-group">
+                                <label><strong>Name:</strong></label>
+                                <p>${visitor.firstName} ${visitor.lastName}</p>
+                                <input type="text" id="modal_vis_firstname" name="firstName" value="${visitor.firstName}" class="form-control" style="display:none;">
+                                <div id="modal_error_firstname" class="error-message"></div>
+                                <input type="text" id="modal_vis_lastname" name="lastName" value="${visitor.lastName}" class="form-control" style="display:none;">
+                                <div id="modal_error_lastname" class="error-message"></div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-group modal-group">
+                                <label><strong>IC Number:</strong></label>
+                                <p>${visitor.nric}</p>
+                                <input type="text" id="modal_no_ic" name="nric" value="${visitor.nric}" class="form-control" style="display:none;">
+                                <div id="modal_error_no_ic" class="error-message"></div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-group modal-group">
+                                <label><strong>Address:</strong></label>
+                                <p>${visitor.address}</p>
+                                <input type="text" id="modal_address" name="address" value="${visitor.address}" class="form-control" style="display:none;">
+                                <div id="modal_error_address" class="error-message"></div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-group modal-group">
+                                <label><strong>Level:</strong></label>
+                                <p>${visitor.level}</p>
+                                <input type="text" id="modal_level" name="level" value="${visitor.level}" class="form-control" style="display:none;">
+                                <div id="modal_error_level" class="error-message"></div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-group modal-group">
+                                <label><strong>No Pas:</strong></label>
+                                <p>${visitor.pass}</p>
+                                <input type="text" id="modal_no_pas" name="pass" value="${visitor.pass}" class="form-control" style="display:none;">
+                                <div id="modal_error_no_pas" class="error-message"></div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-group modal-group">
+                                <label><strong>Phone Number:</strong></label>
+                                <p>${visitor.phoneNum}</p>
+                                <input type="text" id="modal_no_telephone" name="phoneNum" value="${visitor.phoneNum}" class="form-control" style="display:none;">
+                                <div id="modal_error_no_telephone" class="error-message"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 2 (modal-sec2) -->
+                    <div class="row g-4 mt-3">
+                        <div class="col-md-6">
+                            <div class="form-group modal-group">
+                                <label><strong>Purpose of Visit:</strong></label>
+                                <p class="modal-display">${visitor.purpose}</p>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-group modal-group">
+                                <label><strong>Status:</strong></label>
+                                <p class="modal-display">${visitor.timeOut ? 'Checked-Out' : 'Checked-In'}</p>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-group modal-group">
+                                <label><strong>Time In:</strong></label>
+                                <p class="modal-display">${timeIn}</p>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-group modal-group">
+                                <label><strong>Time Out:</strong></label>
+                                <p class="modal-display">${timeOut}</p>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-group modal-group">
+                                <label><strong>Building Location:</strong></label>
+                                <p class="modal-display">${visitor.location}</p>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            `;
+            $('#visitorDetails').html(visitorDetails);
+        }
+
+        // Edit button for visitor details
+        $('#editVisitor').on('click', function() {
+            $('#visitorDetails p').hide();
+            $('#visitorDetails .form-control').show();
+            $('#visitorDetails .modal-display').show();
+            $(this).hide();
+            $('#saveChanges').show();
+            $('#cancel').show();
+        });
+
+        // Save changes button for latest visitor details
+        $('#saveChanges').on('click', function() {
+            if (!validateModalForm()) {
+                return;
+            }
+
+            var visitorId = $('#modalVisitorId').val();
+            var formData = new FormData(document.getElementById('visitorEditForm'));
+
+            fetch('/updateVisitor/' + visitorId, {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    $('#visitorModal').modal('hide');
+                    fetchVisitors();
+                    updateVisitorCounts();
+                    $('#saveChanges').hide();
+                    $('#editVisitor').show();
+                    $('#cancel').hide();
+                } else {
+                    console.error('Error updating visitor:', data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error updating visitor:', error);
+            });
+        });
+
+        // Cancel edit button click handler
+        $('#cancel').on('click', function() {
+            $('#visitorDetails p').show();
+            $('#visitorDetails .form-control').hide();
+            $('#editVisitor').show();
+            $('#saveChanges').hide();
+            $(this).hide();
+            isEditing = false;
+        });
+
+        // Handle Delete Visitor for modal
+        $('body').on('submit', '#modalDeleteForm', function(e) {
+            e.preventDefault();
+            var visitorId = $('#modalVisitorId').val();
+            
+            // Show confirmation modal
+            var confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
+            confirmModal.show();
+
+            // Handle the delete action when the "Delete" button is clicked
+            document.getElementById('confirmDeleteBtn').addEventListener('click', async () => {
+                try {
+                    const response = await fetch('/delete/visitor', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ visitor_id: visitorId })
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        $('#visitorModal').modal('hide');
+                        fetchVisitors();
+                        updateVisitorCounts();
+                    } else {
+                        console.error('Error deleting visitor:', data.error);
+                    }
+                } catch (error) {
+                    console.error('Error deleting visitor:', error);
+                }
+                confirmModal.hide(); // Hide the confirmation modal
+            }, { once: true });
+        });
+
+        // Validation function for the modal form
+        function validateModalForm() {
+            let valid = true;
+
+            // Clear previous error messages and styles
+            document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
+            document.querySelectorAll('.form-control').forEach(el => {
+                el.classList.remove('error', 'valid');
+            });
+
+            // Validate first name
+            let firstname = document.getElementById('modal_vis_firstname').value;
+            if (!/^[a-zA-Z\s]+$/.test(firstname)) {
+                valid = false;
+                document.getElementById('modal_error_firstname').textContent = "Invalid first name format";
+                document.getElementById('modal_vis_firstname').classList.add('error');
+            } else {
+                document.getElementById('modal_vis_firstname').classList.add('valid');
+            }
+
+            // Validate last name
+            let lastname = document.getElementById('modal_vis_lastname').value;
+            if (!/^[a-zA-Z\s]+$/.test(lastname)) {
+                valid = false;
+                document.getElementById('modal_error_lastname').textContent = "Invalid last name format";
+                document.getElementById('modal_vis_lastname').classList.add('error');
+            } else {
+                document.getElementById('modal_vis_lastname').classList.add('valid');
+            }
+
+            // Validate IC number
+            let icNumber = document.getElementById('modal_no_ic').value;
+            if (!/^\d{12}$/.test(icNumber)) {
+                valid = false;
+                document.getElementById('modal_error_no_ic').textContent = "IC number must be 12 digits";
+                document.getElementById('modal_no_ic').classList.add('error');
+            } else {
+                document.getElementById('modal_no_ic').classList.add('valid');
+            }
+
+            // Validate address
+            let address = document.getElementById('modal_address').value;
+            if (address.trim() === "") {
+                valid = false;
+                document.getElementById('modal_error_address').textContent = "Address is required";
+                document.getElementById('modal_address').classList.add('error');
+            } else {
+                document.getElementById('modal_address').classList.add('valid');
+            }
+
+            // Validate level
+            let level = document.getElementById('modal_level').value;
+            if (!/^\d+$/.test(level)) {
+                valid = false;
+                document.getElementById('modal_error_level').textContent = "Level must be a number";
+                document.getElementById('modal_level').classList.add('error');
+            } else {
+                document.getElementById('modal_level').classList.add('valid');
+            }
+
+            // Validate No Pas
+            let noPas = document.getElementById('modal_no_pas').value;
+            if (!/^\d+$/.test(noPas)) {
+                valid = false;
+                document.getElementById('modal_error_no_pas').textContent = "Pas must be a number";
+                document.getElementById('modal_no_pas').classList.add('error');
+            } else {
+                document.getElementById('modal_no_pas').classList.add('valid');
+            }
+
+            // Validate phone number
+            let phoneNumber = document.getElementById('modal_no_telephone').value;
+            if (!/^\d{10,15}$/.test(phoneNumber)) {
+                valid = false;
+                document.getElementById('modal_error_no_telephone').textContent = "Phone number must be between 10 and 15 digits";
+                document.getElementById('modal_no_telephone').classList.add('error');
+            } else {
+                document.getElementById('modal_no_telephone').classList.add('valid');
+            }
+            
+            return valid;
+        }
+    });
+</script>
+
+<%- include('partials/private-footer.ejs') %>
