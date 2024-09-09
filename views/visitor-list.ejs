@@ -1,6 +1,21 @@
 <%- include('partials/private-header') %>
 
 <style>
+    /* Modal valid message */
+    .error-message {
+        color: #ff3860;
+        font-size: 12px;
+        margin-top: auto;
+        padding-left: 10px;
+    }
+
+    .valid-message {
+        color: #09c372;
+        font-size: 12px;
+        margin-top: auto;
+        padding-left: 10px;
+    }
+    
     /* Media query for responsive */
     @media (max-width: 768px) {
         .visitors_card .card {
@@ -506,8 +521,10 @@
                                 <p>${visitor.firstName} ${visitor.lastName}</p>
                                 <input type="text" id="modal_vis_firstname" name="firstName" value="${visitor.firstName}" class="form-control" style="display:none;">
                                 <div id="modal_error_firstname" class="error-message"></div>
+                                <div id="modal_valid_firstname" class="valid-message"></div>
                                 <input type="text" id="modal_vis_lastname" name="lastName" value="${visitor.lastName}" class="form-control" style="display:none;">
                                 <div id="modal_error_lastname" class="error-message"></div>
+                                <div id="modal_valid_lastname" class="valid-message"></div>
                             </div>
                         </div>
 
@@ -517,6 +534,7 @@
                                 <p>${visitor.nric}</p>
                                 <input type="text" id="modal_no_ic" name="nric" value="${visitor.nric}" class="form-control" style="display:none;">
                                 <div id="modal_error_no_ic" class="error-message"></div>
+                                <div id="modal_valid_no_ic" class="valid-message"></div>
                             </div>
                         </div>
 
@@ -526,6 +544,7 @@
                                 <p>${visitor.address}</p>
                                 <input type="text" id="modal_address" name="address" value="${visitor.address}" class="form-control" style="display:none;">
                                 <div id="modal_error_address" class="error-message"></div>
+                                <div id="modal_valid_address" class="valid-message"></div>
                             </div>
                         </div>
 
@@ -535,6 +554,7 @@
                                 <p>${visitor.level}</p>
                                 <input type="text" id="modal_level" name="level" value="${visitor.level}" class="form-control" style="display:none;">
                                 <div id="modal_error_level" class="error-message"></div>
+                                <div id="modal_valid_level" class="valid-message"></div>
                             </div>
                         </div>
 
@@ -544,6 +564,7 @@
                                 <p>${visitor.pass}</p>
                                 <input type="text" id="modal_no_pas" name="pass" value="${visitor.pass}" class="form-control" style="display:none;">
                                 <div id="modal_error_no_pas" class="error-message"></div>
+                                <div id="modal_valid_no_pas" class="valid-message"></div>
                             </div>
                         </div>
 
@@ -553,6 +574,7 @@
                                 <p>${visitor.phoneNum}</p>
                                 <input type="text" id="modal_no_telephone" name="phoneNum" value="${visitor.phoneNum}" class="form-control" style="display:none;">
                                 <div id="modal_error_no_telephone" class="error-message"></div>
+                                <div id="modal_valid_no_telephone" class="valid-message"></div>
                             </div>
                         </div>
                     </div>
@@ -700,8 +722,11 @@
                 valid = false;
                 document.getElementById('modal_error_firstname').textContent = "Invalid first name format";
                 document.getElementById('modal_vis_firstname').classList.add('error');
+                document.getElementById('modal_vis_firstname').style.border = '1px solid #ff3860';
             } else {
+                document.getElementById('modal_valid_firstname').textContent = "Looks good!";
                 document.getElementById('modal_vis_firstname').classList.add('valid');
+                document.getElementById('modal_vis_firstname').style.border = '1px solid #09c372';
             }
 
             // Validate last name
@@ -710,8 +735,11 @@
                 valid = false;
                 document.getElementById('modal_error_lastname').textContent = "Invalid last name format";
                 document.getElementById('modal_vis_lastname').classList.add('error');
+                document.getElementById('modal_vis_lastname').style.border = '1px solid #ff3860';
             } else {
+                document.getElementById('modal_valid_lastname').textContent = "Looks good!";
                 document.getElementById('modal_vis_lastname').classList.add('valid');
+                document.getElementById('modal_vis_lastname').style.border = '1px solid #09c372';
             }
 
             // Validate IC number
@@ -720,8 +748,11 @@
                 valid = false;
                 document.getElementById('modal_error_no_ic').textContent = "IC number must be 12 digits";
                 document.getElementById('modal_no_ic').classList.add('error');
+                document.getElementById('modal_no_ic').style.border = '1px solid #ff3860';
             } else {
+                document.getElementById('modal_valid_no_ic').textContent = "Looks good!";
                 document.getElementById('modal_no_ic').classList.add('valid');
+                document.getElementById('modal_no_ic').style.border = '1px solid #09c372';
             }
 
             // Validate address
@@ -730,8 +761,11 @@
                 valid = false;
                 document.getElementById('modal_error_address').textContent = "Address is required";
                 document.getElementById('modal_address').classList.add('error');
+                document.getElementById('modal_address').style.border = '1px solid #ff3860';
             } else {
+                document.getElementById('modal_valid_address').textContent = "Looks good!";
                 document.getElementById('modal_address').classList.add('valid');
+                document.getElementById('modal_address').style.border = '1px solid #09c372';
             }
 
             // Validate level
@@ -740,8 +774,11 @@
                 valid = false;
                 document.getElementById('modal_error_level').textContent = "Level must be a number";
                 document.getElementById('modal_level').classList.add('error');
+                document.getElementById('modal_level').style.border = '1px solid #ff3860';
             } else {
+                document.getElementById('modal_valid_level').textContent = "Looks good!";
                 document.getElementById('modal_level').classList.add('valid');
+                document.getElementById('modal_level').style.border = '1px solid #09c372';
             }
 
             // Validate No Pas
@@ -750,8 +787,11 @@
                 valid = false;
                 document.getElementById('modal_error_no_pas').textContent = "Pas must be a number";
                 document.getElementById('modal_no_pas').classList.add('error');
+                document.getElementById('modal_no_pas').style.border = '1px solid #ff3860';
             } else {
+                document.getElementById('modal_valid_no_pas').textContent = "Looks good!";
                 document.getElementById('modal_no_pas').classList.add('valid');
+                document.getElementById('modal_no_pas').style.border = '1px solid #09c372';
             }
 
             // Validate phone number
@@ -760,8 +800,11 @@
                 valid = false;
                 document.getElementById('modal_error_no_telephone').textContent = "Phone number must be between 10 and 15 digits";
                 document.getElementById('modal_no_telephone').classList.add('error');
+                document.getElementById('modal_no_telephone').style.border = '1px solid #ff3860';
             } else {
+                document.getElementById('modal_valid_no_telephone').textContent = "Looks good!";
                 document.getElementById('modal_no_telephone').classList.add('valid');
+                document.getElementById('modal_no_telephone').style.border = '1px solid #09c372';
             }
             
             return valid;
