@@ -612,7 +612,7 @@ if(user.isSuperAdmin){
                 </div>
                 <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
                   <div class="d-flex lh-1 align-items-center"><a class="text-body-tertiary fw-bold fs-10 me-2 <%= displayTaskFile %>" href="#!"><span class="fas fa-paperclip me-1"></span><%= fileAmount %></a><a class="text-warning fw-bold fs-10 me-2 <%= displayTaskSubtask %>" href="#!"><span class="fas fa-tasks me-1"></span><%= item.subtask.length %></a>
-                    <p class="text-body-tertiary fs-10 mb-md-0 me-2 me-md-3 me-xl-2 me-xxl-3 mb-0 itemDate"><%= item.due ? item.due.toLocaleDateString('en-UK', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Not specified' %></p>
+                    <p class="text-body-tertiary fs-10 mb-md-0 me-2 me-md-3 me-xl-2 me-xxl-3 mb-0 itemDate"><%= item.due ? item.due.toLocaleDateString('en-MY', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Not specified' %></p>
                     <div class="hover-md-hide hover-xl-show hover-xxl-hide">
                       <p class="text-body-tertiary fs-10 fw-bold mb-md-0 mb-0 ps-md-3 ps-xl-0 ps-xxl-3 border-start-md border-xl-0 border-start-xxl itemTime"><%= item.reminder ? item.reminder.toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true, timeZone: 'Asia/Kuala_Lumpur' }) : 'Not specified' %></p>
                     </div>

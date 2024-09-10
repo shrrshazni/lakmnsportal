@@ -1657,15 +1657,7 @@ app.post('/settings', isAuthenticated, async (req, res, next) => {
             });
             await activityUser.save();
 
-            res.render('settings', {
-                user,
-                uuid: uuidv4(),
-                notifications,
-                info,
-                subscriptions: sub,
-                show: 'show',
-                alert: 'Update successful. Please check your profile to see the changes.'
-            });
+            res.redirect('/profile');
         } else {
             res.render('settings', {
                 user,
@@ -1674,7 +1666,7 @@ app.post('/settings', isAuthenticated, async (req, res, next) => {
                 info,
                 subscriptions: sub,
                 show: 'show',
-                alert: 'Update unsuccessful. Please check your profile to see the changes.'
+                alert: 'Update unsuccessful. There is no changes made!'
             });
         }
     } catch (error) {
@@ -1732,7 +1724,7 @@ app.post('/settings/change-password', isAuthenticated, async (req, res, next) =>
             info,
             subscriptions: sub,
             show: 'show',
-            alert: 'Update successful on new password, you can use it onwards'
+            alert: 'Update successful on new password!'
         });
     } catch (error) {
         console.error('Route Error:', error);
@@ -2918,27 +2910,27 @@ app.get('/leave/request', isAuthenticated, async (req, res, next) => {
             //     }
             // });
 
-            // const nextRecipient = checkProcess.approvals[1].recipient;
-            // sendNoti.push(nextRecipient);
+            const nextRecipient = checkProcess.approvals[1].recipient;
+            sendNoti.push(nextRecipient);
 
-            // console.log(sendNoti);
+            console.log(sendNoti);
 
-            // let i = 0;
-            // // set user id to be send
-            // for (const recipient of sendNoti) {
-            //     const recipientId = recipient;
+            let i = 0;
+            // set user id to be send
+            for (const recipient of sendNoti) {
+                const recipientId = recipient;
 
-            //     // Fetch the user by recipient ID
-            //     const email = await User.findById(recipientId);
+                // Fetch the user by recipient ID
+                const email = await User.findById(recipientId);
 
-            //     // Check if the user is found and has an email
-            //     if (email && user.email) {
-            //         // Add the user's email to sendEmail
-            //         sendEmail.push(email.email);
-            //     }
+                // Check if the user is found and has an email
+                if (email && user.email) {
+                    // Add the user's email to sendEmail
+                    sendEmail.push(email.email);
+                }
 
-            //     i++;
-            // }
+                i++;
+            }
 
             const leave = new Leave({
                 fileId: uuid,

@@ -315,14 +315,14 @@ console.log(showCancel);
       var display = ''
 
       if(approval.timestamp !== null){
-        date = new Date(approval.timestamp).toLocaleDateString('en-UK', { 
+        date = new Date(approval.timestamp).toLocaleDateString('en-MY', { 
           year: 'numeric', 
           month: 'long', 
           day: 'numeric', 
           timeZone: 'Asia/Kuala_Lumpur' 
         });
 
-        time = new Date(approval.timestamp).toLocaleTimeString('en-UK', {
+        time = new Date(approval.timestamp).toLocaleTimeString('en-MY', {
             hour: 'numeric',
             minute: 'numeric',
             hour12: true,
@@ -330,7 +330,7 @@ console.log(showCancel);
         });
       }else{
         date = 'Estimated';
-        time = new Date(approval.estimated).toLocaleDateString('en-UK', { 
+        time = new Date(approval.estimated).toLocaleDateString('en-MY', { 
           year: 'numeric', 
           month: 'long', 
           day: 'numeric', 
