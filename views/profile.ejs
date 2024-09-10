@@ -150,7 +150,7 @@
               <% if(activities && activities.length > 0){ %>
               <% activities.forEach(item => { %>
               <tr class="position-static">
-                <td class="title align-middle white-space-nowrap py-4 ps-0 fw-bold text-body-highlight fs-9"><%= item.title %></td>
+                <td class="title align-middle white-space-nowrap py-4 ps-0 fw-bold text-body-highlight fs-9 fs-xxl-8"><%= item.title %></td>
                 <td class="description align-middle text-start fw-semibold py-2 text-start text-body-highlight ps-2 fst-italic fs-9"><%= item.description%></td>
                 <td class="type align-middle fw-semibold text-center py-2 ps-0 fs-9"><%= item.type %></td>
                 <td class="date align-middle text-center py-2 ps-0 fs-9"><%= item.date.toLocaleDateString('en-UK', { day: '2-digit', month: 'short', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></td>
@@ -264,7 +264,7 @@
                     }
                     
                   %>
-                  <a class="mb-0 fs-9 notranslate" href="<%= userLink %>"><%= userReliefName %></a>
+                  <a class="mb-0 fs-9 fs-xxl-8 notranslate" href="<%= userLink %>"><%= userReliefName %></a>
                 </td>
                 <td class="align-middle white-space-nowrap startdate text-center ps-3 py-4">
                   <p class="mb-0 fs-9 text-body"><%= formatDate(leaves.date.start) %></p>
@@ -367,7 +367,7 @@
                 }
               %>
               <tr class="position-static">
-                <td class="date align-middle fw-blod text-start text-body-highlight fst-italic fw-bold py-2 ps-0 fs-9"><%= item.timestamp.toLocaleDateString('en-MY', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></td>
+                <td class="date align-middle fw-blod text-start text-body-highlight fst-italic fw-bold py-2 ps-0 fs-9 fs-xxl-8"><%= item.timestamp.toLocaleDateString('en-MY', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></td>
                 <td class="type align-middle fw-semibold text-center py-2 ps-0 fs-9 fs-md-8 text-body-highlight"><span class="badge badge-phoenix fs-10 badge-phoenix-<%= badgeColour %>"><%= item.status %></span></td>
                 <td class="clockin align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-success"><%= signInTime %></span></td>
                 <td class="clockout align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-warning"><%= signOutTime %></span></td>

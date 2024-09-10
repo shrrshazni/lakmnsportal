@@ -1029,7 +1029,7 @@
                 <div class="scrollbar-overlay" style="height: 27rem;">
                   <% if (notifications.length > 0) { %>
                   <% notifications.forEach(notification => { %>
-                  <a href="<%= notification.url %>" class="text-decoration-none">
+                  <a href="/markAsRead/<%= notification._id %>" class="text-decoration-none">
                     <div class="px-2 px-sm-3 py-3 notification-card position-relative read border-bottom">
                       <div class="d-flex align-items-center justify-content-between position-relative">
                         <div class="d-flex">
