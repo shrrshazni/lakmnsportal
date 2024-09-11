@@ -5652,6 +5652,7 @@ app.post('/api/qrcode/process-data', isAuthenticated, async (req, res) => {
     // Determine location based on client IP
     const locationMap = {
         '175.140.45.73': 'BMI',
+        '203.106.120.240': 'BMI',
         '104.28.242.42': 'BMI',
         '210.186.48.79': 'JM',
         '60.50.17.102': 'CM',

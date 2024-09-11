@@ -1,26 +1,28 @@
 <%- include("partials/public-header.ejs") %>
 
-<div class="mb-3">
+<style>
+  body {
+    /* Add a linear gradient background */
+    background: linear-gradient(to right, #ff7e5f, #feb47b);
+    /* Example gradient */
+    height: 100vh;
+    /* Full viewport height */
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
 
-  <div class="mx-auto bg-primary" style="height: 100vh;">
-    <div class="row g-3 my-auto" style="margin:0 25rem 0 25rem;">
-      <div class="col-6">
-        <div class="card">
-          <div class="card-body vh-50">
-            <p>1</p>
-          </div>
-        </div>
-      </div>
+  .content {
+    text-align: center;
+    color: white;
+  }
+</style>
 
-      <div class="col-6">
-        <div class="card">
-          <div class="card-body vh-50">
-            <p>1</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+<div class="content">
+  <h1>Welcome to My Gradient Background Page</h1>
+  <p>This page has a beautiful gradient background!</p>
 </div>
+
 
 <%- include("partials/public-footer.ejs") %>
