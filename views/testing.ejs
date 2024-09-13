@@ -16,12 +16,16 @@
     --image: url('https://s3-us-west-2.amazonaws.com/s.cdpn.io/1376484/jess-harding-lqT6NAmTaiY-unsplash.jpg');
   }
 
+  #glow-card {
+    transition: background 0.8s ease-in-out;
+  }
+
   .glow-wrapper-1 {
     position: relative;
     display: inline-block;
     border-radius: 0;
     /* No radius to affect card */
-    padding: 4px;
+    /* padding: 4px; */
     /* Adjust padding to control glow width */
   }
 
@@ -38,7 +42,7 @@
     bottom: 0;
     background-size: 400%;
     z-index: -1;
-    filter: blur(10px);
+    filter: blur(20px);
     animation: glowing 20s linear infinite;
     border-radius: inherit;
   }
@@ -54,7 +58,7 @@
     display: inline-block;
     border-radius: 0;
     /* No radius to affect card */
-    padding: 4px;
+    /* padding: 4px; */
     /* Adjust padding to control glow width */
   }
 
@@ -71,7 +75,7 @@
     bottom: 0;
     background-size: 400%;
     z-index: -1;
-    filter: blur(10px);
+    filter: blur(20px);
     animation: glowing 20s linear infinite;
     border-radius: inherit;
   }
@@ -114,15 +118,18 @@
 <div class="glass-background">
 </div>
 
-<div class=" text-center">
-  <!-- <h1 class="text-white">Glass Background Effect</h1> -->
+<div class="text-center">
 
-  <div class="d-lg-flex d-block justify-content-center align-items-center min-vh-100 z-5">
+  <div class="">
+    <h1 class="fs-3">Good Afternoon</h1>
+  </div>
+
+  <div class="d-lg-flex d-block justify-content-center align-items-center z-5" style="min-height: 90vh;">
 
     <div class="py-5 px-5 px-xl-15 mb-0 order-xl-1 order-md-1">
 
       <div class="text-center">
-        <h2 class="fs-2 fs-lg-1 fst-italic mb-9" id="currentTime"></h2>
+        <h2 class="fs-3 fs-lg-1 fst-italic mb-9" id="currentTime"></h2>
 
         <script>
           function updateTime() {
@@ -155,7 +162,7 @@
       </div>
 
       <div class="text-center">
-        <h2 id="dayName" class="fs-3 fs-lg-4 mb-2"></h2>
+        <h2 id="dayName" class="fs-3 fs-lg-2 mb-3"></h2>
 
         <script>
           // Function to get the current day name based on Asia/Kuala_Lumpur timezone
@@ -187,7 +194,7 @@
       </div>
 
       <div class="text-center">
-        <h2 class="fs-4 fs-lg-5" id="current-date"></h2>
+        <h2 class="fs-3 fs-lg-4" id="current-date"></h2>
         <script>
           function updateDate() {
             const now = new Date();
@@ -212,10 +219,10 @@
 
     <div class="p-5">
       <div class="order-md-0" id="glow-card">
-        <div class="card" style="min-height: 25vh;min-width: 35vw;">
+        <div class="card" style="min-height: 25vh;min-width: 45vw;">
           <div class="card-body">
 
-            <img id="qrCode" class="w-100 h-100 border border-light border-1">
+            <img id="qrCode" class="w-100 h-100">
 
             <script>
               document.addEventListener('DOMContentLoaded', function() {
@@ -281,9 +288,8 @@
                     .then(data => {
                       const glow = document.getElementById('glow-card');
 
-                      if (data.message === "No attendance record found.") {
+                      if (data.temp === null) {
                         console.log('No data found');
-                        glow.classList.remove('glow-wrapper-1', 'glow-wrapper-2');
                       } else {
                         // Check attendance type
                         if (data.temp.type === 'sign out') {
@@ -297,7 +303,7 @@
                         // Keep the glow effect for 2 seconds, then remove it
                         setTimeout(function() {
                           glow.classList.remove('glow-wrapper-1', 'glow-wrapper-2');
-                        }, 2000); // Glow for 2 seconds
+                        }, 4000); // Glow for 2 seconds
                       }
                     })
                     .catch(error => {
@@ -320,6 +326,7 @@
     </div>
 
   </div>
+
 </div>
 
 <%- include('partials/public-footer') %>

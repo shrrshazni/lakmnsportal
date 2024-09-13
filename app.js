@@ -5620,8 +5620,8 @@ async function generateCustomQRCode(data) {
             height: 400, // Height of the QR code
             margin: 0,
             imageOptions: {
-                imageSize: 0.5,
-                crossOrigin: 'use-credentials',
+                imageSize: 0.45,
+                crossOrigin: 'anonymous',
             },
             qrOptions: {
                 errorCorrectionLevel: 'M',
@@ -5934,14 +5934,13 @@ app.post('/api/qrcode/process-data', isAuthenticated, async (req, res) => {
 // * and returns the related user and message.
 app.get('/api/qrcode/get-latest', async (req, res) => {
     try {
-        const today = moment().utcOffset(8).startOf('day').toDate();
 
         // Find the most recent attendance record for today
-        const tempAttendance = await TempAttendance.findOne({
-            timestamp: { $gte: today, $lte: moment().utcOffset(8).toDate() }
-        })
+        const tempAttendance = await TempAttendance.findOne()
             .sort({ timestamp: -1 })
             .lean();
+
+        console.log(tempAttendance);
 
         let message = '';
         let response = '';
@@ -5988,6 +5987,8 @@ app.get('/api/qrcode/get-latest', async (req, res) => {
 
             console.log('Have not found latest attendance!');
         }
+
+        console.log(response);
 
         res.json(response);
     } catch (error) {
