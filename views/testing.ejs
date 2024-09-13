@@ -12,9 +12,11 @@
     --phoenix-yellow: #ffc107;
     --phoenix-green: #25b003;
     --phoenix-teal: #20c997;
+    --blur: 20px;
+    --image: url('https://s3-us-west-2.amazonaws.com/s.cdpn.io/1376484/jess-harding-lqT6NAmTaiY-unsplash.jpg');
   }
 
-  .glow-wrapper {
+  .glow-wrapper-1 {
     position: relative;
     display: inline-block;
     border-radius: 0;
@@ -23,17 +25,12 @@
     /* Adjust padding to control glow width */
   }
 
-  .glow-wrapper::before {
+  .glow-wrapper-1::before {
     content: '';
-    background: linear-gradient(60deg,
-        var(--phoenix-blue),
-        var(--phoenix-pink),
-        var(--phoenix-red),
-        var(--phoenix-orange),
-        var(--phoenix-yellow),
+    background: linear-gradient(45deg,
         var(--phoenix-green),
-        var(--phoenix-teal),
-        var(--phoenix-blue));
+        var(--phoenix-yellow),
+        var(--phoenix-green));
     position: absolute;
     top: 0;
     left: 0;
@@ -41,12 +38,45 @@
     bottom: 0;
     background-size: 400%;
     z-index: -1;
-    filter: blur(7.5px);
-    animation: glowing 25s linear infinite;
+    filter: blur(10px);
+    animation: glowing 20s linear infinite;
     border-radius: inherit;
   }
 
-  .glow-wrapper .card {
+  .glow-wrapper-1 .card {
+    position: relative;
+    z-index: 1;
+    /* Ensure card content is above the glow */
+  }
+
+  .glow-wrapper-2 {
+    position: relative;
+    display: inline-block;
+    border-radius: 0;
+    /* No radius to affect card */
+    padding: 4px;
+    /* Adjust padding to control glow width */
+  }
+
+  .glow-wrapper-2::before {
+    content: '';
+    background: linear-gradient(45deg,
+        var(--phoenix-red),
+        var(--phoenix-yellow),
+        var(--phoenix-red));
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-size: 400%;
+    z-index: -1;
+    filter: blur(10px);
+    animation: glowing 20s linear infinite;
+    border-radius: inherit;
+  }
+
+  .glow-wrapper-2 .card {
     position: relative;
     z-index: 1;
     /* Ensure card content is above the glow */
@@ -65,178 +95,231 @@
       background-position: 0 0;
     }
   }
+
+  /* Full-page glass background effect */
+  .glass-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-image: var(--image);
+    background-size: cover;
+    background-position: center;
+    filter: blur(var(--blur));
+    z-index: -5;
+  }
 </style>
 
-<div class="container d-lg-flex d-block justify-content-center align-items-center min-vh-100">
+<div class="glass-background">
+</div>
 
-  <div class="py-5 px-5 px-xl-15 mb-0 order-xl-1">
+<div class=" text-center">
+  <!-- <h1 class="text-white">Glass Background Effect</h1> -->
 
-    <div class="text-center">
-      <h2 class="fs-2 fs-lg-1 fst-italic mb-7" id="currentTime"></h2>
+  <div class="d-lg-flex d-block justify-content-center align-items-center min-vh-100 z-5">
 
-      <script>
-        function updateTime() {
-          // Create a new Date object to get the current time
-          var currentTime = new Date();
+    <div class="py-5 px-5 px-xl-15 mb-0 order-xl-1 order-md-1">
 
-          // Get the hours, minutes, and seconds
-          var hours = currentTime.getHours();
-          var minutes = currentTime.getMinutes();
-          var seconds = currentTime.getSeconds();
+      <div class="text-center">
+        <h2 class="fs-2 fs-lg-1 fst-italic mb-9" id="currentTime"></h2>
 
-          // Add leading zeros if the numbers are less than 10
-          hours = (hours < 10) ? '0' + hours : hours;
-          minutes = (minutes < 10) ? '0' + minutes : minutes;
-          seconds = (seconds < 10) ? '0' + seconds : seconds;
+        <script>
+          function updateTime() {
+            // Create a new Date object to get the current time
+            var currentTime = new Date();
 
-          // Construct the time string in HH:MM:SS format
-          var timeString = hours + ':' + minutes + ':' + seconds;
+            // Get the hours, minutes, and seconds
+            var hours = currentTime.getHours();
+            var minutes = currentTime.getMinutes();
+            var seconds = currentTime.getSeconds();
 
-          // Update the content of the <h3> element with the current time
-          document.getElementById('currentTime').textContent = timeString;
-        }
+            // Add leading zeros if the numbers are less than 10
+            hours = (hours < 10) ? '0' + hours : hours;
+            minutes = (minutes < 10) ? '0' + minutes : minutes;
+            seconds = (seconds < 10) ? '0' + seconds : seconds;
 
-        // Call updateTime function initially to set the time immediately
-        updateTime();
+            // Construct the time string in HH:MM:SS format
+            var timeString = hours + ':' + minutes + ':' + seconds;
 
-        // Update the time every second
-        setInterval(updateTime, 1000);
-      </script>
-    </div>
+            // Update the content of the <h3> element with the current time
+            document.getElementById('currentTime').textContent = timeString;
+          }
 
-    <div class="text-center">
-      <h2 id="dayName" class="fs-3 fs-lg-4 mb-3"></h2>
+          // Call updateTime function initially to set the time immediately
+          updateTime();
 
-      <script>
-        // Function to get the current day name based on Asia/Kuala_Lumpur timezone
-        function updateDayName() {
-          // Get the current date and time in Asia/Kuala_Lumpur timezone
-          const today = new Date().toLocaleString("en-US", {
-            timeZone: "Asia/Kuala_Lumpur"
-          });
+          // Update the time every second
+          setInterval(updateTime, 1000);
+        </script>
+      </div>
 
-          // Create a new Date object with the localized time
-          const localDate = new Date(today);
+      <div class="text-center">
+        <h2 id="dayName" class="fs-3 fs-lg-4 mb-2"></h2>
 
-          // Create an array of day names
-          const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-
-          // Get the day name based on the localized day
-          const dayName = dayNames[localDate.getDay()];
-
-          // Display the day name in the <h2> element
-          document.getElementById("dayName").textContent = dayName;
-        }
-
-        // Initial call to display the current day name
-        updateDayName();
-
-        // Set interval to refresh the day name every hour (3600000 milliseconds = 1 hour)
-        setInterval(updateDayName, 3600000);
-      </script>
-    </div>
-
-    <div class="text-center">
-      <h2 class="fs-4 fs-lg-5" id="current-date"></h2>
-      <script>
-        function updateDate() {
-          const now = new Date();
-          const options = {
-            day: '2-digit',
-            month: 'long',
-            year: 'numeric'
-          };
-          const formattedDate = now.toLocaleDateString('en-US', options);
-          document.getElementById('current-date').innerText = formattedDate;
-        }
-
-        // Update the date initially
-        updateDate();
-
-        // Set an interval to update the date every hour
-        setInterval(updateDate, 60 * 60 * 1000); // 60 minutes * 60 seconds * 1000 milliseconds
-      </script>
-    </div>
-
-  </div>
-
-  <div class="p-5">
-    <div class="glow-wrapper order-xl-0">
-      <div class="card" style="min-height: 55vh;">
-        <div class="card-body">
-
-          <div class="">
-            <img id="qrCode" class="w-100 h-100 border border-light border-1">
-          </div>
-
-
-          <script>
-            document.addEventListener('DOMContentLoaded', function() {
-              let previousQRData = null;
-
-              async function updateQRCode() {
-                try {
-                  // Generate a new QR code
-                  const response = await fetch('/api/qrcode/generate');
-                  if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                  }
-                  const data = await response.json();
-
-                  // Update the src attribute of the QR code image
-                  document.getElementById('qrCode').src = data.qrCodeImage;
-
-                  // Save the previous QR code data
-                  if (previousQRData) {
-                    await saveQRData(previousQRData);
-                  }
-
-                  // Update the previous QR data to the new one
-                  previousQRData = data.uniqueIdentifier;
-
-                  console.log('QR code updated successfully');
-                } catch (error) {
-                  console.error('Error updating QR code:', error);
-                }
-              }
-
-              updateQRCode();
-
-              setInterval(updateQRCode, 15000);
-
-              async function saveQRData(qrData) {
-                try {
-                  // Perform any actions to save the QR code data here
-                  // console.log('Saving QR code data:', qrData);
-
-                  const response = await fetch('/api/qrcode/save-data', {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                      qrData: qrData
-                    })
-                  });
-
-                  if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                  }
-
-                  // console.log('QR code data successfully saved');
-                } catch (error) {
-                  console.error('Error saving QR code data:', error);
-                }
-              }
-
+        <script>
+          // Function to get the current day name based on Asia/Kuala_Lumpur timezone
+          function updateDayName() {
+            // Get the current date and time in Asia/Kuala_Lumpur timezone
+            const today = new Date().toLocaleString("en-US", {
+              timeZone: "Asia/Kuala_Lumpur"
             });
-          </script>
 
+            // Create a new Date object with the localized time
+            const localDate = new Date(today);
+
+            // Create an array of day names
+            const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+            // Get the day name based on the localized day
+            const dayName = dayNames[localDate.getDay()];
+
+            // Display the day name in the <h2> element
+            document.getElementById("dayName").textContent = dayName;
+          }
+
+          // Initial call to display the current day name
+          updateDayName();
+
+          // Set interval to refresh the day name every hour (3600000 milliseconds = 1 hour)
+          setInterval(updateDayName, 3600000);
+        </script>
+      </div>
+
+      <div class="text-center">
+        <h2 class="fs-4 fs-lg-5" id="current-date"></h2>
+        <script>
+          function updateDate() {
+            const now = new Date();
+            const options = {
+              day: '2-digit',
+              month: 'long',
+              year: 'numeric'
+            };
+            const formattedDate = now.toLocaleDateString('en-US', options);
+            document.getElementById('current-date').innerText = formattedDate;
+          }
+
+          // Update the date initially
+          updateDate();
+
+          // Set an interval to update the date every hour
+          setInterval(updateDate, 60 * 60 * 1000); // 60 minutes * 60 seconds * 1000 milliseconds
+        </script>
+      </div>
+
+    </div>
+
+    <div class="p-5">
+      <div class="order-md-0" id="glow-card">
+        <div class="card" style="min-height: 25vh;min-width: 35vw;">
+          <div class="card-body">
+
+            <img id="qrCode" class="w-100 h-100 border border-light border-1">
+
+            <script>
+              document.addEventListener('DOMContentLoaded', function() {
+                let previousQRData = null;
+
+                async function updateQRCode() {
+                  try {
+                    // Generate a new QR code
+                    const response = await fetch('/api/qrcode/generate');
+                    if (!response.ok) {
+                      throw new Error('Network response was not ok');
+                    }
+                    const data = await response.json();
+
+                    // Update the src attribute of the QR code image
+                    document.getElementById('qrCode').src = data.qrCodeImage;
+
+                    // Save the previous QR code data
+                    if (previousQRData) {
+                      await saveQRData(previousQRData);
+                    }
+
+                    // Update the previous QR data to the new one
+                    previousQRData = data.uniqueIdentifier;
+
+                    console.log('QR code updated successfully');
+                  } catch (error) {
+                    console.error('Error updating QR code:', error);
+                  }
+                }
+
+                updateQRCode();
+                setInterval(updateQRCode, 10000);
+
+                async function saveQRData(qrData) {
+                  try {
+                    // Perform any actions to save the QR code data here
+                    // console.log('Saving QR code data:', qrData);
+
+                    const response = await fetch('/api/qrcode/save-data', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json'
+                      },
+                      body: JSON.stringify({
+                        qrData: qrData
+                      })
+                    });
+
+                    if (!response.ok) {
+                      throw new Error('Network response was not ok');
+                    }
+
+                    // console.log('QR code data successfully saved');
+                  } catch (error) {
+                    console.error('Error saving QR code data:', error);
+                  }
+                }
+
+                async function fetchLatestScannedData() {
+                  fetch('/api/qrcode/get-latest') // Fetch attendance data for today within a specific time range
+                    .then(response => response.json())
+                    .then(data => {
+                      const glow = document.getElementById('glow-card');
+
+                      if (data.message === "No attendance record found.") {
+                        console.log('No data found');
+                        glow.classList.remove('glow-wrapper-1', 'glow-wrapper-2');
+                      } else {
+                        // Check attendance type
+                        if (data.temp.type === 'sign out') {
+                          glow.classList.remove('glow-wrapper-1');
+                          glow.classList.add('glow-wrapper-2');
+                        } else {
+                          glow.classList.remove('glow-wrapper-2');
+                          glow.classList.add('glow-wrapper-1');
+                        }
+
+                        // Keep the glow effect for 2 seconds, then remove it
+                        setTimeout(function() {
+                          glow.classList.remove('glow-wrapper-1', 'glow-wrapper-2');
+                        }, 2000); // Glow for 2 seconds
+                      }
+                    })
+                    .catch(error => {
+                      console.error('Error fetching latest scanned data:', error);
+                    });
+                }
+
+                // Call the function to fetch latest scanned data immediately
+                fetchLatestScannedData();
+
+                // Set interval to fetch data every 4.5 seconds
+                setInterval(fetchLatestScannedData, 4500);
+
+              });
+            </script>
+
+          </div>
         </div>
       </div>
     </div>
-  </div>
 
+  </div>
 </div>
 
 <%- include('partials/public-footer') %>

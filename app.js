@@ -24,6 +24,7 @@ const { type } = require('os');
 const requestIp = require('request-ip');
 const { performance } = require('perf_hooks');
 const webPush = require('web-push');
+const { QRCodeCanvas } = require('@loskir/styled-qr-code-node');
 
 const app = express();
 
@@ -5596,21 +5597,91 @@ app.post('/api/data/all-attendance/per-month/department-section', isAuthenticate
     }
 });
 
+function getRandomColor() {
+    const colors = ['red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'violet'];
+
+    // Get a random index from the colors array
+    const randomIndex = Math.floor(Math.random() * colors.length);
+
+    // Return the color at the random index
+    return colors[randomIndex];
+}
+
+async function generateCustomQRCode(data) {
+    try {
+        const firstColour = getRandomColor();
+        const secondColour = getRandomColor();
+
+        // Create a new instance of QRCodeCanvas
+        const qrCode = new QRCodeCanvas({
+            data: data,
+            image: path.join(__dirname, 'public/assets/img/icons/logolakmns/', 'LOGO KEDUA GOLD.png'), // Path to the logo image
+            width: 400, // Width of the QR code
+            height: 400, // Height of the QR code
+            margin: 0,
+            imageOptions: {
+                imageSize: 0.5,
+                crossOrigin: 'use-credentials',
+            },
+            qrOptions: {
+                errorCorrectionLevel: 'M',
+                typeNumber: 4
+            },
+            backgroundOptions: {
+                color: '#ffffff', // Background color
+            },
+            dotsOptions: {
+                // color: "#111",
+                type: "classy-rounded",
+                gradient: {
+                    type: 'linear',
+                    rotation: 1,
+                    colorStops: [{ offset: 0, color: firstColour }, { offset: 1, color: secondColour }]
+                },
+            },
+            cornersSquareOptions: {
+                // color: "#111",
+                // gradient: {
+                //     type: 'linear',
+                //     rotation: 1,
+                //     colorStops: [{ offset: 0, color: firstColour }, { offset: 1, color: secondColour }]
+                // },
+                type: 'extra-rounded'
+            },
+            cornersDotOptions: {
+                // color: "#111",
+                gradient: {
+                    type: 'linear',
+                    rotation: 1,
+                    colorStops: [{ offset: 0, color: firstColour }, { offset: 1, color: secondColour }]
+                },
+                type: 'dot'
+            }
+        });
+
+        // Generate QR code as a buffer
+        const qrCodeBuffer = await qrCode.toBuffer('png');
+
+        // Convert buffer to base64 string
+        const qrCodeBase64 = `data:image/png;base64,${qrCodeBuffer.toString('base64')}`;
+
+        return qrCodeBase64; // Returns base64-encoded QR code
+    } catch (error) {
+        console.error('Error generating custom QR code:', error);
+        throw error;
+    }
+}
+
 // * Route to generate a QR code with a unique identifier and client IP.
 // * Creates a QR code image with specified colors and dimensions,
 // * then returns the image data and unique identifier to the client.
 app.get('/api/qrcode/generate', async (req, res) => {
     const uniqueIdentifier = generateUniqueIdentifier();
     const clientIP = req.clientIp;
+    const data = uniqueIdentifier + "-" + clientIP;
 
     try {
-        const qrCodeImage = await qr.toDataURL(uniqueIdentifier + "-" + clientIP, {
-            type: 'image/png',
-            errorCorrectionLevel: 'H',
-            color: { dark: '#3874ff', light: '#f5f7fa' }, // Set colors for the QR code
-            width: 400,
-            margin: 0 // Set the width of the QR code
-        });
+        const qrCodeImage = await generateCustomQRCode(data);
 
         res.json({ qrCodeImage, uniqueIdentifier });
     } catch (error) {
@@ -5629,6 +5700,10 @@ app.post('/api/qrcode/save-data', async (req, res) => {
         uniqueId: qrData,
         createdAt: moment().utcOffset(8).toDate()
     });
+
+    await TempAttendance.deleteMany();
+
+    console.log('QR data saved and temporary attendance deleted all.')
 
     res.status(200).send('QR code data received and saved successfully');
 });
@@ -5900,6 +5975,8 @@ app.get('/api/qrcode/get-latest', async (req, res) => {
                 user: user,
                 message: message
             };
+
+            console.log('Have found latest attendance!');
         } else {
             // Handle the case when no attendance record is found
             message = 'No attendance record found.';
@@ -5908,6 +5985,8 @@ app.get('/api/qrcode/get-latest', async (req, res) => {
                 user: null,
                 message: message
             };
+
+            console.log('Have not found latest attendance!');
         }
 
         res.json(response);
@@ -6841,6 +6920,21 @@ app.post('/search-schedule-temp', async (req, res) => {
     }
 });
 
+// ============================
+// QR Code
+// ============================
+
+// * QR code route - generate
+// app.get('/generate-qr', async (req, res) => {
+//     const data = 'https://www.lakmnsportal.com';
+
+//     // Generate the QR code as base64
+//     const qrCodeBase64 = await generateCustomQRCode(data);
+
+//     // Render the QR code in the EJS template
+//     res.render('qr', { qrCodeBase64 });
+// });
+
 
 // ============================
 // Scheduler
@@ -7238,11 +7332,9 @@ const clearQRCodeData = async () => {
     try {
         const [qrResult, tempAttendanceResult] = await Promise.all([
             QRCode.deleteMany({}),
-            TempAttendance.deleteMany({})
         ]);
 
         console.log(`Deleted ${qrResult.deletedCount} documents from the QRCode collection`);
-        console.log(`Deleted ${tempAttendanceResult.deletedCount} documents from the temporary attendance`);
     } catch (error) {
         console.error('Error clearing QRCode data:', error);
     }
