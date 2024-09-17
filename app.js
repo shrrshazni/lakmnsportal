@@ -1076,7 +1076,6 @@ const renderHomePage = async (req, res, next, show = '', alert = '') => {
     }
 };
 
-
 // Allowed IP addresses for restricted access
 const allowedIPs = [
     '175.140.45.73', '104.28.242.42', '210.186.48.79',
@@ -5628,7 +5627,7 @@ async function generateCustomQRCode(data) {
                 typeNumber: 4
             },
             backgroundOptions: {
-                color: '#ffffff', // Background color
+                color: '#ffffff00', // Background color
             },
             dotsOptions: {
                 // color: "#111",
@@ -6624,6 +6623,47 @@ app.get('/testing', isAuthenticated, async (req, res, next) => {
     try {
         const { user, notifications } = req;
 
+        // Get the current date in Asia/Kuala_Lumpur timezone
+        // const today = moment().utcOffset(8).toDate();
+
+        // const checkpointData = [
+        //     {
+        //         checkpointName: 'Mufti Residence',
+        //         logReport: '',
+        //         time: ''
+        //     },
+        //     {
+        //         checkpointName: 'Encik Drahman Residence',
+        //         logReport: '',
+        //         time: ''
+        //     },
+        //     {
+        //         checkpointName: 'Ceo Residence',
+        //         logReport: '',
+        //         time: ''
+        //     },
+        //     {
+        //         checkpointName: 'Sicc',
+        //         logReport: '',
+        //         time: ''
+        //     }
+        // ];
+
+        // const patrolUnitData = {
+        //     reportId: uuidv4(),
+        //     type: 'Patrol Unit',
+        //     shift: 'Non',
+        //     location: 'Non',
+        //     date: today,
+        //     status: 'Open',
+        //     startShift: '08:00',
+        //     endShift: '17:00',
+        //     remarks: '',
+        //     patrolUnit: checkpointData
+        // };
+
+        // scheduler(patrolUnitData);
+
         // // Replace req.body with dummy data
         // const dummyData = {
         //     uuid: 'dummy-uuid',
@@ -6982,6 +7022,19 @@ cron.schedule('* * * * *', async () => {
         } else {
             console.log('No expired sessions found.');
         }
+    } catch (error) {
+        console.error('Error removing expired sessions:', error);
+    }
+}, {
+    scheduled: true,
+    timezone: 'Asia/Kuala_Lumpur'
+});
+
+cron.schedule('* * * * *', async () => {
+    console.log('Running cron job to create patrol unit sessions');
+
+    try {
+
     } catch (error) {
         console.error('Error removing expired sessions:', error);
     }
@@ -7453,7 +7506,6 @@ const createPatrolReport = async (dutyHandoverId, location, date, shift, startTi
         throw new Error('Error creating patrol report: ' + error.message);
     }
 };
-
 
 // * Function to generate approvals hierachy based on the user grade/position
 const generateApprovals = (
