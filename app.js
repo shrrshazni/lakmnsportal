@@ -3040,17 +3040,42 @@ app.get('/leave/history', isAuthenticated, async (req, res, next) => {
             );
         } else {
             filteredApprovalLeaves = allLeave.filter(leave => {
+                // Ensure leave.user is defined before accessing toString
+                if (!leave.user) return false;
+
                 return (
                     leave.user.toString() !== user._id.toString() &&
-                    leave.approvals.some(
-                        approval =>
+                    leave.approvals.some(approval => {
+                        // Ensure approval.recipient is defined before accessing toString
+                        if (!approval.recipient) return false;
+
+                        return (
                             approval.recipient.toString() === user._id.toString() &&
                             leave.status !== 'approved' &&
                             leave.status !== 'denied'
-                    )
+                        );
+                    })
                 );
             });
         }
+        // let filteredApprovalLeaves;
+        // if (user.isAdmin) {
+        //     filteredApprovalLeaves = allLeave.filter(
+        //         leave => leave.status !== 'approved' && leave.status !== 'denied'
+        //     );
+        // } else {
+        //     filteredApprovalLeaves = allLeave.filter(leave => {
+        //         return (
+        //             leave.user.toString() !== user._id.toString() &&
+        //             leave.approvals.some(
+        //                 approval =>
+        //                     approval.recipient.toString() === user._id.toString() &&
+        //                     leave.status !== 'approved' &&
+        //                     leave.status !== 'denied'
+        //             )
+        //         );
+        //     });
+        // }
 
         // Collect unique departments and sections
         const uniqueDepartments = new Set();
