@@ -990,6 +990,8 @@ const renderHomePage = async (req, res, next, show = '', alert = '') => {
 
         const startTime = performance.now();
 
+        const userIdsTask = await getUserIdsBySectionOrDepartment(user);
+
         // Fetch dynamic data needed per request
         const [
             allUser,
@@ -998,7 +1000,7 @@ const renderHomePage = async (req, res, next, show = '', alert = '') => {
             allInfo,
             userLeave,
             leave,
-            task,
+            tasks,
             file,
             info,
             otherTask,
@@ -1012,7 +1014,7 @@ const renderHomePage = async (req, res, next, show = '', alert = '') => {
             Info.find(),
             UserLeave.findOne({ user: user._id }).populate('user').exec(),
             Leave.find({ user: user._id }),
-            Task.find({ assignee: { $in: [user._id] } }).sort({ timestamp: -1 }).populate('assignee').exec(),
+            Task.find({ owner: { $in: userIdsTask } }).populate('owner').exec(),
             File.find(),
             Info.findOne({ user: user._id }),
             Task.find({ assignee: { $ne: [user._id] } }),
@@ -1056,7 +1058,7 @@ const renderHomePage = async (req, res, next, show = '', alert = '') => {
             allInfo,
             userLeave,
             leave,
-            tasks: task,
+            tasks,
             files: file,
             activities,
             selectedNames: '',
@@ -8402,7 +8404,7 @@ const processLeaveRequest = async (type, user, userLeave, startDate, returnDate,
             }
             break;
         case 'Emergency Leave':
-            if (amountDayRequest <= 1 && amountDayRequest >= -5) {
+            if (amountDayRequest <= 1) {
                 if (await checkFileAttachment(uuid, renderDataError, `There is no file attached for ${type.toLowerCase()}!`)) {
                     approvals = generateApprovals(
                         user,
@@ -8423,7 +8425,7 @@ const processLeaveRequest = async (type, user, userLeave, startDate, returnDate,
             }
             break;
         case 'Half Day Emergency Leave':
-            if (amountDayRequest <= 1 && amountDayRequest >= -5 && numberOfDays <= 1) {
+            if (amountDayRequest <= 1 && numberOfDays <= 1) {
                 if (await checkFileAttachment(uuid, renderDataError, `There is no file attached for ${type.toLowerCase()}!`)) {
                     approvals = generateApprovals(
                         user,
@@ -9094,6 +9096,22 @@ const isWithinTimeSlot = (timeSlot) => {
         return currentTime >= startNumeric || currentTime <= endNumeric;
     }
 }
+
+// Query function to find tasks where the owner's section matches the user's section or, if empty, matches the department
+const getUserIdsBySectionOrDepartment = async (user) => {
+    let query = {};
+
+    if (user.section) {
+        // If the user has a section, find tasks where the owner has the same section
+        query = { section: user.section };
+    } else if (user.department) {
+        // If the section is empty, fallback to department
+        query = { department: user.department };
+    }
+
+    const usersInTask = await User.find(query).exec();
+    return usersInTask.map(user => user._id);
+};
 
 // Global error handler middleware
 app.use((error, req, res, next) => {
