@@ -1,6 +1,15 @@
 <%- include('partials/private-header') %>
 
 <style>
+    .card-icon {
+        position: absolute;
+        top: 50%;
+        right: 20px; /* Adjust the right position as needed */
+        transform: translateY(-50%);
+        font-size: 2rem; /* Adjust the icon size */
+        color: #6c757d; /* Icon color */
+    }
+
     /* Modal valid message */
     .error-message {
         color: #ff3860;
@@ -67,6 +76,7 @@
                         <h3 class="number display-3 fw-bold"><%= totalVisitorsToday %></h3>
                         <p class="mb-0 lh-sm text-body-tertiary">Total Visitors Today</p>
                     </p>
+                    <i class="fa-solid fa-users fs-4 card-icon"></i>
                 </div>
             </div>
         </div>
@@ -77,6 +87,7 @@
                         <h3 class="number display-3 fw-bold"><%= timeInVisitorsToday %></h3>
                         <p class="mb-0 lh-sm text-body-tertiary">Visitors Time In Today</p>
                     </p>
+                    <i class="fa-solid fa-sign-in-alt fs-4 card-icon text-success"></i>
                 </div>
             </div>
         </div>
@@ -87,6 +98,7 @@
                         <h3 class="number display-3 fw-bold"><%= timeOutVisitorsToday %></h3>
                         <p class="mb-0 lh-sm text-body-tertiary">Visitors Time Out Today</p>
                     </p>
+                    <i class="fa-solid fa-sign-out-alt fs-4 card-icon text-danger"></i>
                 </div>
             </div>
         </div>

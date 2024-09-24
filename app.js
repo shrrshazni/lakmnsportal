@@ -3058,24 +3058,6 @@ app.get('/leave/history', isAuthenticated, async (req, res, next) => {
                 );
             });
         }
-        // let filteredApprovalLeaves;
-        // if (user.isAdmin) {
-        //     filteredApprovalLeaves = allLeave.filter(
-        //         leave => leave.status !== 'approved' && leave.status !== 'denied'
-        //     );
-        // } else {
-        //     filteredApprovalLeaves = allLeave.filter(leave => {
-        //         return (
-        //             leave.user.toString() !== user._id.toString() &&
-        //             leave.approvals.some(
-        //                 approval =>
-        //                     approval.recipient.toString() === user._id.toString() &&
-        //                     leave.status !== 'approved' &&
-        //                     leave.status !== 'denied'
-        //             )
-        //         );
-        //     });
-        // }
 
         // Collect unique departments and sections
         const uniqueDepartments = new Set();
@@ -6536,7 +6518,6 @@ app.get('/api/auxiliary-police/schedule/calendar-data', async (req, res, next) =
     }
 });
 
-
 // ============================
 // Super Admin
 // ============================
@@ -7055,18 +7036,18 @@ cron.schedule('* * * * *', async () => {
     timezone: 'Asia/Kuala_Lumpur'
 });
 
-cron.schedule('* * * * *', async () => {
-    console.log('Running cron job to create patrol unit sessions');
+// cron.schedule('* * * * *', async () => {
+//     console.log('Running cron job to create patrol unit sessions');
 
-    try {
+//     try {
 
-    } catch (error) {
-        console.error('Error removing expired sessions:', error);
-    }
-}, {
-    scheduled: true,
-    timezone: 'Asia/Kuala_Lumpur'
-});
+//     } catch (error) {
+//         console.error('Error removing expired sessions:', error);
+//     }
+// }, {
+//     scheduled: true,
+//     timezone: 'Asia/Kuala_Lumpur'
+// });
 
 // Scheduler to update attendance at midnight
 cron.schedule('0 0 * * *', () => {
@@ -7126,28 +7107,28 @@ cron.schedule('0 8 * * *', () => {
 });
 
 // Scheduler to close patrol reports at 5 PM
-cron.schedule('0 17 * * *', async () => {
-    console.log('Running cron job to update patrol unit status to Closed');
+// cron.schedule('0 17 * * *', async () => {
+//     console.log('Running cron job to update patrol unit status to Closed');
 
-    try {
-        const dateToday = moment().utcOffset(8).startOf('day').toDate();
+//     try {
+//         const dateToday = moment().utcOffset(8).startOf('day').toDate();
 
-        const patrolUnit = await PatrolAux.findOneAndUpdate(
-            { date: dateToday, status: 'Open' },
-            { $set: { status: 'Closed' } }
-        );
+//         const patrolUnit = await PatrolAux.findOneAndUpdate(
+//             { date: dateToday, status: 'Open' },
+//             { $set: { status: 'Closed' } }
+//         );
 
-        console.log(patrolUnit ? `Patrol Reports for date ${dateToday} updated and closed at 5 PM` : 'Failed to update patrol reports');
-    } catch (error) {
-        console.error('Error in scheduled task at 5 PM:', error);
-    }
-}, {
-    scheduled: true,
-    timezone: 'Asia/Kuala_Lumpur'
-});
+//         console.log(patrolUnit ? `Patrol Reports for date ${dateToday} updated and closed at 5 PM` : 'Failed to update patrol reports');
+//     } catch (error) {
+//         console.error('Error in scheduled task at 5 PM:', error);
+//     }
+// }, {
+//     scheduled: true,
+//     timezone: 'Asia/Kuala_Lumpur'
+// });
 
 // Function to submit patrol unit data
-const scheduler = async (data) => {
+const createPatrolUnit = async (data) => {
     try {
         const submitData = await PatrolAux.create(data);
         console.log(submitData ? 'Patrol unit submitted' : 'Error submitting patrol unit');
@@ -8242,14 +8223,13 @@ const generateApprovals = (
 // * Leave request
 // * Helper function to check leave balance and set errors if insufficient
 const checkLeaveBalance = (leaveBalance, numberOfDays, minDays = 0, renderDataError) => {
-    if (leaveBalance < numberOfDays || numberOfDays <= minDays) {
+    if (leaveBalance < numberOfDays || numberOfDays < minDays) {
         renderDataError.show = 'show';
         renderDataError.alert = 'Insufficient balance for the requested duration';
         return false;
     }
     return true;
 };
-
 // * Leave request
 // * Helper function to check if files are attached
 const checkFileAttachment = async (uuid, renderDataError, errorMessage = 'File attachment is required!') => {
@@ -8270,6 +8250,8 @@ const processLeaveRequest = async (type, user, userLeave, startDate, returnDate,
     let leaveBalance, leaveTaken;
     let renderDataError = { show: '', alert: '' };
     let approvals = null;
+
+    console.log(amountDayRequest);
 
     // Helper function to map leave type names to userLeave keys
     const getUserLeaveKey = (leaveType) => {
@@ -8397,7 +8379,8 @@ const processLeaveRequest = async (type, user, userLeave, startDate, returnDate,
             leaveBalance = type === 'Sick Leave'
                 ? userLeave.sick.leave - userLeave.sick.taken
                 : userLeave.sickExtended.leave - userLeave.sickExtended.taken;
-            if (checkLeaveBalance(leaveBalance, numberOfDays, 1, renderDataError) && amountDayRequest <= 1 && amountDayRequest >= -5) {
+            console.log(checkLeaveBalance(leaveBalance, numberOfDays, 1, renderDataError));
+            if (checkLeaveBalance(leaveBalance, numberOfDays, 1, renderDataError) && amountDayRequest <= 1) {
                 if (await checkFileAttachment(uuid, renderDataError, `There is no file attached for ${type.toLowerCase()}!`)) {
                     approvals = generateApprovals(
                         user,
@@ -8411,6 +8394,7 @@ const processLeaveRequest = async (type, user, userLeave, startDate, returnDate,
                         type,
                         startDate
                     );
+                    console.log('This is the approvals for sick leave and extended sick leave', approvals);
                     return { approvals, renderDataError };
                 }
             } else {
@@ -9041,10 +9025,19 @@ const calculateBusinessDays = (startDateString, endDateString) => {
     let start = moment(startDateString).startOf('day');
     let end = moment(endDateString).startOf('day');
 
+    // If start and end are the same day
+    if (start.isSame(end, 'day')) {
+        // Check if it's a business day (Mon-Fri) and not a public holiday
+        if (start.day() >= 1 && start.day() <= 5 && !isPublicHoliday(start.toDate(), allPublicHolidays)) {
+            return 1; // 1 business day
+        } else {
+            return 0; // Not a business day
+        }
+    }
+
     // Determine the increment direction based on whether start is before or after end
     const increment = start.isBefore(end) ? 1 : -1;
 
-    // Swap start and end if end is before start, so we can loop consistently
     let earlier = increment === 1 ? start : end;
     let later = increment === 1 ? end : start;
 
