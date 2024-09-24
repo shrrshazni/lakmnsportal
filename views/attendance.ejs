@@ -1,154 +1,639 @@
 <%- include('partials/public-header') %>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hijri-date/1.0.3/hijri-date.min.js"></script>
+
+<script>
+  // take the root of the colour from css for echarts
+  const style = getComputedStyle(document.body);
+  const theme = {
+    primary: style.getPropertyValue('--phoenix-primary'),
+    secondary: style.getPropertyValue('--phoenix-secondary'),
+    success: style.getPropertyValue('--phoenix-success'),
+    info: style.getPropertyValue('--phoenix-info'),
+    warning: style.getPropertyValue('--phoenix-warning'),
+    danger: style.getPropertyValue('--phoenix-danger'),
+    bg_primary_subtle: style.getPropertyValue('--phoenix-primary-bg-subtle'),
+    tertiary: style.getPropertyPriority('--phoenix-tertiary-color'),
+    light: style.getPropertyValue('--phoenix-light'),
+    dark: style.getPropertyValue('--phoenix-dark'),
+    secondary_subtle: style.getPropertyValue('--phoenix-secondary-border-subtle'),
+    cyan: style.getPropertyValue('--phoenix-cyan'),
+    gray_100: style.getPropertyValue('--phoenix-gray-100')
+
+  };
+
+  //   take css class color based on their property color/bg-colour for echarts
+  function getColor(className, property) {
+    var element = document.createElement('div');
+    element.className = className;
+    document.body.appendChild(element);
+
+    var computedStyle = window.getComputedStyle(element);
+    var color = computedStyle.getPropertyValue(property);
+
+    document.body.removeChild(element);
+
+    return color;
+  }
+</script>
+
 <style>
-  body,
-  html {
-    height: 100%;
-    /* Full height for the body and html */
+  /* Custom colors */
+  :root {
+    --phoenix-blue: #3874ff;
+    --phoenix-indigo: #6610f2;
+    --phoenix-purple: #6f42c1;
+    --phoenix-pink: #d63384;
+    --phoenix-red: #ec1f00;
+    --phoenix-orange: #e5780b;
+    --phoenix-yellow: #ffc107;
+    --phoenix-green: #25b003;
+    --phoenix-teal: #20c997;
+    --blur: 20px;
+    --image: url('https://s3-us-west-2.amazonaws.com/s.cdpn.io/1376484/jess-harding-lqT6NAmTaiY-unsplash.jpg');
   }
 
-  .full-height {
+  #glow-card {
+    transition: background 0.8s ease-in-out;
+  }
+
+  /* Full-page glass background effect */
+  /* .glass-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
     height: 100vh;
-    /* Full viewport height for centering */
-    overflow: hidden !important;
-    /* Hide any overflow */
+    background-image: var(--image);
+    background-size: cover;
+    background-position: center;
+    filter: blur(var(--blur));
+    z-index: -5;
+  } */
+
+  :root {
+    --diameter: 45vmax;
   }
 
-  .card-blurred.card {
-    background-color: rgba(255, 255, 255, 0.95);
+
+  #qrblock {
+    position: relative;
+    /* Set position relative for absolute positioning of glow elements */
+    overflow: hidden;
+    /* Ensure glow doesn't overflow outside the block */
   }
 
-  @supports (-webkit-backdrop-filter: none) or (backdrop-filter: none) {
-    .card-blurred.card {
-      -webkit-backdrop-filter: blur(25px) saturate(150%);
-      backdrop-filter: blur(25px) saturate(150%);
-      background-color: rgba(255, 255, 255, 0.5);
+  .glow-1 {
+    position: absolute;
+    width: .001vmin;
+    height: .001vmin;
+    border-radius: 50%;
+    opacity: .25;
+    box-shadow: 0 0 var(--diameter) var(--diameter) magenta;
+    animation: hue 10s 0s linear infinite, move1 19s 0s linear infinite;
+    z-index: -1;
+  }
+
+  .glow-2 {
+    position: absolute;
+    width: .001vmin;
+    height: .001vmin;
+    border-radius: 50%;
+    opacity: .25;
+    box-shadow: 0 0 var(--diameter) var(--diameter) white;
+    animation: hue 15s 0s linear infinite, move2 25s 0s linear infinite;
+    z-index: -1;
+  }
+
+  .glow-3 {
+    position: absolute;
+    width: .001vmin;
+    height: .001vmin;
+    border-radius: 50%;
+    opacity: .2;
+    box-shadow: 0 0 var(--diameter) var(--diameter) cyan;
+    animation: hue 20s 0s linear infinite, move3 15s 0s linear infinite;
+    z-index: -1;
+  }
+
+  @keyframes hue {
+    0% {
+      filter: hue-rotate(0deg);
     }
+
+    100% {
+      filter: hue-rotate(360deg);
+    }
+  }
+
+  @keyframes move1 {
+    0% {
+      top: 0vh;
+      left: 50vw;
+    }
+
+    25% {
+      left: 0vw;
+    }
+
+    50% {
+      top: 100vh;
+    }
+
+    75% {
+      left: 100vw;
+    }
+
+    100% {
+      top: 0vh;
+      left: 50vw;
+    }
+  }
+
+  @keyframes move2 {
+    0% {
+      top: 50vh;
+      left: 100vw;
+    }
+
+    25% {
+      top: 100vh;
+    }
+
+    50% {
+      left: 0vw;
+    }
+
+    75% {
+      top: 0vh;
+    }
+
+    100% {
+      top: 50vh;
+      left: 100vw;
+    }
+  }
+
+  @keyframes move3 {
+    0% {
+      top: 100vh;
+      left: 50vw;
+    }
+
+    25% {
+      left: 100vw;
+    }
+
+    50% {
+      top: 0vh;
+    }
+
+    75% {
+      left: 0vw;
+    }
+
+    100% {
+      top: 100vh;
+      left: 50vw;
+    }
+  }
+
+  .floating-icon {
+    display: inline-block;
+    /* Ensure the icon can be transformed */
+    animation: float 3s ease-in-out infinite;
+    /* Apply the animation */
+  }
+
+  @keyframes float {
+
+    0%,
+    100% {
+      transform: translateY(7.5px);
+      /* Start and end at original position */
+    }
+
+    50% {
+      transform: translateY(-2.5px);
+      /* Move up 10px at the midpoint */
+    }
+  }
+
+  /* Main container for the clock */
+  .clock {
+    position: relative;
+    width: 325px;
+    height: 325px;
+    border: 7.5px solid white;
+    /* White outline */
+    border-radius: 50%;
+    background: transparent;
+    /* Transparent background */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* Clock center dot */
+  .clock::after {
+    content: '';
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background-color: white;
+    /* Center dot */
+    border-radius: 50%;
+    z-index: 10;
+  }
+
+  /* Common hand styles */
+  .hand {
+    position: absolute;
+    width: 50%;
+    height: 2px;
+    background-color: white;
+    /* White outline for hands */
+    top: 50%;
+    left: 50%;
+    transform-origin: 0 50%;
+    /* Rotation point at the center of the clock */
+    transform: rotate(90deg);
+    /* Initial rotation */
+  }
+
+  /* Hour hand */
+  .hour {
+    height: 4px;
+    width: 32%;
+    border-radius: 5px;
+  }
+
+  /* Minute hand */
+  .minute {
+    height: 3.2px;
+    width: 40%;
+    border-radius: 5px;
+  }
+
+  /* Second hand */
+  .second {
+    height: 2px;
+    width: 45%;
+    background-color: red;
+    /* Different color for seconds */
+    border-radius: 10px;
+  }
+
+  /* Hour number styles */
+  .hour-number {
+    position: absolute;
+    color: white;
+    /* White text color */
+    font-size: 24px;
+    /* Adjust size as needed */
+    transform: translate(-50%, -50%);
+    /* Center the number */
+    text-align: center;
+    /* Center align the text */
   }
 </style>
 
-<div class="d-flex justify-content-center align-items-center full-height p-5 bg-primary">
-  <div class="card card-blurred h-100 w-100 text-center">
-    <div class="card-body row g-3">
-      <div class="col-12 py-5">
-        <h1>Good Afternoon</h1>
-      </div>
+<div class="" id="bg-glow">
+  <div class="glow-1"></div>
+  <div class="glow-2"></div>
+  <div class="glow-3"></div>
+</div>
 
-      <div class="col-6">
-        <div class="p-5 order-md-0" id="glow-card">
-          <div class="card" style="min-height: 25vh;min-width: 40vw;">
-            <div class="card-body">
+<div class="d-lg-flex d-block justify-content-center align-items-center z-5 row g-0" style="min-height: 90vh;">
 
-              <img id="qrCode" class="w-100 h-100">
+  <div class="col-12">
+    <h1 class="fs-3 fs-md-3 fs-xxl-2 text-center mt-10">
+      <i class="fs-1" id="greeting-icon"></i>
+      <span id="greeting-message">Good Morning</span>
+    </h1>
 
-              <script>
-                document.addEventListener('DOMContentLoaded', function() {
-                  let previousQRData = null;
+    <script>
+      function updateGreeting() {
+        // Create a new Date object to get the current time
+        const currentTime = new Date();
+        const hours = currentTime.getHours();
 
-                  async function updateQRCode() {
-                    try {
-                      // Generate a new QR code
-                      const response = await fetch('/api/qrcode/generate');
-                      if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                      }
-                      const data = await response.json();
+        // Get the icon and message elements
+        const greetingIcon = document.getElementById('greeting-icon');
+        const greetingMessage = document.getElementById('greeting-message');
 
-                      // Update the src attribute of the QR code image
-                      document.getElementById('qrCode').src = data.qrCodeImage;
+        // Determine the greeting and icon based on the hour
+        if (hours < 12) {
+          greetingIcon.className = 'bi bi-brightness-alt-high-fill floating-icon'; // Morning icon
+          greetingMessage.textContent = 'Good Morning';
+        } else if (hours < 17) {
+          greetingIcon.className = 'bi bi-brightness-high-fill floating-icon'; // Afternoon icon (change this to your preferred icon)
+          greetingMessage.textContent = 'Good Afternoon';
+        } else {
+          greetingIcon.className = 'bi bi-moon-stars-fill floating-icon'; // Evening icon (change this to your preferred icon)
+          greetingMessage.textContent = 'Good Evening';
+        }
+      }
 
-                      // Save the previous QR code data
-                      if (previousQRData) {
-                        await saveQRData(previousQRData);
-                      }
+      // Call the function to set the initial greeting
+      updateGreeting();
 
-                      // Update the previous QR data to the new one
-                      previousQRData = data.uniqueIdentifier;
+      // Update the greeting every hour (3600000 milliseconds)
+      setInterval(updateGreeting, 3600000);
 
-                      console.log('QR code updated successfully');
-                    } catch (error) {
-                      console.error('Error updating QR code:', error);
-                    }
-                  }
+      // Optional: To ensure it updates immediately if the page is loaded close to a time change
+      const currentTime = new Date();
+      const millisecondsUntilNextHour = (60 - currentTime.getMinutes()) * 60 * 1000 - currentTime.getSeconds() * 1000;
+      setTimeout(updateGreeting, millisecondsUntilNextHour);
+    </script>
+  </div>
 
-                  updateQRCode();
-                  setInterval(updateQRCode, 10000);
+  <div class="py-5 px-2 px-xl-5 mb-0 order-xl-1 order-md-1 col-12 col-md-6">
 
-                  async function saveQRData(qrData) {
-                    try {
-                      // Perform any actions to save the QR code data here
-                      // console.log('Saving QR code data:', qrData);
+    <div class="px-2 py-10">
 
-                      const response = await fetch('/api/qrcode/save-data', {
-                        method: 'POST',
-                        headers: {
-                          'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                          qrData: qrData
-                        })
-                      });
-
-                      if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                      }
-
-                      // console.log('QR code data successfully saved');
-                    } catch (error) {
-                      console.error('Error saving QR code data:', error);
-                    }
-                  }
-
-                  async function fetchLatestScannedData() {
-                    fetch('/api/qrcode/get-latest') // Fetch attendance data for today within a specific time range
-                      .then(response => response.json())
-                      .then(data => {
-                        const glow = document.getElementById('glow-card');
-
-                        if (data.temp === null) {
-                          console.log('No data found');
-                        } else {
-                          // Check attendance type
-                          if (data.temp.type === 'sign out') {
-                            glow.classList.remove('glow-wrapper-1');
-                            glow.classList.add('glow-wrapper-2');
-                          } else {
-                            glow.classList.remove('glow-wrapper-2');
-                            glow.classList.add('glow-wrapper-1');
-                          }
-
-                          // Keep the glow effect for 2 seconds, then remove it
-                          setTimeout(function() {
-                            glow.classList.remove('glow-wrapper-1', 'glow-wrapper-2');
-                          }, 4000); // Glow for 2 seconds
-                        }
-                      })
-                      .catch(error => {
-                        console.error('Error fetching latest scanned data:', error);
-                      });
-                  }
-
-                  // Call the function to fetch latest scanned data immediately
-                  fetchLatestScannedData();
-
-                  // Set interval to fetch data every 4.5 seconds
-                  setInterval(fetchLatestScannedData, 4500);
-
-                });
-              </script>
-
-            </div>
-          </div>
+      <div class="mt-n10">
+        <!-- Clock Container -->
+        <div class="clock mx-auto mb-12">
+          <div class="hand hour" id="hour"></div>
+          <div class="hand minute" id="minute"></div>
+          <div class="hand second" id="second"></div>
+          <div class="hour-number" style="top: 6%; left: 50%;">١٢</div>
+          <div class="hour-number" style="top: 12%; left: 72%;">١</div>
+          <div class="hour-number" style="top: 28%; left: 88%;">٢</div>
+          <div class="hour-number" style="top: 50%; left: 95%;">٣</div>
+          <div class="hour-number" style="top: 75%; left: 87%;">٤</div>
+          <div class="hour-number" style="top: 91%; left: 70%;">٥</div>
+          <div class="hour-number" style="top: 95%; left: 50%;">٦</div>
+          <div class="hour-number" style="top: 88%; left: 28%;">٧</div>
+          <div class="hour-number" style="top: 71%; left: 11%;">٨</div>
+          <div class="hour-number" style="top: 50%; left: 5%;">٩</div>
+          <div class="hour-number" style="top: 25%; left: 15%;">١٠</div>
+          <div class="hour-number" style="top: 12%; left: 30%;">١١</div>
         </div>
       </div>
 
-      <div class="col-6">
-        <div class="p-5">
-          <h1>Hello 3</h1>
+      <div class="text-center" style="min-width: 25vw;">
+        <h2 class="fs-3 fs-md-2 fs-xxl-1 fst-italic" id="currentTime"></h2>
+
+        <script>
+          function updateClockHands(hours, minutes, seconds) {
+            // Calculate the rotation ratios
+            const hourRatio = (hours % 12) / 12 + (minutes / 60) / 12;
+            const minuteRatio = (minutes / 60) + (seconds / 3600); // Minute hand moves with seconds
+            const secondRatio = seconds / 60; // Second hand moves each second
+
+            // Update the hands' rotation based on the calculated ratios
+            document.getElementById('hour').style.transform = `rotate(${(hourRatio * 360) - 90}deg)`;
+            document.getElementById('minute').style.transform = `rotate(${(minuteRatio * 360) - 90}deg)`;
+            document.getElementById('second').style.transform = `rotate(${(secondRatio * 360) - 90}deg)`;
+          }
+
+          function updateTime() {
+            // Create a new Date object to get the current time
+            var currentTime = new Date();
+
+            // Get the hours, minutes, and seconds
+            var hours = currentTime.getUTCHours() + 8; // Adjust for UTC+8
+            var minutes = currentTime.getUTCMinutes();
+            var seconds = currentTime.getUTCSeconds();
+
+            // Make sure the hours stay within 24-hour format
+            if (hours >= 24) {
+              hours -= 24; // Wrap around if needed
+            }
+
+            // Add leading zeros if the numbers are less than 10
+            hours = (hours < 10) ? '0' + hours : hours;
+            minutes = (minutes < 10) ? '0' + minutes : minutes;
+            seconds = (seconds < 10) ? '0' + seconds : seconds;
+
+            // Construct the time string in HH:MM:SS format
+            var timeString = hours + ':' + minutes + ':' + seconds + ' UTC+8';
+
+            // Update the content of the <h3> element with the current time
+            document.getElementById('currentTime').textContent = timeString;
+
+            // Update the clock hands based on the time
+            updateClockHands(parseInt(hours), minutes, seconds);
+          }
+
+          // Call updateTime function initially to set the time immediately
+          updateTime();
+
+          // Update the time every second
+          setInterval(updateTime, 1000);
+        </script>
+      </div>
+
+      <div class="d-flex justify-content-center">
+        <!-- <div class="text-center">
+          <h2 id="dayName" class="fs-6 fs-md-6 fs-xxl-6 mb-3"></h2>
+
+          <script>
+            // Function to get the current day name based on Asia/Kuala_Lumpur timezone
+            function updateDayName() {
+              // Get the current date and time in Asia/Kuala_Lumpur timezone
+              const today = new Date().toLocaleString("en-US", {
+                timeZone: "Asia/Kuala_Lumpur"
+              });
+
+              // Create a new Date object with the localized time
+              const localDate = new Date(today);
+
+              // Create an array of day names
+              const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+              // Get the day name based on the localized day
+              const dayName = dayNames[localDate.getDay()];
+
+              // Display the day name in the <h2> element
+              document.getElementById("dayName").textContent = dayName;
+            }
+
+            // Initial call to display the current day name
+            updateDayName();
+
+            // Set interval to refresh the day name every hour (3600000 milliseconds = 1 hour)
+            setInterval(updateDayName, 3600000);
+          </script>
+        </div> -->
+
+        <div class="text-center fst-italic">
+          <h2 class="fs-6 fs-md-6 fs-xxl-6" id="current-date"></h2>
+          <!-- <h3 class="fs-6 fs-md-6 fs-xxl-6" id="current-islamic-date"></h3> -->
+
+          <script>
+            function getOrdinalSuffix(day) {
+              if (day > 3 && day < 21) return 'th'; // Special case for 11th to 19th
+              switch (day % 10) {
+                case 1:
+                  return 'st';
+                case 2:
+                  return 'nd';
+                case 3:
+                  return 'rd';
+                default:
+                  return 'th';
+              }
+            }
+
+            function updateDate() {
+              const now = new Date();
+
+              // Get Gregorian date
+              const day = now.getDate();
+              const ordinalSuffix = getOrdinalSuffix(day);
+              const formattedDay = `${day}${ordinalSuffix}`;
+
+              // Get month and year for Gregorian
+              const options = {
+                month: 'long',
+                year: 'numeric'
+              };
+              const formattedMonthYear = now.toLocaleDateString('en-US', options);
+
+              // Combine the formatted day with month and year
+              const formattedDate = `${formattedDay} ${formattedMonthYear}`;
+              document.getElementById('current-date').innerText = formattedDate;
+
+              // Convert the current date to Islamic date
+              const hijri = new HijriDate(now.getFullYear(), now.getMonth() + 1, now.getDate());
+              const hijriYear = hijri.getFullYear();
+              const hijriMonth = hijri.getMonth();
+              const hijriDay = hijri.getDate();
+
+              // Islamic month names
+              const islamicMonths = [
+                "Muharram", "Safar", "Rabiʻ I", "Rabiʻ II", "Jumada I", "Jumada II",
+                "Rajab", "Shaʻban", "Ramadan", "Shawwal", "Dhu al-Qiʻdah", "Dhu al-Hijjah"
+              ];
+
+              // Format Islamic date as "Month Day, Year AH"
+              const formattedIslamicDate = `${islamicMonths[hijriMonth]} ${hijriDay}, ${hijriYear} AH`;
+              document.getElementById('current-islamic-date').innerText = `Islamic Date: ${formattedIslamicDate}`;
+              console.log(formattedIslamicDate);
+            }
+
+            // Update the date initially
+            updateDate();
+
+            // Set an interval to update the date every hour
+            setInterval(updateDate, 60 * 60 * 1000); // 60 minutes * 60 seconds * 1000 milliseconds
+          </script>
+
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="p-5 col-12 col-md-6">
+    <div class="order-md-0">
+      <div class="bg-white rounded-5" style="min-height: 25vh;min-width: 45vw;" id="qrblock">
+        <div class="p-2">
+
+          <div class="rounded-5" id="glow-card">
+            <div class="p-2">
+              <img id="qrCode" class="w-100 h-100">
+            </div>
+          </div>
+
+          <script>
+            document.addEventListener('DOMContentLoaded', function() {
+              let previousQRData = null;
+
+              async function updateQRCode() {
+                try {
+                  // Generate a new QR code
+                  const response = await fetch('/api/qrcode/generate');
+                  if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                  }
+                  const data = await response.json();
+
+                  // Update the src attribute of the QR code image
+                  document.getElementById('qrCode').src = data.qrCodeImage;
+
+                  // Save the previous QR code data
+                  if (previousQRData) {
+                    await saveQRData(previousQRData);
+                  }
+
+                  // Update the previous QR data to the new one
+                  previousQRData = data.uniqueIdentifier;
+
+                  console.log('QR code updated successfully');
+                } catch (error) {
+                  console.error('Error updating QR code:', error);
+                }
+              }
+
+              updateQRCode();
+              setInterval(updateQRCode, 15000);
+
+              async function saveQRData(qrData) {
+                try {
+                  // Perform any actions to save the QR code data here
+                  // console.log('Saving QR code data:', qrData);
+
+                  const response = await fetch('/api/qrcode/save-data', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                      qrData: qrData
+                    })
+                  });
+
+                  if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                  }
+
+                  // console.log('QR code data successfully saved');
+                } catch (error) {
+                  console.error('Error saving QR code data:', error);
+                }
+              }
+
+              async function fetchLatestScannedData() {
+                fetch('/api/qrcode/get-latest') // Fetch attendance data for today within a specific time range
+                  .then(response => response.json())
+                  .then(data => {
+                    const glow = document.getElementById('bg-glow');
+
+                    if (data.temp === null) {
+                      console.log('No data found');
+                    } else {
+                      glow.classList.remove('d-none');
+
+                      // Keep the glow effect for 2 seconds, then remove it
+                      setTimeout(function() {
+                        glow.classList.add('d-none');
+                      }, 4000); // Glow for 2 seconds
+                    }
+                  })
+                  .catch(error => {
+                    console.error('Error fetching latest scanned data:', error);
+                  });
+              }
+
+              // Call the function to fetch latest scanned data immediately
+              fetchLatestScannedData();
+
+              // Set interval to fetch data every 4.5 seconds
+              setInterval(fetchLatestScannedData, 4500);
+
+            });
+          </script>
+
         </div>
       </div>
     </div>
   </div>
+
 </div>
 
-<%- include('partials/public-footer.ejs') %>
+<%- include('partials/public-footer') %>

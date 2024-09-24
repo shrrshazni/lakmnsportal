@@ -92,6 +92,8 @@
   <script src="https://cdn.jsdelivr.net/npm/dayjs@1.10.7/dist/dayjs.min.js"></script>
   <!-- calendar -->
   <link href="vendors/fullcalendar/main.min.css" rel="stylesheet" />
+  <!-- bootstrap icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
@@ -744,25 +746,28 @@
 
               <!-- VMS -->
               <div class="nav-item-wrapper"><a class="nav-link dropdown-indicator label-1" href="#nv-visitor" role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-tables">
-                <div class="d-flex align-items-center">
-                  <div class="dropdown-indicator-icon"><span class="fas fa-caret-right"></span></div><span class="nav-link-icon"><span data-feather="sun"></span></span><span class="nav-link-text">VMS</span>
-                </div></a>
+                  <div class="d-flex align-items-center">
+                    <div class="dropdown-indicator-icon"><span class="fas fa-caret-right"></span></div><span class="nav-link-icon"><span data-feather="sun"></span></span><span class="nav-link-text">VMS</span>
+                  </div>
+                </a>
                 <div class="parent-wrapper label-1">
                   <ul class="nav collapse parent" data-bs-parent="#navbarVerticalCollapse" id="nv-visitor">
                     <li class="collapsed-nav-item-title d-none">VMS</li>
                     <li class="nav-item"><a class="nav-link" href="/visitor/list" data-bs-toggle="" aria-expanded="false">
-                      <div class="d-flex align-items-center">
-                        <span class="nav-link-text">Visitor List</span>
-                      </div></a>
+                        <div class="d-flex align-items-center">
+                          <span class="nav-link-text">Visitor List</span>
+                        </div>
+                      </a>
                     </li>
                     <li class="nav-item d-none"><a class="nav-link" href="/visitor/overview" data-bs-toggle="" aria-expanded="false">
-                      <div class="d-flex align-items-center">
-                        <span class="nav-link-text">Visitor Overview</span>
-                      </div></a>
+                        <div class="d-flex align-items-center">
+                          <span class="nav-link-text">Visitor Overview</span>
+                        </div>
+                      </a>
                     </li>
                   </ul>
                 </div>
-               </div>
+              </div>
 
               <!-- multi level example-->
               <div class="nav-item-wrapper d-none"><a class="nav-link dropdown-indicator label-1" href="#nv-multi-level" role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-multi-level">
@@ -943,7 +948,7 @@
       <div class="navbar-logo">
 
         <button class="btn navbar-toggler navbar-toggler-humburger-icon hover-bg-transparent" type="button" data-bs-toggle="collapse" data-bs-target="#navbarVerticalCollapse" aria-controls="navbarVerticalCollapse" aria-expanded="false" aria-label="Toggle Navigation"><span class="navbar-toggle-icon"><span class="toggle-line"></span></span></button>
-        <a class="navbar-brand navbar-brand notranslate" href="/">my<span class="text-body-highlight d-none d-sm-inline">lakmns</span></a>
+        <a class="navbar-brand navbar-brand notranslate fw-bold" href="/">my<span class="text-body-highlight d-inline">lakmns</span></a>
       </div>
       <ul class="navbar-nav navbar-nav-icons flex-row">
 

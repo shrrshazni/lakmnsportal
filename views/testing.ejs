@@ -1,5 +1,7 @@
 <%- include('partials/public-header') %>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hijri-date/1.0.3/hijri-date.min.js"></script>
+
 <script>
   // take the root of the colour from css for echarts
   const style = getComputedStyle(document.body);
@@ -55,82 +57,6 @@
     transition: background 0.8s ease-in-out;
   }
 
-  .glow-wrapper-1 {
-    /* No radius to affect card */
-    /* Adjust padding to control glow width */
-  }
-
-  .glow-wrapper-1::before {
-    content: '';
-    background: linear-gradient(45deg,
-        var(--phoenix-green),
-        var(--phoenix-yellow),
-        var(--phoenix-green));
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-size: 400%;
-    z-index: -1;
-    filter: blur(15px);
-    animation: glowing 20s linear infinite;
-    border-radius: inherit;
-  }
-
-  .glow-wrapper-1 .card {
-    position: relative;
-    z-index: 1;
-    /* Ensure card content is above the glow */
-  }
-
-  .glow-wrapper-2 {
-    position: relative;
-    display: inline-block;
-    border-radius: 0;
-    /* No radius to affect card */
-    padding: 4px;
-    /* Adjust padding to control glow width */
-  }
-
-  .glow-wrapper-2::before {
-    content: '';
-    background: linear-gradient(45deg,
-        var(--phoenix-red),
-        var(--phoenix-yellow),
-        var(--phoenix-red));
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-size: 400%;
-    z-index: -1;
-    filter: blur(20px);
-    animation: glowing 20s linear infinite;
-    border-radius: inherit;
-  }
-
-  .glow-wrapper-2 .card {
-    position: relative;
-    z-index: 1;
-    /* Ensure card content is above the glow */
-  }
-
-  @keyframes glowing {
-    0% {
-      background-position: 0 0;
-    }
-
-    50% {
-      background-position: 400% 0;
-    }
-
-    100% {
-      background-position: 0 0;
-    }
-  }
-
   /* Full-page glass background effect */
   /* .glass-background {
     position: fixed;
@@ -147,6 +73,14 @@
 
   :root {
     --diameter: 45vmax;
+  }
+
+
+  #qrblock {
+    position: relative;
+    /* Set position relative for absolute positioning of glow elements */
+    overflow: hidden;
+    /* Ensure glow doesn't overflow outside the block */
   }
 
   .glow-1 {
@@ -263,34 +197,211 @@
       left: 50vw;
     }
   }
+
+  .floating-icon {
+    display: inline-block;
+    /* Ensure the icon can be transformed */
+    animation: float 3s ease-in-out infinite;
+    /* Apply the animation */
+  }
+
+  @keyframes float {
+
+    0%,
+    100% {
+      transform: translateY(7.5px);
+      /* Start and end at original position */
+    }
+
+    50% {
+      transform: translateY(-2.5px);
+      /* Move up 10px at the midpoint */
+    }
+  }
+
+  /* Main container for the clock */
+  .clock {
+    position: relative;
+    width: 325px;
+    height: 325px;
+    border: 7.5px solid white;
+    /* White outline */
+    border-radius: 50%;
+    background: transparent;
+    /* Transparent background */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* Clock center dot */
+  .clock::after {
+    content: '';
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background-color: white;
+    /* Center dot */
+    border-radius: 50%;
+    z-index: 10;
+  }
+
+  /* Common hand styles */
+  .hand {
+    position: absolute;
+    width: 50%;
+    height: 2px;
+    background-color: white;
+    /* White outline for hands */
+    top: 50%;
+    left: 50%;
+    transform-origin: 0 50%;
+    /* Rotation point at the center of the clock */
+    transform: rotate(90deg);
+    /* Initial rotation */
+  }
+
+  /* Hour hand */
+  .hour {
+    height: 4px;
+    width: 32%;
+    border-radius: 5px;
+  }
+
+  /* Minute hand */
+  .minute {
+    height: 3.2px;
+    width: 40%;
+    border-radius: 5px;
+  }
+
+  /* Second hand */
+  .second {
+    height: 2px;
+    width: 45%;
+    background-color: red;
+    /* Different color for seconds */
+    border-radius: 10px;
+  }
+
+  /* Hour number styles */
+  .hour-number {
+    position: absolute;
+    color: white;
+    /* White text color */
+    font-size: 24px;
+    /* Adjust size as needed */
+    transform: translate(-50%, -50%);
+    /* Center the number */
+    text-align: center;
+    /* Center align the text */
+  }
 </style>
 
-<!-- <div class="glow-1"></div>
-<div class="glow-2"></div>
-<div class="glow-3"></div> -->
+<div class="" id="bg-glow">
+  <div class="glow-1"></div>
+  <div class="glow-2"></div>
+  <div class="glow-3"></div>
+</div>
 
 <div class="d-lg-flex d-block justify-content-center align-items-center z-5 row g-0" style="min-height: 90vh;">
 
   <div class="col-12">
-    <h1 class="fs-3 fs-md-3 fs-xxl-2 text-center mt-10"><span>Sun logo</span> Good Afternoon</h1>
+    <h1 class="fs-3 fs-md-3 fs-xxl-2 text-center mt-10">
+      <i class="fs-1" id="greeting-icon"></i>
+      <span id="greeting-message">Good Morning</span>
+    </h1>
+
+    <script>
+      function updateGreeting() {
+        // Create a new Date object to get the current time
+        const currentTime = new Date();
+        const hours = currentTime.getHours();
+
+        // Get the icon and message elements
+        const greetingIcon = document.getElementById('greeting-icon');
+        const greetingMessage = document.getElementById('greeting-message');
+
+        // Determine the greeting and icon based on the hour
+        if (hours < 12) {
+          greetingIcon.className = 'bi bi-brightness-alt-high-fill floating-icon'; // Morning icon
+          greetingMessage.textContent = 'Good Morning';
+        } else if (hours < 17) {
+          greetingIcon.className = 'bi bi-brightness-high-fill floating-icon'; // Afternoon icon (change this to your preferred icon)
+          greetingMessage.textContent = 'Good Afternoon';
+        } else {
+          greetingIcon.className = 'bi bi-moon-stars-fill floating-icon'; // Evening icon (change this to your preferred icon)
+          greetingMessage.textContent = 'Good Evening';
+        }
+      }
+
+      // Call the function to set the initial greeting
+      updateGreeting();
+
+      // Update the greeting every hour (3600000 milliseconds)
+      setInterval(updateGreeting, 3600000);
+
+      // Optional: To ensure it updates immediately if the page is loaded close to a time change
+      const currentTime = new Date();
+      const millisecondsUntilNextHour = (60 - currentTime.getMinutes()) * 60 * 1000 - currentTime.getSeconds() * 1000;
+      setTimeout(updateGreeting, millisecondsUntilNextHour);
+    </script>
   </div>
 
   <div class="py-5 px-2 px-xl-5 mb-0 order-xl-1 order-md-1 col-12 col-md-6">
 
     <div class="px-2 py-10">
 
+      <div class="mt-n10">
+        <!-- Clock Container -->
+        <div class="clock mx-auto mb-12">
+          <div class="hand hour" id="hour"></div>
+          <div class="hand minute" id="minute"></div>
+          <div class="hand second" id="second"></div>
+          <div class="hour-number" style="top: 6%; left: 50%;">١٢</div>
+          <div class="hour-number" style="top: 12%; left: 72%;">١</div>
+          <div class="hour-number" style="top: 28%; left: 88%;">٢</div>
+          <div class="hour-number" style="top: 50%; left: 95%;">٣</div>
+          <div class="hour-number" style="top: 75%; left: 87%;">٤</div>
+          <div class="hour-number" style="top: 91%; left: 70%;">٥</div>
+          <div class="hour-number" style="top: 95%; left: 50%;">٦</div>
+          <div class="hour-number" style="top: 88%; left: 28%;">٧</div>
+          <div class="hour-number" style="top: 71%; left: 11%;">٨</div>
+          <div class="hour-number" style="top: 50%; left: 5%;">٩</div>
+          <div class="hour-number" style="top: 25%; left: 15%;">١٠</div>
+          <div class="hour-number" style="top: 12%; left: 30%;">١١</div>
+        </div>
+      </div>
+
       <div class="text-center" style="min-width: 25vw;">
         <h2 class="fs-3 fs-md-2 fs-xxl-1 fst-italic" id="currentTime"></h2>
 
         <script>
+          function updateClockHands(hours, minutes, seconds) {
+            // Calculate the rotation ratios
+            const hourRatio = (hours % 12) / 12 + (minutes / 60) / 12;
+            const minuteRatio = (minutes / 60) + (seconds / 3600); // Minute hand moves with seconds
+            const secondRatio = seconds / 60; // Second hand moves each second
+
+            // Update the hands' rotation based on the calculated ratios
+            document.getElementById('hour').style.transform = `rotate(${(hourRatio * 360) - 90}deg)`;
+            document.getElementById('minute').style.transform = `rotate(${(minuteRatio * 360) - 90}deg)`;
+            document.getElementById('second').style.transform = `rotate(${(secondRatio * 360) - 90}deg)`;
+          }
+
           function updateTime() {
             // Create a new Date object to get the current time
             var currentTime = new Date();
 
             // Get the hours, minutes, and seconds
-            var hours = currentTime.getHours();
-            var minutes = currentTime.getMinutes();
-            var seconds = currentTime.getSeconds();
+            var hours = currentTime.getUTCHours() + 8; // Adjust for UTC+8
+            var minutes = currentTime.getUTCMinutes();
+            var seconds = currentTime.getUTCSeconds();
+
+            // Make sure the hours stay within 24-hour format
+            if (hours >= 24) {
+              hours -= 24; // Wrap around if needed
+            }
 
             // Add leading zeros if the numbers are less than 10
             hours = (hours < 10) ? '0' + hours : hours;
@@ -302,6 +413,9 @@
 
             // Update the content of the <h3> element with the current time
             document.getElementById('currentTime').textContent = timeString;
+
+            // Update the clock hands based on the time
+            updateClockHands(parseInt(hours), minutes, seconds);
           }
 
           // Call updateTime function initially to set the time immediately
@@ -347,6 +461,8 @@
 
         <div class="text-center fst-italic">
           <h2 class="fs-6 fs-md-6 fs-xxl-6" id="current-date"></h2>
+          <!-- <h3 class="fs-6 fs-md-6 fs-xxl-6" id="current-islamic-date"></h3> -->
+
           <script>
             function getOrdinalSuffix(day) {
               if (day > 3 && day < 21) return 'th'; // Special case for 11th to 19th
@@ -365,12 +481,12 @@
             function updateDate() {
               const now = new Date();
 
-              // Get day and add ordinal suffix
+              // Get Gregorian date
               const day = now.getDate();
               const ordinalSuffix = getOrdinalSuffix(day);
               const formattedDay = `${day}${ordinalSuffix}`;
 
-              // Get month and year
+              // Get month and year for Gregorian
               const options = {
                 month: 'long',
                 year: 'numeric'
@@ -379,9 +495,24 @@
 
               // Combine the formatted day with month and year
               const formattedDate = `${formattedDay} ${formattedMonthYear}`;
-
-              // Update the date in the DOM
               document.getElementById('current-date').innerText = formattedDate;
+
+              // Convert the current date to Islamic date
+              const hijri = new HijriDate(now.getFullYear(), now.getMonth() + 1, now.getDate());
+              const hijriYear = hijri.getFullYear();
+              const hijriMonth = hijri.getMonth();
+              const hijriDay = hijri.getDate();
+
+              // Islamic month names
+              const islamicMonths = [
+                "Muharram", "Safar", "Rabiʻ I", "Rabiʻ II", "Jumada I", "Jumada II",
+                "Rajab", "Shaʻban", "Ramadan", "Shawwal", "Dhu al-Qiʻdah", "Dhu al-Hijjah"
+              ];
+
+              // Format Islamic date as "Month Day, Year AH"
+              const formattedIslamicDate = `${islamicMonths[hijriMonth]} ${hijriDay}, ${hijriYear} AH`;
+              document.getElementById('current-islamic-date').innerText = `Islamic Date: ${formattedIslamicDate}`;
+              console.log(formattedIslamicDate);
             }
 
             // Update the date initially
@@ -390,6 +521,7 @@
             // Set an interval to update the date every hour
             setInterval(updateDate, 60 * 60 * 1000); // 60 minutes * 60 seconds * 1000 milliseconds
           </script>
+
         </div>
       </div>
 
@@ -399,11 +531,11 @@
 
   <div class="p-5 col-12 col-md-6">
     <div class="order-md-0">
-      <div class="border border-5 rounded-5" style="min-height: 25vh;min-width: 45vw;">
+      <div class="bg-white rounded-5" style="min-height: 25vh;min-width: 45vw;" id="qrblock">
         <div class="p-2">
 
           <div class="rounded-5" id="glow-card">
-            <div class="p-3">
+            <div class="p-2">
               <img id="qrCode" class="w-100 h-100">
             </div>
           </div>
@@ -439,7 +571,7 @@
               }
 
               updateQRCode();
-              setInterval(updateQRCode, 10000);
+              setInterval(updateQRCode, 15000);
 
               async function saveQRData(qrData) {
                 try {
@@ -470,23 +602,16 @@
                 fetch('/api/qrcode/get-latest') // Fetch attendance data for today within a specific time range
                   .then(response => response.json())
                   .then(data => {
-                    const glow = document.getElementById('glow-card');
+                    const glow = document.getElementById('bg-glow');
 
                     if (data.temp === null) {
                       console.log('No data found');
                     } else {
-                      // Check attendance type
-                      if (data.temp.type === 'sign out') {
-                        glow.classList.remove('glow-wrapper-1');
-                        glow.classList.add('glow-wrapper-2');
-                      } else {
-                        glow.classList.remove('glow-wrapper-2');
-                        glow.classList.add('glow-wrapper-1');
-                      }
+                      glow.classList.remove('d-none');
 
                       // Keep the glow effect for 2 seconds, then remove it
                       setTimeout(function() {
-                        glow.classList.remove('glow-wrapper-1', 'glow-wrapper-2');
+                        glow.classList.add('d-none');
                       }, 4000); // Glow for 2 seconds
                     }
                   })

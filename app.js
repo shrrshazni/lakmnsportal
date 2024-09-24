@@ -5709,7 +5709,7 @@ app.post('/api/qrcode/save-data', async (req, res) => {
         createdAt: moment().utcOffset(8).toDate()
     });
 
-    await TempAttendance.deleteMany();
+    // await TempAttendance.deleteMany();
 
     console.log('QR data saved and temporary attendance deleted all.')
 
