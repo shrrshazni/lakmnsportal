@@ -5606,7 +5606,7 @@ app.post('/api/data/all-attendance/per-month/department-section', isAuthenticate
 });
 
 function getRandomColor() {
-    const colors = ['red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'violet'];
+    const colors = ['red', 'orange', 'green', 'blue', 'indigo', 'violet'];
 
     // Get a random index from the colors array
     const randomIndex = Math.floor(Math.random() * colors.length);

@@ -374,7 +374,7 @@
       </div>
 
       <div class="text-center" style="min-width: 25vw;">
-        <h2 class="fs-3 fs-md-2 fs-xxl-1 fst-italic" id="currentTime"></h2>
+        <h2 class="fs-3 fs-md-2 fs-xxl-1 fst-italic text-white" id="currentTime"></h2>
 
         <script>
           function updateClockHands(hours, minutes, seconds) {
@@ -460,7 +460,7 @@
         </div> -->
 
         <div class="text-center fst-italic">
-          <h2 class="fs-6 fs-md-6 fs-xxl-6" id="current-date"></h2>
+          <h2 class="fs-6 fs-md-6 fs-xxl-6 text-white" id="current-date"></h2>
           <!-- <h3 class="fs-6 fs-md-6 fs-xxl-6" id="current-islamic-date"></h3> -->
 
           <script>
@@ -607,12 +607,12 @@
                     if (data.temp === null) {
                       console.log('No data found');
                     } else {
-                      glow.classList.remove('d-none');
+                    //   glow.classList.remove('d-none');
 
-                      // Keep the glow effect for 2 seconds, then remove it
-                      setTimeout(function() {
-                        glow.classList.add('d-none');
-                      }, 4000); // Glow for 2 seconds
+                    //   // Keep the glow effect for 2 seconds, then remove it
+                    //   setTimeout(function() {
+                    //     glow.classList.add('d-none');
+                    //   }, 4000); // Glow for 2 seconds
                     }
                   })
                   .catch(error => {
