@@ -63,7 +63,7 @@
 <div class="row gy-3 mb-3 justify-content-between d-flex mt-0">
     <div class="col-md-9 col-auto">
         <h2 class="mb-2 text-body-emphasis">Visitor Management System</h2>
-        <h5 class="text-body-tertiary fw-semibold">We hope you have a great experience managing visitor entries and exits</h5>
+        <h5 class="text-body-tertiary fw-semibold">We hope you have a great experience managing visitor entries and exits.</h5>
     </div>
 </div>
 
@@ -164,7 +164,7 @@
                         </tr>
                     </thead>
                     <tbody id="visitorTableBody">
-                        <% if (visitors.length > 0) { %>
+                        <!-- <% if (visitors.length > 0) { %>
                             <% visitors.forEach((visitor, index) => { %>
                                 <tr class="position-static">
                                     <td class="align-middle text-start"><%= index + 1 %></td>
@@ -207,20 +207,22 @@
                             <tr>
                                 <td colspan="12" style="text-align:center;">There is no visitor list found</td>
                             </tr>
-                        <% } %>
+                        <% } %> -->
                     </tbody>  
                 </table>
             </div>
         </div>
         <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
-            <!-- <div class="col-auto d-flex">
-                <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p><a class="fw-semibold" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semibold d-none" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
+            <div class="col-auto d-flex">
+                <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p>
+                <a class="fw-semibold" href="#!" data-list-view="*" id="view-all">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
+                <a class="fw-semibold d-none" href="#!" data-list-view="less" id="view-less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
             </div>
             <div class="col-auto d-flex">
                 <button class="page-link" data-list-pagination="prev"><span class="fas fa-chevron-left"></span></button>
                 <ul class="mb-0 pagination"></ul>
                 <button class="page-link pe-0" data-list-pagination="next"><span class="fas fa-chevron-right"></span></button>
-            </div> -->
+            </div>
         </div>
     </div>
 </div>
@@ -272,6 +274,10 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
+        let currentPage = 1;
+        const pageSize = 5; // Number of visitors per page
+        let isViewAll = false; // Flag to check if "View All" is active
+
         async function fetchVisitors() {
             const searchName = document.getElementById('search-input').value;
             const selectedDate = document.getElementById('dateFilter').value;
@@ -285,50 +291,104 @@
                 if (data.length === 0) {
                     document.getElementById('visitorTableBody').innerHTML = '<tr><td colspan="12" style="text-align:center;">There is no visitor list found</td></tr>';
                 } else {
-                    const rows = data.map((visitor, index) => `
-                        <tr>
-                            <td class="align-middle text-start">${index + 1}</td>
-                            <td class="align-middle text-center"><a href="#" class="visitor-link" data-visitor='${JSON.stringify(visitor)}'>${visitor.firstName} ${visitor.lastName}</a></td>
-                            <td class="align-middle text-center">${visitor.nric}</td>
-                            <td class="align-middle text-center d-none">${visitor.address}</td>
-                            <td class="align-middle text-center d-none">${visitor.level}</td>
-                            <td class="align-middle text-center d-none">${visitor.pass}</td>
-                            <td class="align-middle text-center">${visitor.phoneNum}</td>
-                            <td class="align-middle text-center d-none">${visitor.purpose}</td>
-                            <td class="align-middle text-center">
-                                <span class="badge badge-phoenix ${visitor.timeOut ? 'badge-phoenix-danger' : 'badge-phoenix-success'} fs-10 align-items-center">
-                                    ${visitor.timeOut ? 'Checked-Out' : 'Checked-In'}
-                                </span>
-                            </td>
-                            <td class="align-middle text-center">${moment(visitor.timeIn).format('D/M/YYYY h:mm A')}</td>
-                            <td class="align-middle text-center">${visitor.timeOut ? moment(visitor.timeOut).format('D/M/YYYY h:mm A') : '-'}</td>
-                            <td class="align-middle text-center d-none">${visitor.location}</td>
-                            <td class="align-middle text-end">
-                                <div class="d-flex justify-content-end align-items-center gap-1">
-                                    ${!visitor.timeOut ? `
-                                    <form action="/toggle/status" method="POST" style="display:inline;" class="toggle-form">
-                                        <input type="hidden" name="visitor_id" value="${visitor._id}">
-                                        <button type="submit" class="timeout_button btn p-0" style="background: none; border: none;">
-                                            <i class="bi bi-clock-fill text-white bg-danger p-2 rounded" style="transition: background-color 0.3s, transform 0.3s; font-size: 1rem;"></i>
-                                        </button>
-                                    </form>` : ''}
-                                    <form action="/delete/visitor" method="POST" style="display:inline;" class="delete-form">
-                                        <input type="hidden" name="visitor_id" value="${visitor._id}">
-                                        <button type="submit" class="delete_button btn p-0" style="background: none; border: none;">
-                                            <i class="bi bi-trash text-white bg-secondary p-2 rounded" style="transition: background-color 0.3s, transform 0.3s; font-size: 1rem;"></i>
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    `).join('');
-                    document.getElementById('visitorTableBody').innerHTML = rows;
+                    updateTable(data);
                 }
             } catch (error) {
                 console.error('Error fetching visitors:', error);
                 document.getElementById('visitorTableBody').innerHTML = '<tr><td colspan="12" style="text-align:center;">Error loading data</td></tr>';
             }
         }
+
+        function updateTable(visitors) {
+            const totalVisitors = visitors.length;
+            const totalPages = Math.ceil(totalVisitors / pageSize);
+
+            // Determine the number of visitors to display based on "View All" or pagination
+            const visitorsToDisplay = isViewAll ? visitors : visitors.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+            // Render rows
+            const rows = visitorsToDisplay.map((visitor, index) => `
+                <tr>
+                    <td class="align-middle text-start">${index + 1}</td>
+                    <td class="align-middle text-center"><a href="#" class="visitor-link" data-visitor='${JSON.stringify(visitor)}'>${visitor.firstName} ${visitor.lastName}</a></td>
+                    <td class="align-middle text-center">${visitor.nric}</td>
+                    <td class="align-middle text-center d-none">${visitor.address}</td>
+                    <td class="align-middle text-center d-none">${visitor.level}</td>
+                    <td class="align-middle text-center d-none">${visitor.pass}</td>
+                    <td class="align-middle text-center">${visitor.phoneNum}</td>
+                    <td class="align-middle text-center d-none">${visitor.purpose}</td>
+                    <td class="align-middle text-center">
+                        <span class="badge badge-phoenix ${visitor.timeOut ? 'badge-phoenix-danger' : 'badge-phoenix-success'} fs-10 align-items-center">
+                            ${visitor.timeOut ? 'Checked-Out' : 'Checked-In'}
+                        </span>
+                    </td>
+                    <td class="align-middle text-center">${moment(visitor.timeIn).format('D/M/YYYY h:mm A')}</td>
+                    <td class="align-middle text-center">${visitor.timeOut ? moment(visitor.timeOut).format('D/M/YYYY h:mm A') : '-'}</td>
+                    <td class="align-middle text-center d-none">${visitor.location}</td>
+                    <td class="align-middle text-end">
+                        <div class="d-flex justify-content-end align-items-center gap-1">
+                            ${!visitor.timeOut ? `
+                            <form action="/toggle/status" method="POST" style="display:inline;" class="toggle-form">
+                                <input type="hidden" name="visitor_id" value="${visitor._id}">
+                                <button type="submit" class="timeout_button btn p-0" style="background: none; border: none;">
+                                    <i class="bi bi-clock-fill text-white bg-danger p-2 rounded" style="transition: background-color 0.3s, transform 0.3s; font-size: 1rem;"></i>
+                                </button>
+                            </form>` : ''}
+                            <form action="/delete/visitor" method="POST" style="display:inline;" class="delete-form">
+                                <input type="hidden" name="visitor_id" value="${visitor._id}">
+                                <button type="submit" class="delete_button btn p-0" style="background: none; border: none;">
+                                    <i class="bi bi-trash text-white bg-secondary p-2 rounded" style="transition: background-color 0.3s, transform 0.3s; font-size: 1rem;"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+            document.getElementById('visitorTableBody').innerHTML = rows;
+
+            // Update Pagination Controls
+            updatePaginationControls(totalPages);
+        }
+
+        function updatePaginationControls(totalPages) {
+            const paginationList = document.querySelector('.pagination');
+            paginationList.innerHTML = '';
+
+            if (isViewAll) {
+                // Hide pagination controls
+                paginationList.style.display = 'none';
+            } else {
+                // Show pagination controls
+                paginationList.style.display = 'flex';
+                for (let i = 1; i <= totalPages; i++) {
+                    const listItem = document.createElement('li');
+                    listItem.className = 'page-item' + (i === currentPage ? ' active' : '');
+                    listItem.innerHTML = `<a class="page-link" href="#">${i}</a>`;
+                    listItem.addEventListener('click', () => {
+                        currentPage = i;
+                        fetchVisitors();
+                    });
+                    paginationList.appendChild(listItem);
+                }
+            }
+        }
+
+        // Handle View All and View Less Clicks
+        document.getElementById('view-all').addEventListener('click', function () {
+            isViewAll = true;
+            currentPage = 1; // Reset to first page
+            fetchVisitors();
+            this.classList.add('d-none');
+            document.getElementById('view-less').classList.remove('d-none');
+        });
+
+        document.getElementById('view-less').addEventListener('click', function () {
+            isViewAll = false;
+            currentPage = 1; // Reset to first page
+            fetchVisitors();
+            this.classList.add('d-none');
+            document.getElementById('view-all').classList.remove('d-none');
+        });
 
         async function updateVisitorCounts() {
             try {
