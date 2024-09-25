@@ -298,7 +298,7 @@
   }
 </style>
 
-<div class="" id="bg-glow">
+<div>
   <div class="glow-1"></div>
   <div class="glow-2"></div>
   <div class="glow-3"></div>
@@ -602,7 +602,7 @@
                 fetch('/api/qrcode/get-latest') // Fetch attendance data for today within a specific time range
                   .then(response => response.json())
                   .then(data => {
-                    const glow = document.getElementById('bg-glow');
+                    // const glow = document.getElementById('bg-glow');
 
                     if (data.temp === null) {
                       console.log('No data found');
@@ -624,7 +624,7 @@
               fetchLatestScannedData();
 
               // Set interval to fetch data every 4.5 seconds
-              setInterval(fetchLatestScannedData, 4500);
+            //   setInterval(fetchLatestScannedData, 4500);
 
             });
           </script>
