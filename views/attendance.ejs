@@ -304,57 +304,57 @@
   <div class="glow-3"></div>
 </div>
 
-<div class="d-lg-flex d-block justify-content-center align-items-center z-5 row g-0" style="min-height: 90vh;">
-
-  <div class="col-12">
-    <h1 class="fs-3 fs-md-3 fs-xxl-2 text-center mt-10">
-      <i class="fs-1" id="greeting-icon"></i>
-      <span id="greeting-message">Good Morning</span>
-    </h1>
-
-    <script>
-      function updateGreeting() {
-        // Create a new Date object to get the current time
-        const currentTime = new Date();
-        const hours = currentTime.getHours();
-
-        // Get the icon and message elements
-        const greetingIcon = document.getElementById('greeting-icon');
-        const greetingMessage = document.getElementById('greeting-message');
-
-        // Determine the greeting and icon based on the hour
-        if (hours < 12) {
-          greetingIcon.className = 'bi bi-brightness-alt-high-fill floating-icon'; // Morning icon
-          greetingMessage.textContent = 'Good Morning';
-        } else if (hours < 17) {
-          greetingIcon.className = 'bi bi-brightness-high-fill floating-icon'; // Afternoon icon (change this to your preferred icon)
-          greetingMessage.textContent = 'Good Afternoon';
-        } else {
-          greetingIcon.className = 'bi bi-moon-stars-fill floating-icon'; // Evening icon (change this to your preferred icon)
-          greetingMessage.textContent = 'Good Evening';
-        }
-      }
-
-      // Call the function to set the initial greeting
-      updateGreeting();
-
-      // Update the greeting every hour (3600000 milliseconds)
-      setInterval(updateGreeting, 3600000);
-
-      // Optional: To ensure it updates immediately if the page is loaded close to a time change
-      const currentTime = new Date();
-      const millisecondsUntilNextHour = (60 - currentTime.getMinutes()) * 60 * 1000 - currentTime.getSeconds() * 1000;
-      setTimeout(updateGreeting, millisecondsUntilNextHour);
-    </script>
-  </div>
+<div class="d-lg-flex d-block justify-content-center align-items-center z-5 row g-0 mt-5" style="min-height: 90vh;">
 
   <div class="py-5 px-2 px-xl-5 mb-0 order-xl-1 order-md-1 col-12 col-md-6">
 
-    <div class="px-2 py-10">
+    <div class="px-2 py-5">
 
-      <div class="mt-n10">
+      <div class="mb-8">
+        <h1 class="fs-3 fs-md-3 fs-xxl-2 text-center">
+          <i class="fs-1" id="greeting-icon"></i>
+          <span id="greeting-message">Good Morning</span>
+        </h1>
+
+        <script>
+          function updateGreeting() {
+            // Create a new Date object to get the current time
+            const currentTime = new Date();
+            const hours = currentTime.getHours();
+
+            // Get the icon and message elements
+            const greetingIcon = document.getElementById('greeting-icon');
+            const greetingMessage = document.getElementById('greeting-message');
+
+            // Determine the greeting and icon based on the hour
+            if (hours < 12) {
+              greetingIcon.className = 'bi bi-brightness-alt-high-fill floating-icon'; // Morning icon
+              greetingMessage.textContent = 'Good Morning';
+            } else if (hours < 17) {
+              greetingIcon.className = 'bi bi-brightness-high-fill floating-icon'; // Afternoon icon (change this to your preferred icon)
+              greetingMessage.textContent = 'Good Afternoon';
+            } else {
+              greetingIcon.className = 'bi bi-moon-stars-fill floating-icon'; // Evening icon (change this to your preferred icon)
+              greetingMessage.textContent = 'Good Evening';
+            }
+          }
+
+          // Call the function to set the initial greeting
+          updateGreeting();
+
+          // Update the greeting every hour (3600000 milliseconds)
+          setInterval(updateGreeting, 3600000);
+
+          // Optional: To ensure it updates immediately if the page is loaded close to a time change
+          const currentTime = new Date();
+          const millisecondsUntilNextHour = (60 - currentTime.getMinutes()) * 60 * 1000 - currentTime.getSeconds() * 1000;
+          setTimeout(updateGreeting, millisecondsUntilNextHour);
+        </script>
+      </div>
+
+      <div class="">
         <!-- Clock Container -->
-        <div class="clock mx-auto mb-12">
+        <div class="clock mx-auto mb-8">
           <div class="hand hour" id="hour"></div>
           <div class="hand minute" id="minute"></div>
           <div class="hand second" id="second"></div>
@@ -461,7 +461,7 @@
 
         <div class="text-center fst-italic">
           <h2 class="fs-6 fs-md-6 fs-xxl-6 text-white" id="current-date"></h2>
-          <!-- <h3 class="fs-6 fs-md-6 fs-xxl-6" id="current-islamic-date"></h3> -->
+          <h3 class="fs-6 fs-md-6 fs-xxl-6" id="hijri-date"></h3>
 
           <script>
             function getOrdinalSuffix(day) {
@@ -496,30 +496,47 @@
               // Combine the formatted day with month and year
               const formattedDate = `${formattedDay} ${formattedMonthYear}`;
               document.getElementById('current-date').innerText = formattedDate;
-
-              // Convert the current date to Islamic date
-              const hijri = new HijriDate(now.getFullYear(), now.getMonth() + 1, now.getDate());
-              const hijriYear = hijri.getFullYear();
-              const hijriMonth = hijri.getMonth();
-              const hijriDay = hijri.getDate();
-
-              // Islamic month names
-              const islamicMonths = [
-                "Muharram", "Safar", "Rabiʻ I", "Rabiʻ II", "Jumada I", "Jumada II",
-                "Rajab", "Shaʻban", "Ramadan", "Shawwal", "Dhu al-Qiʻdah", "Dhu al-Hijjah"
-              ];
-
-              // Format Islamic date as "Month Day, Year AH"
-              const formattedIslamicDate = `${islamicMonths[hijriMonth]} ${hijriDay}, ${hijriYear} AH`;
-              document.getElementById('current-islamic-date').innerText = `Islamic Date: ${formattedIslamicDate}`;
-              console.log(formattedIslamicDate);
             }
+
+            async function fetchHijriDate() {
+              try {
+                const response = await fetch('/api/hijri-date');
+                const data = await response.json();
+
+                console.log(data);
+
+                // Update the Hijri date in the HTML
+                document.getElementById('hijri-date').textContent = data.hijriDate;
+              } catch (error) {
+                console.error('Error fetching the Hijri date:', error);
+              }
+            }
+
+            // Call the function to fetch and display the Hijri date
+            fetchHijriDate();
 
             // Update the date initially
             updateDate();
 
             // Set an interval to update the date every hour
-            setInterval(updateDate, 60 * 60 * 1000); // 60 minutes * 60 seconds * 1000 milliseconds
+            setInterval(updateDate, fetchHijriDate, 60 * 60 * 1000); // 60 minutes * 60 seconds * 1000 milliseconds
+          </script>
+
+
+          <script>
+            function updateIslamicDate() {
+              // Fetch the date from the server
+              fetch('/islamic-date')
+                .then(response => response.json())
+                .then(data => {
+                  console.log(data);
+                  document.getElementById('hijri-date').innerText = `${data.hijriDate}`;
+                })
+                .catch(error => console.error('Error fetching date:', error));
+            }
+
+            // Update the date on page load
+            updateIslamicDate();
           </script>
 
         </div>
@@ -529,7 +546,7 @@
 
   </div>
 
-  <div class="p-5 col-12 col-md-6">
+  <div class="px-8 py-5 col-12 col-md-6">
     <div class="order-md-0">
       <div class="bg-white rounded-5" style="min-height: 25vh;min-width: 45vw;" id="qrblock">
         <div class="p-2">
@@ -607,12 +624,12 @@
                     if (data.temp === null) {
                       console.log('No data found');
                     } else {
-                    //   glow.classList.remove('d-none');
+                      //   glow.classList.remove('d-none');
 
-                    //   // Keep the glow effect for 2 seconds, then remove it
-                    //   setTimeout(function() {
-                    //     glow.classList.add('d-none');
-                    //   }, 4000); // Glow for 2 seconds
+                      //   // Keep the glow effect for 2 seconds, then remove it
+                      //   setTimeout(function() {
+                      //     glow.classList.add('d-none');
+                      //   }, 4000); // Glow for 2 seconds
                     }
                   })
                   .catch(error => {
@@ -624,7 +641,7 @@
               fetchLatestScannedData();
 
               // Set interval to fetch data every 4.5 seconds
-            //   setInterval(fetchLatestScannedData, 4500);
+              //   setInterval(fetchLatestScannedData, 4500);
 
             });
           </script>

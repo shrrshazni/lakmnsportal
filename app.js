@@ -25,6 +25,7 @@ const requestIp = require('request-ip');
 const { performance } = require('perf_hooks');
 const webPush = require('web-push');
 const { QRCodeCanvas } = require('@loskir/styled-qr-code-node');
+const momentHijri = require('moment-hijri'); // Extend moment with hijri support
 
 const app = express();
 
@@ -5623,12 +5624,12 @@ async function generateCustomQRCode(data) {
         // Create a new instance of QRCodeCanvas
         const qrCode = new QRCodeCanvas({
             data: data,
-            image: path.join(__dirname, 'public/assets/img/icons/logolakmns/', 'LOGO KEDUA GOLD.png'), // Path to the logo image
+            image: path.join(__dirname, 'public/assets/img/icons/logolakmns/', 'LOGO KEDUA.png'), // Path to the logo image
             width: 400, // Width of the QR code
             height: 400, // Height of the QR code
-            margin: 0,
+            margin: 1,
             imageOptions: {
-                imageSize: 0.45,
+                imageSize: 0.40,
                 crossOrigin: 'anonymous',
             },
             qrOptions: {
@@ -5680,6 +5681,28 @@ async function generateCustomQRCode(data) {
     }
 }
 
+app.get('/api/hijri-date', async (req, res) => {
+    
+    momentHijri.locale('ar-SA');
+    m = momentHijri(); // Parse a Hijri date.
+    m.format('iYYYY/iM/iD [is] YYYY/M/D');
+
+    m.iYear(); // 1410
+    m.iMonth(); // 7
+    m.iDate(); // 28
+    m.iDayOfYear(); // 236
+    m.iWeek(); // 35
+    m.iWeekYear();
+
+    // Use the hijriMonths array to get the English month name
+    const monthName = hijriMonths[m.iMonth()];
+
+    // Return formatted Hijri date
+    const hijriDate = `${m.iDate()} ${monthName}, ${m.iYear()} AH`;
+    // Return the Hijri date as JSON
+    res.json({ hijriDate });
+});
+
 // * Route to generate a QR code with a unique identifier and client IP.
 // * Creates a QR code image with specified colors and dimensions,
 // * then returns the image data and unique identifier to the client.
@@ -5709,7 +5732,7 @@ app.post('/api/qrcode/save-data', async (req, res) => {
         createdAt: moment().utcOffset(8).toDate()
     });
 
-    // await TempAttendance.deleteMany();
+    await TempAttendance.deleteMany();
 
     console.log('QR data saved and temporary attendance deleted all.')
 
@@ -5948,8 +5971,6 @@ app.get('/api/qrcode/get-latest', async (req, res) => {
             .sort({ timestamp: -1 })
             .lean();
 
-        console.log(tempAttendance);
-
         let message = '';
         let response = '';
 
@@ -5995,8 +6016,6 @@ app.get('/api/qrcode/get-latest', async (req, res) => {
 
             console.log('Have not found latest attendance!');
         }
-
-        console.log(response);
 
         res.json(response);
     } catch (error) {
@@ -9112,6 +9131,34 @@ const getUserIdsBySectionOrDepartment = async (user) => {
     const usersInTask = await User.find(query).exec();
     return usersInTask.map(user => user._id);
 };
+
+// Array mapping Hijri months to their English equivalents
+const hijriMonths = [
+    "Muharram", "Safar", "Rabiʻ I", "Rabiʻ II",
+    "Jumada I", "Jumada II", "Rajab", "Shaʻban",
+    "Ramadan", "Shawwal", "Dhuʻl-Qiʻdah", "Dhuʻl-Hijjah"
+];
+
+// Function to convert Gregorian date to Hijri with custom formatting
+const getCustomHijriDate = async () => {
+
+    momentHijri.locale('ar-SA');
+    m = momentHijri(); // Parse a Hijri date.
+    m.format('iYYYY/iM/iD [is] YYYY/M/D');
+
+    m.iYear(); // 1410
+    m.iMonth(); // 7
+    m.iDate(); // 28
+    m.iDayOfYear(); // 236
+    m.iWeek(); // 35
+    m.iWeekYear();
+
+    // Use the hijriMonths array to get the English month name
+    const monthName = hijriMonths[m.iMonth()];
+
+    // Return formatted Hijri date
+    return `${m.iDate()} ${monthName}, ${m.iYear()} AH`;
+}
 
 // Global error handler middleware
 app.use((error, req, res, next) => {
