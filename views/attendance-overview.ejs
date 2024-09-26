@@ -96,7 +96,7 @@
                 <tr class="position-static">
                   <td class="date align-middle fw-blod text-start text-body-highlight fst-italic fw-bold py-2 ps-0 fs-9 fs-xxl-8"><%= item.timestamp.toLocaleDateString('en-MY', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></td>
                   <td class="type align-middle fw-semibold text-center py-2 ps-0 fs-9 fs-md-8 text-body-highlight"><span class="badge badge-phoenix fs-10 badge-phoenix-<%= badgeColour %>"><%= item.status %></span></td>
-                  <td class="clockin align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-success"><%= signInTime %></span><br><span class="fw-bold fst-italic fs-10 text-primary">BMI</span></td>
+                  <td class="clockin align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-success"><%= signInTime %></span><br><span class="fw-bold fst-italic fs-10 text-primary"><%= item.location.signIn || '' %></span></td>
                   <td class="clockout align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-warning"><%= signOutTime %></span><br><span class="fw-bold fst-italic fs-10 text-primary"><%= item.location.signOut || '' %></span></td>
                   <td class="outofoffice align-middle text-center py-2 ps-0 fs-9"><a href="#" class="badge badge-phoenix badge-phoenix-<%= outOfOfficeEnabled %>"><%= item.outOfOffice.enabled %></a></td>
                   <td class="remarks align-middle fst-italic text-center py-2 ps-0 fs-9"><%= item.remarks || 'No remarks added.' %></td>
