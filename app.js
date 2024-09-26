@@ -5629,7 +5629,7 @@ async function generateCustomQRCode(data) {
             height: 400, // Height of the QR code
             margin: 1,
             imageOptions: {
-                imageSize: 0.40,
+                imageSize: 0.38,
                 crossOrigin: 'anonymous',
             },
             qrOptions: {
@@ -5682,28 +5682,14 @@ async function generateCustomQRCode(data) {
 }
 
 app.get('/api/hijri-date', async (req, res) => {
-
-    momentHijri.locale('ar-SA');
-    m = momentHijri(); // Parse a Hijri date.
-    m.format('iYYYY/iM/iD [is] YYYY/M/D');
-
-    m.iYear(); // 1410
-    m.iMonth(); // 7
-    m.iDate(); // 28
-    m.iDayOfYear(); // 236
-    m.iWeek(); // 35
-    m.iWeekYear();
-
-    // Use the hijriMonths array to get the English month name
-    const monthName = hijriMonths[m.iMonth()];
-
-    // Return formatted Hijri date
-    const hijriDate = `${m.iDate()} ${monthName}, ${m.iYear()} AH`;
-    // Return the Hijri date as JSON
-
-    momentHijri.locale('en');
-
-    res.json({ hijriDate });
+    try {
+        const hijriDate = await getCustomHijriDate();
+        console.log(hijriDate);
+        res.json({ hijriDate });
+    } catch (error) {
+        console.error('Error fetching Hijri date:', error);
+        res.status(500).json({ error: 'Unable to fetch Hijri date' });
+    }
 });
 
 // * Route to generate a QR code with a unique identifier and client IP.
@@ -7199,7 +7185,7 @@ const isDateInRange = (startDate, endDate) => {
 };
 
 // * Get today's date formatted as 'D MMMM YYYY'
-const getDateFormat2 = () => moment().utcOffset('+08:00').format('D MMMM YYYY');
+const getDateFormat2 = () => moment().locale('en').utcOffset('+08:00').format('D MMMM YYYY');
 
 // * Generate a unique identifier
 const generateUniqueIdentifier = () => Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
@@ -9135,34 +9121,23 @@ const getUserIdsBySectionOrDepartment = async (user) => {
     return usersInTask.map(user => user._id);
 };
 
-// Array mapping Hijri months to their English equivalents
-const hijriMonths = [
-    "Muharram", "Safar", "Rabiʻ I", "Rabiʻ II",
-    "Jumada I", "Jumada II", "Rajab", "Shaʻban",
-    "Ramadan", "Shawwal", "Dhuʻl-Qiʻdah", "Dhuʻl-Hijjah"
-];
-
 // Function to convert Gregorian date to Hijri with custom formatting
-// const getCustomHijriDate = async () => {
+const getCustomHijriDate = async () => {
+    // Set locale for Hijri dates (you can still use ar-SA for the Hijri calculation if needed)
+    momentHijri.locale('en'); // Set to English locale to avoid Arabic formatting
 
-//     momentHijri.locale('ar-SA');
-//     m = momentHijri(); // Parse a Hijri date.
-//     m.format('iYYYY/iM/iD [is] YYYY/M/D');
+    const hijriMonths = [
+        'Muharram', 'Safar', 'Rabiʻ I', 'Rabiʻ II', 'Jumada I', 'Jumada II',
+        'Rajab', 'Shaʻban', 'Ramadan', 'Shawwal', 'Dhuʻl-Qiʻdah', 'Dhuʻl-Hijjah'
+    ];
 
-//     m.iYear(); // 1410
-//     m.iMonth(); // 7
-//     m.iDate(); // 28
-//     m.iDayOfYear(); // 236
-//     m.iWeek(); // 35
-//     m.iWeekYear();
+    const m = momentHijri(); // Use the current Hijri date
+    const hijriMonthIndex = m.iMonth(); // Get the Hijri month index
+    const monthName = hijriMonths[hijriMonthIndex]; // Get the English Hijri month name
 
-//     // Use the hijriMonths array to get the English month name
-//     const monthName = hijriMonths[m.iMonth()];
-
-//     momentHijri.locale('en');
-//     // Return formatted Hijri date
-//     return `${m.iDate()} ${monthName}, ${m.iYear()} AH`;
-// }
+    // Return formatted Hijri date in English
+    return `${m.iDate()} ${monthName}, ${m.iYear()} AH`;
+};
 
 // Global error handler middleware
 app.use((error, req, res, next) => {
