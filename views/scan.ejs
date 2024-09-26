@@ -4,17 +4,156 @@
 
   <section class="px-0">
 
-    <div class="mb-4" id="title">
-      <h2 class="title">QR Scanner</h2>
+    <div id="title">
+
+      <div class="row align-items-center justify-content-between g-3 mb-4">
+        <div class="col-auto">
+          <h2 class="mb-0">Attendance</h2>
+          <p class="text-body-tertiary lh-sm mb-0">Automated qr-based attendance.</p>
+        </div>
+        <div class="col-12 col-lg-auto">
+          <div class="row g-2 g-sm-3 d-lg-flex">
+            <div class="col-auto">
+              <button class="btn btn-primary px-5" role="button" id="startButton"><span class="fa-solid fa-qrcode"></span>&nbsp;&nbsp;&nbsp;Scan</button>
+            </div>
+            <div class="col-auto">
+              <button class="btn px-3 btn-phoenix-secondary" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fa-solid fa-ellipsis"></span></button>
+              <ul class="dropdown-menu dropdown-menu-end p-0" style="z-index: 9999;">
+                <li><a class="dropdown-item" href="#!">Print</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis pt-7 pb-3 border-y mb-6">
+        <div class="border-bottom border-translucent mt-3 mb-8" id="attendance" data-list='{"valueNames":["type","date","clockin","clockout","location", "remarks"],"page":10,"pagination":true}'>
+          <div class="row align-items-end justify-content-between pb-4 g-3">
+
+            <div class="col-12 col-md-auto">
+              <div class="search-box">
+                <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
+                  <input class="form-control search-input search form-control-sm" type="search" placeholder="Search team members" aria-label="Search" />
+                  <span class="fas fa-search search-box-icon"></span>
+                </form>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="table-responsive ms-n1 ps-1 scrollbar">
+            <table class="table fs-9 mb-0 border-top border-translucent">
+              <thead>
+                <tr>
+                  <th class="sort align-middle ps-0 text-start text-uppercase" scope="col" data-sort="date" style="width:15%;min-width: 150px;">Date</th>
+                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="type" style="width:15%;min-width: 100px;">Status</th>
+                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="clockin" style="width:10%;min-width: 100px;">Clock In</th>
+                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="clockout" style="width:10%;min-width: 100px;">Clock Out</th>
+                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="location" style="width:10%;min-width: 100px;">Location</th>
+                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="remarks" style="width:20%;min-width: 100px;">Remarks</th>
+                  <th class="sort align-middle ps-0 text-end text-uppercase" scope="col" style="width:5%;min-width: 50px;"></th>
+                </tr>
+              </thead>
+
+              <tbody class="list" id="attendance-table-content">
+                <% if(attendance && attendance.length > 0){ %>
+                <% attendance.forEach((item, index) => { %>
+
+                <% 
+                    
+                    let signOutTime;
+                    if(item.date.signOutTime === null){
+                        signOutTime = 'Nil';
+                    } else{
+                        signOutTime = item.date.signOutTime.toLocaleTimeString('en-MY', {hour: 'numeric',minute: 'numeric', hour12: true, timeZone : 'Asia/Kuala_Lumpur' });
+                    }
+                    
+                    let signInTime;
+                    if(item.date.signInTime === null){
+                        signInTime = 'Nil';
+                    } else{
+                        signInTime = item.date.signInTime.toLocaleTimeString('en-MY', { hour: 'numeric',minute: 'numeric', hour12: true, timeZone : 'Asia/Kuala_Lumpur' });
+                    }
+    
+                    var badgeColour;
+                    if (item.status === 'Late' || item.status === 'Absent') {
+                      badgeColour = 'danger';
+                    } else if (item.status === 'Leave' || item.status === 'Non Working Day' ) {
+                      badgeColour = 'info';
+                    } else {
+                      badgeColour = 'success';
+                    }
+                  %>
+                <tr class="position-static">
+                  <td class="date align-middle fw-blod text-start text-body-highlight fst-italic fw-bold py-2 ps-0 fs-9 fs-xxl-8"><%= item.timestamp.toLocaleDateString('en-MY', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></td>
+                  <td class="type align-middle fw-semibold text-center py-2 ps-0 fs-9 fs-md-8 text-body-highlight"><span class="badge badge-phoenix fs-10 badge-phoenix-<%= badgeColour %>"><%= item.status %></span></td>
+                  <td class="clockin align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-success"><%= signInTime %></span></td>
+                  <td class="clockout align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-warning"><%= signOutTime %></span></td>
+                  <td class="location align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-success"><%= item.location.signIn || '' %></span> <span class="badge badge-phoenix fs-10 badge-phoenix-warning"><%= item.location.signOut || '' %></span></td>
+                  <td class="remarks align-middle fst-italic text-center py-2 ps-0 fs-9"><%= item.remarks || 'No remarks added.' %></td>
+                  <td class="align-middle text-end white-space-nowrap ps-0 action">
+                    <div class="font-sans-serif btn-reveal-trigger position-static">
+                      <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs--2" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
+                        <span class="fas fa-ellipsis-h fs-9"></span>
+                      </button>
+                      <div class="dropdown-menu dropdown-menu-end py-2">
+                        <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#addRemark<%= index %>">Update Remarks</a>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+
+                <div class="modal fade" id="addRemark<%= index %>" tabindex="-1">
+                  <div class="modal-dialog">
+                    <div class="modal-content">
+                      <form action="/attendance/update/remarks/<%= item._id %>" method="post">
+                        <div class="modal-body">
+                          <label class="form-label" for="udpateDescription">Remarks</label>
+                          <textarea class="form-control scrollbar-overlay" placeholder="Leave a attendance remark here" style="height: 100px" name="remarks"></textarea>
+                        </div>
+                        <div class="modal-footer border-top-0">
+                          <button class="btn btn-primary loading-button" type="submit">
+                            <div class="content-button">
+                              <span>Update</span>
+                            </div>
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+                <% }); %>
+                <% }else{ %>
+                <tr>
+                  <td colspan="6" class="text-center fw-bold fs-9">No attendance detected from <span class="fw-bold text-primary notranslate"><%= user.fullname %></span></td>
+                </tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+          <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
+            <div class="col-auto d-flex">
+              <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p><a class="fw-semibold" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semibold d-none" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
+            </div>
+            <div class="col-auto d-flex">
+              <button class="page-link" data-list-pagination="prev"><span class="fas fa-chevron-left"></span></button>
+              <ul class="mb-0 pagination"></ul>
+              <button class="page-link pe-0" data-list-pagination="next"><span class="fas fa-chevron-right"></span></button>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
 
     <div class="mb-3 row g-3">
 
-      <div class="col-12 col-md-6 z-1 text-center" id="scanner">
-        <div class="border border-gray rounded-3 p-4 mb-3" style="min-height: 25vh;">
+      <div class="col-12 col-md-12 z-1 text-center" id="scanner">
+        <div class="p-4 mb-3 d-none" id="videoContainer">
+          <!-- Initially hide video container with 'd-none' -->
           <video id="video" class="w-100"></video>
         </div>
-        <button class="btn btn-primary w-100 w-lg-10" id="startButton">Start</button>
+
       </div>
 
       <div class="col-12 col-md-6 mt-n3" id="afterScan">
@@ -75,7 +214,6 @@
           @keyframes fadeOut {
             from {
               opacity: 1;
-              /* Final margin-top value */
             }
 
             to {
@@ -193,8 +331,11 @@
       document.getElementById('startButton').addEventListener('click', () => {
         const button = document.getElementById('startButton');
         const title = document.getElementById('title');
+        const videoContainer = document.getElementById('videoContainer');
+
         button.classList.add('d-none');
         title.classList.add('d-none');
+        videoContainer.classList.remove('d-none'); // Show video container on start
 
         if (codeReader) {
           codeReader.reset();

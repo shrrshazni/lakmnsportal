@@ -3226,10 +3226,13 @@ app.get('/attendance', async function (req, res, next) {
 // Scan QR route
 app.get('/scan-qr', isAuthenticated, async function (req, res, next) {
     try {
+        const attendance = await Attendance.find({ user: req.user._id }).sort({ timestamp: -1 });
+
         res.render('scan', {
             user: req.user,
             notifications: req.notifications,
-            uuid: uuidv4()
+            uuid: uuidv4(), 
+            attendance
         });
     } catch (error) {
         console.error('Error:', error);
