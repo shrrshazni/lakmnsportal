@@ -27,7 +27,7 @@
       </div>
 
       <div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis pt-7 pb-3 border-y mb-6">
-        <div class="border-bottom border-translucent mt-3 mb-8" id="attendance" data-list='{"valueNames":["type","date","clockin","clockout","location", "remarks"],"page":10,"pagination":true}'>
+        <div class="border-bottom border-translucent mt-3 mb-8" id="attendance" data-list='{"valueNames":["type","date","clockin","clockout","outofoffice", "remarks"],"page":10,"pagination":true}'>
           <div class="row align-items-end justify-content-between pb-4 g-3">
 
             <div class="col-12 col-md-auto">
@@ -49,7 +49,7 @@
                   <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="type" style="width:15%;min-width: 100px;">Status</th>
                   <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="clockin" style="width:10%;min-width: 100px;">Clock In</th>
                   <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="clockout" style="width:10%;min-width: 100px;">Clock Out</th>
-                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="location" style="width:10%;min-width: 100px;">Location</th>
+                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="outofoffice" style="width:10%;min-width: 100px;">Out Of Office</th>
                   <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="remarks" style="width:20%;min-width: 100px;">Remarks</th>
                   <th class="sort align-middle ps-0 text-end text-uppercase" scope="col" style="width:5%;min-width: 50px;"></th>
                 </tr>
@@ -63,16 +63,23 @@
                     
                     let signOutTime;
                     if(item.date.signOutTime === null){
-                        signOutTime = 'Nil';
+                        signOutTime = '-';
                     } else{
                         signOutTime = item.date.signOutTime.toLocaleTimeString('en-MY', {hour: 'numeric',minute: 'numeric', hour12: true, timeZone : 'Asia/Kuala_Lumpur' });
                     }
                     
                     let signInTime;
                     if(item.date.signInTime === null){
-                        signInTime = 'Nil';
+                        signInTime = '-';
                     } else{
                         signInTime = item.date.signInTime.toLocaleTimeString('en-MY', { hour: 'numeric',minute: 'numeric', hour12: true, timeZone : 'Asia/Kuala_Lumpur' });
+                    }
+
+                    let outOfOfficeEnabled;
+                    if(item.outOfOffice.enabled === false){
+                        outOfOfficeEnabled = 'primary';
+                    } else{
+                        outOfOfficeEnabled = 'success';
                     }
     
                     var badgeColour;
@@ -80,6 +87,8 @@
                       badgeColour = 'danger';
                     } else if (item.status === 'Leave' || item.status === 'Non Working Day' ) {
                       badgeColour = 'info';
+                    }else if (item.status === 'Invalid' ) {
+                      badgeColour = 'warning';
                     } else {
                       badgeColour = 'success';
                     }
@@ -87,9 +96,9 @@
                 <tr class="position-static">
                   <td class="date align-middle fw-blod text-start text-body-highlight fst-italic fw-bold py-2 ps-0 fs-9 fs-xxl-8"><%= item.timestamp.toLocaleDateString('en-MY', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></td>
                   <td class="type align-middle fw-semibold text-center py-2 ps-0 fs-9 fs-md-8 text-body-highlight"><span class="badge badge-phoenix fs-10 badge-phoenix-<%= badgeColour %>"><%= item.status %></span></td>
-                  <td class="clockin align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-success"><%= signInTime %></span></td>
-                  <td class="clockout align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-warning"><%= signOutTime %></span></td>
-                  <td class="location align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-success"><%= item.location.signIn || '' %></span> <span class="badge badge-phoenix fs-10 badge-phoenix-warning"><%= item.location.signOut || '' %></span></td>
+                  <td class="clockin align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-success"><%= signInTime %></span><br><span class="fw-bold fst-italic fs-10 text-primary">BMI</span></td>
+                  <td class="clockout align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-warning"><%= signOutTime %></span><br><span class="fw-bold fst-italic fs-10 text-primary"><%= item.location.signOut || '' %></span></td>
+                  <td class="outofoffice align-middle text-center py-2 ps-0 fs-9"><a href="#" class="badge badge-phoenix badge-phoenix-<%= outOfOfficeEnabled %>"><%= item.outOfOffice.enabled %></a></td>
                   <td class="remarks align-middle fst-italic text-center py-2 ps-0 fs-9"><%= item.remarks || 'No remarks added.' %></td>
                   <td class="align-middle text-end white-space-nowrap ps-0 action">
                     <div class="font-sans-serif btn-reveal-trigger position-static">
