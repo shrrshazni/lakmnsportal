@@ -5606,81 +5606,7 @@ app.post('/api/data/all-attendance/per-month/department-section', isAuthenticate
     }
 });
 
-function getRandomColor() {
-    const colors = ['DarkGoldenRod', 'Black', 'MidnightBlue', 'Indigo', 'Maroon', 'OliveDrab'];
-
-    // Get a random index from the colors array
-    const randomIndex = Math.floor(Math.random() * colors.length);
-
-    // Return the color at the random index
-    return colors[randomIndex];
-}
-
-async function generateCustomQRCode(data) {
-    try {
-        const firstColour = getRandomColor();
-        const secondColour = getRandomColor();
-
-        // Create a new instance of QRCodeCanvas
-        const qrCode = new QRCodeCanvas({
-            data: data,
-            image: path.join(__dirname, 'public/assets/img/icons/logolakmns/', 'LOGO KEDUA.png'), // Path to the logo image
-            width: 400, // Width of the QR code
-            height: 400, // Height of the QR code
-            margin: 1,
-            imageOptions: {
-                imageSize: 0.38,
-                crossOrigin: 'anonymous',
-            },
-            qrOptions: {
-                errorCorrectionLevel: 'M',
-                typeNumber: 4
-            },
-            backgroundOptions: {
-                color: '#ffffff00', // Background color
-            },
-            dotsOptions: {
-                // color: "#111",
-                type: "classy-rounded",
-                gradient: {
-                    type: 'linear',
-                    rotation: 1,
-                    colorStops: [{ offset: 0, color: firstColour }, { offset: 1, color: secondColour }]
-                },
-            },
-            cornersSquareOptions: {
-                // color: "#111",
-                // gradient: {
-                //     type: 'linear',
-                //     rotation: 1,
-                //     colorStops: [{ offset: 0, color: firstColour }, { offset: 1, color: secondColour }]
-                // },
-                type: 'extra-rounded'
-            },
-            cornersDotOptions: {
-                // color: "#111",
-                gradient: {
-                    type: 'linear',
-                    rotation: 1,
-                    colorStops: [{ offset: 0, color: firstColour }, { offset: 1, color: secondColour }]
-                },
-                type: 'dot'
-            }
-        });
-
-        // Generate QR code as a buffer
-        const qrCodeBuffer = await qrCode.toBuffer('png');
-
-        // Convert buffer to base64 string
-        const qrCodeBase64 = `data:image/png;base64,${qrCodeBuffer.toString('base64')}`;
-
-        return qrCodeBase64; // Returns base64-encoded QR code
-    } catch (error) {
-        console.error('Error generating custom QR code:', error);
-        throw error;
-    }
-}
-
+// * Route to get hijri date for attendance page
 app.get('/api/hijri-date', async (req, res) => {
     try {
         const hijriDate = await getCustomHijriDate();
@@ -9070,7 +8996,7 @@ const calculateBusinessDays = (startDateString, endDateString) => {
     return increment === 1 ? count : -count;
 };
 
-// *Check if the current time shift for auxiliary police is within the given time slot
+// * Check if the current time shift for auxiliary police is within the given time slot
 const isWithinTimeSlot = (timeSlot) => {
     // Parse the start and end times from the time slot
     const [startTime, endTime] = timeSlot.split('-');
@@ -9105,7 +9031,7 @@ const isWithinTimeSlot = (timeSlot) => {
     }
 }
 
-// Query function to find tasks where the owner's section matches the user's section or, if empty, matches the department
+// * Query function to find tasks where the owner's section matches the user's section or, if empty, matches the department
 const getUserIdsBySectionOrDepartment = async (user) => {
     let query = {};
 
@@ -9121,7 +9047,7 @@ const getUserIdsBySectionOrDepartment = async (user) => {
     return usersInTask.map(user => user._id);
 };
 
-// Function to convert Gregorian date to Hijri with custom formatting
+// * Function to convert Gregorian date to Hijri with custom formatting
 const getCustomHijriDate = async () => {
     // Set locale for Hijri dates (you can still use ar-SA for the Hijri calculation if needed)
     momentHijri.locale('en'); // Set to English locale to avoid Arabic formatting
@@ -9138,6 +9064,83 @@ const getCustomHijriDate = async () => {
     // Return formatted Hijri date in English
     return `${m.iDate()} ${monthName}, ${m.iYear()} AH`;
 };
+
+// * Helper function to get random colour
+const getRandomColor = () => {
+    const colors = ['DarkGoldenRod', 'Black', 'MidnightBlue', 'Indigo', 'Maroon', 'OliveDrab'];
+
+    // Get a random index from the colors array
+    const randomIndex = Math.floor(Math.random() * colors.length);
+
+    // Return the color at the random index
+    return colors[randomIndex];
+}
+
+// * Helper function to generate qr code image
+const generateCustomQRCode = async (data) => {
+    try {
+        const firstColour = getRandomColor();
+        const secondColour = getRandomColor();
+
+        // Create a new instance of QRCodeCanvas
+        const qrCode = new QRCodeCanvas({
+            data: data,
+            image: path.join(__dirname, 'public/assets/img/icons/logolakmns/', 'LOGO KEDUA.png'), // Path to the logo image
+            width: 400, // Width of the QR code
+            height: 400, // Height of the QR code
+            margin: 1,
+            imageOptions: {
+                imageSize: 0.38,
+                crossOrigin: 'anonymous',
+            },
+            qrOptions: {
+                errorCorrectionLevel: 'M',
+                typeNumber: 4
+            },
+            backgroundOptions: {
+                color: '#ffffff00', // Background color
+            },
+            dotsOptions: {
+                // color: "#111",
+                type: "classy-rounded",
+                gradient: {
+                    type: 'linear',
+                    rotation: 1,
+                    colorStops: [{ offset: 0, color: firstColour }, { offset: 1, color: secondColour }]
+                },
+            },
+            cornersSquareOptions: {
+                // color: "#111",
+                // gradient: {
+                //     type: 'linear',
+                //     rotation: 1,
+                //     colorStops: [{ offset: 0, color: firstColour }, { offset: 1, color: secondColour }]
+                // },
+                type: 'extra-rounded'
+            },
+            cornersDotOptions: {
+                // color: "#111",
+                gradient: {
+                    type: 'linear',
+                    rotation: 1,
+                    colorStops: [{ offset: 0, color: firstColour }, { offset: 1, color: secondColour }]
+                },
+                type: 'dot'
+            }
+        });
+
+        // Generate QR code as a buffer
+        const qrCodeBuffer = await qrCode.toBuffer('png');
+
+        // Convert buffer to base64 string
+        const qrCodeBase64 = `data:image/png;base64,${qrCodeBuffer.toString('base64')}`;
+
+        return qrCodeBase64; // Returns base64-encoded QR code
+    } catch (error) {
+        console.error('Error generating custom QR code:', error);
+        throw error;
+    }
+}
 
 // Global error handler middleware
 app.use((error, req, res, next) => {
