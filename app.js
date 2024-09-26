@@ -25,7 +25,7 @@ const requestIp = require('request-ip');
 const { performance } = require('perf_hooks');
 const webPush = require('web-push');
 const { QRCodeCanvas } = require('@loskir/styled-qr-code-node');
-const momentHijri = require('moment-hijri'); // Extend moment with hijri support
+const momentHijri = require('moment-hijri');
 
 const app = express();
 
@@ -5682,7 +5682,7 @@ async function generateCustomQRCode(data) {
 }
 
 app.get('/api/hijri-date', async (req, res) => {
-    
+
     momentHijri.locale('ar-SA');
     m = momentHijri(); // Parse a Hijri date.
     m.format('iYYYY/iM/iD [is] YYYY/M/D');
@@ -5700,6 +5700,9 @@ app.get('/api/hijri-date', async (req, res) => {
     // Return formatted Hijri date
     const hijriDate = `${m.iDate()} ${monthName}, ${m.iYear()} AH`;
     // Return the Hijri date as JSON
+
+    momentHijri.locale('en');
+
     res.json({ hijriDate });
 });
 
@@ -9140,25 +9143,26 @@ const hijriMonths = [
 ];
 
 // Function to convert Gregorian date to Hijri with custom formatting
-const getCustomHijriDate = async () => {
+// const getCustomHijriDate = async () => {
 
-    momentHijri.locale('ar-SA');
-    m = momentHijri(); // Parse a Hijri date.
-    m.format('iYYYY/iM/iD [is] YYYY/M/D');
+//     momentHijri.locale('ar-SA');
+//     m = momentHijri(); // Parse a Hijri date.
+//     m.format('iYYYY/iM/iD [is] YYYY/M/D');
 
-    m.iYear(); // 1410
-    m.iMonth(); // 7
-    m.iDate(); // 28
-    m.iDayOfYear(); // 236
-    m.iWeek(); // 35
-    m.iWeekYear();
+//     m.iYear(); // 1410
+//     m.iMonth(); // 7
+//     m.iDate(); // 28
+//     m.iDayOfYear(); // 236
+//     m.iWeek(); // 35
+//     m.iWeekYear();
 
-    // Use the hijriMonths array to get the English month name
-    const monthName = hijriMonths[m.iMonth()];
+//     // Use the hijriMonths array to get the English month name
+//     const monthName = hijriMonths[m.iMonth()];
 
-    // Return formatted Hijri date
-    return `${m.iDate()} ${monthName}, ${m.iYear()} AH`;
-}
+//     momentHijri.locale('en');
+//     // Return formatted Hijri date
+//     return `${m.iDate()} ${monthName}, ${m.iYear()} AH`;
+// }
 
 // Global error handler middleware
 app.use((error, req, res, next) => {
