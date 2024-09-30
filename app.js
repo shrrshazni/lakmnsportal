@@ -414,6 +414,9 @@ const auxPoliceDatabase = mongoose.createConnection(
 const vmsDatabase = mongoose.createConnection(
     'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/vms'
 );
+const educationDatabase = mongoose.createConnection(
+    'mongodb+srv://protech-user-1:XCouh0jCtSKzo2EF@cluster-lakmnsportal.5ful3sr.mongodb.net/education'
+);
 
 // ============================
 // Define Mongoose Schema and Model
@@ -823,6 +826,103 @@ const subscriptionSchema = new mongoose.Schema({
 });
 subscriptionSchema.index({ endpoint: 1 });
 
+const childSchema = new mongoose.Schema({
+    name: { type: String },
+    dob: { type: Date, default: Date.now },
+    nric: { type: String },
+    gender: { type: String },
+    pob: { type: String },
+    race: { type: String },
+    citizenship: { type: String },
+    swkNative: { type: String },
+    profile: { type: String },
+    class: { type: mongoose.Schema.Types.ObjectId, ref: 'Class', required: false },
+    receiptUploaded: { type: Boolean, default: false },
+    parent: { type: mongoose.Schema.Types.ObjectId, ref: 'Parent' },
+    attendanceRecords: [{
+        date: Date,
+        status: String,
+        additionalInfo: String
+    }],
+    siblings: [{
+        nama: String,
+        dob: Date,
+        status: { type: String, enum: ['Study', 'Work', 'Unemployed'] },
+        education: { type: String, enum: ['Preschool', 'Primary School', 'High School', 'Diploma', 'Degree', 'Master', 'PHD'] }
+    }]
+});
+
+// Add indexes for performance optimization
+childSchema.index({ name: 1 });
+childSchema.index({ dob: 1 });
+childSchema.index({ nric: 1 });
+childSchema.index({ class: 1 });
+childSchema.index({ parent: 1 });
+childSchema.index({ 'attendanceRecords.date': 1 });
+
+const classSchema = new mongoose.Schema({
+    classname: String,
+    teacher: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Teacher' }],
+    students: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Child' }]
+});
+
+// Add indexes for performance optimization
+classSchema.index({ classname: 1 });
+classSchema.index({ teacher: 1 });
+
+const parentSchema = new mongoose.Schema({
+    user: { type: mongoose.Schema.Types.ObjectId, required: true },
+    children: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Child' }]
+});
+
+// Add indexes for performance optimization
+parentSchema.index({ user: 1 });
+
+const teacherSchema = new mongoose.Schema({
+    user: { type: mongoose.Schema.Types.ObjectId },
+    class: { type: mongoose.Schema.Types.ObjectId, ref: 'Class', required: true }
+});
+
+// Add indexes for performance optimization
+teacherSchema.index({ user: 1 });
+teacherSchema.index({ class: 1 });
+
+const schoolAttendanceSchema = new mongoose.Schema({
+    child: { type: mongoose.Schema.Types.ObjectId, ref: 'Child', required: true },
+    status: { type: String, enum: ['Present', 'Absent'], required: true },
+    remarks: { type: String },
+    date: { type: Date, required: true }
+});
+
+// Add indexes for performance optimization
+schoolAttendanceSchema.index({ child: 1, date: 1 });
+schoolAttendanceSchema.index({ status: 1 });
+
+const paymentSchema = new mongoose.Schema({
+    child: { type: mongoose.Schema.Types.ObjectId, ref: 'Child' },
+    products: [{
+        name: String,
+        desc: String,
+        type: { type: String },
+        color: String,
+        size: { type: String },
+        quantity: { type: Number, default: 1 },
+        price: Number
+    }],
+    isProduct: { type: Boolean },
+    totalAmount: { type: Number },
+    date: { type: Date, default: Date.now },
+    timestamp: { type: Date, default: Date.now },
+    file: String,
+    status: { type: String, enum: ['Pay Now', 'Pending', 'Paid', 'Invalid'] }
+});
+
+// Add indexes for performance optimization
+paymentSchema.index({ child: 1 });
+paymentSchema.index({ date: 1 });
+paymentSchema.index({ status: 1 });
+
+
 // Integrate passport-local-mongoose and findOrCreate plugins
 userSchema.plugin(passportLocalMongoose);
 userSchema.plugin(findOrCreate);
@@ -844,7 +944,12 @@ const PatrolAux = auxPoliceDatabase.model('PatrolAux', patrolSchema);
 const CaseAux = auxPoliceDatabase.model('CaseAux', caseSchema);
 const DutyHandoverAux = auxPoliceDatabase.model('DutyHandoverAux', dutyHandoverSchema);
 const Vms = vmsDatabase.model('Visitors', vmsSchema);
-const Subscriptions = userDatabase.model('Subscriptions', subscriptionSchema);
+const ChildEducation = educationDatabase.model('Children', childSchema);
+const ParentEducation = educationDatabase.model('Parents', parentSchema);
+const TeacherEducation = educationDatabase.model('Teachers', teacherSchema);
+const ClassEducation = educationDatabase.model('Classes', classSchema);
+const PaymentEducation = educationDatabase.model('Payments', paymentSchema);
+const AttendanceEducation = educationDatabase.model('Attendances', schoolAttendanceSchema);
 
 // ============================
 // Configure Passport Local Strategy
@@ -3241,7 +3346,83 @@ app.get('/attendance/overview', isAuthenticated, async function (req, res, next)
             user: req.user,
             notifications: req.notifications,
             uuid: uuidv4(),
-            attendance
+            attendance,
+            show: '',
+            alert : ''
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        next(error); // Pass error to global error handler
+    }
+});
+
+// Attendance out of office route
+app.post('/attendance/outofoffice/request', isAuthenticated, async (req, res, next) => {
+    try {
+        const { date, startTime, returnTime, reason } = req.body;
+        const userId = req.user._id; // Assuming you have authentication to get the user
+
+        // Convert startDate to a valid Date object
+        const selectedDate = moment(date, 'YYYY-MM-DD').startOf('day').toDate();
+
+        // Combine startDate with startTime and returnTime to create full Date objects
+        const startDateTime = moment(`${date} ${startTime}`, 'YYYY-MM-DD H:mm').toDate();
+        const returnDateTime = moment(`${date} ${returnTime}`, 'YYYY-MM-DD H:mm').toDate();
+
+        // Check if attendance record for the selected date exists
+        let attendance = await Attendance.findOne({
+            user: userId,
+            timestamp: { $gte: moment(selectedDate).startOf('day').toDate(), $lt: moment(selectedDate).endOf('day').toDate() }
+        });
+
+        let alert;
+
+        if (attendance) {
+            // Update existing attendance record
+            attendance.outOfOffice = {
+                enabled: true,
+                reason: reason || '',
+                status: 'pending',
+                signInTime: startDateTime,
+                signOutTime: returnDateTime
+            };
+            await attendance.save();
+            alert = 'Out of office on ' + selectedDate + ' updated successfully';
+            console.log('Attendance record updated.');
+        } else {
+            // Create a new attendance record
+            attendance = new Attendance({
+                user: userId,
+                type: 'manual add',
+                status: 'Absent', // Or appropriate status
+                timestamp: selectedDate,
+                'date.signInTime': null,
+                'date.signOutTime': null,
+                'location.signIn': null,
+                'location.signOut': null,
+                remarks: 'No remarks added',
+                outOfOffice: {
+                    enabled: true,
+                    reason: reason || '',
+                    status: 'pending',
+                    signInTime: startDateTime,
+                    signOutTime: returnDateTime
+                }
+            });
+            await attendance.save();
+            alert = 'New out of office record on ' + selectedDate + ' submit successfully';
+            console.log('New attendance record created.');
+        }
+
+        const attendanceOverview = await Attendance.find({ user: req.user._id }).sort({ timestamp: -1 });
+
+        res.render('attendance-overview', {
+            user: req.user,
+            notifications: req.notifications,
+            uuid: uuidv4(),
+            attendance: attendanceOverview,
+            show: 'show',
+            alert: alert
         });
     } catch (error) {
         console.error('Error:', error);
@@ -4910,6 +5091,61 @@ app.get('/total_timeout_visitors', async function (req, res) {
 });
 
 // ============================
+// Education
+// ============================
+
+// Education overview route
+app.get('/education/overview', isAuthenticated, async (req, res, next) => {
+    try {
+        const { user, notifications } = req;
+
+        res.render('education-overview', {
+            user,
+            notifications,
+            uuid: uuidv4()
+        });
+
+    } catch (error) {
+        console.error('Error fetching data:', error);
+        next(error);
+    }
+});
+
+// Education student route
+app.get('/education/student', isAuthenticated, async (req, res, next) => {
+    try {
+        const { user, notifications } = req;
+
+        res.render('education-student', {
+            user,
+            notifications,
+            uuid: uuidv4()
+        });
+
+    } catch (error) {
+        console.error('Error fetching data:', error);
+        next(error);
+    }
+});
+
+// Education payment route
+app.get('/education/payment', isAuthenticated, async (req, res, next) => {
+    try {
+        const { user, notifications } = req;
+
+        res.render('education-payment', {
+            user,
+            notifications,
+            uuid: uuidv4()
+        });
+
+    } catch (error) {
+        console.error('Error fetching data:', error);
+        next(error);
+    }
+});
+
+// ============================
 // Fetch Data API
 // ============================
 
@@ -6543,32 +6779,6 @@ app.get('/super-admin/logout', isAuthenticated, async (req, res, next) => {
 // * This route is accessible to authenticated users.
 // * It retrieves the user's data and unread notifications,
 // * and renders the 'temp' view with the user data, notifications, and a unique UUID.
-app.get('/temp', isAuthenticated, async (req, res, next) => {
-    const username = req.user.username;
-    const user = req.user;
-
-    try {
-        // Retrieve unread notifications for the user
-        const notifications = await Notification.find({
-            recipient: user._id,
-            read: false
-        })
-            .populate('sender')
-            .sort({ timestamp: -1 });
-
-        // Render the 'temp' page with user data and notifications
-        res.render('temp', {
-            user: user,
-            notifications: notifications,
-            uuid: uuidv4(),
-        });
-    } catch (error) {
-        // Pass rendering errors to global error handler
-        console.error('Error:', error);
-        next(error);
-    }
-});
-
 // * Route to render the email leave page for testing
 // * This route is accessible to authenticated users.
 // * It retrieves the user's data and unread notifications,
@@ -6576,9 +6786,6 @@ app.get('/temp', isAuthenticated, async (req, res, next) => {
 app.get('/testing', isAuthenticated, async (req, res, next) => {
     try {
         const { user, notifications } = req;
-
-        deleteTodayAttendanceRecords();
-        createTodayAttendance();
 
         res.render('testing', {
             user: user,
@@ -8132,7 +8339,7 @@ const processLeaveRequest = async (type, user, userLeave, startDate, returnDate,
                 ? userLeave.sick.leave - userLeave.sick.taken
                 : userLeave.sickExtended.leave - userLeave.sickExtended.taken;
             console.log(checkLeaveBalance(leaveBalance, numberOfDays, 1, renderDataError));
-            if (checkLeaveBalance(leaveBalance, numberOfDays, 1, renderDataError) && amountDayRequest <= 1) {
+            if (checkLeaveBalance(leaveBalance, numberOfDays, 1, renderDataError) && amountDayRequest <= 1 && amountDayRequest >= -5) {
                 if (await checkFileAttachment(uuid, renderDataError, `There is no file attached for ${type.toLowerCase()}!`)) {
                     approvals = generateApprovals(
                         user,
@@ -8154,7 +8361,7 @@ const processLeaveRequest = async (type, user, userLeave, startDate, returnDate,
             }
             break;
         case 'Emergency Leave':
-            if (amountDayRequest <= 1) {
+            if (amountDayRequest <= 1 && amountDayRequest >= -5 ) {
                 if (await checkFileAttachment(uuid, renderDataError, `There is no file attached for ${type.toLowerCase()}!`)) {
                     approvals = generateApprovals(
                         user,
