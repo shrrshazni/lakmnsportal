@@ -37,281 +37,20 @@
   }
 </script>
 
-<style>
-  /* Custom colors */
-  :root {
-    --phoenix-blue: #3874ff;
-    --phoenix-indigo: #6610f2;
-    --phoenix-purple: #6f42c1;
-    --phoenix-pink: #d63384;
-    --phoenix-red: #ec1f00;
-    --phoenix-orange: #e5780b;
-    --phoenix-yellow: #ffc107;
-    --phoenix-green: #25b003;
-    --phoenix-teal: #20c997;
-    --blur: 20px;
-    --image: url('https://s3-us-west-2.amazonaws.com/s.cdpn.io/1376484/jess-harding-lqT6NAmTaiY-unsplash.jpg');
-  }
-
-  #glow-card {
-    transition: background 0.8s ease-in-out;
-  }
-
-  /* Full-page glass background effect */
-  /* .glass-background {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background-image: var(--image);
-    background-size: cover;
-    background-position: center;
-    filter: blur(var(--blur));
-    z-index: -5;
-  } */
-
-  :root {
-    --diameter: 45vmax;
-  }
-
-
-  #qrblock {
-    position: relative;
-    /* Set position relative for absolute positioning of glow elements */
-    overflow: hidden;
-    /* Ensure glow doesn't overflow outside the block */
-  }
-
-  .glow-1 {
-    position: absolute;
-    width: .001vmin;
-    height: .001vmin;
-    border-radius: 50%;
-    opacity: .25;
-    box-shadow: 0 0 var(--diameter) var(--diameter) magenta;
-    animation: hue 10s 0s linear infinite, move1 19s 0s linear infinite;
-    z-index: -1;
-  }
-
-  .glow-2 {
-    position: absolute;
-    width: .001vmin;
-    height: .001vmin;
-    border-radius: 50%;
-    opacity: .25;
-    box-shadow: 0 0 var(--diameter) var(--diameter) white;
-    animation: hue 15s 0s linear infinite, move2 25s 0s linear infinite;
-    z-index: -1;
-  }
-
-  .glow-3 {
-    position: absolute;
-    width: .001vmin;
-    height: .001vmin;
-    border-radius: 50%;
-    opacity: .2;
-    box-shadow: 0 0 var(--diameter) var(--diameter) cyan;
-    animation: hue 20s 0s linear infinite, move3 15s 0s linear infinite;
-    z-index: -1;
-  }
-
-  @keyframes hue {
-    0% {
-      filter: hue-rotate(0deg);
-    }
-
-    100% {
-      filter: hue-rotate(360deg);
-    }
-  }
-
-  @keyframes move1 {
-    0% {
-      top: 0vh;
-      left: 50vw;
-    }
-
-    25% {
-      left: 0vw;
-    }
-
-    50% {
-      top: 100vh;
-    }
-
-    75% {
-      left: 100vw;
-    }
-
-    100% {
-      top: 0vh;
-      left: 50vw;
-    }
-  }
-
-  @keyframes move2 {
-    0% {
-      top: 50vh;
-      left: 100vw;
-    }
-
-    25% {
-      top: 100vh;
-    }
-
-    50% {
-      left: 0vw;
-    }
-
-    75% {
-      top: 0vh;
-    }
-
-    100% {
-      top: 50vh;
-      left: 100vw;
-    }
-  }
-
-  @keyframes move3 {
-    0% {
-      top: 100vh;
-      left: 50vw;
-    }
-
-    25% {
-      left: 100vw;
-    }
-
-    50% {
-      top: 0vh;
-    }
-
-    75% {
-      left: 0vw;
-    }
-
-    100% {
-      top: 100vh;
-      left: 50vw;
-    }
-  }
-
-  .floating-icon {
-    display: inline-block;
-    /* Ensure the icon can be transformed */
-    animation: float 3s ease-in-out infinite;
-    /* Apply the animation */
-  }
-
-  @keyframes float {
-
-    0%,
-    100% {
-      transform: translateY(7.5px);
-      /* Start and end at original position */
-    }
-
-    50% {
-      transform: translateY(-2.5px);
-      /* Move up 10px at the midpoint */
-    }
-  }
-
-  /* Main container for the clock */
-  .clock {
-    position: relative;
-    width: 325px;
-    height: 325px;
-    border: 7.5px solid white;
-    /* White outline */
-    border-radius: 50%;
-    background: transparent;
-    /* Transparent background */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-
-  /* Clock center dot */
-  .clock::after {
-    content: '';
-    position: absolute;
-    width: 10px;
-    height: 10px;
-    background-color: white;
-    /* Center dot */
-    border-radius: 50%;
-    z-index: 10;
-  }
-
-  /* Common hand styles */
-  .hand {
-    position: absolute;
-    width: 50%;
-    height: 2px;
-    background-color: white;
-    /* White outline for hands */
-    top: 50%;
-    left: 50%;
-    transform-origin: 0 50%;
-    /* Rotation point at the center of the clock */
-    transform: rotate(90deg);
-    /* Initial rotation */
-  }
-
-  /* Hour hand */
-  .hour {
-    height: 4px;
-    width: 32%;
-    border-radius: 5px;
-  }
-
-  /* Minute hand */
-  .minute {
-    height: 3.2px;
-    width: 40%;
-    border-radius: 5px;
-  }
-
-  /* Second hand */
-  .second {
-    height: 2px;
-    width: 45%;
-    background-color: red;
-    /* Different color for seconds */
-    border-radius: 10px;
-  }
-
-  /* Hour number styles */
-  .hour-number {
-    position: absolute;
-    color: white;
-    /* White text color */
-    font-size: 24px;
-    /* Adjust size as needed */
-    transform: translate(-50%, -50%);
-    /* Center the number */
-    text-align: center;
-    /* Center align the text */
-  }
-</style>
-
 <div>
   <div class="glow-1"></div>
   <div class="glow-2"></div>
   <div class="glow-3"></div>
 </div>
 
-<div class="d-lg-flex d-block justify-content-center align-items-center z-5 row g-0 mt-5" style="min-height: 90vh;">
+<div class="d-lg-flex d-block justify-content-center align-items-center z-2 row g-0 mt-n3 mt-xl-5" style="min-height: 90vh;">
 
-  <div class="py-5 px-2 px-xl-5 mb-0 order-xl-1 order-md-1 col-12 col-md-6">
+  <div class="py-0 py-xl-5 px-2 px-xl-5 mb-0 order-xl-1 order-md-1 col-12 col-md-6 z-5">
 
     <div class="px-2 py-5">
 
-      <div class="mb-8">
-        <h1 class="fs-3 fs-md-3 fs-xxl-2 text-center">
+      <div class="mb-4 mb-xl-8">
+        <h1 class="fs-5 fs-md-3 fs-xxl-2 text-center">
           <i class="fs-1" id="greeting-icon"></i>
           <span id="greeting-message">Good Morning</span>
         </h1>
@@ -352,9 +91,9 @@
         </script>
       </div>
 
-      <div class="">
+      <div>
         <!-- Clock Container -->
-        <div class="clock mx-auto mb-8">
+        <div class="clock mx-auto mb-4 mb-xl-8">
           <div class="hand hour" id="hour"></div>
           <div class="hand minute" id="minute"></div>
           <div class="hand second" id="second"></div>
@@ -374,7 +113,7 @@
       </div>
 
       <div class="text-center" style="min-width: 25vw;">
-        <h2 class="fs-3 fs-md-2 fs-xxl-1 fst-italic text-white" id="currentTime"></h2>
+        <h2 class="fs-4 fs-md-3 fs-xxl-1 fst-italic text-white" id="currentTime"></h2>
 
         <script>
           function updateClockHands(hours, minutes, seconds) {
@@ -427,41 +166,10 @@
       </div>
 
       <div class="d-flex justify-content-center">
-        <!-- <div class="text-center">
-          <h2 id="dayName" class="fs-6 fs-md-6 fs-xxl-6 mb-3"></h2>
-
-          <script>
-            // Function to get the current day name based on Asia/Kuala_Lumpur timezone
-            function updateDayName() {
-              // Get the current date and time in Asia/Kuala_Lumpur timezone
-              const today = new Date().toLocaleString("en-US", {
-                timeZone: "Asia/Kuala_Lumpur"
-              });
-
-              // Create a new Date object with the localized time
-              const localDate = new Date(today);
-
-              // Create an array of day names
-              const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-
-              // Get the day name based on the localized day
-              const dayName = dayNames[localDate.getDay()];
-
-              // Display the day name in the <h2> element
-              document.getElementById("dayName").textContent = dayName;
-            }
-
-            // Initial call to display the current day name
-            updateDayName();
-
-            // Set interval to refresh the day name every hour (3600000 milliseconds = 1 hour)
-            setInterval(updateDayName, 3600000);
-          </script>
-        </div> -->
 
         <div class="text-center fst-italic">
-          <h2 class="fs-6 fs-md-6 fs-xxl-6 text-white" id="current-date"></h2>
-          <h3 class="fs-6 fs-md-6 fs-xxl-6" id="hijri-date"></h3>
+          <h2 class="fs-7 fs-md-6 fs-xxl-6 text-white" id="current-date"></h2>
+          <h3 class="fs-7 fs-md-6 fs-xxl-6" id="hijri-date"></h3>
 
           <script>
             function getOrdinalSuffix(day) {
@@ -546,13 +254,13 @@
 
   </div>
 
-  <div class="px-8 py-5 col-12 col-md-6">
+  <div class="px-3 px-xl-8 py-4 py-xl-5 col-12 col-md-6 mt-n5 z-5">
     <div class="order-md-0">
       <div class="bg-white rounded-5" style="min-height: 25vh;min-width: 45vw;" id="qrblock">
         <div class="p-2">
 
           <div class="rounded-5" id="glow-card">
-            <div class="p-2">
+            <div class="p-1 p">
               <img id="qrCode" class="w-100 h-100">
             </div>
           </div>

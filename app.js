@@ -3348,7 +3348,7 @@ app.get('/attendance/overview', isAuthenticated, async function (req, res, next)
             uuid: uuidv4(),
             attendance,
             show: '',
-            alert : ''
+            alert: ''
         });
     } catch (error) {
         console.error('Error:', error);
@@ -5134,6 +5134,23 @@ app.get('/education/payment', isAuthenticated, async (req, res, next) => {
         const { user, notifications } = req;
 
         res.render('education-payment', {
+            user,
+            notifications,
+            uuid: uuidv4()
+        });
+
+    } catch (error) {
+        console.error('Error fetching data:', error);
+        next(error);
+    }
+});
+
+// Education parent route - sign up
+app.get('/education/parent/sign-up', isAuthenticated, async (req, res, next) => {
+    try {
+        const { user, notifications } = req;
+        
+        res.render('education-parent-signup', {
             user,
             notifications,
             uuid: uuidv4()
@@ -7362,61 +7379,60 @@ const clearQRCodeData = async () => {
 // * Location mappings for different sites
 const locationMappings = {
     'Baitul Makmur I': [
-        { checkpointName: 'Parameter 1', time: '', logReport: '' },
-        { checkpointName: 'Parameter 2', time: '', logReport: '' },
-        { checkpointName: 'Parameter 3', time: '', logReport: '' },
-        { checkpointName: 'Parameter 4', time: '', logReport: '' },
-        { checkpointName: 'Basement 1', time: '', logReport: '' },
-        { checkpointName: 'Basement 2', time: '', logReport: '' },
-        { checkpointName: 'Basement 3', time: '', logReport: '' },
-        { checkpointName: 'Basement 4', time: '', logReport: '' },
-        { checkpointName: 'Club House', time: '', logReport: '' },
-        { checkpointName: 'Old Cafe', time: '', logReport: '' },
-        { checkpointName: 'Level 4', time: '', logReport: '' },
-        { checkpointName: 'Level 8', time: '', logReport: '' }
+        { checkpointName: 'Entrance Way', time: '', logReport: '' },
+        { checkpointName: 'MSB Room', time: '', logReport: '' },
+        { checkpointName: 'Chiller Room', time: '', logReport: '' },
+        { checkpointName: 'Exit Way', time: '', logReport: '' },
+        { checkpointName: 'Level G (Right Wing - Club House)', time: '', logReport: '' },
+        { checkpointName: 'Level G (Left Wing - Old Cafe)', time: '', logReport: '' },
+        { checkpointName: 'Level 4 (Middle Staircase)', time: '', logReport: '' },
+        { checkpointName: 'Level 8 (Middle Staircase)', time: '', logReport: '' }
     ],
     'Baitul Makmur II': [
-        { checkpointName: 'Basement 1 (a)', time: '', logReport: '' },
-        { checkpointName: 'Basement 1 (b)', time: '', logReport: '' },
-        { checkpointName: 'Basement 1 (c)', time: '', logReport: '' },
-        { checkpointName: 'Basement 2 (a)', time: '', logReport: '' },
-        { checkpointName: 'Basement 2 (b)', time: '', logReport: '' },
-        { checkpointName: 'Basement 2 (c)', time: '', logReport: '' },
-        { checkpointName: 'Ground Floor 1', time: '', logReport: '' },
-        { checkpointName: 'Ground Floor 2', time: '', logReport: '' },
-        { checkpointName: 'Level 8', time: '', logReport: '' },
-        { checkpointName: 'Level 17', time: '', logReport: '' },
-        { checkpointName: 'Level 5 (a)', time: '', logReport: '' },
-        { checkpointName: 'Level 5 (b)', time: '', logReport: '' },
-        { checkpointName: 'Genset Outside Building', time: '', logReport: '' },
-        { checkpointName: 'Emergency Entrance', time: '', logReport: '' },
-        { checkpointName: 'Outside Cafe 1', time: '', logReport: '' },
-        { checkpointName: 'Outside Cafe 2', time: '', logReport: '' },
-        { checkpointName: 'Service Lift Level 6', time: '', logReport: '' },
-        { checkpointName: 'Service Lift Level 10', time: '', logReport: '' },
-        { checkpointName: 'Service Lift Level 11', time: '', logReport: '' }
+        { checkpointName: 'Basement 2 - Fire Pump Room (East Wing)', time: '', logReport: '' },
+        { checkpointName: 'Basement 2 - SSB Room (Middle Wing)', time: '', logReport: '' },
+        { checkpointName: 'Basement 2 - Chiller Plant Room (West Wing)', time: '', logReport: '' },
+        { checkpointName: 'Basement 1 - Genset Room (East Wing)', time: '', logReport: '' },
+        { checkpointName: 'Basement 1 - SSB Room (Middle Wing)', time: '', logReport: '' },
+        { checkpointName: 'Basement 1 - FAP Room (West Wing)', time: '', logReport: '' },
+        { checkpointName: 'Level G - Service Lift (West Wing)', time: '', logReport: '' },
+        { checkpointName: 'Level G - Service Lift (East Wing)', time: '', logReport: '' },
+        { checkpointName: 'Level G - Switch Gear Room (East Wing - Outside Building)', time: '', logReport: '' },
+        { checkpointName: 'Level 5 - Exit Way (East Wing)', time: '', logReport: '' },
+        { checkpointName: 'Level 5 - Garden (West Wing)', time: '', logReport: '' },
+        { checkpointName: 'Level 5 - Servive Lift Door (West Wing)', time: '', logReport: '' },
+        { checkpointName: 'Level 6 - UKPS (West Wing-Emergency Stairs)', time: '', logReport: '' },
+        { checkpointName: 'Level 10 - Treasury (West Wing-Emergency Stairs)', time: '', logReport: '' },
+        { checkpointName: 'Level 11 - Forestry (East Wing-Emergency Stairs)', time: '', logReport: '' },
+        { checkpointName: 'Level 8 - Common Area (West Wing)', time: '', logReport: '' },
+        { checkpointName: 'Level 17 - Common Area (West Wing)', time: '', logReport: '' }
     ],
     'Jamek Mosque': [
-        { checkpointName: 'Bilal Area', time: '', logReport: '' },
-        { checkpointName: 'Mosque Tower', time: '', logReport: '' },
+        { checkpointName: 'Main Gate', time: '', logReport: '' },
+        { checkpointName: 'Madrasah Darul Quran (MDQ)', time: '', logReport: '' },
+        { checkpointName: 'Genset', time: '', logReport: '' },
         { checkpointName: 'Cooling Tower', time: '', logReport: '' },
-        { checkpointName: 'Mimbar Area', time: '', logReport: '' },
-        { checkpointName: 'First Gate', time: '', logReport: '' }
+        { checkpointName: 'Open Parking (Backside MJNS)', time: '', logReport: '' },
+        { checkpointName: 'Lower Level (Left Porch)', time: '', logReport: '' },
+        { checkpointName: 'Technical Room (Prayer Area)', time: '', logReport: '' },
+        { checkpointName: 'Lower Level (Right Porch)', time: '', logReport: '' },
+        { checkpointName: 'Central Room (Left Porch - Tower)', time: '', logReport: '' },
+        { checkpointName: 'Central Room (Right Porch - Genset)', time: '', logReport: '' }
     ],
     'City Mosque': [
-        { checkpointName: 'Main Entrance', time: '', logReport: '' },
-        { checkpointName: 'Gate 2', time: '', logReport: '' },
-        { checkpointName: 'Backside Mosque (cemetery)', time: '', logReport: '' },
-        { checkpointName: 'Muslimah Pray Area', time: '', logReport: '' }
+        { checkpointName: 'Entrance Gate', time: '', logReport: '' },
+        { checkpointName: 'Mihrab Area (Backside)', time: '', logReport: '' },
+        { checkpointName: 'Exit Gate (Dock Yard Area)', time: '', logReport: '' },
+        { checkpointName: 'Upper Pray Area', time: '', logReport: '' }
     ],
     'Raudhatul Sakinah': [
-        { checkpointName: 'Cemetery Area 1', time: '', logReport: '' },
-        { checkpointName: 'Cemetery Area 2', time: '', logReport: '' },
-        { checkpointName: 'Cemetery Area 3', time: '', logReport: '' },
-        { checkpointName: 'Cemetery Area 4', time: '', logReport: '' },
-        { checkpointName: 'Office Area 1', time: '', logReport: '' },
-        { checkpointName: 'Office Area 2', time: '', logReport: '' },
-        { checkpointName: 'Office Area 3', time: '', logReport: '' }
+        { checkpointName: 'MSB Room', time: '', logReport: '' },
+        { checkpointName: 'Stor KRSK', time: '', logReport: '' },
+        { checkpointName: 'Utility Room', time: '', logReport: '' },
+        { checkpointName: 'Gazebo 1 (lakeside)', time: '', logReport: '' },
+        { checkpointName: 'Plot 13', time: '', logReport: '' },
+        { checkpointName: 'Plot H (VIP)', time: '', logReport: '' },
+        { checkpointName: 'Gazebo Plot H (VIP)', time: '', logReport: '' }
     ]
 };
 
@@ -8361,7 +8377,7 @@ const processLeaveRequest = async (type, user, userLeave, startDate, returnDate,
             }
             break;
         case 'Emergency Leave':
-            if (amountDayRequest <= 1 && amountDayRequest >= -5 ) {
+            if (amountDayRequest <= 1 && amountDayRequest >= -5) {
                 if (await checkFileAttachment(uuid, renderDataError, `There is no file attached for ${type.toLowerCase()}!`)) {
                     approvals = generateApprovals(
                         user,
@@ -8382,7 +8398,7 @@ const processLeaveRequest = async (type, user, userLeave, startDate, returnDate,
             }
             break;
         case 'Half Day Emergency Leave':
-            if (amountDayRequest <= 1 && numberOfDays <= 1) {
+            if (amountDayRequest <= 1 && numberOfDays <= 1 && amountDayRequest >= -5) {
                 if (await checkFileAttachment(uuid, renderDataError, `There is no file attached for ${type.toLowerCase()}!`)) {
                     approvals = generateApprovals(
                         user,

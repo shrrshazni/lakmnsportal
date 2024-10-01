@@ -179,3 +179,405 @@
     height: 35vh !important;
   }
 }
+
+/* Hide Google Translate toolbar and feedback elements */
+.VIpgJd-ZVi9od-ORHb-OEVmcd {
+  display: none !important;
+}
+
+body {
+  top: 0 !important;
+}
+
+#goog-gt-tt {
+  display: none !important;
+  top: 0px !important;
+}
+
+.goog-tooltip skiptranslate {
+  display: none !important;
+  top: 0px !important;
+}
+
+.activity-root {
+  display: hide !important;
+}
+
+.status-message {
+  display: hide !important;
+}
+
+.started-activity-container {
+  display: hide !important;
+}
+
+#btn-ms {
+  padding: 0 0.5rem;
+  height: 1rem;
+  width: auto;
+  border-radius: 50rem;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  justify-content: center;
+  border: 1px solid var(--phoenix-border-color);
+  background-color: var(--phoenix-primary-lighter);
+  color: var(--phoenix-primary);
+  cursor: pointer;
+  -webkit-transition: all 0.2s ease-in-out;
+  -o-transition: all 0.2s ease-in-out;
+  transition: all 0.2s ease-in-out;
+}
+
+#btn-ms:hover {
+  background-color: var(--phoenix-primary);
+  color: var(--phoenix-body-bg);
+}
+
+#btn-en {
+  padding: 0 0.5rem;
+  height: 1rem;
+  width: auto;
+  border-radius: 50rem;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  justify-content: center;
+  border: 1px solid var(--phoenix-border-color);
+  background-color: var(--phoenix-primary);
+  color: var(--phoenix-body-bg);
+  cursor: pointer;
+  -webkit-transition: all 0.2s ease-in-out;
+  -o-transition: all 0.2s ease-in-out;
+  transition: all 0.2s ease-in-out;
+}
+
+#btn-en:hover {
+  background-color: var(--phoenix-body-bg);
+  color: var(--phoenix-primary);
+}
+
+/* button at mobile */
+#btn-ms-mobile {
+  padding: 0 0.5rem;
+  height: 1rem;
+  width: auto;
+  border-radius: 50rem;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  justify-content: center;
+  border: 1px solid var(--phoenix-border-color);
+  background-color: var(--phoenix-body-bg);
+  color: var(--phoenix-primary);
+  cursor: pointer;
+  -webkit-transition: all 0.2s ease-in-out;
+  -o-transition: all 0.2s ease-in-out;
+  transition: all 0.2s ease-in-out;
+}
+
+#btn-ms-mobile:hover {
+  background-color: var(--phoenix-primary);
+  color: var(--phoenix-body-bg);
+}
+
+#btn-en-mobile {
+  padding: 0 0.5rem;
+  height: 1rem;
+  width: auto;
+  border-radius: 50rem;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  justify-content: center;
+  border: 1px solid var(--phoenix-border-color);
+  background-color: var(--phoenix-primary);
+  color: var(--phoenix-body-bg);
+  cursor: pointer;
+  -webkit-transition: all 0.2s ease-in-out;
+  -o-transition: all 0.2s ease-in-out;
+  transition: all 0.2s ease-in-out;
+}
+
+#btn-en-mobile:hover {
+  background-color: var(--phoenix-body-bg);
+  color: var(--phoenix-primary);
+}
+
+/* glow background */
+
+:root {
+  --phoenix-blue: #3874ff;
+  --phoenix-indigo: #6610f2;
+  --phoenix-purple: #6f42c1;
+  --phoenix-pink: #d63384;
+  --phoenix-red: #ec1f00;
+  --phoenix-orange: #e5780b;
+  --phoenix-yellow: #ffc107;
+  --phoenix-green: #25b003;
+  --phoenix-teal: #20c997;
+  --blur: 20px;
+  --image: url('https://s3-us-west-2.amazonaws.com/s.cdpn.io/1376484/jess-harding-lqT6NAmTaiY-unsplash.jpg');
+}
+
+#glow-card {
+  transition: background 0.8s ease-in-out;
+}
+
+/* Full-page glass background effect */
+/* .glass-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-image: var(--image);
+    background-size: cover;
+    background-position: center;
+    filter: blur(var(--blur));
+    z-index: -5;
+  } */
+
+:root {
+  --diameter: 45vmax;
+}
+
+#qrblock {
+  position: relative;
+  /* Set position relative for absolute positioning of glow elements */
+  overflow: hidden;
+  /* Ensure glow doesn't overflow outside the block */
+}
+
+.glow-1 {
+  position: absolute;
+  width: 0.001vmin;
+  height: 0.001vmin;
+  border-radius: 50%;
+  opacity: 0.25;
+  box-shadow: 0 0 var(--diameter) var(--diameter) magenta;
+  animation: hue 10s 0s linear infinite, move1 19s 0s linear infinite;
+  z-index: 1;
+}
+
+.glow-2 {
+  position: absolute;
+  width: 0.001vmin;
+  height: 0.001vmin;
+  border-radius: 50%;
+  opacity: 0.25;
+  box-shadow: 0 0 var(--diameter) var(--diameter) white;
+  animation: hue 15s 0s linear infinite, move2 25s 0s linear infinite;
+  z-index: 1;
+}
+
+.glow-3 {
+  position: absolute;
+  width: 0.001vmin;
+  height: 0.001vmin;
+  border-radius: 50%;
+  opacity: 0.2;
+  box-shadow: 0 0 var(--diameter) var(--diameter) cyan;
+  animation: hue 20s 0s linear infinite, move3 15s 0s linear infinite;
+  z-index: 1;
+}
+
+@keyframes hue {
+  0% {
+    filter: hue-rotate(0deg);
+  }
+
+  100% {
+    filter: hue-rotate(360deg);
+  }
+}
+
+@keyframes move1 {
+  0% {
+    top: 0vh;
+    left: 50vw;
+  }
+
+  25% {
+    left: 0vw;
+  }
+
+  50% {
+    top: 100vh;
+  }
+
+  75% {
+    left: 100vw;
+  }
+
+  100% {
+    top: 0vh;
+    left: 50vw;
+  }
+}
+
+@keyframes move2 {
+  0% {
+    top: 50vh;
+    left: 100vw;
+  }
+
+  25% {
+    top: 100vh;
+  }
+
+  50% {
+    left: 0vw;
+  }
+
+  75% {
+    top: 0vh;
+  }
+
+  100% {
+    top: 50vh;
+    left: 100vw;
+  }
+}
+
+@keyframes move3 {
+  0% {
+    top: 100vh;
+    left: 50vw;
+  }
+
+  25% {
+    left: 100vw;
+  }
+
+  50% {
+    top: 0vh;
+  }
+
+  75% {
+    left: 0vw;
+  }
+
+  100% {
+    top: 100vh;
+    left: 50vw;
+  }
+}
+
+.floating-icon {
+  display: inline-block;
+  /* Ensure the icon can be transformed */
+  animation: float 3s ease-in-out infinite;
+  /* Apply the animation */
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(7.5px);
+    /* Start and end at original position */
+  }
+
+  50% {
+    transform: translateY(-2.5px);
+    /* Move up 10px at the midpoint */
+  }
+}
+
+/* Main container for the clock */
+.clock {
+  position: relative;
+  width: 325px;
+  height: 325px;
+  border: 7.5px solid white;
+  /* White outline */
+  border-radius: 50%;
+  background: transparent;
+  /* Transparent background */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Clock center dot */
+.clock::after {
+  content: '';
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background-color: white;
+  /* Center dot */
+  border-radius: 50%;
+  z-index: 10;
+}
+
+/* Common hand styles */
+.hand {
+  position: absolute;
+  width: 50%;
+  height: 2px;
+  background-color: white;
+  /* White outline for hands */
+  top: 50%;
+  left: 50%;
+  transform-origin: 0 50%;
+  /* Rotation point at the center of the clock */
+  transform: rotate(90deg);
+  /* Initial rotation */
+}
+
+/* Hour hand */
+.hour {
+  height: 4px;
+  width: 32%;
+  border-radius: 5px;
+}
+
+/* Minute hand */
+.minute {
+  height: 3.2px;
+  width: 40%;
+  border-radius: 5px;
+}
+
+/* Second hand */
+.second {
+  height: 2px;
+  width: 45%;
+  background-color: red;
+  /* Different color for seconds */
+  border-radius: 10px;
+}
+
+/* Hour number styles */
+.hour-number {
+  position: absolute;
+  color: white;
+  /* White text color */
+  font-size: 24px;
+  /* Adjust size as needed */
+  transform: translate(-50%, -50%);
+  /* Center the number */
+  text-align: center;
+  /* Center align the text */
+}
