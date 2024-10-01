@@ -7366,8 +7366,8 @@ const locationMappings = {
         { checkpointName: 'MSB Room', time: '', logReport: '' },
         { checkpointName: 'Chiller Room', time: '', logReport: '' },
         { checkpointName: 'Exit Way', time: '', logReport: '' },
-        { checkpointName: 'Level G (Right Wing-Club House)', time: '', logReport: '' },
-        { checkpointName: 'Level G (Left Wing-Old Cafe)', time: '', logReport: '' },
+        { checkpointName: 'Level G (Right Wing - Club House)', time: '', logReport: '' },
+        { checkpointName: 'Level G (Left Wing - Old Cafe)', time: '', logReport: '' },
         { checkpointName: 'Level 4 (Middle Staircase)', time: '', logReport: '' },
         { checkpointName: 'Level 8 (Middle Staircase)', time: '', logReport: '' }
         // { checkpointName: 'Club House', time: '', logReport: '' },
@@ -7376,23 +7376,23 @@ const locationMappings = {
         // { checkpointName: 'Level 8', time: '', logReport: '' }
     ],
     'Baitul Makmur II': [
-        { checkpointName: 'Basement 1-Genset Room (East Wing)', time: '', logReport: '' },
-        { checkpointName: 'Basement 1-SSB Room (Middle Wing)', time: '', logReport: '' },
-        { checkpointName: 'Basement 1-FAP Room (West Wing)', time: '', logReport: '' },
-        { checkpointName: 'Basement 2-Fire Pump Room (East Wing)', time: '', logReport: '' },
-        { checkpointName: 'Basement 2-SSB Room (Middle Wing)', time: '', logReport: '' },
-        { checkpointName: 'Basement 2-Chiller Plant Room (West Wing)', time: '', logReport: '' },
-        { checkpointName: 'Level G-Service Lift (West Wing)', time: '', logReport: '' },
-        { checkpointName: 'Level G-Service Lift (East Wing)', time: '', logReport: '' },
-        { checkpointName: 'Level G-Switch Gear Room (East Wing-Outside Building)', time: '', logReport: '' },
-        { checkpointName: 'Level 5-Exit Way (East Wing)', time: '', logReport: '' },
-        { checkpointName: 'Level 5-Garden (West Wing)', time: '', logReport: '' },
-        { checkpointName: 'Level 5-Servive Lift Door (West Wing)', time: '', logReport: '' },
-        { checkpointName: 'Level 6-UKPS (West Wing-Emergency Stairs)', time: '', logReport: '' },
-        { checkpointName: 'Level 8-Common Area (West Wing)', time: '', logReport: '' },
-        { checkpointName: 'Level 10-Treasury (West Wing-Emergency Stairs)', time: '', logReport: '' },
-        { checkpointName: 'Level 11-Forestry (East Wing-Emergency Stairs)', time: '', logReport: '' },
-        { checkpointName: 'Level 17-Common Area (West Wing)', time: '', logReport: '' }
+        { checkpointName: 'Basement 2 - Fire Pump Room (East Wing)', time: '', logReport: '' },
+        { checkpointName: 'Basement 2 - SSB Room (Middle Wing)', time: '', logReport: '' },
+        { checkpointName: 'Basement 2 - Chiller Plant Room (West Wing)', time: '', logReport: '' },
+        { checkpointName: 'Basement 1 - Genset Room (East Wing)', time: '', logReport: '' },
+        { checkpointName: 'Basement 1 - SSB Room (Middle Wing)', time: '', logReport: '' },
+        { checkpointName: 'Basement 1 - FAP Room (West Wing)', time: '', logReport: '' },
+        { checkpointName: 'Level G - Service Lift (West Wing)', time: '', logReport: '' },
+        { checkpointName: 'Level G - Service Lift (East Wing)', time: '', logReport: '' },
+        { checkpointName: 'Level G - Switch Gear Room (East Wing - Outside Building)', time: '', logReport: '' },
+        { checkpointName: 'Level 5 - Exit Way (East Wing)', time: '', logReport: '' },
+        { checkpointName: 'Level 5 - Garden (West Wing)', time: '', logReport: '' },
+        { checkpointName: 'Level 5 - Servive Lift Door (West Wing)', time: '', logReport: '' },
+        { checkpointName: 'Level 6 - UKPS (West Wing-Emergency Stairs)', time: '', logReport: '' },
+        { checkpointName: 'Level 10 - Treasury (West Wing-Emergency Stairs)', time: '', logReport: '' },
+        { checkpointName: 'Level 11 - Forestry (East Wing-Emergency Stairs)', time: '', logReport: '' },
+        { checkpointName: 'Level 8 - Common Area (West Wing)', time: '', logReport: '' },
+        { checkpointName: 'Level 17 - Common Area (West Wing)', time: '', logReport: '' }
         // { checkpointName: 'Service Lift Level 10', time: '', logReport: '' },
         // { checkpointName: 'Service Lift Level 11', time: '', logReport: '' }
     ],
@@ -7405,8 +7405,8 @@ const locationMappings = {
         { checkpointName: 'Lower Level (Left Porch)', time: '', logReport: '' },
         { checkpointName: 'Technical Room (Prayer Area)', time: '', logReport: '' },
         { checkpointName: 'Lower Level (Right Porch)', time: '', logReport: '' },
-        { checkpointName: 'Central Room (Left Porch-Tower)', time: '', logReport: '' },
-        { checkpointName: 'Central Room (Right Porch-Genset)', time: '', logReport: '' }
+        { checkpointName: 'Central Room (Left Porch - Tower)', time: '', logReport: '' },
+        { checkpointName: 'Central Room (Right Porch - Genset)', time: '', logReport: '' }
     ],
     'City Mosque': [
         { checkpointName: 'Entrance Gate', time: '', logReport: '' },
@@ -7421,7 +7421,7 @@ const locationMappings = {
         { checkpointName: 'Gazebo 1 (lakeside)', time: '', logReport: '' },
         { checkpointName: 'Plot 13', time: '', logReport: '' },
         { checkpointName: 'Plot H (VIP)', time: '', logReport: '' },
-        { checkpointName: 'Gazebo 1 (VIP)', time: '', logReport: '' }
+        { checkpointName: 'Gazebo Plot H (VIP)', time: '', logReport: '' }
     ]
 };
 
