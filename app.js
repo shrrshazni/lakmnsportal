@@ -5149,7 +5149,7 @@ app.get('/education/payment', isAuthenticated, async (req, res, next) => {
 app.get('/education/parent/sign-up', isAuthenticated, async (req, res, next) => {
     try {
         const { user, notifications } = req;
-        
+
         res.render('education-parent-signup', {
             user,
             notifications,
@@ -7387,13 +7387,6 @@ const locationMappings = {
         { checkpointName: 'Level G (Left Wing - Old Cafe)', time: '', logReport: '' },
         { checkpointName: 'Level 4 (Middle Staircase)', time: '', logReport: '' },
         { checkpointName: 'Level 8 (Middle Staircase)', time: '', logReport: '' }
-<<<<<<< HEAD
-=======
-        // { checkpointName: 'Club House', time: '', logReport: '' },
-        // { checkpointName: 'Old Cafe', time: '', logReport: '' },
-        // { checkpointName: 'Level 4', time: '', logReport: '' },
-        // { checkpointName: 'Level 8', time: '', logReport: '' }
->>>>>>> origin/main
     ],
     'Baitul Makmur II': [
         { checkpointName: 'Basement 2 - Fire Pump Room (East Wing)', time: '', logReport: '' },
@@ -7413,11 +7406,6 @@ const locationMappings = {
         { checkpointName: 'Level 11 - Forestry (East Wing-Emergency Stairs)', time: '', logReport: '' },
         { checkpointName: 'Level 8 - Common Area (West Wing)', time: '', logReport: '' },
         { checkpointName: 'Level 17 - Common Area (West Wing)', time: '', logReport: '' }
-<<<<<<< HEAD
-=======
-        // { checkpointName: 'Service Lift Level 10', time: '', logReport: '' },
-        // { checkpointName: 'Service Lift Level 11', time: '', logReport: '' }
->>>>>>> origin/main
     ],
     'Jamek Mosque': [
         { checkpointName: 'Main Gate', time: '', logReport: '' },
