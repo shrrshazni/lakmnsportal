@@ -1,0 +1,126 @@
+<%- include("partials/public-header.ejs") %>
+<div class="container-fluid bg-body-tertiary dark__bg-gray-1200">
+  <div class="bg-holder bg-auth-card-overlay" style="background-image:url(../../../assets/img/bg/37.png);">
+  </div>
+  <!--/.bg-holder-->
+
+  <div class="row flex-center position-relative min-vh-100 g-0 py-5">
+    <div class="col-12 col-sm-12 col-xl-8">
+      <div class="card border border-translucent auth-card">
+        <div class="card-body">
+          <div class="row align-items-center gx-0 gy-7">
+            <div class="col-auto bg-body-highlight dark__bg-gray-1100 rounded-3 position-relative overflow-hidden auth-title-box d-none d-lg-block">
+              <div class="bg-holder" style="background-image:url(../../../assets/img/bg/38.png);">
+              </div>
+              <!--/.bg-holder-->
+
+              <div class="position-relative px-4 px-lg-7 pt-7 pb-7 pb-sm-5 text-center text-md-start pb-lg-7 pb-md-7">
+                <h3 class="mb-3 text-body-emphasis fs-6">Ittary Education</h3>
+                <p class="text-body-tertiary">A web portal for education provides a centralized platform for students, teachers, and administrators to access educational resources.</p>
+                <ul class="list-unstyled mb-0 w-max-content w-md-auto">
+                  <li class="d-flex align-items-center"><span class="uil uil-check-circle text-success me-2"></span><span class="text-body-tertiary fw-semibold">Fast</span></li>
+                  <li class="d-flex align-items-center"><span class="uil uil-check-circle text-success me-2"></span><span class="text-body-tertiary fw-semibold">Simple</span></li>
+                  <li class="d-flex align-items-center"><span class="uil uil-check-circle text-success me-2"></span><span class="text-body-tertiary fw-semibold">Responsive</span></li>
+                </ul>
+              </div>
+              <div class="position-relative z-n1 mb-6 d-none d-md-block text-center mt-md-15"><img class="auth-title-box-img d-dark-none" src="../../../assets/img/spot-illustrations/auth.png" alt="" /><img class="auth-title-box-img d-light-none" src="../../../assets/img/spot-illustrations/auth-dark.png" alt="" /></div>
+            </div>
+            <div class="col mx-auto">
+              <div class="auth-form-box">
+                <a class="d-flex flex-center text-decoration-none mb-5" href="/">
+                  <div class="d-flex align-items-center fw-bolder fs-5 d-inline-block">
+                    <img src="../../../assets/img/icons/logolakmns/LOGO TATTARY COLOUR.png" alt="logo" height="55" />
+                  </div>
+                </a>
+                <div class="text-center mb-5">
+                  <h3 class="text-1000">Sign In</h3>
+                  <p class="text-700">Get access to your account</p>
+                </div>
+
+                <form action="/education/parent/sign-in" method="post" class="has-validation">
+                  <div class="mb-3 text-start">
+                    <label class="form-label" for="username">Username</label>
+                    <div class="form-icon-container">
+                      <input class="form-control <%= validationUsername %> form-icon-input" id="username" type="text" name="username" value="<%= username %>" placeholder="Username" /><span class="fas fa-user text-900 fs--1 form-icon"></span>
+                      <div class="valid-feedback">Looks good!</div>
+                      <div class="invalid-feedback">
+                        Username required/incorrect
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="mb-3 text-start">
+                    <label class="form-label" for="password">Password</label>
+                    <div class="form-icon-container">
+                      <div class="container px-0">
+                        <div>
+                          <input class="form-control <%= validationPassword %> form-icon-input" id="password" type="password" name="password" value="<%= password %>" placeholder="Password" /><span class="fas fa-key text-900 fs--1 form-icon"></span>
+                          <div class="valid-feedback">Looks good!</div>
+                          <div class="invalid-feedback">
+                            Required/Incorrect, at least 1 digit with minimum 4 character
+                          </div>
+                        </div>
+                        <span type="button" class="position-absolute end-0 top-0 mt-2 me-3" id="togglePassword">
+                          <i class="fa fa-eye-slash" aria-hidden="true" width="15" height="15"></i>
+                        </span>
+                      </div>
+
+                    </div>
+
+                    <script>
+                      document.getElementById("togglePassword").addEventListener("click", function() {
+                        var passwordInput = document.getElementById("password");
+                        if (passwordInput.type === "password") {
+                          passwordInput.type = "text";
+                          this.innerHTML = '<i class="fa fa-eye" aria-hidden="true"  width="15" height="15"></i>';
+                        } else {
+                          passwordInput.type = "password";
+                          this.innerHTML = '<i class="fa fa-eye-slash" aria-hidden="true"  width="16.5" height="16.5"></i>';
+                        }
+                      });
+                    </script>
+                  </div>
+
+                  <div class="row flex-between-center mb-7">
+                    <div class="col-auto">
+                      <div class="form-check mb-0">
+                        <input class="form-check-input" id="basic-checkbox" type="checkbox" name="rememberMe" />
+                        <label class="form-check-label mb-0" for="basic-checkbox">Remember me</label>
+                      </div>
+                    </div>
+                    <div class="col-auto">
+                      <a class="fs-9 fw-semibold" href="/forgot-password">Forgot Password?</a>
+                    </div>
+                  </div>
+
+                  <button class="btn btn-primary w-100 mb-3 loading-button" type="submit" name="submit">
+                    <div class="content-button">Sign In</div>
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- alert toast -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 5">
+  <div class="d-flex">
+    <div class="toast <%= toastShow %> align-items-center bg-primary-light border-0" role="alert" data-bs-autohide="false" aria-live="assertive" aria-atomic="true" id="alertToast">
+      <div class="d-flex justify-content-between">
+        <div class="toast-body px-0 py-3">
+          <code class="text-white"><%= toastMsg %></code>
+        </div>
+
+        <button class="btn ms-2 p-0 btn-close-white text-secondary" type="button" data-bs-dismiss="toast" aria-label="Close">
+          <span class="uil uil-times fs-5"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include("partials/public-footer.ejs") %>

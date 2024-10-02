@@ -460,6 +460,7 @@ const userSchema = new mongoose.Schema({
     isSuperAdmin: { type: Boolean, default: false },
     isDriver: { type: Boolean, default: false },
     isTeaLady: { type: Boolean, default: false },
+    isPublicUser: { type: Boolean, default: false },
     dateEmployed: { type: Date },
     birthdate: { type: Date }
 }, { timestamps: true });
@@ -1254,6 +1255,27 @@ const isAuthenticated = async (req, res, next) => {
     res.redirect('/landing'); // Redirect to the landing page if not authenticated
 };
 
+const isAuthenticatedEdu = async (req, res, next) => {
+    if (req.isAuthenticated()) {
+        try {
+            const user = await User.findOne({ username: req.user.username });
+            const notifications = await Notification.find({
+                recipient: user._id,
+                read: false
+            }).populate('sender').sort({ timestamp: -1 });
+
+            req.user = user; // Attach user to req object
+            req.notifications = notifications; // Attach notifications to req object
+
+            return next(); // User is authenticated, proceed to the next middleware
+        } catch (error) {
+            console.error('Error in isAuthenticated middleware:', error);
+            return res.redirect('/landing/education'); // Handle error and redirect if necessary
+        }
+    }
+    res.redirect('/landing/education'); // Redirect to the landing page if not authenticated
+};
+
 // Sign in routes
 app.get('/sign-in', async (req, res, next) => {
     try {
@@ -1284,7 +1306,7 @@ app.get('/sign-in', async (req, res, next) => {
         ? moment().utcOffset(8).add(7, 'days').toDate()  // 7 days if rememberMe is checked
         : moment().utcOffset(8).add(1, 'hour').toDate(); // 1 hour otherwise
 
-    const passwordRegex = /^(?:\d+|[a-zA-Z0-9]{2,})/; // Password validation regex
+    const passwordRegex = /^(?:\d+|[a-zA-Z0-9]{2,})/;
 
     try {
         // Find user by username
@@ -5146,7 +5168,7 @@ app.get('/education/payment', isAuthenticated, async (req, res, next) => {
 });
 
 // Education parent route - sign up
-app.get('/education/parent/sign-up', isAuthenticated, async (req, res, next) => {
+app.get('/education/parent/sign-up', async (req, res, next) => {
     try {
         const { user, notifications } = req;
 
@@ -5158,6 +5180,106 @@ app.get('/education/parent/sign-up', isAuthenticated, async (req, res, next) => 
 
     } catch (error) {
         console.error('Error fetching data:', error);
+        next(error);
+    }
+});
+
+app.get('/education/parent/sign-in', async (req, res, next) => {
+    try {
+        res.render('education-parent-signin', {
+            // Initial validation states
+            validationUsername: '',
+            validationPassword: '',
+            // Input values
+            username: '',
+            password: '',
+            // Toast notification
+            toastShow: '',
+            toastMsg: ''
+        });
+
+    } catch (error) {
+        console.error('Error fetching data:', error);
+        next(error);
+    }
+}).post('/education/parent/sign-in', async (req, res, next) => {
+    const { username, password, rememberMe } = req.body;
+
+    // Start measuring sign-in process time
+    console.time('Sign-in Process');
+
+    // Calculate expiration date based on rememberMe checkbox
+    const expirationDate = rememberMe
+        ? moment().utcOffset(8).add(7, 'days').toDate()  // 7 days if rememberMe is checked
+        : moment().utcOffset(8).add(1, 'hour').toDate(); // 1 hour otherwise
+
+    const passwordRegex = /^(?:\d+|[a-zA-Z0-9]{2,})/;
+
+    try {
+        // Find user by username
+        const user = await User.findByUsername(username);
+
+        // Validate username and password
+        const validationUsername = username && user ? 'is-valid' : 'is-invalid';
+        const validationPassword = password && passwordRegex.test(password) ? 'is-valid' : 'is-invalid';
+
+        // Check if both username and password are valid
+        if (validationUsername === 'is-valid' && validationPassword === 'is-valid') {
+            user.authenticate(password, async (err, authenticatedUser) => {
+                if (err || !authenticatedUser) {
+                    // End timing and log for invalid authentication
+                    console.timeEnd('Sign-in Process');
+
+                    return res.render('sign-in', {
+                        validationUsername,
+                        validationPassword: 'is-invalid',
+                        username,
+                        password,
+                        toastShow: 'show',
+                        toastMsg: 'Incorrect password'
+                    });
+                }
+
+                // Password is correct, log in the user
+                req.logIn(authenticatedUser, async err => {
+                    if (err) {
+                        // End timing and log for login error
+                        console.timeEnd('Sign-in Process');
+                        return next(err);
+                    }
+
+                    // Update user info
+                    await Info.findOneAndUpdate(
+                        { user: user._id },
+                        { isOnline: true, lastSeen: moment().utcOffset(8).toDate() },
+                        { new: true }
+                    );
+
+                    // Set session expiration date
+                    req.session.cookie.expires = expirationDate;
+                    console.log(`Current Session expires: ${req.session.cookie.expires}`);
+
+                    // End timing and redirect to home
+                    console.timeEnd('Sign-in Process');
+                    return res.redirect('/education');
+                });
+            });
+        } else {
+            // End timing and render sign-in page with validation errors
+            console.timeEnd('Sign-in Process');
+
+            res.render('sign-in', {
+                validationUsername,
+                validationPassword,
+                username,
+                password,
+                toastShow: 'show',
+                toastMsg: 'There is an error, please check your input'
+            });
+        }
+    } catch (error) {
+        // Log rendering errors and pass to global error handler
+        console.error('Error:', error);
         next(error);
     }
 });
@@ -6734,22 +6856,30 @@ app.get('/super-admin/update', isAuthenticated, async (req, res, next) => {
     // Check if the authenticated user is a super admin
     if (user.isSuperAdmin) {
         try {
-            // Step 1: Find users with usernames 'Test1', 'Test2', 'Test3', and 'Test4'
-            const users = await User.find({
-                username: { $in: ['Test1', 'Test2', 'Test3', 'Test4'] }
-            }).select('_id'); // Only select the '_id' field to optimize the query
+            // // Step 1: Find users with usernames 'Test1', 'Test2', 'Test3', and 'Test4'
+            // const users = await User.find({
+            //     username: { $in: ['Test1', 'Test2', 'Test3', 'Test4'] }
+            // }).select('_id'); // Only select the '_id' field to optimize the query
 
-            // Step 2: Extract the user IDs
-            const userIds = users.map(user => user._id);
+            // // Step 2: Extract the user IDs
+            // const userIds = users.map(user => user._id);
 
-            if (userIds.length > 0) {
-                // Step 3: Delete leave records with these user IDs
-                const result = await Leave.deleteMany({ user: { $in: userIds } });
+            // if (userIds.length > 0) {
+            //     // Step 3: Delete leave records with these user IDs
+            //     const result = await Leave.deleteMany({ user: { $in: userIds } });
 
-                console.log(`${result.deletedCount} leave(s) deleted for users with usernames: Test1, Test2, Test3, and Test4.`);
-            } else {
-                console.log('No users found with usernames: Test1, Test2, Test3, and Test4.');
-            }
+            //     console.log(`${result.deletedCount} leave(s) deleted for users with usernames: Test1, Test2, Test3, and Test4.`);
+            // } else {
+            //     console.log('No users found with usernames: Test1, Test2, Test3, and Test4.');
+            // }
+
+            await User.updateMany(
+                {}, // No condition, this will affect all documents
+                { $set: { isPublicUser: false } } // Set isPublicUser to false (will add the field if missing)
+            );
+            console.log('All user documents updated to set isPublicUser to false');
+
+            res.redirect('/');
         } catch (error) {
             // Pass error to global error handler
             return next(error);
