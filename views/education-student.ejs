@@ -1,4 +1,9 @@
+<% if(user.isPublicUser){ %>
+<%- include('partials/alternate-private-header.ejs') %>
+<% }else{ %>
 <%- include('partials/private-header.ejs') %>
+<%}%>
+
 
 <div class="mb-6">
   <div class="mb-3 d-xxl-flex justify-content-between">
@@ -9,4 +14,8 @@
   </div>
 </div>
 
+<% if(user.isPublicUser){ %>
+<%- include('partials/alternate-private-footer.ejs') %>
+<% }else{ %>
 <%- include('partials/private-footer.ejs') %>
+<%}%>
