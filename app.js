@@ -8786,7 +8786,7 @@ const handleAcknowledged = async (checkLeave, user, res) => {
                         'approvals.$.timestamp': moment().utcOffset(8).toDate()
                     }
                 },
-                { new: true }
+                { new: true, useFindAndModify: false }
             );
 
             // Log if the recipient has been updated
