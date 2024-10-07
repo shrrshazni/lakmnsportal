@@ -1735,6 +1735,7 @@ app.post('/settings', isAuthenticated, async (req, res, next) => {
         if (req.body.education && req.body.education !== 'Select your highest education') updateFields.education = req.body.education;
         if (req.body.address) updateFields.address = req.body.address;
         if (req.body.children && req.body.children !== 'Select your number of children') updateFields.children = parseInt(req.body.children);
+        if (req.body.gender && req.body.gender !== 'Select your gender') updateFields.gender = req.body.gender;
 
         // Handle cases with no updates
         if (Object.keys(updateFields).length === 0) {
@@ -1939,6 +1940,65 @@ app.get('/info/:type/:method/:id', async (req, res, next) => {
             } else if (method === 'personal') {
                 requestedInfo = await Subscriptions.find({ user: id });
             }
+        } else if (type === 'email' && method === 'confirm') {
+            const updateEmail = await Info.findOneAndUpdate(
+                {
+                    user: user._id
+                },
+                {
+                    emailVerified: true
+                },
+                { upsert: true, new: true }
+            );
+
+            if (updateEmail) {
+                console.log('Email is verified');
+                res.redirect('/');
+            } else {
+                console.log('There is error');
+                res.redirect('/');
+            }
+        } else if (type === 'email' && method === 'verification') {
+            const emailHTML = await new Promise((resolve, reject) => {
+                app.render('email-verified', { user: user }, (err, html) => {
+                    if (err) reject(err);
+                    else resolve(html);
+                });
+            });
+            let mailOptions = {
+                from: 'protech@lakmns.org',
+                to: user.email,
+                subject: 'lakmnsportal - Email Verification',
+                html: emailHTML
+            };
+
+            console.log(mailOptions);
+
+            transporter.sendMail(mailOptions, (error, info) => {
+                if (error) {
+                    console.log(error);
+
+                    res.render('settings', {
+                        user: user,
+                        uuid: uuidv4(),
+                        notifications: notifications,
+                        info: info,
+                        show: 'show',
+                        alert: 'The email you submitted here is invalid'
+                    });
+                }
+
+                console.log('Message %s sent: %s', info.messageId, info.response);
+            });
+
+            res.render('settings', {
+                user: user,
+                uuid: uuidv4(),
+                notifications: notifications,
+                info: info,
+                show: 'show',
+                alert: 'We already send email verification towards your email'
+            });
         }
 
         res.render('info', {
@@ -3820,7 +3880,7 @@ app.get('/human-resource/staff-members/add-staff', isAuthenticated, async functi
         !req.body.gender ||
         !req.body.classification) &&
         (req.body.gender === 'Select gender' ||
-        req.body.classification === 'Select classification')) {
+            req.body.classification === 'Select classification')) {
         return res.render('hr-staffmembers-addstaff', {
             user: user,
             notifications: notifications,
@@ -5236,6 +5296,7 @@ app.get('/education/overview', isAuthenticated, async (req, res, next) => {
     }
 });
 
+// Education parent route - application form
 app.get('/education/parent/application', async (req, res, next) => {
     try {
         res.render('education-application', {
@@ -5246,8 +5307,6 @@ app.get('/education/parent/application', async (req, res, next) => {
         next(error);
     }
 });
-
-// Education parent route - application form
 
 // Education parent route - sign up
 app.get('/education/parent/sign-up', async (req, res, next) => {
@@ -5400,6 +5459,24 @@ app.get('/education/payment', isAuthenticatedEdu, async (req, res, next) => {
         next(error);
     }
 });
+
+// Education attendance route
+app.get('/education/attendance', isAuthenticatedEdu, async (req, res, next) => {
+    try {
+        const { user, notifications } = req;
+
+        res.render('education-attendance', {
+            user,
+            notifications,
+            uuid: uuidv4()
+        });
+
+    } catch (error) {
+        console.error('Error fetching data:', error);
+        next(error);
+    }
+});
+
 
 // ============================
 // Fetch Data API
@@ -8624,7 +8701,7 @@ const processLeaveRequest = async (type, user, userLeave, startDate, returnDate,
             }
             break;
         case 'Emergency Leave':
-            if (amountDayRequest <= 1 && amountDayRequest >= -5) {
+            if (amountDayRequest <= 1) {
                 if (await checkFileAttachment(uuid, renderDataError, `There is no file attached for ${type.toLowerCase()}!`)) {
                     approvals = generateApprovals(
                         user,
@@ -8645,7 +8722,7 @@ const processLeaveRequest = async (type, user, userLeave, startDate, returnDate,
             }
             break;
         case 'Half Day Emergency Leave':
-            if (amountDayRequest <= 1 && numberOfDays <= 1 && amountDayRequest >= -5) {
+            if (amountDayRequest <= 1 && numberOfDays <= 1) {
                 if (await checkFileAttachment(uuid, renderDataError, `There is no file attached for ${type.toLowerCase()}!`)) {
                     approvals = generateApprovals(
                         user,

@@ -1,0 +1,25 @@
+<% if(user.isPublicUser){ %>
+<%- include('partials/alternate-private-header.ejs') %>
+<% }else{ %>
+<%- include('partials/private-header.ejs') %>
+<%}%>
+    
+    
+    <div class="mb-6">
+      <div class="mb-3 d-xxl-flex justify-content-between">
+        <div class="mb-3">
+          <h2 class="mb-2">Attendance</h2>
+          <h5 class="text-body-tertiary fw-semibold">Tracking presence of enrolled students.</h5>
+        </div>
+
+        <div class="align-items-middle">
+            <h3>Hello</h3>
+        </div>
+      </div>
+    </div>
+    
+    <% if(user.isPublicUser){ %>
+<%- include('partials/alternate-private-footer.ejs') %>
+<% }else{ %>
+<%- include('partials/private-footer.ejs') %>
+<%}%>
