@@ -122,6 +122,8 @@
         let isDriver;
         let isTeaLady;
         let isNonOfficeHour;
+        let isTeacher;
+        let isPublicUser;
 
         if(otherUser.isAdmin === false){
             isAdmin = "no";
@@ -175,6 +177,18 @@
             isNonOfficeHour = "no";
         } else {
             isNonOfficeHour = "yes";
+        }
+
+        if(otherUser.isTeacher === false){
+            isTeacher = "no";
+        } else {
+            isTeacher = "yes";
+        }
+
+        if(otherUser.isPublicUser === false){
+            isPublicUser  = "no";
+        } else {
+            isPublicUser  = "yes";
         }
 
         %>
@@ -287,6 +301,30 @@
           </div>
         </div>
 
+        <div class="col-12 col-md-4">
+          <div class="form-floating">
+            <select class="form-select" id="floatingSelectTask" name="isTeacher">
+              <option value="<%= isTeacher %>" selected><%= isTeacher %></option>
+              <option value="yes">Yes</option>
+              <option value="no">No</option>
+            </select>
+            <div class="invalid-feedback">Please select an option</div>
+            <label for="floatingSelectTask">Teacher</label>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-4">
+          <div class="form-floating">
+            <select class="form-select" id="floatingSelectTask" name="isPublicUser">
+              <option value="<%= isPublicUser %>" selected><%= isPublicUser %></option>
+              <option value="yes">Yes</option>
+              <option value="no">No</option>
+            </select>
+            <div class="invalid-feedback">Please select an option</div>
+            <label for="floatingSelectTask">Public User</label>
+          </div>
+        </div>
+
         <div class="col-12 gy-6">
           <div class="row g-3 justify-content-end">
             <div class="col-auto">
@@ -349,13 +387,13 @@
               </div>
             </div>
             <div class="">
-                <div class="">
-                  <h5 class="text-body-highlight">Gender</h5>
-                </div>
-                <div class="">
-                  <p class="text-body-secondary"><%= otherUser.gender %></p>
-                </div>
+              <div class="">
+                <h5 class="text-body-highlight">Gender</h5>
               </div>
+              <div class="">
+                <p class="text-body-secondary"><%= otherUser.gender %></p>
+              </div>
+            </div>
           </div>
 
           <div class="border-top border-dashed pt-4">

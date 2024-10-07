@@ -263,7 +263,7 @@
           </thead>
           <tbody class="list" id="project-summary-table-body">
             <% if(allUser && allUser.length>0){ %>
-            <% allUser.forEach(staff => { %>
+            <% allUser.forEach((staff,index) => { %>
 
             <tr class="position-static">
               <td class="align-middle text-body white-space-nowrap ps-0 staff">
@@ -298,12 +298,28 @@
                   <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs-10" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fas fa-ellipsis-h fs-10"></span></button>
                   <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item" href="/staff/details/<%= staff._id %>">View</a><a class="dropdown-item d-none" href="#!">Export</a>
                     <div class="dropdown-divider d-none"></div><a class="dropdown-item" href="/human-resource/staff-members/overview/update/<%= staff._id %>">Update</a>
-                    <div class="dropdown-divider d-none"></div><a class="dropdown-item text-danger d-none" href="#!">Remove</a>
+                    <div class="dropdown-divider d-none"></div><a class="dropdown-item text-danger" href="#" data-bs-toggle="modal" data-bs-target="#removestaff<%= index %>">Remove</a>
                   </div>
                 </div>
               </td>
 
             </tr>
+
+            <!-- Remove staff modal -->
+            <div class="modal fade" id="removestaff<%= index %>" tabindex="-1" aria-labelledby="removestaff" aria-hidden="true">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <div class="modal-header border-bottom-0">
+                    <h3 class="modal-title fs-7">Are you sure to remove this account?</h3>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancel</button>
+                    <a type="button" class="btn btn-outline-danger" href="/human-resource/staff-members/remove/<%= staff._id %>">Remove</a>
+                  </div>
+                </div>
+              </div>
+            </div>
             <% }); %>
             <% }else { %>
             <tr class="position-static">

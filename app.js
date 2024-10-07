@@ -461,6 +461,7 @@ const userSchema = new mongoose.Schema({
     isDriver: { type: Boolean, default: false },
     isTeaLady: { type: Boolean, default: false },
     isPublicUser: { type: Boolean, default: false },
+    isTeacher: { type: Boolean, default: false },
     dateEmployed: { type: Date },
     birthdate: { type: Date }
 }, { timestamps: true });
@@ -945,6 +946,7 @@ const PatrolAux = auxPoliceDatabase.model('PatrolAux', patrolSchema);
 const CaseAux = auxPoliceDatabase.model('CaseAux', caseSchema);
 const DutyHandoverAux = auxPoliceDatabase.model('DutyHandoverAux', dutyHandoverSchema);
 const Vms = vmsDatabase.model('Visitors', vmsSchema);
+const Subscriptions = userDatabase.model('Subscriptions', subscriptionSchema);
 const ChildEducation = educationDatabase.model('Children', childSchema);
 const ParentEducation = educationDatabase.model('Parents', parentSchema);
 const TeacherEducation = educationDatabase.model('Teachers', teacherSchema);
@@ -3111,7 +3113,7 @@ app.get('/leave/request', isAuthenticated, async (req, res, next) => {
                 url: `www.lakmnsportal.com/leave/details/${currentLeave._id}`
             });
 
-            await renderHomePage(req, res, next, 'show', 'Leave requested successfully! Please wait within 3 days for approvals, thank you.');
+            await renderHomePage(req, res, next, 'show', 'Leave requested successfully! Please wait for approvals, thank you.');
         }
 
     } catch (error) {
@@ -3681,6 +3683,57 @@ app.get('/human-resource/staff-members/overview/update/:id', isAuthenticated, as
     res.redirect('/human-resource/staff-members/overview/update/' + userId);
 });
 
+// Staff members route - remove
+app.get('/human-resource/staff-members/remove/:id', isAuthenticated, async function (req, res, next) {
+    const { user, notifications } = req;
+    const userId = req.params.id;
+
+    try {
+        let alert;
+        // Remove user from User collection
+        const userRemove = await User.findByIdAndDelete(userId);
+        if (!user) {
+            console.log('User not found!');
+        }
+        let username = userRemove.username;
+
+
+        // Remove associated tasks where the user is the owner
+        await Task.deleteMany({ owner: userId });
+
+        // Remove attendance records for the user
+        await Attendance.deleteMany({ user: userId });
+
+        // Remove user leave records
+        await UserLeave.deleteMany({ user: userId });
+
+        // Remove activity records for the user
+        await Activity.deleteMany({ user: userId });
+
+        // Remove notifications where the user is the sender
+        await Notification.deleteMany({ sender: userId });
+
+        // If the user is the recipient of notifications, you can also delete those
+        await Notification.deleteMany({ recipient: userId });
+
+        // Remove subscriptions for the user
+        await Subscriptions.deleteMany({ user: userId });
+
+        alert = 'Successfuly delete ' + username;
+
+        res.render('hr-staffmembers-overview', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4(),
+            show: 'show',
+            alert: alert
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
+    }
+})
+
 // Staff members route - add employees 
 app.get('/human-resource/staff-members/add-staff', isAuthenticated, async function (req, res, next) {
     const { user, notifications } = req;
@@ -3761,6 +3814,8 @@ app.get('/human-resource/staff-members/add-staff', isAuthenticated, async functi
         isDriver: isFieldTrue(req.body.isDriver),
         isTealady: isFieldTrue(req.body.isTealady),
         isNonOfficeHour: isFieldTrue(req.body.isNonOfficeHour),
+        isPublicUser: isFieldTrue(req.body.isPublicUser),
+        isTeacher: isFieldTrue(req.body.isTeacher)
     });
 
     User.register(newUser, req.body.password, async function (err, user) {
@@ -6875,9 +6930,9 @@ app.get('/super-admin/update', isAuthenticated, async (req, res, next) => {
 
             await User.updateMany(
                 {}, // No condition, this will affect all documents
-                { $set: { isPublicUser: false } } // Set isPublicUser to false (will add the field if missing)
+                { $set: { isTeacher: false } } // Set isPublicUser to false (will add the field if missing)
             );
-            console.log('All user documents updated to set isPublicUser to false');
+            console.log('All user documents updated to set isTeacher to false');
 
             res.redirect('/');
         } catch (error) {
@@ -8443,7 +8498,7 @@ const processLeaveRequest = async (type, user, userLeave, startDate, returnDate,
     switch (type) {
         case 'Annual Leave':
             leaveBalance = userLeave.annual.leave - userLeave.annual.taken;
-            if (checkLeaveBalance(leaveBalance, numberOfDays, 0, renderDataError) && amountDayRequest >= 3) {
+            if (checkLeaveBalance(leaveBalance, numberOfDays, 0, renderDataError) && amountDayRequest >= 7) {
                 approvals = generateApprovals(
                     user,
                     approvers.headOfSection,
@@ -8458,11 +8513,11 @@ const processLeaveRequest = async (type, user, userLeave, startDate, returnDate,
                 );
                 return { approvals, renderDataError };
             }
-            renderDataError.alert = 'The leave date applied must be more than 3 days from today';
+            renderDataError.alert = 'The leave date applied must be more than 7 days from today';
             break;
         case 'Half Day Leave':
             leaveBalance = userLeave.annual.leave - userLeave.annual.taken;
-            if (checkLeaveBalance(leaveBalance, numberOfDays, 0, renderDataError) && amountDayRequest >= 3 && numberOfDays <= 1) {
+            if (checkLeaveBalance(leaveBalance, numberOfDays, 0, renderDataError) && amountDayRequest >= 7 && numberOfDays <= 1) {
                 approvals = generateApprovals(
                     user,
                     approvers.headOfSection,
@@ -8477,7 +8532,7 @@ const processLeaveRequest = async (type, user, userLeave, startDate, returnDate,
                 );
                 return { approvals, renderDataError };
             }
-            renderDataError.alert = 'Required only 1 day of leave date and applied date must be more than 3 days from today.';
+            renderDataError.alert = 'Required only 1 day of leave date and applied date must be more than 7 days from today.';
             break;
         case 'Sick Leave':
         case 'Extended Sick Leave':
