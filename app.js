@@ -3683,7 +3683,7 @@ app.get('/human-resource/staff-members/overview/update/:id', isAuthenticated, as
     const userId = req.params.id;
     const {
         fullname, classification, grade, position, department, section, dateEmployed, gender,
-        isOfficer, isAdmin, isHeadOfDepartment, isHeadOfSection, isManagement, isPersonalAssistant, isDriver, isTeaLady, isNonOfficeHour
+        isOfficer, isAdmin, isHeadOfDepartment, isHeadOfSection, isManagement, isPersonalAssistant, isDriver, isTeaLady, isNonOfficeHour, isTeacher, isPublicUser
     } = req.body;
 
     const updatedFields = { fullname, classification, grade, position, department, section, dateEmployed, gender };
