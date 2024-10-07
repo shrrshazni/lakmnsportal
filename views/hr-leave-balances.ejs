@@ -50,7 +50,7 @@
             <% if(allUserLeave && allUserLeave.length>0){ %>
             <% allUserLeave.forEach(leave => { %>
 
-            <% 
+            <%
             const checkUser = allUser.find(check => check._id.toString() === leave.user.toString());
             %>
 
@@ -60,7 +60,7 @@
                 <% if (checkUser) { %>
                 <a class="mb-0 fw-bold white-space-nowrap notranslate fs-8 staff" href="/staff/details/<%= checkUser._id %>"><%= checkUser.fullname %></a>
                 <% } else { %>
-                <p class="mb-0 fs-8">User not found</p>
+                <p class="mb-0 fw-bold fs-8">User not found</p>
                 <% } %>
               </td>
 

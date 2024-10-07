@@ -3651,6 +3651,8 @@ app.get('/human-resource/staff-members/overview/update/:id', isAuthenticated, as
     nonEmptyUpdatedFields.isDriver = isFieldTrue(isDriver);
     nonEmptyUpdatedFields.isTeaLady = isFieldTrue(isTeaLady);
     nonEmptyUpdatedFields.isNonOfficeHour = isFieldTrue(isNonOfficeHour);
+    nonEmptyUpdatedFields.isTeacher = isFieldTrue(isTeacher);
+    nonEmptyUpdatedFields.isPublicUser = isFieldTrue(isPublicUser);
 
     const updatedUser = await User.findOneAndUpdate(
         { _id: userId },
@@ -3690,44 +3692,87 @@ app.get('/human-resource/staff-members/remove/:id', isAuthenticated, async funct
 
     try {
         let alert;
-        // Remove user from User collection
-        const userRemove = await User.findByIdAndDelete(userId);
-        if (!user) {
-            console.log('User not found!');
+
+        const currentUser = await User.findOne({ _id: userId });
+        const headOfDepartment = await User.findOne({ section: 'Human Resource Management Division', isHeadOfSection: true });
+
+        if (currentUser) {
+            await logActivity(req.user._id, 'Remove Staff Data', 'Admin',
+                `${req.user.fullname} has removed staff ${currentUser.username} at ${getDateFormat2(moment().utcOffset(8).toDate())}`);
+
+            await createAndSendNotification(req.user._id, headOfDepartment._id, 'Staff Removed', `/human-resource/staff-members/overview/`,
+                `${req.user.fullname} has updated staff ${currentUser.username}`);
+
+            const message = `${currentUser.fullname}, your staff (${req.user.fullname}) data has been removed  at ${getDateFormat2(moment().utcOffset(8).toDate())}.`
+
+            // Prepare email data
+            const emailData = {
+                content: message,
+                url: `https://www.lakmnsportal.com/human-resource/staff-members/overview/`
+            };
+
+            await sendEmailNotification(headOfDepartment.email, emailData);
+
+            // Remove user from User collection
+            const userRemove = await User.findByIdAndDelete(userId);
+
+            if (userRemove) {
+                // Remove associated tasks where the user is the owner
+                await Task.deleteMany({ owner: userId });
+
+                // Remove attendance records for the user
+                await Attendance.deleteMany({ user: userId });
+
+                // Remove user leave records
+                await UserLeave.deleteMany({ user: userId });
+
+                // Remove activity records for the user
+                await Activity.deleteMany({ user: userId });
+
+                // Remove notifications where the user is the sender
+                await Notification.deleteMany({ sender: userId });
+
+                // If the user is the recipient of notifications, you can also delete those
+                await Notification.deleteMany({ recipient: userId });
+
+                // Remove subscriptions for the user
+                await Subscriptions.deleteMany({ user: userId });
+
+                alert = 'Successfuly delete ' + userRemove.username;
+            } else {
+                alert = "Error deleting user";
+            }
+        } else {
+            alert = "User not found!";
         }
-        let username = userRemove.username;
 
+        const allUser = await User.find();
+        const uniqueDepartments = new Set();
+        const uniqueSections = new Set();
 
-        // Remove associated tasks where the user is the owner
-        await Task.deleteMany({ owner: userId });
+        allUser.forEach(user => {
+            if (user.department) {
+                uniqueDepartments.add(user.department);
+            }
+            if (user.section) {
+                uniqueSections.add(user.section);
+            }
+        });
 
-        // Remove attendance records for the user
-        await Attendance.deleteMany({ user: userId });
-
-        // Remove user leave records
-        await UserLeave.deleteMany({ user: userId });
-
-        // Remove activity records for the user
-        await Activity.deleteMany({ user: userId });
-
-        // Remove notifications where the user is the sender
-        await Notification.deleteMany({ sender: userId });
-
-        // If the user is the recipient of notifications, you can also delete those
-        await Notification.deleteMany({ recipient: userId });
-
-        // Remove subscriptions for the user
-        await Subscriptions.deleteMany({ user: userId });
-
-        alert = 'Successfuly delete ' + username;
+        const departments = Array.from(uniqueDepartments);
+        const sections = Array.from(uniqueSections);
 
         res.render('hr-staffmembers-overview', {
             user: user,
             notifications: notifications,
             uuid: uuidv4(),
+            departments: departments,
+            sections: sections,
+            allUser: allUser,
             show: 'show',
             alert: alert
         });
+
     } catch (error) {
         console.error('Error:', error);
         next(error);
@@ -3772,7 +3817,11 @@ app.get('/human-resource/staff-members/add-staff', isAuthenticated, async functi
         !req.body.position ||
         !req.body.grade ||
         !req.body.department ||
-        !req.body.gender) {
+        !req.body.gender ||
+        req.body.gender === 'Select gender' ||
+        !req.body.gender ||
+        !req.body.classification ||
+        req.body.classification === 'Select classification') {
         return res.render('hr-staffmembers-addstaff', {
             user: user,
             notifications: notifications,
@@ -3863,21 +3912,21 @@ app.get('/human-resource/staff-members/add-staff', isAuthenticated, async functi
         // send notification via email and web push 
         const headOfDepartment = await User.findOne({ section: 'Human Resource Management Division', isHeadOfSection: true });
 
-        await logActivity(user._id, 'Register new staff', 'Admin',
-            `${user.fullname} has registered staff ${newUser.username} at ${getDateFormat2(moment().utcOffset(8).toDate())}`);
+        // await logActivity(user._id, 'Register new staff', 'Admin',
+        //     `${user.fullname} has registered staff ${newUser.username} at ${getDateFormat2(moment().utcOffset(8).toDate())}`);
 
-        await createAndSendNotification(user._id, headOfDepartment._id, 'Staff Registered', `/human-resource/staff-members/overview/`,
-            `${user.fullname} has registered staff ${newUser.username}`);
+        // await createAndSendNotification(user._id, headOfDepartment._id, 'Staff Registered', `/human-resource/staff-members/overview/`,
+        //     `${user.fullname} has registered staff ${newUser.username}`);
 
-        const message = `Your staff (${user.fullname}) has registered new staff, ${newUser.fullname} (${newUser.username}) at ${getDateFormat2(moment().utcOffset(8).toDate())}.`
+        // const message = `Your staff (${user.fullname}) has registered new staff, ${newUser.fullname} (${newUser.username}) at ${getDateFormat2(moment().utcOffset(8).toDate())}.`
 
-        // Prepare email data
-        const emailData = {
-            content: message,
-            url: `https://www.lakmnsportal.com/human-resource/staff-members/overview/`
-        };
+        // // Prepare email data
+        // const emailData = {
+        //     content: message,
+        //     url: `https://www.lakmnsportal.com/human-resource/staff-members/overview/`
+        // };
 
-        await sendEmailNotification(headOfDepartment.email, emailData);
+        // await sendEmailNotification(headOfDepartment.email, emailData);
 
         passport.authenticate('local')(req, res, function () {
             res.render('hr-staffmembers-overview', {

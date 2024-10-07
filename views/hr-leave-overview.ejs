@@ -6,7 +6,7 @@
     <h2 class="mb-2">Leave Overview</h2>
     <h5 class="text-body-tertiary fw-semibold">Temporary absence for personal reasons</h5>
   </div>
-  
+
   <!-- colour script for echarts -->
   <script>
     // take the root of the colour from css for echarts
@@ -561,7 +561,7 @@
         </div>
       </div>
 
-      <div class="col-12">
+      <div class="col-12 d-none">
 
         <div class="row flex-between-center mb-4 g-3">
           <div class="col-auto">
@@ -892,7 +892,11 @@
                 <% 
                 const checkUser = allUser.find(check => check._id.toString() === leave.user.toString());
                 %>
+                <% if (checkUser) { %>
                 <a class="mb-0 fw-bold fs-9 notranslate" href="/staff/details/<%= checkUser._id %>"><%= checkUser.fullname %></a>
+                <% } else { %>
+                <p class="mb-0 fs-9 fw-bold text-primary">User not found</p>
+                <% } %>
               </td>
 
               <td class="align-middle white-space-nowrap position ps-3">
@@ -913,8 +917,13 @@
                   userLink = '#';
                 }else{
                   const checkUserRelief = allUser.find(check => check._id.toString() === leave.assignee[0].toString());
-                  userReliefName = checkUserRelief.fullname;
+                  if(checkUserRelief){
+                    userReliefName = checkUserRelief.fullname;
                   userLink = '/staff/details/'+checkUserRelief._id;
+                  }else{
+                    userReliefName = '-';
+                    userLink = '#';
+                  }
                 }
                 
               %>
