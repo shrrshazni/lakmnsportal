@@ -3810,7 +3810,7 @@ app.get('/human-resource/staff-members/add-staff', isAuthenticated, async functi
     const departments = Array.from(uniqueDepartments);
     const sections = Array.from(uniqueSection);
 
-    if (!req.body.fullname ||
+    if ((!req.body.fullname ||
         !req.body.username ||
         !req.body.email ||
         !req.body.password ||
@@ -3818,10 +3818,9 @@ app.get('/human-resource/staff-members/add-staff', isAuthenticated, async functi
         !req.body.grade ||
         !req.body.department ||
         !req.body.gender ||
-        req.body.gender === 'Select gender' ||
-        !req.body.gender ||
-        !req.body.classification ||
-        req.body.classification === 'Select classification') {
+        !req.body.classification) &&
+        (req.body.gender === 'Select gender' ||
+        req.body.classification === 'Select classification')) {
         return res.render('hr-staffmembers-addstaff', {
             user: user,
             notifications: notifications,
@@ -5237,39 +5236,18 @@ app.get('/education/overview', isAuthenticated, async (req, res, next) => {
     }
 });
 
-// Education student route
-app.get('/education/student', isAuthenticated, async (req, res, next) => {
+app.get('/education/parent/application', async (req, res, next) => {
     try {
-        const { user, notifications } = req;
+        res.render('education-application', {
 
-        res.render('education-student', {
-            user,
-            notifications,
-            uuid: uuidv4()
         });
-
     } catch (error) {
         console.error('Error fetching data:', error);
         next(error);
     }
 });
 
-// Education payment route
-app.get('/education/payment', isAuthenticated, async (req, res, next) => {
-    try {
-        const { user, notifications } = req;
-
-        res.render('education-payment', {
-            user,
-            notifications,
-            uuid: uuidv4()
-        });
-
-    } catch (error) {
-        console.error('Error fetching data:', error);
-        next(error);
-    }
-});
+// Education parent route - application form
 
 // Education parent route - sign up
 app.get('/education/parent/sign-up', async (req, res, next) => {
@@ -5288,6 +5266,7 @@ app.get('/education/parent/sign-up', async (req, res, next) => {
     }
 });
 
+// Education parent route - sign-in
 app.get('/education/parent/sign-in', async (req, res, next) => {
     try {
         res.render('education-parent-signin', {
@@ -5384,6 +5363,40 @@ app.get('/education/parent/sign-in', async (req, res, next) => {
     } catch (error) {
         // Log rendering errors and pass to global error handler
         console.error('Error:', error);
+        next(error);
+    }
+});
+
+// Education student route
+app.get('/education/student', isAuthenticatedEdu, async (req, res, next) => {
+    try {
+        const { user, notifications } = req;
+
+        res.render('education-student', {
+            user,
+            notifications,
+            uuid: uuidv4()
+        });
+
+    } catch (error) {
+        console.error('Error fetching data:', error);
+        next(error);
+    }
+});
+
+// Education payment route
+app.get('/education/payment', isAuthenticatedEdu, async (req, res, next) => {
+    try {
+        const { user, notifications } = req;
+
+        res.render('education-payment', {
+            user,
+            notifications,
+            uuid: uuidv4()
+        });
+
+    } catch (error) {
+        console.error('Error fetching data:', error);
         next(error);
     }
 });

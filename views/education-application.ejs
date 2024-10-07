@@ -1,0 +1,48 @@
+<%- include('partials/public-header.ejs') %>
+
+<div class="container-fluid bg-body-tertiary dark__bg-gray-1200">
+  <div class="bg-holder bg-auth-card-overlay" style="background-image:url(../../../assets/img/bg/37.png);">
+  </div>
+  <!--/.bg-holder-->
+
+  <div class="row flex-center position-relative min-vh-100 g-0 py-3 px-0 px-xl-3 z-5">
+    <div class="col-12 col-sm-12 col-xl-4">
+      <div class="px-1 py-2">
+        <div class="card mb-5">
+          <div class="card-body pt-4 pb-0">
+            <form id="form1" novalidate="novalidate">
+              <div class="mb-2">
+                <label class="form-label text-body" for="bootstrap-wizard-wizard-name">Name</label>
+                <input class="form-control" type="text" name="name" placeholder="John Smith" id="bootstrap-wizard-wizard-name" />
+              </div>
+              <div class="mb-2">
+                <label class="form-label" for="bootstrap-wizard-wizard-email">Email*</label>
+                <input class="form-control" type="email" name="email" placeholder="Email address" pattern="^([a-zA-Z0-9_.-])+@(([a-zA-Z0-9-])+.)+([a-zA-Z0-9]{2,4})+$" id="bootstrap-wizard-wizard-email" />
+              </div>
+              <div class="row g-3 mb-3">
+                <div class="col-sm-6">
+                  <div class="mb-2 mb-sm-0">
+                    <label class="form-label text-body" for="bootstrap-wizard-wizard-password">Password*</label>
+                    <input class="form-control" type="password" name="password" placeholder="Password" id="bootstrap-wizard-wizard-password" data-wizard-password="true" />
+                  </div>
+                </div>
+                <div class="col-sm-6">
+                  <div class="mb-2">
+                    <label class="form-label text-body" for="bootstrap-wizard-wizard-confirm-password">Confirm Password*</label>
+                    <input class="form-control" type="password" name="confirmPassword" placeholder="Confirm Password" id="bootstrap-wizard-wizard-confirm-password" data-wizard-confirm-password="true" />
+                  </div>
+                </div>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="terms" checked="checked" id="bootstrap-wizard-wizard-checkbox" />
+                <label class="form-check-label text-body" for="bootstrap-wizard-wizard-checkbox">I accept the <a href="#!">terms </a>and <a href="#!">privacy policy</a></label>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/public-footer.ejs') %>
