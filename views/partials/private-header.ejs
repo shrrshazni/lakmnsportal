@@ -112,6 +112,7 @@
     <nav class="navbar navbar-vertical navbar-expand-lg">
 
       <div class="collapse navbar-collapse" id="navbarVerticalCollapse">
+
         <!-- navbar vertical content -->
         <div class="navbar-vertical-content">
 
@@ -120,7 +121,8 @@
             <!-- Home -->
             <li class="nav-item">
               <!-- parent pages-->
-              <div class="nav-item-wrapper"><a class="nav-link label-1" href="/" role="button" data-bs-toggle="" aria-expanded="false">
+              <div class="nav-item-wrapper">
+                <a class="nav-link label-1" href="/" role="button" data-bs-toggle="" aria-expanded="false">
                   <div class="d-flex align-items-center"><span class="nav-link-icon"><span class="mb-1" data-feather="bar-chart-2"></span></span><span class="nav-link-text-wrapper"><span class="nav-link-text">Dashboard</span></span>
                   </div>
                 </a>
@@ -130,7 +132,8 @@
             <!-- Calendar -->
             <li class="nav-item">
               <!-- parent pages-->
-              <div class="nav-item-wrapper"><a class="nav-link label-1" href="/calendar" role="button" data-bs-toggle="" aria-expanded="false">
+              <div class="nav-item-wrapper">
+                <a class="nav-link label-1" href="/calendar" role="button" data-bs-toggle="" aria-expanded="false">
                   <div class="d-flex align-items-center"><span class="nav-link-icon"><span class="mb-1" data-feather="calendar"></span><span class="fa-solid fa-circle ms-n1 text-warning" style="font-size: 6px;"></span></span><span class="nav-link-text-wrapper"><span class="nav-link-text">Calendar<span class="ms-2 badge badge-phoenix badge-phoenix-warning"><span class="me-2 fa-solid fa-ribbon"></span>Coming Soon</span></span></span>
                   </div>
                 </a>
@@ -138,22 +141,27 @@
             </li>
 
             <!-- Leave -->
-            <div class="nav-item-wrapper"><a class="nav-link dropdown-indicator label-1" href="#nv-tables-leaves" role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-tables">
+            <div class="nav-item-wrapper">
+              <a class="nav-link dropdown-indicator label-1" href="#nv-tables-leaves" role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-tables">
                 <div class="d-flex align-items-center">
-                  <div class="dropdown-indicator-icon"><span class="fas fa-caret-right"></span></div><span class="nav-link-icon"><span data-feather="clock"></span></span><span class="nav-link-text">Leave</span>
+                  <div class="dropdown-indicator-icon"><span class="fas fa-caret-right"></span></div>
+                  <span class="nav-link-icon"><span data-feather="clock"></span></span>
+                  <span class="nav-link-text">Leave</span>
                 </div>
               </a>
               <div class="parent-wrapper label-1">
                 <ul class="nav collapse parent" data-bs-parent="#navbarVerticalCollapse" id="nv-tables-leaves">
                   <li class="collapsed-nav-item-title d-none">Leave
                   </li>
-                  <li class="nav-item"><a class="nav-link" href="/leave/request" data-bs-toggle="" aria-expanded="false">
+                  <li class="nav-item">
+                    <a class="nav-link" href="/leave/request" data-bs-toggle="" aria-expanded="false">
                       <div class="d-flex align-items-center"><span class="nav-link-text">Request </span>
                       </div>
                     </a>
                     <!-- more inner pages-->
                   </li>
-                  <li class="nav-item"><a class="nav-link" href="/leave/history" data-bs-toggle="" aria-expanded="false">
+                  <li class="nav-item">
+                    <a class="nav-link" href="/leave/history" data-bs-toggle="" aria-expanded="false">
                       <div class="d-flex align-items-center"><span class="nav-link-text">History</span>
                       </div>
                     </a>
@@ -173,7 +181,8 @@
                 %>
 
             <!-- Attendance -->
-            <div class="nav-item-wrapper"><a class="nav-link dropdown-indicator label-1" href="#nv-tables-2" role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-tables">
+            <div class="nav-item-wrapper">
+              <a class="nav-link dropdown-indicator label-1" href="#nv-tables-2" role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-tables">
                 <div class="d-flex align-items-center">
                   <div class="dropdown-indicator-icon"><span class="fas fa-caret-right"></span></div><span class="nav-link-icon"><span data-feather="book"></span></span><span class="nav-link-text">Attendance</span>
                 </div>
@@ -215,7 +224,8 @@
               <hr class="navbar-vertical-line" />
 
               <!-- level 1-->
-              <div class="nav-item-wrapper"><a class="nav-link dropdown-indicator label-1" href="#nv-human-resources-staff" role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-tables">
+              <div class="nav-item-wrapper">
+                <a class="nav-link dropdown-indicator label-1" href="#nv-human-resources-staff" role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-tables">
                   <div class="d-flex align-items-center">
                     <div class="dropdown-indicator-icon"><span class="fas fa-caret-right"></span></div><span class="nav-link-icon"><span data-feather="users"></span></span><span class="nav-link-text">Employees</span>
                   </div>
@@ -224,13 +234,15 @@
                   <ul class="nav collapse parent" data-bs-parent="#navbarVerticalCollapse" id="nv-human-resources-staff">
                     <li class="collapsed-nav-item-title d-none">Employees
                     </li>
-                    <li class="nav-item"><a class="nav-link" href="/human-resource/staff-members/overview" data-bs-toggle="" aria-expanded="false">
+                    <li class="nav-item">
+                      <a class="nav-link" href="/human-resource/staff-members/overview" data-bs-toggle="" aria-expanded="false">
                         <div class="d-flex align-items-center"><span class="nav-link-text">Overview</span>
                         </div>
                       </a>
                       <!-- more inner pages-->
                     </li>
-                    <li class="nav-item"><a class="nav-link" href="/human-resource/staff-members/add-staff" data-bs-toggle="" aria-expanded="false">
+                    <li class="nav-item">
+                      <a class="nav-link" href="/human-resource/staff-members/add-staff" data-bs-toggle="" aria-expanded="false">
                         <div class="d-flex align-items-center"><span class="nav-link-text">Add</span>
                         </div>
                       </a>
@@ -241,7 +253,8 @@
               </div>
 
               <!-- level 1-->
-              <div class="nav-item-wrapper"><a class="nav-link dropdown-indicator label-1" href="#nv-human-resources-leave" role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-tables">
+              <div class="nav-item-wrapper">
+                <a class="nav-link dropdown-indicator label-1" href="#nv-human-resources-leave" role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-tables">
                   <div class="d-flex align-items-center">
                     <div class="dropdown-indicator-icon"><span class="fas fa-caret-right"></span></div><span class="nav-link-icon"><span data-feather="clock"></span></span><span class="nav-link-text">Leave</span>
                   </div>
@@ -250,13 +263,15 @@
                   <ul class="nav collapse parent" data-bs-parent="#navbarVerticalCollapse" id="nv-human-resources-leave">
                     <li class="collapsed-nav-item-title d-none">Leave
                     </li>
-                    <li class="nav-item"><a class="nav-link" href="/human-resource/leave/overview" data-bs-toggle="" aria-expanded="false">
+                    <li class="nav-item">
+                      <a class="nav-link" href="/human-resource/leave/overview" data-bs-toggle="" aria-expanded="false">
                         <div class="d-flex align-items-center"><span class="nav-link-text">Overview</span>
                         </div>
                       </a>
                       <!-- more inner pages-->
                     </li>
-                    <li class="nav-item"><a class="nav-link" href="/human-resource/leave/balances" data-bs-toggle="" aria-expanded="false">
+                    <li class="nav-item">
+                      <a class="nav-link" href="/human-resource/leave/balances" data-bs-toggle="" aria-expanded="false">
                         <div class="d-flex align-items-center"><span class="nav-link-text">Balances</span>
                         </div>
                       </a>
@@ -266,7 +281,8 @@
                 </div>
               </div>
 
-              <div class="nav-item-wrapper"><a class="nav-link dropdown-indicator label-1" href="#nv-human-resources-attendance" role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-tables">
+              <div class="nav-item-wrapper">
+                <a class="nav-link dropdown-indicator label-1" href="#nv-human-resources-attendance" role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-tables">
                   <div class="d-flex align-items-center">
                     <div class="dropdown-indicator-icon"><span class="fas fa-caret-right"></span></div><span class="nav-link-icon"><span data-feather="clipboard"></span></span><span class="nav-link-text">Attendance</span>
                   </div>
@@ -275,7 +291,8 @@
                   <ul class="nav collapse parent" data-bs-parent="#navbarVerticalCollapse" id="nv-human-resources-attendance">
                     <li class="collapsed-nav-item-title d-none">Attendance
                     </li>
-                    <li class="nav-item"><a class="nav-link" href="/human-resource/attendance/overview" data-bs-toggle="" aria-expanded="false">
+                    <li class="nav-item">
+                      <a class="nav-link" href="/human-resource/attendance/overview" data-bs-toggle="" aria-expanded="false">
                         <div class="d-flex align-items-center"><span class="nav-link-text">Overview</span>
                         </div>
                       </a>
@@ -296,14 +313,16 @@
                   <hr class="navbar-vertical-line" /> -->
 
               <!-- level 0-->
-              <div class="nav-item-wrapper d-none"><a class="nav-link label-1" href="#" role="button" data-bs-toggle="" aria-expanded="false">
+              <div class="nav-item-wrapper d-none">
+                <a class="nav-link label-1" href="#" role="button" data-bs-toggle="" aria-expanded="false">
                   <div class="d-flex align-items-center"><span class="nav-link-icon"><span data-feather="server"></span></span><span class="nav-link-text-wrapper"><span class="nav-link-text">Level 0</span></span>
                   </div>
                 </a>
               </div>
 
               <!-- level 1-->
-              <div class="nav-item-wrapper d-none"><a class="nav-link dropdown-indicator label-1" href="#nv-tables" role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-tables">
+              <div class="nav-item-wrapper d-none">
+                <a class="nav-link dropdown-indicator label-1" href="#nv-tables" role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-tables">
                   <div class="d-flex align-items-center">
                     <div class="dropdown-indicator-icon"><span class="fas fa-caret-right"></span></div><span class="nav-link-icon"><span data-feather="columns"></span></span><span class="nav-link-text">Level 1</span>
                   </div>
@@ -312,19 +331,22 @@
                   <ul class="nav collapse parent" data-bs-parent="#navbarVerticalCollapse" id="nv-tables">
                     <li class="collapsed-nav-item-title d-none">Level 1
                     </li>
-                    <li class="nav-item"><a class="nav-link" href="#" data-bs-toggle="" aria-expanded="false">
+                    <li class="nav-item">
+                      <a class="nav-link" href="#" data-bs-toggle="" aria-expanded="false">
                         <div class="d-flex align-items-center"><span class="nav-link-text">Level 1.1</span>
                         </div>
                       </a>
                       <!-- more inner pages-->
                     </li>
-                    <li class="nav-item"><a class="nav-link" href="#" data-bs-toggle="" aria-expanded="false">
+                    <li class="nav-item">
+                      <a class="nav-link" href="#" data-bs-toggle="" aria-expanded="false">
                         <div class="d-flex align-items-center"><span class="nav-link-text">Level 1.2</span>
                         </div>
                       </a>
                       <!-- more inner pages-->
                     </li>
-                    <li class="nav-item"><a class="nav-link" href="#" data-bs-toggle="" aria-expanded="false">
+                    <li class="nav-item">
+                      <a class="nav-link" href="#" data-bs-toggle="" aria-expanded="false">
                         <div class="d-flex align-items-center"><span class="nav-link-text">Level 1.3</span>
                         </div>
                       </a>
@@ -335,7 +357,8 @@
               </div>
 
               <!-- multi level example-->
-              <div class="nav-item-wrapper d-none"><a class="nav-link dropdown-indicator label-1" href="#nv-multi-level" role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-multi-level">
+              <div class="nav-item-wrapper d-none">
+                <a class="nav-link dropdown-indicator label-1" href="#nv-multi-level" role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-multi-level">
                   <div class="d-flex align-items-center">
                     <div class="dropdown-indicator-icon"><span class="fas fa-caret-right"></span></div><span class="nav-link-icon"><span data-feather="layers"></span></span><span class="nav-link-text">Multi level</span>
                   </div>
@@ -344,7 +367,8 @@
                   <ul class="nav collapse parent" data-bs-parent="#navbarVerticalCollapse" id="nv-multi-level">
                     <li class="collapsed-nav-item-title d-none">Multi level
                     </li>
-                    <li class="nav-item"><a class="nav-link dropdown-indicator" href="#nv-level-two" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-level-two">
+                    <li class="nav-item">
+                      <a class="nav-link dropdown-indicator" href="#nv-level-two" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-level-two">
                         <div class="d-flex align-items-center">
                           <div class="dropdown-indicator-icon"><span class="fas fa-caret-right"></span></div><span class="nav-link-text">Level two</span>
                         </div>
@@ -352,13 +376,15 @@
                       <!-- more inner pages-->
                       <div class="parent-wrapper">
                         <ul class="nav collapse parent" data-bs-parent="#multi-level" id="nv-level-two">
-                          <li class="nav-item"><a class="nav-link" href="../#!.html" data-bs-toggle="" aria-expanded="false">
+                          <li class="nav-item">
+                            <a class="nav-link" href="../#!.html" data-bs-toggle="" aria-expanded="false">
                               <div class="d-flex align-items-center"><span class="nav-link-text">Item 1</span>
                               </div>
                             </a>
                             <!-- more inner pages-->
                           </li>
-                          <li class="nav-item"><a class="nav-link" href="../#!.html" data-bs-toggle="" aria-expanded="false">
+                          <li class="nav-item">
+                            <a class="nav-link" href="../#!.html" data-bs-toggle="" aria-expanded="false">
                               <div class="d-flex align-items-center"><span class="nav-link-text">Item 2</span>
                               </div>
                             </a>
@@ -367,7 +393,8 @@
                         </ul>
                       </div>
                     </li>
-                    <li class="nav-item"><a class="nav-link dropdown-indicator" href="#nv-level-three" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-level-three">
+                    <li class="nav-item">
+                      <a class="nav-link dropdown-indicator" href="#nv-level-three" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-level-three">
                         <div class="d-flex align-items-center">
                           <div class="dropdown-indicator-icon"><span class="fas fa-caret-right"></span></div><span class="nav-link-text">Level three</span>
                         </div>
@@ -375,13 +402,15 @@
                       <!-- more inner pages-->
                       <div class="parent-wrapper">
                         <ul class="nav collapse parent" data-bs-parent="#multi-level" id="nv-level-three">
-                          <li class="nav-item"><a class="nav-link" href="../#!.html" data-bs-toggle="" aria-expanded="false">
+                          <li class="nav-item">
+                            <a class="nav-link" href="../#!.html" data-bs-toggle="" aria-expanded="false">
                               <div class="d-flex align-items-center"><span class="nav-link-text">Item 3</span>
                               </div>
                             </a>
                             <!-- more inner pages-->
                           </li>
-                          <li class="nav-item"><a class="nav-link dropdown-indicator" href="#nv-item-4" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-item-4">
+                          <li class="nav-item">
+                            <a class="nav-link dropdown-indicator" href="#nv-item-4" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-item-4">
                               <div class="d-flex align-items-center">
                                 <div class="dropdown-indicator-icon"><span class="fas fa-caret-right"></span></div><span class="nav-link-text">Item 4</span>
                               </div>
@@ -389,13 +418,15 @@
                             <!-- more inner pages-->
                             <div class="parent-wrapper">
                               <ul class="nav collapse parent" data-bs-parent="#level-three" id="nv-item-4">
-                                <li class="nav-item"><a class="nav-link" href="../#!.html" data-bs-toggle="" aria-expanded="false">
+                                <li class="nav-item">
+                                  <a class="nav-link" href="../#!.html" data-bs-toggle="" aria-expanded="false">
                                     <div class="d-flex align-items-center"><span class="nav-link-text">Item 5</span>
                                     </div>
                                   </a>
                                   <!-- more inner pages-->
                                 </li>
-                                <li class="nav-item"><a class="nav-link" href="../#!.html" data-bs-toggle="" aria-expanded="false">
+                                <li class="nav-item">
+                                  <a class="nav-link" href="../#!.html" data-bs-toggle="" aria-expanded="false">
                                     <div class="d-flex align-items-center"><span class="nav-link-text">Item 6</span>
                                     </div>
                                   </a>
@@ -407,7 +438,8 @@
                         </ul>
                       </div>
                     </li>
-                    <li class="nav-item"><a class="nav-link dropdown-indicator" href="#nv-level-four" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-level-four">
+                    <li class="nav-item">
+                      <a class="nav-link dropdown-indicator" href="#nv-level-four" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-level-four">
                         <div class="d-flex align-items-center">
                           <div class="dropdown-indicator-icon"><span class="fas fa-caret-right"></span></div><span class="nav-link-text">Level four</span>
                         </div>
@@ -415,13 +447,15 @@
                       <!-- more inner pages-->
                       <div class="parent-wrapper">
                         <ul class="nav collapse parent" data-bs-parent="#multi-level" id="nv-level-four">
-                          <li class="nav-item"><a class="nav-link" href="../#!.html" data-bs-toggle="" aria-expanded="false">
+                          <li class="nav-item">
+                            <a class="nav-link" href="../#!.html" data-bs-toggle="" aria-expanded="false">
                               <div class="d-flex align-items-center"><span class="nav-link-text">Item 6</span>
                               </div>
                             </a>
                             <!-- more inner pages-->
                           </li>
-                          <li class="nav-item"><a class="nav-link dropdown-indicator" href="#nv-item-7" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-item-7">
+                          <li class="nav-item">
+                            <a class="nav-link dropdown-indicator" href="#nv-item-7" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-item-7">
                               <div class="d-flex align-items-center">
                                 <div class="dropdown-indicator-icon"><span class="fas fa-caret-right"></span></div><span class="nav-link-text">Item 7</span>
                               </div>
@@ -429,13 +463,15 @@
                             <!-- more inner pages-->
                             <div class="parent-wrapper">
                               <ul class="nav collapse parent" data-bs-parent="#level-four" id="nv-item-7">
-                                <li class="nav-item"><a class="nav-link" href="../#!.html" data-bs-toggle="" aria-expanded="false">
+                                <li class="nav-item">
+                                  <a class="nav-link" href="../#!.html" data-bs-toggle="" aria-expanded="false">
                                     <div class="d-flex align-items-center"><span class="nav-link-text">Item 8</span>
                                     </div>
                                   </a>
                                   <!-- more inner pages-->
                                 </li>
-                                <li class="nav-item"><a class="nav-link dropdown-indicator" href="#nv-item-9" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-item-9">
+                                <li class="nav-item">
+                                  <a class="nav-link dropdown-indicator" href="#nv-item-9" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-item-9">
                                     <div class="d-flex align-items-center">
                                       <div class="dropdown-indicator-icon"><span class="fas fa-caret-right"></span></div><span class="nav-link-text">Item 9</span>
                                     </div>
@@ -443,13 +479,15 @@
                                   <!-- more inner pages-->
                                   <div class="parent-wrapper">
                                     <ul class="nav collapse parent" data-bs-parent="#item-7" id="nv-item-9">
-                                      <li class="nav-item"><a class="nav-link" href="../#!.html" data-bs-toggle="" aria-expanded="false">
+                                      <li class="nav-item">
+                                        <a class="nav-link" href="../#!.html" data-bs-toggle="" aria-expanded="false">
                                           <div class="d-flex align-items-center"><span class="nav-link-text">Item 10</span>
                                           </div>
                                         </a>
                                         <!-- more inner pages-->
                                       </li>
-                                      <li class="nav-item"><a class="nav-link" href="../#!.html" data-bs-toggle="" aria-expanded="false">
+                                      <li class="nav-item">
+                                        <a class="nav-link" href="../#!.html" data-bs-toggle="" aria-expanded="false">
                                           <div class="d-flex align-items-center"><span class="nav-link-text">Item 11</span>
                                           </div>
                                         </a>
@@ -470,16 +508,15 @@
 
             </li>
 
-            <% 
-                var showAuxiPolice = '';
-                if(user.section === 'Security Division' || user.isChiefExec || user.isDeputyChiefExec){
-                    showAuxiPolice = '';
-                }else{
-                    showAuxiPolice = 'd-none';
-                }
-                %>
-
             <!-- Auxiallary Police -->
+            <% 
+            var showAuxiPolice = '';
+            if(user.section === 'Security Division' || user.isChiefExec || user.isDeputyChiefExec){
+                showAuxiPolice = '';
+            }else{
+                showAuxiPolice = 'd-none';
+            }
+            %>
             <li class="nav-item <%= showAuxiPolice %>">
 
               <!-- label-->
@@ -488,28 +525,32 @@
               <hr class="navbar-vertical-line" />
 
               <!-- level 0-->
-              <div class="nav-item-wrapper"><a class="nav-link label-1" href="/auxiliary-police/schedule/view" role="button" data-bs-toggle="" aria-expanded="false">
+              <div class="nav-item-wrapper">
+                <a class="nav-link label-1" href="/auxiliary-police/schedule/view" role="button" data-bs-toggle="" aria-expanded="false">
                   <div class="d-flex align-items-center"><span class="nav-link-icon"><span data-feather="airplay"></span></span><span class="nav-link-text-wrapper"><span class="nav-link-text">Schedule</span></span>
                   </div>
                 </a>
               </div>
 
               <!-- level 0-->
-              <div class="nav-item-wrapper"><a class="nav-link label-1" href="/auxiliary-police/duty-handover/submit" role="button" data-bs-toggle="" aria-expanded="false">
+              <div class="nav-item-wrapper">
+                <a class="nav-link label-1" href="/auxiliary-police/duty-handover/submit" role="button" data-bs-toggle="" aria-expanded="false">
                   <div class="d-flex align-items-center"><span class="nav-link-icon"><span data-feather="table"></span></span><span class="nav-link-text-wrapper"><span class="nav-link-text">Duty Handover</span></span>
                   </div>
                 </a>
               </div>
 
               <!-- level 0-->
-              <div class="nav-item-wrapper"><a class="nav-link label-1" href="/auxiliary-police/case/view" role="button" data-bs-toggle="" aria-expanded="false">
+              <div class="nav-item-wrapper">
+                <a class="nav-link label-1" href="/auxiliary-police/case/view" role="button" data-bs-toggle="" aria-expanded="false">
                   <div class="d-flex align-items-center"><span class="nav-link-icon"><span data-feather="alert-octagon"></span></span><span class="nav-link-text-wrapper"><span class="nav-link-text">Case</span></span>
                   </div>
                 </a>
               </div>
 
               <!-- level 1-->
-              <div class="nav-item-wrapper"><a class="nav-link dropdown-indicator label-1" href="#nv-aux-police-patrol" role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-tables">
+              <div class="nav-item-wrapper">
+                <a class="nav-link dropdown-indicator label-1" href="#nv-aux-police-patrol" role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-tables">
                   <div class="d-flex align-items-center">
                     <div class="dropdown-indicator-icon"><span class="fas fa-caret-right"></span></div><span class="nav-link-icon"><span data-feather="copy"></span></span><span class="nav-link-text">Patrol</span>
                   </div>
@@ -518,13 +559,15 @@
                   <ul class="nav collapse parent" data-bs-parent="#navbarVerticalCollapse" id="nv-aux-police-patrol">
                     <li class="collapsed-nav-item-title d-none">Patrol
                     </li>
-                    <li class="nav-item"><a class="nav-link" href="/auxiliary-police/patrol/shift-member-location/view" data-bs-toggle="" aria-expanded="false">
+                    <li class="nav-item">
+                      <a class="nav-link" href="/auxiliary-police/patrol/shift-member-location/view" data-bs-toggle="" aria-expanded="false">
                         <div class="d-flex align-items-center"><span class="nav-link-text">Shift Member Location</span>
                         </div>
                       </a>
                       <!-- more inner pages-->
                     </li>
-                    <li class="nav-item"><a class="nav-link" href="/auxiliary-police/patrol/patrol-unit/view" data-bs-toggle="" aria-expanded="false">
+                    <li class="nav-item">
+                      <a class="nav-link" href="/auxiliary-police/patrol/patrol-unit/view" data-bs-toggle="" aria-expanded="false">
                         <div class="d-flex align-items-center"><span class="nav-link-text">Patrol Unit</span>
                         </div>
                       </a>
@@ -543,13 +586,15 @@
                 <div class="parent-wrapper label-1">
                   <ul class="nav collapse parent" data-bs-parent="#navbarVerticalCollapse" id="nv-visitor">
                     <li class="collapsed-nav-item-title d-none">VMS</li>
-                    <li class="nav-item"><a class="nav-link" href="/visitor/list" data-bs-toggle="" aria-expanded="false">
+                    <li class="nav-item">
+                      <a class="nav-link" href="/visitor/list" data-bs-toggle="" aria-expanded="false">
                         <div class="d-flex align-items-center">
                           <span class="nav-link-text">Visitor List</span>
                         </div>
                       </a>
                     </li>
-                    <li class="nav-item d-none"><a class="nav-link" href="/visitor/overview" data-bs-toggle="" aria-expanded="false">
+                    <li class="nav-item d-none">
+                      <a class="nav-link" href="/visitor/overview" data-bs-toggle="" aria-expanded="false">
                         <div class="d-flex align-items-center">
                           <span class="nav-link-text">Visitor Overview</span>
                         </div>
@@ -560,7 +605,8 @@
               </div>
 
               <!-- multi level example-->
-              <div class="nav-item-wrapper d-none"><a class="nav-link dropdown-indicator label-1" href="#nv-multi-level" role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-multi-level">
+              <div class="nav-item-wrapper d-none">
+                <a class="nav-link dropdown-indicator label-1" href="#nv-multi-level" role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-multi-level">
                   <div class="d-flex align-items-center">
                     <div class="dropdown-indicator-icon"><span class="fas fa-caret-right"></span></div><span class="nav-link-icon"><span data-feather="layers"></span></span><span class="nav-link-text">Multi level</span>
                   </div>
@@ -569,7 +615,8 @@
                   <ul class="nav collapse parent" data-bs-parent="#navbarVerticalCollapse" id="nv-multi-level">
                     <li class="collapsed-nav-item-title d-none">Multi level
                     </li>
-                    <li class="nav-item"><a class="nav-link dropdown-indicator" href="#nv-level-two" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-level-two">
+                    <li class="nav-item">
+                      <a class="nav-link dropdown-indicator" href="#nv-level-two" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-level-two">
                         <div class="d-flex align-items-center">
                           <div class="dropdown-indicator-icon"><span class="fas fa-caret-right"></span></div><span class="nav-link-text">Level two</span>
                         </div>
@@ -577,13 +624,15 @@
                       <!-- more inner pages-->
                       <div class="parent-wrapper">
                         <ul class="nav collapse parent" data-bs-parent="#multi-level" id="nv-level-two">
-                          <li class="nav-item"><a class="nav-link" href="../#!.html" data-bs-toggle="" aria-expanded="false">
+                          <li class="nav-item">
+                            <a class="nav-link" href="../#!.html" data-bs-toggle="" aria-expanded="false">
                               <div class="d-flex align-items-center"><span class="nav-link-text">Item 1</span>
                               </div>
                             </a>
                             <!-- more inner pages-->
                           </li>
-                          <li class="nav-item"><a class="nav-link" href="../#!.html" data-bs-toggle="" aria-expanded="false">
+                          <li class="nav-item">
+                            <a class="nav-link" href="../#!.html" data-bs-toggle="" aria-expanded="false">
                               <div class="d-flex align-items-center"><span class="nav-link-text">Item 2</span>
                               </div>
                             </a>
@@ -592,7 +641,8 @@
                         </ul>
                       </div>
                     </li>
-                    <li class="nav-item"><a class="nav-link dropdown-indicator" href="#nv-level-three" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-level-three">
+                    <li class="nav-item">
+                      <a class="nav-link dropdown-indicator" href="#nv-level-three" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-level-three">
                         <div class="d-flex align-items-center">
                           <div class="dropdown-indicator-icon"><span class="fas fa-caret-right"></span></div><span class="nav-link-text">Level three</span>
                         </div>
@@ -600,13 +650,15 @@
                       <!-- more inner pages-->
                       <div class="parent-wrapper">
                         <ul class="nav collapse parent" data-bs-parent="#multi-level" id="nv-level-three">
-                          <li class="nav-item"><a class="nav-link" href="../#!.html" data-bs-toggle="" aria-expanded="false">
+                          <li class="nav-item">
+                            <a class="nav-link" href="../#!.html" data-bs-toggle="" aria-expanded="false">
                               <div class="d-flex align-items-center"><span class="nav-link-text">Item 3</span>
                               </div>
                             </a>
                             <!-- more inner pages-->
                           </li>
-                          <li class="nav-item"><a class="nav-link dropdown-indicator" href="#nv-item-4" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-item-4">
+                          <li class="nav-item">
+                            <a class="nav-link dropdown-indicator" href="#nv-item-4" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-item-4">
                               <div class="d-flex align-items-center">
                                 <div class="dropdown-indicator-icon"><span class="fas fa-caret-right"></span></div><span class="nav-link-text">Item 4</span>
                               </div>
@@ -614,13 +666,15 @@
                             <!-- more inner pages-->
                             <div class="parent-wrapper">
                               <ul class="nav collapse parent" data-bs-parent="#level-three" id="nv-item-4">
-                                <li class="nav-item"><a class="nav-link" href="../#!.html" data-bs-toggle="" aria-expanded="false">
+                                <li class="nav-item">
+                                  <a class="nav-link" href="../#!.html" data-bs-toggle="" aria-expanded="false">
                                     <div class="d-flex align-items-center"><span class="nav-link-text">Item 5</span>
                                     </div>
                                   </a>
                                   <!-- more inner pages-->
                                 </li>
-                                <li class="nav-item"><a class="nav-link" href="../#!.html" data-bs-toggle="" aria-expanded="false">
+                                <li class="nav-item">
+                                  <a class="nav-link" href="../#!.html" data-bs-toggle="" aria-expanded="false">
                                     <div class="d-flex align-items-center"><span class="nav-link-text">Item 6</span>
                                     </div>
                                   </a>
@@ -632,7 +686,8 @@
                         </ul>
                       </div>
                     </li>
-                    <li class="nav-item"><a class="nav-link dropdown-indicator" href="#nv-level-four" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-level-four">
+                    <li class="nav-item">
+                      <a class="nav-link dropdown-indicator" href="#nv-level-four" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-level-four">
                         <div class="d-flex align-items-center">
                           <div class="dropdown-indicator-icon"><span class="fas fa-caret-right"></span></div><span class="nav-link-text">Level four</span>
                         </div>
@@ -640,13 +695,15 @@
                       <!-- more inner pages-->
                       <div class="parent-wrapper">
                         <ul class="nav collapse parent" data-bs-parent="#multi-level" id="nv-level-four">
-                          <li class="nav-item"><a class="nav-link" href="../#!.html" data-bs-toggle="" aria-expanded="false">
+                          <li class="nav-item">
+                            <a class="nav-link" href="../#!.html" data-bs-toggle="" aria-expanded="false">
                               <div class="d-flex align-items-center"><span class="nav-link-text">Item 6</span>
                               </div>
                             </a>
                             <!-- more inner pages-->
                           </li>
-                          <li class="nav-item"><a class="nav-link dropdown-indicator" href="#nv-item-7" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-item-7">
+                          <li class="nav-item">
+                            <a class="nav-link dropdown-indicator" href="#nv-item-7" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-item-7">
                               <div class="d-flex align-items-center">
                                 <div class="dropdown-indicator-icon"><span class="fas fa-caret-right"></span></div><span class="nav-link-text">Item 7</span>
                               </div>
@@ -654,13 +711,15 @@
                             <!-- more inner pages-->
                             <div class="parent-wrapper">
                               <ul class="nav collapse parent" data-bs-parent="#level-four" id="nv-item-7">
-                                <li class="nav-item"><a class="nav-link" href="../#!.html" data-bs-toggle="" aria-expanded="false">
+                                <li class="nav-item">
+                                  <a class="nav-link" href="../#!.html" data-bs-toggle="" aria-expanded="false">
                                     <div class="d-flex align-items-center"><span class="nav-link-text">Item 8</span>
                                     </div>
                                   </a>
                                   <!-- more inner pages-->
                                 </li>
-                                <li class="nav-item"><a class="nav-link dropdown-indicator" href="#nv-item-9" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-item-9">
+                                <li class="nav-item">
+                                  <a class="nav-link dropdown-indicator" href="#nv-item-9" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-item-9">
                                     <div class="d-flex align-items-center">
                                       <div class="dropdown-indicator-icon"><span class="fas fa-caret-right"></span></div><span class="nav-link-text">Item 9</span>
                                     </div>
@@ -668,13 +727,15 @@
                                   <!-- more inner pages-->
                                   <div class="parent-wrapper">
                                     <ul class="nav collapse parent" data-bs-parent="#item-7" id="nv-item-9">
-                                      <li class="nav-item"><a class="nav-link" href="../#!.html" data-bs-toggle="" aria-expanded="false">
+                                      <li class="nav-item">
+                                        <a class="nav-link" href="../#!.html" data-bs-toggle="" aria-expanded="false">
                                           <div class="d-flex align-items-center"><span class="nav-link-text">Item 10</span>
                                           </div>
                                         </a>
                                         <!-- more inner pages-->
                                       </li>
-                                      <li class="nav-item"><a class="nav-link" href="../#!.html" data-bs-toggle="" aria-expanded="false">
+                                      <li class="nav-item">
+                                        <a class="nav-link" href="../#!.html" data-bs-toggle="" aria-expanded="false">
                                           <div class="d-flex align-items-center"><span class="nav-link-text">Item 11</span>
                                           </div>
                                         </a>
@@ -703,7 +764,7 @@
                 }else{
                     showEducation = 'd-none';
                 }
-                %>
+            %>
 
             <li class="nav-item <%= showEducation %>">
 
@@ -714,21 +775,24 @@
               <hr class="navbar-vertical-line" />
 
               <!-- overview-->
-              <div class="nav-item-wrapper"><a class="nav-link label-1" href="/education/overview" role="button" data-bs-toggle="" aria-expanded="false">
+              <div class="nav-item-wrapper">
+                <a class="nav-link label-1" href="/education/overview" role="button" data-bs-toggle="" aria-expanded="false">
                   <div class="d-flex align-items-center"><span class="nav-link-icon"><span data-feather="anchor"></span></span><span class="nav-link-text-wrapper"><span class="nav-link-text">Overview</span></span>
                   </div>
                 </a>
               </div>
 
               <!-- student -->
-              <div class="nav-item-wrapper"><a class="nav-link label-1" href="/education/student" role="button" data-bs-toggle="" aria-expanded="false">
+              <div class="nav-item-wrapper">
+                <a class="nav-link label-1" href="/education/student" role="button" data-bs-toggle="" aria-expanded="false">
                   <div class="d-flex align-items-center"><span class="nav-link-icon"><span data-feather="book-open"></span></span><span class="nav-link-text-wrapper"><span class="nav-link-text">Student</span></span>
                   </div>
                 </a>
               </div>
 
               <!-- payment -->
-              <div class="nav-item-wrapper"><a class="nav-link label-1" href="/education/payment" role="button" data-bs-toggle="" aria-expanded="false">
+              <div class="nav-item-wrapper">
+                <a class="nav-link label-1" href="/education/payment" role="button" data-bs-toggle="" aria-expanded="false">
                   <div class="d-flex align-items-center"><span class="nav-link-icon"><span data-feather="credit-card"></span></span><span class="nav-link-text-wrapper"><span class="nav-link-text">Payment</span></span>
                   </div>
                 </a>
@@ -745,21 +809,24 @@
               <hr class="navbar-vertical-line" />
 
               <!-- Tutorial-->
-              <div class="nav-item-wrapper"><a class="nav-link label-1" href="/guide" role="button" data-bs-toggle="" aria-expanded="false">
+              <div class="nav-item-wrapper">
+                <a class="nav-link label-1" href="/guide" role="button" data-bs-toggle="" aria-expanded="false">
                   <div class="d-flex align-items-center"><span class="nav-link-icon"><span data-feather="play"></span></span><span class="nav-link-text-wrapper"><span class="nav-link-text">Guide</span></span>
                   </div>
                 </a>
               </div>
 
               <!-- Changelog-->
-              <div class="nav-item-wrapper d-none"><a class="nav-link label-1" href="/changelog" role="button" data-bs-toggle="" aria-expanded="false">
+              <div class="nav-item-wrapper d-none">
+                <a class="nav-link label-1" href="/changelog" role="button" data-bs-toggle="" aria-expanded="false">
                   <div class="d-flex align-items-center"><span class="nav-link-icon"><span data-feather="shuffle"></span></span><span class="nav-link-text-wrapper"><span class="nav-link-text">Changelog</span></span>
                   </div>
                 </a>
               </div>
 
               <!-- Announcement-->
-              <div class="nav-item-wrapper d-none"><a class="nav-link label-1" href="/announcement" role="button" data-bs-toggle="" aria-expanded="false">
+              <div class="nav-item-wrapper d-none">
+                <a class="nav-link label-1" href="/announcement" role="button" data-bs-toggle="" aria-expanded="false">
                   <div class="d-flex align-items-center"><span class="nav-link-icon"><span data-feather="sun"></span></span><span class="nav-link-text-wrapper"><span class="nav-link-text">Announcement</span></span>
                   </div>
                 </a>
@@ -767,7 +834,9 @@
             </li>
 
           </ul>
+
         </div>
+
       </div>
 
       <div class="navbar-vertical-footer">

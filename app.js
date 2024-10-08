@@ -1272,10 +1272,14 @@ const isAuthenticatedEdu = async (req, res, next) => {
             return next(); // User is authenticated, proceed to the next middleware
         } catch (error) {
             console.error('Error in isAuthenticated middleware:', error);
-            return res.redirect('/landing/education'); // Handle error and redirect if necessary
+            return res.redirect('/education/parent/sign-in'); // Handle error and redirect if necessary
         }
     }
-    res.redirect('/landing/education/parent/sign-in'); // Redirect to the landing page if not authenticated
+    if (req.user.isPublicUser) {
+        res.redirect('/education/parent/sign-in'); // Redirect to the landing page if not authenticated
+    } else {
+        res.redirect('/landing-page'); // Redirect to the landing page if not
+    }
 };
 
 // Sign in routes
@@ -5431,14 +5435,14 @@ app.get('/education/student', isAuthenticatedEdu, async (req, res, next) => {
     try {
         const { user, notifications } = req;
         const allUser = await User.find();
-        const allLeave = await Leave.find();
+        const allStudents = await ChildEducation.find();
 
         res.render('education-student', {
             user,
             notifications,
             uuid: uuidv4(),
             allUser,
-            allLeave
+            allStudents
         });
 
     } catch (error) {
@@ -7138,6 +7142,12 @@ app.get('/testing', isAuthenticated, async (req, res, next) => {
     try {
         const { user, notifications } = req;
 
+        // const insertStudent = await ChildEducation.insertMany(childrenData);
+        // if (insertStudent) {
+        //     console.log('Done');
+        // } else {
+        //     console.log('Failed');
+        // }
         res.render('testing', {
             user: user,
             notifications: notifications,
@@ -7149,6 +7159,75 @@ app.get('/testing', isAuthenticated, async (req, res, next) => {
         next(error);
     }
 });
+
+// dummy data for child education - student
+// const childrenData = [
+//     {
+//         name: "Richard Hodge",
+//         dob: new Date(1965, 0, 27),
+//         nric: "758-61-5792",
+//         gender: "Female",
+//         pob: "Marcusshire",
+//         race: "Indian",
+//         citizenship: "Foreigner",
+//         attendanceRecords: [
+//             { date: new Date(2023, 9, 1), status: "Absent" },
+//             { date: new Date(2023, 9, 2), status: "Present" }
+//         ],
+//         siblings: [
+//             { nama: "Sarah", dob: new Date(1995, 5, 12), status: "Study", education: "PHD" },
+//             { nama: "Justin", dob: new Date(1997, 3, 5), status: "Study", education: "Master" }
+//         ]
+//     },
+//     {
+//         name: "Justin McNeil",
+//         dob: new Date(1999, 8, 3),
+//         nric: "523-77-2220",
+//         gender: "Female",
+//         pob: "New Suzannestad",
+//         race: "Other",
+//         citizenship: "Malaysian",
+//         attendanceRecords: [
+//             { date: new Date(2023, 9, 1), status: "Present" },
+//             { date: new Date(2023, 9, 2), status: "Absent" }
+//         ],
+//         siblings: [
+//             { nama: "Larry", dob: new Date(2010, 6, 10), status: "Study", education: "Primary School" },
+//             { nama: "Robert", dob: new Date(2008, 11, 22), status: "Study", education: "High School" }
+//         ]
+//     },
+//     {
+//         name: "Brandon Gilmore",
+//         dob: new Date(1984, 0, 3),
+//         nric: "707-99-4379",
+//         gender: "Female",
+//         pob: "Brianville",
+//         race: "Chinese",
+//         citizenship: "Malaysian",
+//         attendanceRecords: [
+//             { date: new Date(2023, 9, 1), status: "Present" }
+//         ],
+//         siblings: [
+//             { nama: "Stephen", dob: new Date(2005, 10, 15), status: "Study", education: "High School" }
+//         ]
+//     },
+//     {
+//         name: "Sharon Chambers",
+//         dob: new Date(1948, 7, 7),
+//         nric: "108-95-0460",
+//         gender: "Male",
+//         pob: "Thomasport",
+//         race: "Other",
+//         citizenship: "Foreigner",
+//         attendanceRecords: [
+//             { date: new Date(2023, 9, 1), status: "Present" }
+//         ],
+//         siblings: [
+//             { nama: "Nicole", dob: new Date(2001, 3, 17), status: "Study", education: "Diploma" },
+//             { nama: "Scott", dob: new Date(2009, 5, 30), status: "Study", education: "Primary School" }
+//         ]
+//     }
+// ];
 
 const checkAttendanceOutOfOfficeToday = async () => {
     try {
@@ -8711,7 +8790,7 @@ const processLeaveRequest = async (type, user, userLeave, startDate, returnDate,
             }
             break;
         case 'Emergency Leave':
-            if (amountDayRequest <= 1) {
+            if (amountDayRequest <= 1 && amountDayRequest >= -5) {
                 if (await checkFileAttachment(uuid, renderDataError, `There is no file attached for ${type.toLowerCase()}!`)) {
                     approvals = generateApprovals(
                         user,
@@ -8732,7 +8811,7 @@ const processLeaveRequest = async (type, user, userLeave, startDate, returnDate,
             }
             break;
         case 'Half Day Emergency Leave':
-            if (amountDayRequest <= 1 && numberOfDays <= 1) {
+            if (amountDayRequest <= 1 && numberOfDays <= 1 && amountDayRequest >= -5) {
                 if (await checkFileAttachment(uuid, renderDataError, `There is no file attached for ${type.toLowerCase()}!`)) {
                     approvals = generateApprovals(
                         user,

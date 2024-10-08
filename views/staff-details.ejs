@@ -619,17 +619,16 @@
                       </td>
                       <td class="align-middle text-body white-space-nowrap reliefstaff ps-3">
                         <%
-                          let userReliefName;
-                          let userLink;
-
-                          if(leaves.assignee[0] === undefined){
-                            userReliefName = '-';
-                            userLink = '#';
-                          }else{
-                            const checkUserRelief = allUser.find(check => check._id.toString() === leaves.assignee[0].toString());
-                            userReliefName = checkUserRelief.fullname;
-                            userLink = '/staff/details/'+checkUserRelief._id;
-                          }
+                           let userReliefName = '-'; // Default value for relief name
+                           let userLink = '#';       // Default value for the link
+                           
+                           if (leaves.assignee && leaves.assignee[0]) { // Check if assignee exists
+                             const checkUserRelief = allUser.find(check => check._id.toString() === leaves.assignee[0].toString());
+                             if (checkUserRelief) { // Ensure that user is found
+                               userReliefName = checkUserRelief.fullname;
+                               userLink = '/staff/details/' + checkUserRelief._id;
+                             }
+                      }
                           
                         %>
                         <a class="mb-0 fs-9 notranslate" href="<%= userLink %>"><%= userReliefName %></a>
