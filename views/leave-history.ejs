@@ -762,8 +762,13 @@ function formatDate(inputDate) {
                     <a class="fw-bold fs-9 fs-xxl-8" href="/leave/details/<%= leaves._id %>"><%= leaves.type %></a>
                   </td>
                   <td class="align-middle white-space-nowrap ps-3 staff py-4">
-                    <% const userApproval = allUser.find(userapp => userapp._id.toString() === leaves.user.toString()); %>
+                    <% const userApproval = allUser.find(userapp => userapp._id.toString() === leaves.user.toString());
+                    
+                    if (userApproval) { %>
                     <a class="fw-semibold fst-italic fs-9 fs-xxl-8 notranslate" href="/staff/details/<%= leaves.user %> "><%= userApproval.fullname %></a>
+                    <% } else {%>
+                    <p class="fw-semibold fst-italic fs-9 fs-xxl-8 notranslate">-</p>
+                    <% } %>
                   </td>
                   <td class="align-middle latestapproval ps-3 py-4">
                     <% const latestApproval = leaves.approvals.reduce((latest, approval) => approval.timestamp > latest.timestamp ? approval : latest, leaves.approvals[0]); %>

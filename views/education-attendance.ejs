@@ -7,22 +7,183 @@
     
     <div class="mb-6">
       <div class="mb-3 d-xxl-flex justify-content-between">
-        <div class="mb-3">
-          <h2 class="mb-2">Attendance</h2>
-          <h5 class="text-body-tertiary fw-semibold">Tracking presence of enrolled students.</h5>
+        <div class="align-items-middle order-xl-1 mb-5 mb-xl-3">
+            <img src="../../../assets/img/icons/logolakmns/LOGO TATTARY COLOUR.png" alt="logo" height="67.5" />
         </div>
 
-        <div class="align-items-middle">
-            <h3>Hello</h3>
+        <div class="mb-3 order-xl-0">
+          <h2 class="mb-2">Attendance</h2>
+          <h5 class="text-body-tertiary fw-semibold">Tracking presence of enrolled students.</h5>
         </div>
       </div>
 
       <div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis pt-7 pb-3 border-y mb-6">
-        <h1></h1>
+        <div id="all-student" data-list='{"valueNames":["staff","type","startdate","returndate","department","reliefstaff","status"],"page":10,"pagination":true}'>
+  
+            <div class="row align-items-end justify-content-between pb-4 g-3">
+      
+              <div class="col-12 col-md-auto">
+                <div class="search-box">
+                  <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
+                    <input class="form-control search-input search form-control-sm" type="search" placeholder="Search staffs" aria-label="Search" />
+                    <span class="fas fa-search search-box-icon"></span>
+                  </form>
+                </div>
+              </div>
+      
+              <div class="col-12 col-md-auto d-none">
+                <a class="btn btn-primary my-auto me-2" role="button" href="/"><span class="fa-solid fa-plus me-2"></span>Add new staff</a>
+              </div>
+      
+            </div>
+      
+            <div class="table-responsive ms-n1 ps-1 scrollbar">
+              <table class="table fs-9 mb-0 border-top border-translucent">
+                <thead>
+                  <tr>
+                    <th class="sort white-space-nowrap align-middle ps-0" scope="col" data-sort="staff" style="width:15%;">STAFF</th>
+                    <th class="sort align-middle ps-3" scope="col" data-sort="type" style="width:10%;">TYPE</th>
+                    <th class="sort align-middle ps-3" scope="col" data-sort="department" style="width:15%;">DEPARTMENT</th>
+                    <th class="sort align-middle ps-3" scope="col" data-sort="reliefstaff" style="width:15%;">RELIEF STAFF</th>
+                    <th class="sort align-middle text-center text-center ps-3" scope="col" data-sort="startdate" style="width:10%;">START DATE</th>
+                    <th class="sort align-middle text-center text-center ps-3" scope="col" data-sort="returndate" style="width:10%;">RETURN DATE</th>
+                    <th class="sort align-middle text-center text-center ps-3" scope="col" data-sort="status" style="width:5%;">STATUS</th>
+                    <th class="sort align-middle text-end" scope="col" style="width:5%;"></th>
+                  </tr>
+                </thead>
+                <tbody class="list" id="project-summary-table-body">
+                  <% if(allLeave && allLeave.length>0){ %>
+                  <% allLeave.forEach(leave => { %>
+      
+                  <% 
+                  var statusApprovalColor = '';
+                  
+                        if (leave.status == "pending"){
+                            statusApprovalColor = 'info';
+                        } else if(leave.status == "approved") {
+                            statusApprovalColor = 'success';
+                        } else if(leave.status == "denied" ||  leave.status == "cancelled") {
+                            statusApprovalColor = 'danger';
+                        }else if (leave.status == "invalid"){
+                            statusApprovalColor = 'warning';
+                        }else if (leave.status == "submitted"){
+                            statusApprovalColor = 'info';
+                        }   
+                  %>
+      
+                  <% 
+                  function formatDate(inputDate) {
+                      if (!inputDate) {
+                          return ""; // Return an empty string if inputDate is undefined or null
+                      }
+              
+                      const dateObject = new Date(inputDate);
+              
+                      if (isNaN(dateObject.getTime())) {
+                          console.error("Invalid date format:", inputDate);
+                          return ""; // Return an empty string for invalid dates
+                      }
+              
+                      const day = String(dateObject.getDate()).padStart(2, '0');
+                      const month = String(dateObject.getMonth() + 1).padStart(2, '0');
+                      const year = dateObject.getFullYear();
+              
+                      return `${day}/${month}/${year}`;
+                  }
+                  %>
+      
+                  <tr class="position-static">
+                    <td class="align-middle text-body white-space-nowrap ps-0 staff">
+                      <% 
+                      const checkUser = allUser.find(check => check._id.toString() === leave.user.toString());
+                      %>
+                      <% if (checkUser) { %>
+                      <a class="mb-0 fw-bold fs-9 notranslate" href="/staff/details/<%= checkUser._id %>"><%= checkUser.fullname %></a>
+                      <% } else { %>
+                      <p class="mb-0 fs-9 fw-bold text-primary">User not found</p>
+                      <% } %>
+                    </td>
+      
+                    <td class="align-middle white-space-nowrap position ps-3">
+                      <a class="mb-0 fs-9 fw-bold" href="/leave/details/<%= leave._id %> "><%= leave.type %></a>
+                    </td>
+      
+                    <td class="align-middle department ps-3">
+                      <p class="mb-0 fs-9 text-body-highlight"><%= leave.department %></p>
+                    </td>
+      
+                    <td class="align-middle text-body white-space-nowrap reliefstaff ps-3">
+                      <%
+                      let userReliefName;
+                      let userLink;
+      
+                      if(leave.assignee[0] === undefined){
+                        userReliefName = '-';
+                        userLink = '#';
+                      }else{
+                        const checkUserRelief = allUser.find(check => check._id.toString() === leave.assignee[0].toString());
+                        if(checkUserRelief){
+                          userReliefName = checkUserRelief.fullname;
+                        userLink = '/staff/details/'+checkUserRelief._id;
+                        }else{
+                          userReliefName = '-';
+                          userLink = '#';
+                        }
+                      }
+                      
+                    %>
+                      <a class="mb-0 fs-9" href="<%= userLink %>"><%= userReliefName %></a>
+                    </td>
+      
+                    <td class="align-middle white-space-nowrap text-center startdate ps-0">
+                      <p class="mb-0 fs-9 text-body" id="start-date"><%= formatDate(leave.date.start) %></p>
+                    </td>
+      
+                    <td class="align-middle white-space-nowrap text-center returndate ps-0">
+                      <p class="mb-0 fs-9 text-body"><%= formatDate(leave.date.return) %></p>
+                    </td>
+      
+                    <td class="align-middle white-space-nowrap text-center status">
+                      <span class="badge badge-phoenix fs-10 badge-phoenix-<%= statusApprovalColor %>"><%= leave.status %></span>
+                    </td>
+      
+                    <td class="align-middle text-end white-space-nowrap pe-0">
+                      <div class="btn-reveal-trigger position-static">
+                        <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs-10" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fas fa-ellipsis-h fs-10"></span></button>
+                        <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item" href="/leave/details/<%= leave._id %>">View</a><a class="dropdown-item d-none" href="#!">Export</a>
+                          <div class="dropdown-divider d-none"></div><a class="dropdown-item d-none" href="#!">Edit</a>
+                          <div class="dropdown-divider d-none"></div><a class="dropdown-item d-none text-danger" href="#!">Remove</a>
+                        </div>
+                      </div>
+                    </td>
+      
+                  </tr>
+                  <% }); %>
+                  <% }else { %>
+                  <tr class="position-static">
+                    <td class="mb-0 fs-9 text-body">
+                      <p>There is no user found in your department</p>
+                    </td>
+                  </tr>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
+            <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
+              <div class="col-auto d-flex">
+                <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p><a class="fw-semibold" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semibold d-none" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
+              </div>
+              <div class="col-auto d-flex">
+                <button class="page-link" data-list-pagination="prev"><span class="fas fa-chevron-left"></span></button>
+                <ul class="mb-0 pagination"></ul>
+                <button class="page-link pe-0" data-list-pagination="next"><span class="fas fa-chevron-right"></span></button>
+              </div>
+            </div>
+        </div> 
       </div>
       
     </div>
-    
+
     <% if(user.isPublicUser){ %>
 <%- include('partials/alternate-private-footer.ejs') %>
 <% }else{ %>

@@ -1275,7 +1275,7 @@ const isAuthenticatedEdu = async (req, res, next) => {
             return res.redirect('/landing/education'); // Handle error and redirect if necessary
         }
     }
-    res.redirect('/landing/education'); // Redirect to the landing page if not authenticated
+    res.redirect('/landing/education/parent/sign-in'); // Redirect to the landing page if not authenticated
 };
 
 // Sign in routes
@@ -5430,11 +5430,15 @@ app.get('/education/parent/sign-in', async (req, res, next) => {
 app.get('/education/student', isAuthenticatedEdu, async (req, res, next) => {
     try {
         const { user, notifications } = req;
+        const allUser = await User.find();
+        const allLeave = await Leave.find();
 
         res.render('education-student', {
             user,
             notifications,
-            uuid: uuidv4()
+            uuid: uuidv4(),
+            allUser,
+            allLeave
         });
 
     } catch (error) {
@@ -5447,11 +5451,14 @@ app.get('/education/student', isAuthenticatedEdu, async (req, res, next) => {
 app.get('/education/payment', isAuthenticatedEdu, async (req, res, next) => {
     try {
         const { user, notifications } = req;
-
+        const allUser = await User.find();
+        const allLeave = await Leave.find();
         res.render('education-payment', {
             user,
             notifications,
-            uuid: uuidv4()
+            uuid: uuidv4(),
+            allUser,
+            allLeave
         });
 
     } catch (error) {
@@ -5464,11 +5471,14 @@ app.get('/education/payment', isAuthenticatedEdu, async (req, res, next) => {
 app.get('/education/attendance', isAuthenticatedEdu, async (req, res, next) => {
     try {
         const { user, notifications } = req;
-
+        const allUser = await User.find();
+        const allLeave = await Leave.find();
         res.render('education-attendance', {
             user,
             notifications,
-            uuid: uuidv4()
+            uuid: uuidv4(),
+            allUser,
+            allLeave
         });
 
     } catch (error) {
