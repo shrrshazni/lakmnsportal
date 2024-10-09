@@ -1,139 +1,213 @@
-<% if(user.isPublicUser){ %>
-<%- include('partials/alternate-private-header.ejs') %>
-<% }else{ %>
-<%- include('partials/private-header.ejs') %>
-<%}%>
-
+<% if(user.isPublicUser){ %> 
+<%-include('partials/alternate-private-header.ejs') %> 
+<% }else{ %> 
+<%-include('partials/private-header.ejs') }%>
 
 <div class="mb-6">
   <div class="mb-3 d-xxl-flex justify-content-between">
-    <div class="align-items-middle order-xl-0 mb-5 mb-xl-3">
-        <img src="../../../assets/img/icons/logolakmns/LOGO TATTARY COLOUR.png" alt="logo" height="67.5" />
+    <div class="mb-3 order-xl-0">
+      <h2 class="mb-2">Student</h2>
+      <h5 class="text-body-tertiary fw-semibold">
+        Child, class, parent, attendance, payment
+      </h5>
     </div>
 
-    <div class="mb-3 order-xl-1 text-end">
-      <button class="btn btn-primary mt-3"><span class="fa-solid fa-plus"></span>&nbsp;Add child</button>
+    <div class="mb-3 order-xl-1 text-center text-xl-end">
+      <button class="btn btn-primary mt-3">
+        <span class="fa-solid fa-plus"></span>
+        &nbsp;Add child
+      </button>
     </div>
   </div>
 
-  <div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis pt-7 pb-3 border-y mb-6">
-    <div id="all-student" data-list='{"valueNames":["name","dob","class","attendance","siblings"],"page":10,"pagination":true}'>
-
+  <div
+    class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis pt-7 pb-3 border-y mb-6"
+  >
+    <div
+      id="all-student"
+      data-list='{"valueNames":["name","dob","class","attendance","siblings"],"page":10,"pagination":true}'
+    >
       <div class="row align-items-end justify-content-between pb-4 g-3">
-    
-        <div class="col-12 col-md-auto">
-          <h2 class="mb-2">Students</h2>
-          <h5 class="text-body-tertiary fw-semibold">Name, birthdate, class, attendance, siblings.</h5>
-        </div>
-    
         <div class="col-12 col-md-auto">
           <div class="search-box">
-            <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
-              <input class="form-control search-input search form-control-sm" type="search" placeholder="Search students" aria-label="Search" />
+            <form
+              class="position-relative"
+              data-bs-toggle="search"
+              data-bs-display="static"
+            >
+              <input
+                class="form-control search-input search form-control-sm"
+                type="search"
+                placeholder="Search students"
+                aria-label="Search"
+              />
               <span class="fas fa-search search-box-icon"></span>
             </form>
           </div>
         </div>
-    
       </div>
-    
+
       <div class="table-responsive ms-n1 ps-1 scrollbar">
         <table class="table fs-9 mb-0 border-top border-translucent">
           <thead>
             <tr>
-              <th class="sort white-space-nowrap align-middle ps-0" scope="col" data-sort="name" style="width:15%;">STUDENT NAME</th>
-              <th class="sort align-middle text-center ps-3" scope="col" data-sort="dob" style="width:10%;">DATE OF BIRTH</th>
-              <th class="sort align-middle text-center ps-3" scope="col" data-sort="class" style="width:15%;">CLASS</th>
-              <th class="sort align-middle text-center ps-3" scope="col" data-sort="attendance" style="width:15%;">ATTENDANCE</th>
-              <th class="sort align-middle text-center ps-3" scope="col" data-sort="siblings" style="width:20%;">SIBLINGS</th>
+              <th
+                class="sort white-space-nowrap align-middle ps-0"
+                scope="col"
+                data-sort="name"
+                style="width: 15%"
+              >
+                STUDENT NAME
+              </th>
+              <th
+                class="sort align-middle text-center ps-3"
+                scope="col"
+                data-sort="dob"
+                style="width: 10%"
+              >
+                DATE OF BIRTH
+              </th>
+              <th
+                class="sort align-middle text-center ps-3"
+                scope="col"
+                data-sort="class"
+                style="width: 15%"
+              >
+                CLASS
+              </th>
+              <th
+                class="sort align-middle text-center ps-3"
+                scope="col"
+                data-sort="attendance"
+                style="width: 15%"
+              >
+                ATTENDANCE
+              </th>
+              <th
+                class="sort align-middle text-center ps-3"
+                scope="col"
+                data-sort="siblings"
+                style="width: 20%"
+              >
+                SIBLINGS
+              </th>
             </tr>
           </thead>
           <tbody class="list" id="project-summary-table-body">
-            <% if(allStudents && allStudents.length > 0){ %>
-<% allStudents.forEach(student => { %>
+            <% if(allStudents && allStudents.length > 0){ %> <%
+            allStudents.forEach(student => { %> <% function
+            formatDate(inputDate) { if (!inputDate) return ""; // Return empty
+            string if inputDate is undefined or null const dateObject = new
+            Date(inputDate); if (isNaN(dateObject.getTime())) return ""; //
+            Return empty string for invalid dates const day =
+            String(dateObject.getDate()).padStart(2, '0'); const month =
+            String(dateObject.getMonth() + 1).padStart(2, '0'); const year =
+            dateObject.getFullYear(); return `${day}/${month}/${year}`; } %>
 
-<% 
-              function formatDate(inputDate) {
-                  if (!inputDate) return ""; // Return empty string if inputDate is undefined or null
-                  const dateObject = new Date(inputDate);
-                  if (isNaN(dateObject.getTime())) return ""; // Return empty string for invalid dates
-                  const day = String(dateObject.getDate()).padStart(2, '0');
-                  const month = String(dateObject.getMonth() + 1).padStart(2, '0');
-                  const year = dateObject.getFullYear();
-                  return `${day}/${month}/${year}`;
-              }
-            %>
+            <tr class="position-static">
+              <td class="align-middle text-body white-space-nowrap ps-0 name">
+                <a
+                  class="mb-0 fw-bold fs-9 notranslate"
+                  href="/student/details/<%= student._id %>"
+                >
+                  <%= student.name %>
+                </a>
+              </td>
 
-<tr class="position-static">
-  <td class="align-middle text-body white-space-nowrap ps-0 name">
-    <a class="mb-0 fw-bold fs-9 notranslate" href="/student/details/<%= student._id %>"><%= student.name %></a>
-  </td>
+              <td class="align-middle white-space-nowrap text-center dob ps-3">
+                <p class="mb-0 fs-9 text-body">
+                  <%= formatDate(student.dob) %>
+                </p>
+              </td>
 
-  <td class="align-middle white-space-nowrap text-center dob ps-3">
-    <p class="mb-0 fs-9 text-body"><%= formatDate(student.dob) %></p>
-  </td>
+              <td
+                class="align-middle white-space-nowrap text-center class ps-3"
+              >
+                <% if (student.class) { %>
+                <p class="mb-0 fs-9 text-body">
+                  <%= student.class.classname %>
+                </p>
+                <% } else { %>
+                <p class="mb-0 fs-9 text-body">Not assigned</p>
+                <% } %>
+              </td>
 
-  <td class="align-middle white-space-nowrap text-center class ps-3">
-    <% if (student.class) { %>
-    <p class="mb-0 fs-9 text-body"><%= student.class.classname %></p>
-    <% } else { %>
-    <p class="mb-0 fs-9 text-body">Not assigned</p>
-    <% } %>
-  </td>
+              <td
+                class="align-middle white-space-nowrap text-center attendance ps-3"
+              >
+                <% if (student.attendanceRecords &&
+                student.attendanceRecords.length > 0) { %>
+                <p class="mb-0 fs-9 text-body">
+                  <%= student.attendanceRecords.map(record =>
+                  record.status).join(", ") %>
+                </p>
+                <% } else { %>
+                <p class="mb-0 fs-9 text-body">No records</p>
+                <% } %>
+              </td>
 
-  <td class="align-middle white-space-nowrap text-center attendance ps-3">
-    <% if (student.attendanceRecords && student.attendanceRecords.length > 0) { %>
-    <p class="mb-0 fs-9 text-body">
-      <%= student.attendanceRecords.map(record => record.status).join(", ") %>
-    </p>
-    <% } else { %>
-    <p class="mb-0 fs-9 text-body">No records</p>
-    <% } %>
-  </td>
+              <td
+                class="align-middle white-space-nowrap text-center siblings ps-3"
+              >
+                <% if (student.siblings && student.siblings.length > 0) { %>
+                <p class="mb-0 fs-9 text-body">
+                  <%= student.siblings.map(sibling => sibling.nama).join(", ")
+                  %>
+                </p>
+                <% } else { %>
+                <p class="mb-0 fs-9 text-body">No siblings</p>
+                <% } %>
+              </td>
+            </tr>
 
-  <td class="align-middle white-space-nowrap text-center siblings ps-3">
-    <% if (student.siblings && student.siblings.length > 0) { %>
-    <p class="mb-0 fs-9 text-body">
-      <%= student.siblings.map(sibling => sibling.nama).join(", ") %>
-    </p>
-    <% } else { %>
-    <p class="mb-0 fs-9 text-body">No siblings</p>
-    <% } %>
-  </td>
-</tr>
+            <% }); %> <% } else { %>
+            <tr class="position-static">
+              <td class="mb-0 fs-9 text-body" colspan="5">
+                <p>No students found</p>
+              </td>
+            </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
 
-<% }); %>
-<% } else { %>
-<tr class="position-static">
-  <td class="mb-0 fs-9 text-body" colspan="5">
-    <p>No students found</p>
-  </td>
-</tr>
-<% } %>
-</tbody>
-</table>
-</div>
-
-<div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
-  <div class="col-auto d-flex">
-    <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p>
-    <a class="fw-semibold" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
-    <a class="fw-semibold d-none" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
+      <div
+        class="row align-items-center justify-content-between py-2 pe-0 fs-9"
+      >
+        <div class="col-auto d-flex">
+          <p
+            class="mb-0 d-none d-sm-block me-3 fw-semibold text-body"
+            data-list-info="data-list-info"
+          ></p>
+          <a class="fw-semibold" href="#!" data-list-view="*">
+            View all
+            <span
+              class="fas fa-angle-right ms-1"
+              data-fa-transform="down-1"
+            ></span>
+          </a>
+          <a class="fw-semibold d-none" href="#!" data-list-view="less">
+            View Less
+            <span
+              class="fas fa-angle-right ms-1"
+              data-fa-transform="down-1"
+            ></span>
+          </a>
+        </div>
+        <div class="col-auto d-flex">
+          <button class="page-link" data-list-pagination="prev">
+            <span class="fas fa-chevron-left"></span>
+          </button>
+          <ul class="mb-0 pagination"></ul>
+          <button class="page-link pe-0" data-list-pagination="next">
+            <span class="fas fa-chevron-right"></span>
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
-  <div class="col-auto d-flex">
-    <button class="page-link" data-list-pagination="prev"><span class="fas fa-chevron-left"></span></button>
-    <ul class="mb-0 pagination"></ul>
-    <button class="page-link pe-0" data-list-pagination="next"><span class="fas fa-chevron-right"></span></button>
-  </div>
 </div>
 
-</div>
-
-</div>
-</div>
-
-<% if(user.isPublicUser){ %>
-<%- include('partials/alternate-private-footer.ejs') %>
-<% }else{ %>
-<%- include('partials/private-footer.ejs') %>
-<%}%>
+<% if(user.isPublicUser){ %> <%-
+include('partials/alternate-private-footer.ejs') %> <% }else{ %> <%-
+include('partials/private-footer.ejs') %> <%}%>

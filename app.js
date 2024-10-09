@@ -439,8 +439,8 @@ const userSchema = new mongoose.Schema({
     grade: { type: Number, default: 5 },
     classification: {
         type: String,
-        enum: ['permanent', 'contract', 'intern', 'trainee'],
-        default: 'trainee'
+        enum: ['permanent', 'contract', 'intern', 'trainee', 'none'],
+        default: 'none'
     },
     marital: {
         type: String,
@@ -841,11 +841,6 @@ const childSchema = new mongoose.Schema({
     class: { type: mongoose.Schema.Types.ObjectId, ref: 'Class', required: false },
     receiptUploaded: { type: Boolean, default: false },
     parent: { type: mongoose.Schema.Types.ObjectId, ref: 'Parent' },
-    attendanceRecords: [{
-        date: Date,
-        status: String,
-        additionalInfo: String
-    }],
     siblings: [{
         nama: String,
         dob: Date,
@@ -853,7 +848,6 @@ const childSchema = new mongoose.Schema({
         education: { type: String, enum: ['Preschool', 'Primary School', 'High School', 'Diploma', 'Degree', 'Master', 'PHD'] }
     }]
 });
-
 // Add indexes for performance optimization
 childSchema.index({ name: 1 });
 childSchema.index({ dob: 1 });
@@ -5407,7 +5401,7 @@ app.get('/education/parent/sign-in', async (req, res, next) => {
 
                     // End timing and redirect to home
                     console.timeEnd('Sign-in Process');
-                    return res.redirect('/education');
+                    return res.redirect('/education/overview');
                 });
             });
         } else {

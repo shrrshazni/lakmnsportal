@@ -1,4 +1,18 @@
+<% if(user.isPublicUser){ %>
+<%- include('partials/alternate-private-header.ejs') %>
+<% }else{ %>
 <%- include('partials/private-header.ejs') %>
+<%}%>
+
+<%
+ let publicUser; 
+
+ if(user.isPublicUser){
+    publicUser = 'd-none'
+ }else{
+    publicUser = '';
+ }
+%>
 
 <div class="mb-9">
 
@@ -12,7 +26,7 @@
           <button class="btn btn-phoenix-primary"><span class="fa-regular fa-envelope me-2"></span>Message</button>
         </div>
         <div class="col-auto">
-          <a class="btn btn-phoenix-secondary" role="button" href="/profile"><span class="fa-solid fa-user me-2"></span>Profile</a>
+          <a class="btn btn-phoenix-secondary <%= publicUser %>" role="button" href="/profile"><span class="fa-solid fa-user me-2"></span>Profile</a>
         </div>
       </div>
     </div>
@@ -164,6 +178,7 @@
          textSubNoti = 'Subscribed for push notification for this device';
          showSubNoti = 'd-none';
         }
+        console.log(subscriptions);
       %>
 
       <div class="border-bottom border-translucent border-dashed pb-3 mb-4">
@@ -309,7 +324,7 @@
         <div class="mb-6">
           <h4 class="mb-4">Basic Information</h4>
           <div class="row g-3">
-            <div class="col-12 col-sm-6">
+            <div class="col-12 col-sm-6 <%= publicUser %>">
               <div class="form-icon-container">
                 <div class="form-floating">
                   <input class="form-control form-icon-input" name="officenumber" type="text" placeholder="officenumber" />
@@ -333,7 +348,7 @@
                 </div><span class="fa-solid fa-mobile-screen text-body fs-9 form-icon"></span>
               </div>
             </div>
-            <div class="col-12 col-sm-6">
+            <div class="col-12 col-sm-6 <%= publicUser %>">
               <div class="form-icon-container">
                 <div class="form-floating">
                   <input type="text" class="form-control datetimepicker flatpickr-input form-icon-input" placeholder="" name="dateEmployed" data-options='{"disableMobile":true,"allowInput":true, "locale" : { "firstDayOfWeek" : 1}, "mode": "multiple" }'>
@@ -555,4 +570,9 @@
   </div>
 </div>
 
+
+<% if(user.isPublicUser){ %>
+<%- include('partials/alternate-private-footer.ejs') %>
+<% }else{ %>
 <%- include('partials/private-footer.ejs') %>
+<%}%>

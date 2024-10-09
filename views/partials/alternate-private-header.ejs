@@ -10,7 +10,7 @@
   <!-- ===============================================-->
   <!--    Document Title-->
   <!-- ===============================================-->
-  <title>ITARY</title>
+  <title>ITTARY</title>
 
 
   <!-- ===============================================-->
@@ -251,6 +251,12 @@
     }
   </style>
 
+  <!-- Hide auto-created selection field completely by hiding its container -->
+  <div class="d-none" id="google_translate_element"></div>
+  <input class="d-none" value="ms" id="language-ms" />
+  <input class="d-none" value="en" id="language-en" />
+  <div id="goog-gt-tt" class="goog-tooltip skiptranslate d-none"></div>
+
   <!-- ===============================================-->
   <!--    Main Content-->
   <!-- ===============================================-->
@@ -259,7 +265,7 @@
       <div class="navbar-logo">
 
         <button class="btn navbar-toggler navbar-toggler-humburger-icon hover-bg-transparent" type="button" data-bs-toggle="collapse" data-bs-target="#navbarTopCollapse" aria-controls="navbarTopCollapse" aria-expanded="false" aria-label="Toggle Navigation"><span class="navbar-toggle-icon"><span class="toggle-line"></span></span></button>
-        <a class="navbar-brand navbar-brand" href="/education/overview"><span class="text-body-highlight d-sm-inline"></span></a>
+        <a class="navbar-brand navbar-brand" href="/education/overview">ittary<span class="text-body-highlight d-sm-inline">LAKMNS</span></a>
       </div>
 
       <div class="collapse navbar-collapse navbar-top-collapse order-1 order-lg-0 justify-content-center" id="navbarTopCollapse">
@@ -519,10 +525,10 @@
                   </form>
                 </div>
               </div>
-              <div class="overflow-auto scrollbar" style="height: 7rem;">
+              <div class="overflow-auto scrollbar" style="height: 5rem;">
                 <ul class="nav d-flex flex-column mb-2 pb-1">
-                  <li class="nav-item"><a class="nav-link px-3" href="/"><span class="me-2 text-body" data-feather="bar-chart-2"></span>Dashboard</a></li>
-                  <li class="nav-item"><a class="nav-link px-3" href="/profile"> <span class="me-2 text-body" data-feather="user"></span><span>Profile & Activity</span></a></li>
+                  <li class="nav-item"><a class="nav-link px-3" href="/education/overview"><span class="me-2 text-body" data-feather="bar-chart-2"></span>Dashboard</a></li>
+                  <li class="nav-item d-none "><a class="nav-link px-3" href="/profile"> <span class="me-2 text-body" data-feather="user"></span><span>Profile & Activity</span></a></li>
                   <li class="nav-item"><a class="nav-link px-3" href="/settings"> <span class="me-2 text-body" data-feather="settings"></span>Settings &amp; Privacy </a></li>
                 </ul>
               </div>
