@@ -9513,7 +9513,7 @@ const getCustomHijriDate = async () => {
 
 // * Helper function to get random colour
 const getRandomColor = () => {
-    const colors = ['DarkGoldenRod', 'Black', 'MidnightBlue', 'Indigo', 'Maroon', 'OliveDrab'];
+    const colors = ['Black', 'MidnightBlue', 'Indigo', 'Maroon'];
 
     // Get a random index from the colors array
     const randomIndex = Math.floor(Math.random() * colors.length);
