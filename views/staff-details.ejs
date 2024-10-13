@@ -793,7 +793,9 @@
               };
             %>
 
-              <% const modalFiles = files.filter((file) => file.user.toString() === otherUser._id.toString() && file.origin !== 'leave'); %>
+              <% const modalFiles = (files && Array.isArray(files)) 
+? files.filter((file) => file.user && otherUser && otherUser._id && file.user.toString() === otherUser._id.toString() && file.origin !== 'leave') 
+: []; %>
               <% const lastIndexFile = modalFiles.length - 1; var borderModalFile = ''; %>
               <% if(modalFiles && modalFiles.length > 0){ %>
               <% modalFiles.forEach((file, index) => { %>
