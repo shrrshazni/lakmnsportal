@@ -1130,7 +1130,7 @@ const renderHomePage = async (req, res, next, show = '', alert = '') => {
             File.find(),
             Info.findOne({ user: user._id }),
             Task.find({ assignee: { $ne: [user._id] } }),
-            Activity.find(),
+            Activity.find().sort({ timestamp: -1 }).limit(20),
             user.isChiefExec || user.isDeputyChiefExec
                 ? User.find({ isManagement: true, _id: { $ne: user._id } })
                 : user.isHeadOfDepartment
@@ -7135,13 +7135,6 @@ app.get('/super-admin/logout', isAuthenticated, async (req, res, next) => {
 app.get('/testing', isAuthenticated, async (req, res, next) => {
     try {
         const { user, notifications } = req;
-
-        // const insertStudent = await ChildEducation.insertMany(childrenData);
-        // if (insertStudent) {
-        //     console.log('Done');
-        // } else {
-        //     console.log('Failed');
-        // }
         res.render('testing', {
             user: user,
             notifications: notifications,
@@ -8147,6 +8140,59 @@ const generateApprovals = (
                     timestamp: ''
                 });
             }
+        } else if (user.username === 'P319') {
+            approvals.push({
+                recipient: user._id,
+                role: 'Staff',
+                status: 'submitted',
+                comment: 'Submitted leave request',
+                timestamp: moment().utcOffset(8).toDate(),
+                estimated: ''
+            });
+
+            if (headOfSection) {
+                approvals.push({
+                    recipient: headOfSection._id,
+                    role: 'Head of Division',
+                    status: 'pending',
+                    comment: 'Leave request needs approval',
+                    estimated: moment().utcOffset(8).add(1, 'day').toDate(),
+                    timestamp: ''
+                });
+            }
+
+            if (headOfDepartment) {
+                approvals.push({
+                    recipient: headOfDepartment._id,
+                    role: 'Head of Department',
+                    status: 'pending',
+                    comment: 'Leave request needs approval',
+                    estimated: '',
+                    timestamp: ''
+                });
+            }
+
+            if (chiefExec) {
+                approvals.push({
+                    recipient: chiefExec._id,
+                    role: 'Chief Executive Officer',
+                    status: 'pending',
+                    comment: 'Leave request needs approval',
+                    estimated: moment(startDate).utcOffset(8).subtract(2, 'days').toDate(),
+                    timestamp: ''
+                });
+            }
+
+            if (adminHR) {
+                approvals.push({
+                    recipient: adminHR._id,
+                    role: 'Human Resource',
+                    status: 'pending',
+                    comment: 'Leave request needs to be reviewed',
+                    estimated: moment(startDate).utcOffset(8).subtract(1, 'days').toDate(),
+                    timestamp: ''
+                });
+            }
         } else {
             approvals.push({
                 recipient: user._id,
@@ -8528,6 +8574,59 @@ const generateApprovals = (
                     timestamp: ''
                 });
             }
+        } else if (user.username === 'P319') {
+            approvals.push({
+                recipient: user._id,
+                role: 'Staff',
+                status: 'submitted',
+                comment: 'Submitted leave request',
+                timestamp: moment().utcOffset(8).toDate(),
+                estimated: ''
+            });
+
+            if (headOfSection) {
+                approvals.push({
+                    recipient: headOfSection._id,
+                    role: 'Head of Division',
+                    status: 'pending',
+                    comment: 'Leave request needs approval',
+                    estimated: moment().utcOffset(8).add(1, 'day').toDate(),
+                    timestamp: ''
+                });
+            }
+
+            if (headOfDepartment) {
+                approvals.push({
+                    recipient: headOfDepartment._id,
+                    role: 'Head of Department',
+                    status: 'pending',
+                    comment: 'Leave request needs approval',
+                    estimated: '',
+                    timestamp: ''
+                });
+            }
+
+            if (chiefExec) {
+                approvals.push({
+                    recipient: chiefExec._id,
+                    role: 'Chief Executive Officer',
+                    status: 'pending',
+                    comment: 'Leave request needs approval',
+                    estimated: moment(startDate).utcOffset(8).subtract(2, 'days').toDate(),
+                    timestamp: ''
+                });
+            }
+
+            if (adminHR) {
+                approvals.push({
+                    recipient: adminHR._id,
+                    role: 'Human Resource',
+                    status: 'pending',
+                    comment: 'Leave request needs to be reviewed',
+                    estimated: moment(startDate).utcOffset(8).subtract(1, 'days').toDate(),
+                    timestamp: ''
+                });
+            }
         } else {
             approvals.push({
                 recipient: user._id,
@@ -8784,7 +8883,7 @@ const processLeaveRequest = async (type, user, userLeave, startDate, returnDate,
             }
             break;
         case 'Emergency Leave':
-            if (amountDayRequest <= 1 && amountDayRequest >= -5) {
+            if (amountDayRequest <= 7 && amountDayRequest >= -5) {
                 if (await checkFileAttachment(uuid, renderDataError, `There is no file attached for ${type.toLowerCase()}!`)) {
                     approvals = generateApprovals(
                         user,
@@ -8805,7 +8904,7 @@ const processLeaveRequest = async (type, user, userLeave, startDate, returnDate,
             }
             break;
         case 'Half Day Emergency Leave':
-            if (amountDayRequest <= 1 && numberOfDays <= 1 && amountDayRequest >= -5) {
+            if (amountDayRequest <= 7 && numberOfDays <= 1 && amountDayRequest >= -5) {
                 if (await checkFileAttachment(uuid, renderDataError, `There is no file attached for ${type.toLowerCase()}!`)) {
                     approvals = generateApprovals(
                         user,
@@ -9193,7 +9292,7 @@ const handleAcknowledged = async (checkLeave, user, res) => {
                         'approvals.$.timestamp': moment().utcOffset(8).toDate()
                     }
                 },
-                { new: true, useFindAndModify: false }
+                { new: true, useFindAndModify: false, arrayFilters: [{ 'elem.recipient': checkLeave.approvals[humanResourceIndex].recipient }] }
             );
 
             // Log if the recipient has been updated
@@ -9206,6 +9305,11 @@ const handleAcknowledged = async (checkLeave, user, res) => {
             // Retrieve the leave details and user data for the first recipient
             const userLeave = await UserLeave.findOne({ user: firstRecipientId });
             const checkUser = await User.findById(firstRecipientId);
+
+            if (!userLeave) {
+                console.log('User leave record not found for user:', firstRecipientId);
+                return;
+            }
 
             const startDate = checkLeave.date.start;
             const returnDate = checkLeave.date.return;
