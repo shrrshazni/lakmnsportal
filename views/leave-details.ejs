@@ -133,8 +133,8 @@ console.log(showCancel);
       <ul class="dropdown-menu dropdown-menu-end p-0" style="z-index: 9999;">
         <li><a class="dropdown-item d-none" href="/leave/history">Leave History</a></li>
         <li><a class="dropdown-item <%= showCancel %>" href="/leave/cancelled/<%= leave._id %>">Cancel Request</a></li>
-        <li><a class="dropdown-item <%= showComment %>" href="#!" data-bs-target="#add-comment" data-bs-toggle="modal">Add Remarks</a></li>
-        <li><a class="dropdown-item" href="#!">Print</a></li>
+        <li><a class="dropdown-item no-loader <%= showComment %>" href="#!" data-bs-target="#add-comment" data-bs-toggle="modal">Add Remarks</a></li>
+        <li><a class="dropdown-item no-loader" href="#!">Print</a></li>
       </ul>
     </div>
   </div>
@@ -258,7 +258,7 @@ console.log(showCancel);
                         <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item text-danger" href="/files/delete/<%= file._id %>">Delete</a><a class="dropdown-item" href="/files/download/<%= file._id %>">Download</a><a class="dropdown-item d-none" href="#!">Report abuse</a></div>
                       </div>
                     </div>
-                    <div class="d-flex fs-9 text-body-tertiary mb-2 flex-wrap"><span><%= file.size %></span><span class="text-body-quaternary mx-1">| </span><a href="#!"><%= file.user %> </a><span class="text-body-quaternary mx-1">| </span><span class="text-nowrap"><%= formatDateFile(file.date) %></span></div><img class="rounded-2" src="<%= file.path %>" alt="" style="max-width:230px" />
+                    <div class="d-flex fs-9 text-body-tertiary mb-2 flex-wrap"><span><%= file.size %></span><span class="text-body-quaternary mx-1">| </span><a href="/staff/details/<%= file.user %>"><%= file.user %> </a><span class="text-body-quaternary mx-1">| </span><span class="text-nowrap"><%= formatDateFile(file.date) %></span></div><img class="rounded-2" src="<%= file.path %>" alt="" style="max-width:230px" />
                   </div>
                 </div>
 
@@ -271,7 +271,7 @@ console.log(showCancel);
                         <div class="d-flex align-items-center mb-1"><span class="fa-solid fa-image me-2 fs-9 text-body-tertiary"></span>
                           <p class="text-body-highlight mb-0 lh-1"><%= file.name %></p>
                         </div>
-                        <div class="d-flex fs-9 text-body-tertiary mb-0 flex-wrap"><span><%= file.size %></span><span class="text-body-quaternary mx-1">| </span><a href="#!"><%= file.user %> </a><span class="text-body-quaternary mx-1">| </span><span class="text-nowrap"><%= formatDateFile(file.date) %></span></div>
+                        <div class="d-flex fs-9 text-body-tertiary mb-0 flex-wrap"><span><%= file.size %></span><span class="text-body-quaternary mx-1">| </span><a  href="/staff/details/<%= file.user %>"><%= file.user %> </a><span class="text-body-quaternary mx-1">| </span><span class="text-nowrap"><%= formatDateFile(file.date) %></span></div>
                       </div>
                       <div class="btn-reveal-trigger">
                         <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fas fa-ellipsis-h"></span></button>
