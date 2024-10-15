@@ -493,9 +493,13 @@
     wrap.classList.add('d-block'); // Set display to block
 
     // Hide navbar during loading
-    navbar1.style.display = 'none';
-    navbar2.style.display = 'none';
+    // Show the navbar
+    navbar1.classList.add('d-none');
+    navbar1.classList.remove('d-inline-flex');
 
+    navbar2.classList.add('d-none');
+    navbar2.classList.remove('d-inline-flex');
+    navbar2.classList.remove('d-xl-inline-block');
     // Keep the loader visible for at least 3 seconds
     setTimeout(() => {
       // Loader will remain until the page is fully loaded
@@ -546,9 +550,13 @@
 
     wrap.classList.add('d-none'); // Hide the loader when the new page is fully loaded
 
-    // Show the navbar again
-    navbar1.style.display = 'inline-flex';
-    navbar2.style.display = 'inline-block';
+    // Show the navbar
+    navbar1.classList.remove('d-none');
+    navbar1.classList.add('d-inline-flex');
+
+    navbar2.classList.remove('d-none');
+    navbar2.classList.add('d-inline-flex');
+    navbar2.classList.add('d-xl-inline-block');
   });
 
   // Ensure the loader is hidden if navigating via the back button
@@ -560,7 +568,7 @@
 
       wrap.classList.add('d-none'); // Hide the loader
       navbar1.style.display = 'inline-flex'; // Show the navbar
-      navbar2.style.display = 'inline-block';
+      navbar2.style.display = 'inline-flex';
     }
   });
 </script>
