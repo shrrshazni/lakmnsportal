@@ -96,7 +96,6 @@
 
 </head>
 
-
 <body class="scrollbar">
 
   <!-- Hide auto-created selection field completely by hiding its container -->
@@ -105,11 +104,28 @@
   <input class="d-none" value="en" id="language-en" />
   <div id="goog-gt-tt" class="goog-tooltip skiptranslate d-none"></div>
 
+  <script type="importmap">
+    {
+            "imports": {
+              "three": "https://unpkg.com/three@0.162.0/build/three.module.js",
+              "three/addons/": "https://unpkg.com/three@0.162.0/examples/jsm/"
+            }
+          }
+  </script>
+
+  <!-- loading function -->
+  <div id="wrap" class="d-none">
+    <!-- Initially hidden -->
+    <div id="canvas" class="mx-auto text-center">
+      <p class="loading-text fw-semibold fs-8 fst-italic">We are preparing your experience with care...</p>
+    </div>
+  </div>
+
   <!-- ===============================================-->
   <!--    Main Content-->
   <!-- ===============================================-->
   <main class="main" id="top">
-    <nav class="navbar navbar-vertical navbar-expand-lg">
+    <nav class="navbar navbar-vertical navbar-expand-lg" id="navbarComboSlim-2">
 
       <div class="collapse navbar-collapse" id="navbarVerticalCollapse">
 
@@ -142,7 +158,7 @@
 
             <!-- Leave -->
             <div class="nav-item-wrapper">
-              <a class="nav-link dropdown-indicator label-1" href="#nv-tables-leaves" role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-tables">
+              <a class="nav-link dropdown-indicator label-1 no-loader" href="#nv-tables-leaves" role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-tables">
                 <div class="d-flex align-items-center">
                   <div class="dropdown-indicator-icon"><span class="fas fa-caret-right"></span></div>
                   <span class="nav-link-icon"><span data-feather="clock"></span></span>
@@ -182,7 +198,7 @@
 
             <!-- Attendance -->
             <div class="nav-item-wrapper">
-              <a class="nav-link dropdown-indicator label-1" href="#nv-tables-2" role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-tables">
+              <a class="nav-link dropdown-indicator label-1 no-loader" href="#nv-tables-2" role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-tables">
                 <div class="d-flex align-items-center">
                   <div class="dropdown-indicator-icon"><span class="fas fa-caret-right"></span></div><span class="nav-link-icon"><span data-feather="book"></span></span><span class="nav-link-text">Attendance</span>
                 </div>
@@ -225,7 +241,7 @@
 
               <!-- level 1-->
               <div class="nav-item-wrapper">
-                <a class="nav-link dropdown-indicator label-1" href="#nv-human-resources-staff" role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-tables">
+                <a class="nav-link dropdown-indicator label-1 no-loader" href="#nv-human-resources-staff" role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-tables">
                   <div class="d-flex align-items-center">
                     <div class="dropdown-indicator-icon"><span class="fas fa-caret-right"></span></div><span class="nav-link-icon"><span data-feather="users"></span></span><span class="nav-link-text">Employees</span>
                   </div>
@@ -254,7 +270,7 @@
 
               <!-- level 1-->
               <div class="nav-item-wrapper">
-                <a class="nav-link dropdown-indicator label-1" href="#nv-human-resources-leave" role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-tables">
+                <a class="nav-link dropdown-indicator label-1 no-loader" href="#nv-human-resources-leave" role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-tables">
                   <div class="d-flex align-items-center">
                     <div class="dropdown-indicator-icon"><span class="fas fa-caret-right"></span></div><span class="nav-link-icon"><span data-feather="clock"></span></span><span class="nav-link-text">Leave</span>
                   </div>
@@ -282,7 +298,7 @@
               </div>
 
               <div class="nav-item-wrapper">
-                <a class="nav-link dropdown-indicator label-1" href="#nv-human-resources-attendance" role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-tables">
+                <a class="nav-link dropdown-indicator label-1 no-loader" href="#nv-human-resources-attendance" role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-tables">
                   <div class="d-flex align-items-center">
                     <div class="dropdown-indicator-icon"><span class="fas fa-caret-right"></span></div><span class="nav-link-icon"><span data-feather="clipboard"></span></span><span class="nav-link-text">Attendance</span>
                   </div>
@@ -550,7 +566,7 @@
 
               <!-- level 1-->
               <div class="nav-item-wrapper">
-                <a class="nav-link dropdown-indicator label-1" href="#nv-aux-police-patrol" role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-tables">
+                <a class="nav-link dropdown-indicator label-1 no-loader" href="#nv-aux-police-patrol" role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-tables">
                   <div class="d-flex align-items-center">
                     <div class="dropdown-indicator-icon"><span class="fas fa-caret-right"></span></div><span class="nav-link-icon"><span data-feather="copy"></span></span><span class="nav-link-text">Patrol</span>
                   </div>
@@ -578,7 +594,7 @@
               </div>
 
               <!-- VMS -->
-              <div class="nav-item-wrapper"><a class="nav-link dropdown-indicator label-1" href="#nv-visitor" role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-tables">
+              <div class="nav-item-wrapper"><a class="nav-link dropdown-indicator label-1 no-loader" href="#nv-visitor" role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-tables">
                   <div class="d-flex align-items-center">
                     <div class="dropdown-indicator-icon"><span class="fas fa-caret-right"></span></div><span class="nav-link-icon"><span data-feather="sun"></span></span><span class="nav-link-text">VMS</span>
                   </div>
@@ -1763,7 +1779,7 @@
         %>
         <!-- notifications -->
         <li class="nav-item dropdown">
-          <a class="nav-link pe-2" id="navbarDropdownNotification" href="#" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false"><span data-feather="bell" style="height:13px;width:13px;">
+          <a class="nav-link pe-2 no-loader" id="navbarDropdownNotification" href="#" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false"><span data-feather="bell" style="height:13px;width:13px;">
             </span><span class="fa-solid fa-circle ms-n1 <%= display %>" style="font-size: 6px;color: red;"></span></a>
 
           <div class="dropdown-menu dropdown-menu-end notification-dropdown-menu py-0 shadow border navbar-dropdown-caret" id="navbarDropdownNotfication" aria-labelledby="navbarDropdownNotfication">
@@ -1887,7 +1903,7 @@
         </li>
 
         <!-- profiler -->
-        <li class="nav-item dropdown"><a class="nav-link lh-1 pe-0 white-space-nowrap notranslate" id="navbarDropdownUser" href="#!" role="button" data-bs-toggle="dropdown" aria-haspopup="true" data-bs-auto-close="outside" aria-expanded="false"><%= user.fullname.split(' ')[0] %> <span class="fa-solid fa-chevron-down fs-10"></span></a>
+        <li class="nav-item dropdown"><a class="nav-link lh-1 pe-0 white-space-nowrap notranslate no-loader" id="navbarDropdownUser" href="#!" role="button" data-bs-toggle="dropdown" aria-haspopup="true" data-bs-auto-close="outside" aria-expanded="false"><%= user.fullname.split(' ')[0] %> <span class="fa-solid fa-chevron-down fs-10"></span></a>
           <div class="dropdown-menu dropdown-menu-end navbar-dropdown-caret py-0 dropdown-profile shadow border" aria-labelledby="navbarDropdownUser">
             <div class="card position-relative border-0">
               <div class="card-body p-1">
@@ -1915,7 +1931,7 @@
               </div>
               <div class="card-footer p-0 border-top border-translucent">
                 <div class="px-3 mt-3"> <a class="btn btn-phoenix-secondary d-flex flex-center w-100" href="/sign-out/<%= user._id %>"> <span class="me-2" data-feather="log-out"> </span>Sign out</a></div>
-                <div class="my-2 text-center fw-bold fs-10 text-body-quaternary"><a class="text-body-quaternary me-1" data-bs-toggle="modal" data-bs-target="#privacyModal" href="#!">Privacy policy</a>&bull;<a class="text-body-quaternary mx-1" data-bs-toggle="modal" data-bs-target="#termsModal" href="#!">Terms</a>&bull;<a class="text-body-quaternary ms-1" data-bs-toggle="modal" data-bs-target="#cookiesModal" href="#!">Cookies</a></div>
+                <div class="my-2 text-center fw-bold fs-10 text-body-quaternary"><a class="text-body-quaternary me-1 no-loader" data-bs-toggle="modal" data-bs-target="#privacyModal" href="#!">Privacy policy</a>&bull;<a class="text-body-quaternary mx-1 no-loader" data-bs-toggle="modal" data-bs-target="#termsModal" href="#!">Terms</a>&bull;<a class="text-body-quaternary ms-1 no-loader" data-bs-toggle="modal" data-bs-target="#cookiesModal" href="#!">Cookies</a></div>
               </div>
             </div>
           </div>

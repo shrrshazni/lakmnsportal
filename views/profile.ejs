@@ -1,11 +1,5 @@
 <%- include('partials/private-header.ejs') %>
 
-<nav class="mb-2 d-none" aria-label="breadcrumb">
-  <ol class="breadcrumb mb-0">
-    <li class="breadcrumb-item"><a href="#!">Profile</a></li>
-    <li class="breadcrumb-item active" aria-current="page"><%= user.username %></li>
-  </ol>
-</nav>
 <div class="row align-items-center justify-content-between g-3 mb-4">
   <div class="col-auto">
     <h2 class="mb-0">Profile</h2>
@@ -92,7 +86,7 @@
             <div class="col-auto">
               <h5 class="text-body-highlight mb-0">Email</h5>
             </div>
-            <div class="col-auto"><a class="lh-1" href="mailto:<%= user.email %>"><%= user.email %></a></div>
+            <div class="col-auto"><a class="lh-1 no-loader" href="mailto:<%= user.email %>"><%= user.email %></a></div>
           </div>
           <div class="row flex-between-center">
             <div class="col-auto">
@@ -109,11 +103,11 @@
 <div class="mb-6">
   <div class="scrollbar">
     <ul class="nav nav-underline fs-9 flex-nowrap mb-3 pb-1" id="myTab" role="tablist">
-      <li class="nav-item me-3"><a class="nav-link text-nowrap active" id="orders-tab" data-bs-toggle="tab" href="#tab-activity" role="tab" aria-controls="tab-orders" aria-selected="true"><span class="fa-solid fa-clock me-2"></span>Activity<span class="text-body-tertiary fw-normal"> (<%= activities.length %>)</span></a></li>
-      <li class="nav-item me-3"><a class="nav-link text-nowrap" id="reviews-tab" data-bs-toggle="tab" href="#tab-leave" role="tab" aria-controls="tab-orders" aria-selected="true"><span class="fa-solid fa-calendar me-2"></span>Leave<span class="text-body-tertiary fw-normal"></span></a></li>
-      <li class="nav-item me-3"><a class="nav-link text-nowrap" id="wishlist-tab" data-bs-toggle="tab" href="#tab-attendance" role="tab" aria-controls="tab-orders" aria-selected="true"><span class="fa-solid fa-clipboard-user me-2"></span>Attendances</a></li>
-      <li class="nav-item me-3"><a class="nav-link text-nowrap" id="wishlist-tab" data-bs-toggle="tab" href="#tab-attachment" role="tab" aria-controls="tab-orders" aria-selected="true"><span class="fa-solid fa-clipboard me-2"></span>Attachments</a></li>
-      <li class="nav-item me-3"><a class="nav-link text-nowrap" id="wishlist-tab" data-bs-toggle="tab" href="#tab-personal" role="tab" aria-controls="tab-orders" aria-selected="true"><span class="fa-solid fa-user me-2"></span>Personal</a></li>
+      <li class="nav-item me-3"><a class="nav-link text-nowrap no-loader active" id="orders-tab" data-bs-toggle="tab" href="#tab-activity" role="tab" aria-controls="tab-orders" aria-selected="true"><span class="fa-solid fa-clock me-2"></span>Activity<span class="text-body-tertiary fw-normal"> (<%= activities.length %>)</span></a></li>
+      <li class="nav-item me-3"><a class="nav-link text-nowrap no-loader" id="reviews-tab" data-bs-toggle="tab" href="#tab-leave" role="tab" aria-controls="tab-orders" aria-selected="true"><span class="fa-solid fa-calendar me-2"></span>Leave<span class="text-body-tertiary fw-normal"></span></a></li>
+      <li class="nav-item me-3"><a class="nav-link text-nowrap no-loader" id="wishlist-tab" data-bs-toggle="tab" href="#tab-attendance" role="tab" aria-controls="tab-orders" aria-selected="true"><span class="fa-solid fa-clipboard-user me-2"></span>Attendances</a></li>
+      <li class="nav-item me-3"><a class="nav-link text-nowrap no-loader" id="wishlist-tab" data-bs-toggle="tab" href="#tab-attachment" role="tab" aria-controls="tab-orders" aria-selected="true"><span class="fa-solid fa-clipboard me-2"></span>Attachments</a></li>
+      <li class="nav-item me-3"><a class="nav-link text-nowrap no-loader" id="wishlist-tab" data-bs-toggle="tab" href="#tab-personal" role="tab" aria-controls="tab-orders" aria-selected="true"><span class="fa-solid fa-user me-2"></span>Personal</a></li>
     </ul>
   </div>
 
@@ -167,7 +161,7 @@
         </div>
         <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
           <div class="col-auto d-flex">
-            <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p><a class="fw-semibold" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semibold d-none" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
+            <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p><a class="fw-semibold no-loader" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semibold d-none no-loader" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
           </div>
           <div class="col-auto d-flex">
             <button class="page-link" data-list-pagination="prev"><span class="fas fa-chevron-left"></span></button>
@@ -295,7 +289,7 @@
         </div>
         <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
           <div class="col-auto d-flex">
-            <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p><a class="fw-semibold" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semibold d-none" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
+            <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p><a class="fw-semibold no-translate no-loader" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semibold d-none no-loader" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
           </div>
           <div class="col-auto d-flex">
             <button class="page-link" data-list-pagination="prev"><span class="fas fa-chevron-left"></span></button>
@@ -378,7 +372,7 @@
                       <span class="fas fa-ellipsis-h fs-9"></span>
                     </button>
                     <div class="dropdown-menu dropdown-menu-end py-2">
-                      <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#addRemark<%= index %>">Update Remarks</a>
+                      <a class="dropdown-item no-loader" href="#" data-bs-toggle="modal" data-bs-target="#addRemark<%= index %>">Update Remarks</a>
                     </div>
                   </div>
                 </td>
@@ -414,7 +408,7 @@
         </div>
         <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
           <div class="col-auto d-flex">
-            <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p><a class="fw-semibold" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semibold d-none" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
+            <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p><a class="fw-semibold no-loader" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semibold d-none no-loader" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
           </div>
           <div class="col-auto d-flex">
             <button class="page-link" data-list-pagination="prev"><span class="fas fa-chevron-left"></span></button>
@@ -466,7 +460,9 @@
                   } else {
                       borderModalFile = '';
                   }
-                %>
+          %>
+
+          <% const userFile = allUser.find(item => item._id.toString() === user._id.toString()); %>
 
           <% if(file.type === '.png' || file.type === '.webp' || file.type === '.jpg' || file.type === '.jpeg' || file.type === '.gif' ){ %>
           <div class="border-top <%= borderModalFile %> border-dashed px-0 pt-4 pb-3">
@@ -480,8 +476,7 @@
                   <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item" href="/files/download/<%= file._id %>">Download</a><a class="dropdown-item" href="/files/delete/<%= file.id %>">Delete</a></div>
                 </div>
               </div>
-              <% const userFile = allUser.find(item => item._id.toString() === user._id.toString()); %>
-              <div class="d-flex fs-9 text-body-tertiary mb-2 flex-wrap"><span><%= file.size %></span><span class="text-body-quaternary mx-1">| </span><a class="notranslate" href="#!"><%= userFile.fullname %> </a><span class="text-body-quaternary mx-1">| </span><span class="text-nowrap"><%= formatDateFile(file.date) %></span></div><img class="rounded-2" src="<%= file.path %>" alt="" style="max-width:230px" />
+              <div class="d-flex fs-9 text-body-tertiary mb-2 flex-wrap"><span><%= file.size %></span><span class="text-body-quaternary mx-1">| </span><a class="notranslate" href="/staff/details/<%= userFile._id %>"><%= userFile.fullname %> </a><span class="text-body-quaternary mx-1">| </span><span class="text-nowrap"><%= formatDateFile(file.date) %></span></div><img class="rounded-2" src="<%= file.path %>" alt="" style="max-width:230px" />
             </div>
           </div>
 
@@ -494,11 +489,11 @@
                   <div class="d-flex align-items-center mb-1"><span class="fa-solid fa-image me-2 fs-9 text-body-tertiary"></span>
                     <p class="text-body-highlight mb-0 lh-1"><%= file.name %></p>
                   </div>
-                  <div class="d-flex fs-9 text-body-tertiary mb-0 flex-wrap"><span><%= file.size %></span><span class="text-body-quaternary mx-1">| </span><a href="#!"><%= file.user %> </a><span class="text-body-quaternary mx-1">| </span><span class="text-nowrap"><%= formatDateFile(file.date) %></span></div>
+                  <div class="d-flex fs-9 text-body-tertiary mb-0 flex-wrap"><span><%= file.size %></span><span class="text-body-quaternary mx-1">| </span><a href="/staff/details/<%= userFile._id %>"><%= userFile.fullname %> </a><span class="text-body-quaternary mx-1">| </span><span class="text-nowrap"><%= formatDateFile(file.date) %></span></div>
                 </div>
                 <div class="btn-reveal-trigger me-3">
                   <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fas fa-ellipsis-h"></span></button>
-                  <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item d-none" href="#!">Edit</a><a class="dropdown-item text-danger" href="/files/delete/<%= file._id %>">Delete</a><a class="dropdown-item" href="/files/download/<%= file.id %>">Download</a><a class="dropdown-item d-none" href="#!">Report abuse</a></div>
+                  <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item d-none no-loader" href="#!">Edit</a><a class="dropdown-item text-danger" href="/files/delete/<%= file._id %>">Delete</a><a class="dropdown-item" href="/files/download/<%= file.id %>">Download</a><a class="dropdown-item d-none" href="#!">Report abuse</a></div>
                 </div>
               </div>
             </div>

@@ -76,17 +76,17 @@
               <div class="mb-2">
                 <div class="d-flex align-items-center mb-1"><span class="me-2 uil uil-envelope-alt"> </span>
                   <h5 class="text-body-highlight mb-0">Email</h5>
-                </div><a href="mailto:<%= otherUser.email %>"><%= otherUser.email %></a>
+                </div><a class="no-loader" href="mailto:<%= otherUser.email %>"><%= otherUser.email %></a>
               </div>
               <div class="mb-2">
                 <div class="d-flex align-items-center mb-1"><span class="me-2 uil uil-phone"> </span>
                   <h5 class="text-body-highlight mb-0">Phone</h5>
-                </div><a href="tel:+6<%= otherUser.phone %>">+6<%= otherUser.phone %> </a>
+                </div><a class="no-loader" href="tel:+6<%= otherUser.phone %>">+6<%= otherUser.phone %> </a>
               </div>
               <div class="mb-2">
                 <div class="d-flex align-items-center mb-1"><span class="me-2 uil uil-home"> </span>
                   <h5 class="text-body-highlight mb-0">Office Number</h5>
-                </div><a href="tel:+6<%= otherUser.officePhone %>">+6<%= otherUser.officePhone %> </a>
+                </div><a class="no-loader" href="tel:+6<%= otherUser.officePhone %>">+6<%= otherUser.officePhone %> </a>
               </div>
               <div class="mb-2">
                 <div class="d-flex align-items-center mb-1"><span class="me-2 uil uil-building"></span>
@@ -350,11 +350,11 @@
       <div class="lead-details-container">
         <nav class="navbar pb-4 px-0 sticky-top bg-body nav-underline-scrollspy" id="navbar-staffs-detail">
           <ul class="nav nav-underline fs-9">
-            <li class="nav-item"><a class="nav-link me-2" href="#scrollspyTask">Tasks</a></li>
-            <li class="nav-item"><a class="nav-link me-2" href="#scrollspyActivities">Activities</a></li>
-            <li class="nav-item"><a class="nav-link me-2" href="#scrollspyLeaves">Leave</a></li>
-            <li class="nav-item"><a class="nav-link me-2" href="#scrollspyAttendances">Attendances</a></li>
-            <li class="nav-item"><a class="nav-link" href="#scrollspyAttachments">Attachments </a></li>
+            <li class="nav-item"><a class="nav-link me-2 no-loader" href="#scrollspyTask">Tasks</a></li>
+            <li class="nav-item"><a class="nav-link me-2 no-loader" href="#scrollspyActivities">Activities</a></li>
+            <li class="nav-item"><a class="nav-link me-2 no-loader" href="#scrollspyLeaves">Leave</a></li>
+            <li class="nav-item"><a class="nav-link me-2 no-loader" href="#scrollspyAttendances">Attendances</a></li>
+            <li class="nav-item"><a class="nav-link no-loader" href="#scrollspyAttachments">Attachments </a></li>
           </ul>
         </nav>
         <div class="scrollspy-example rounded-2" data-bs-spy="scroll" data-bs-offset="0" data-bs-target="#navbar-staffs-detail" data-bs-root-margin="0px 0px -40%" data-bs-smooth-scroll="true" tabindex="0">
@@ -443,7 +443,7 @@
                       </div>
                     </div>
                     <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
-                      <div class="d-flex lh-1 align-items-center"><a class="text-body-tertiary fw-bold fs-10 me-2 <%= displayTaskFile %>" href="#!"><span class="fas fa-paperclip me-1"></span><%= fileAmount %></a><a class="text-warning fw-bold fs-10 me-2 <%= displayTaskSubtask %>" href="#!"><span class="fas fa-tasks me-1"></span><%= item.subtask.length %></a>
+                      <div class="d-flex lh-1 align-items-center"><a class="text-body-tertiary fw-bold fs-10 me-2 no-loader <%= displayTaskFile %>" href="#!"><span class="fas fa-paperclip me-1"></span><%= fileAmount %></a><a class="text-warning fw-bold fs-10 me-2 no-loader <%= displayTaskSubtask %>" href="#!"><span class="fas fa-tasks me-1"></span><%= item.subtask.length %></a>
                         <p class="text-body-tertiary fs-10 mb-md-0 me-2 me-md-3 me-xl-2 me-xxl-3 mb-0 itemDate"><%= item.due ? item.due.toLocaleDateString('en-UK', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Not specified' %></p>
                         <div class="hover-md-hide hover-xl-show hover-xxl-hide">
                           <p class="text-body-tertiary fs-10 fw-bold mb-md-0 mb-0 ps-md-3 ps-xl-0 ps-xxl-3 border-start-md border-xl-0 border-start-xxl itemTime"><%= item.reminder ? item.reminder.toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true, timeZone: 'Asia/Kuala_Lumpur' }) : 'Not specified' %></p>
@@ -536,7 +536,7 @@
               </div>
               <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
                 <div class="col-auto d-flex">
-                  <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p><a class="fw-semibold" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semibold d-none" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
+                  <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p><a class="fw-semibold" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semibold d-none no-loader" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
                 </div>
                 <div class="col-auto d-flex">
                   <button class="page-link" data-list-pagination="prev"><span class="fas fa-chevron-left"></span></button>
@@ -663,7 +663,7 @@
               </div>
               <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
                 <div class="col-auto d-flex">
-                  <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p><a class="fw-semibold" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semibold d-none" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
+                  <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p><a class="fw-semibold no-loader" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semibold d-none no-loader" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
                 </div>
                 <div class="col-auto d-flex">
                   <button class="page-link" data-list-pagination="prev"><span class="fas fa-chevron-left"></span></button>
@@ -754,7 +754,7 @@
               </div>
               <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
                 <div class="col-auto d-flex">
-                  <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p><a class="fw-semibold" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semibold d-none" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
+                  <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p><a class="fw-semibold" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semibold d-none no-loader" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
                 </div>
                 <div class="col-auto d-flex">
                   <button class="page-link" data-list-pagination="prev"><span class="fas fa-chevron-left"></span></button>
@@ -834,7 +834,7 @@
                       <div class="d-flex align-items-center mb-1"><span class="fa-solid fa-image me-2 fs-9 text-body-tertiary"></span>
                         <p class="text-body-highlight mb-0 lh-1"><%= file.name %></p>
                       </div>
-                      <div class="d-flex fs-9 text-body-tertiary mb-0 flex-wrap"><span><%= file.size %></span><span class="text-body-quaternary mx-1">| </span><a href="#!"><%= file.user %> </a><span class="text-body-quaternary mx-1">| </span><span class="text-nowrap"><%= formatDateFile(file.date) %></span></div>
+                      <div class="d-flex fs-9 text-body-tertiary mb-0 flex-wrap"><span><%= file.size %></span><span class="text-body-quaternary mx-1">| </span><a class="no-loader" href="#!"><%= file.user %> </a><span class="text-body-quaternary mx-1">| </span><span class="text-nowrap"><%= formatDateFile(file.date) %></span></div>
                     </div>
                     <div class="btn-reveal-trigger me-3">
                       <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fas fa-ellipsis-h"></span></button>

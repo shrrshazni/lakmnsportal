@@ -135,13 +135,13 @@
               <div class="col-auto">
                 <h5 class="text-body-highlight mb-0">Email</h5>
               </div>
-              <div class="col-auto"><a class="lh-1" href="mailto:<%= user.email %>"><%= user.email %></a></div>
+              <div class="col-auto"><a class="lh-1 no-loader" href="mailto:<%= user.email %>"><%= user.email %></a></div>
             </div>
             <div class="row flex-between-center">
               <div class="col-auto">
                 <h5 class="text-body-highlight mb-0">Phone</h5>
               </div>
-              <div class="col-auto"><a href="tel:+6<%= user.phone %>">+6<%= user.phone %></a></div>
+              <div class="col-auto"><a class="no-loader" href="tel:+6<%= user.phone %>">+6<%= user.phone %></a></div>
             </div>
           </div>
         </div>

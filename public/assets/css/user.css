@@ -376,7 +376,9 @@ body {
   border-radius: 50%;
   opacity: 0.25;
   box-shadow: 0 0 var(--diameter) var(--diameter) magenta;
-  animation: hue 10s 0s linear infinite, move1 19s 0s linear infinite;
+  animation:
+    hue 10s 0s linear infinite,
+    move1 19s 0s linear infinite;
   z-index: 1;
 }
 
@@ -387,7 +389,9 @@ body {
   border-radius: 50%;
   opacity: 0.25;
   box-shadow: 0 0 var(--diameter) var(--diameter) white;
-  animation: hue 15s 0s linear infinite, move2 25s 0s linear infinite;
+  animation:
+    hue 15s 0s linear infinite,
+    move2 25s 0s linear infinite;
   z-index: 1;
 }
 
@@ -398,7 +402,9 @@ body {
   border-radius: 50%;
   opacity: 0.2;
   box-shadow: 0 0 var(--diameter) var(--diameter) cyan;
-  animation: hue 20s 0s linear infinite, move3 15s 0s linear infinite;
+  animation:
+    hue 20s 0s linear infinite,
+    move3 15s 0s linear infinite;
   z-index: 1;
 }
 
@@ -580,4 +586,57 @@ body {
   /* Center the number */
   text-align: center;
   /* Center align the text */
+}
+
+/* loading page */
+
+#wrap {
+  position: absolute;
+  /* Change to fixed to cover the entire viewport */
+  left: 0;
+  top: 0;
+  width: 100%;
+  /* Full width */
+  height: 100%;
+  /* Full height */
+  background-color: rgba(255, 255, 255, 1);
+  /* Optional: semi-transparent background */
+  display: flex;
+  /* Center the loading text */
+  align-items: center;
+  /* Vertically center */
+  justify-content: center;
+  /* Horizontally center */
+  z-index: 2000;
+}
+
+#canvas {
+  display: block;
+}
+
+.loading-text {
+  animation: fade 0.75s infinite alternate;
+  /* Fading effect */
+  color: #3874ff;
+  /* Adjust loading text color if needed */
+  position: fixed;
+  /* Position it absolutely */
+  top: 60%;
+  /* Center vertically */
+  left: 50%;
+  /* Center horizontally */
+  transform: translate(-50%, -50%);
+  /* Adjust to center it */
+  text-align: center;
+  /* Center text alignment */
+}
+
+@keyframes fade {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0.5;
+  }
 }

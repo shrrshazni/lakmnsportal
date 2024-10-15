@@ -600,7 +600,7 @@ if(user.isSuperAdmin){
           <div class="item">
             <div class="d-flex hover-actions-trigger py-3 border-top <%= todoborder %>">
               <input class="form-check-input form-check-input-todolist flex-shrink-0 my-1 me-2 form-check-input-undefined" type="checkbox" id="checkbox-todo-2" data-event-propagation-prevent="data-event-propagation-prevent" <%= checked %> />
-              <div class="row justify-content-between align-items-md-center btn-reveal-trigger border-translucent gx-0 flex-1 cursor-pointer" data-bs-toggle="modal" data-bs-target="#task<%= index %>">
+              <div class="row justify-content-between align-items-md-center btn-reveal-trigger border-translucent gx-0 flex-1 cursor-pointer no-loader" data-bs-toggle="modal" data-bs-target="#task<%= index %>">
                 <div class="col-12 col-md-auto col-xl-12 col-xxl-auto">
                   <div class="mb-1 mb-md-0 d-flex align-items-center lh-1">
                     <label class="form-check-label mb-1 mb-md-0 mb-xl-1 mb-xxl-0 fs-8 me-2 line-clamp-1 text-body cursor-pointer itemName"><%= item.name %></label><span class="badge badge-phoenix ms-auto fs-10 badge-phoenix-<%= statusTaskColour %> itemStatus"><%= item.status %></span>
@@ -617,7 +617,7 @@ if(user.isSuperAdmin){
               </div>
               <div class="d-none d-md-block d-xl-none d-xxl-block end-0 position-absolute" style="top: 23%;" data-event-propagation-prevent="data-event-propagation-prevent">
                 <div class="hover-actions end-0" data-event-propagation-prevent="data-event-propagation-prevent">
-                  <button class="btn btn-phoenix-secondary btn-icon me-1 fs-10 text-body px-0 me-1" data-event-propagation-prevent="data-event-propagation-prevent" data-bs-toggle="modal" data-bs-target="#task<%= index %>"><span class="fas fa-edit"></span></button>
+                  <button class="btn btn-phoenix-secondary btn-icon me-1 fs-10 text-body px-0 me-1 no-loader" data-event-propagation-prevent="data-event-propagation-prevent" data-bs-toggle="modal" data-bs-target="#task<%= index %>"><span class="fas fa-edit"></span></button>
                   <a class="btn btn-phoenix-secondary btn-icon fs-10 text-danger px-0 <%= showForUser %>" href="/delete/task/<%= item._id %>" data-event-propagation-prevent="data-event-propagation-prevent"><span class="fas fa-trash"></span></a>
                 </div>
               </div>
@@ -639,7 +639,7 @@ if(user.isSuperAdmin){
                       <div class="py-6">
                         <div class="mb-7">
                           <div class="d-flex align-items-center mb-3">
-                            <h4 class="me-3">Description</h4><a class="btn btn-link text-decoration-none p-0" data-bs-target="#description<%= index %>" data-bs-toggle="modal"><span class="fa-solid fa-pen"></span></a>
+                            <h4 class="me-3">Description</h4><a class="btn btn-link text-decoration-none p-0 no-loader" data-bs-target="#description<%= index %>" data-bs-toggle="modal"><span class="fa-solid fa-pen"></span></a>
                           </div>
                           <p class="text-body-highlight mb-0"><%= item.description %></p>
                         </div>
@@ -696,7 +696,7 @@ if(user.isSuperAdmin){
                           <% }else { %>
                           <p class="fs-9 fw-bold">No subtask yet</p>
                           <% } %>
-                          <a class="fw-bold fs-9" href="#!" data-bs-target="#subtask<%= index %>" data-bs-toggle="modal"><span class="fas fa-plus me-1"></span>Add subtask</a>
+                          <a class="fw-bold fs-9 no-loader" href="#!" data-bs-target="#subtask<%= index %>" data-bs-toggle="modal"><span class="fas fa-plus me-1"></span>Add subtask</a>
                         </div>
 
                         <div class="mb-3">
@@ -757,7 +757,7 @@ if(user.isSuperAdmin){
                           <% }else { %>
                           <p class="fs-9 fw-bold">No file uploaded</p>
                           <% } %>
-                        </div><a class="fw-bold fs-9" href="#!" data-bs-target="#file<%= index %>" data-bs-toggle="modal"><span class="fas fa-plus me-1"></span>Add file(s)</a>
+                        </div><a class="fw-bold fs-9 no-loader" href="#!" data-bs-target="#file<%= index %>" data-bs-toggle="modal"><span class="fas fa-plus me-1"></span>Add file(s)</a>
                       </div>
                     </div>
 
@@ -879,8 +879,8 @@ if(user.isSuperAdmin){
                   </form>
                 </div>
                 <div class="modal-footer border-top-0">
-                  <button class="btn btn-phoenix-primary" type="button" data-bs-target="#task<%= index %>" data-bs-toggle="modal">Back</button>
-                  <button class="btn btn-phoenix-primary loading-upload-button" type="submit" id="uploadFiles<%= index %>">
+                  <button class="btn btn-phoenix-primary no-loader" type="button" data-bs-target="#task<%= index %>" data-bs-toggle="modal">Back</button>
+                  <button class="btn btn-phoenix-primary loading-upload-button no-loader" type="submit" id="uploadFiles<%= index %>">
                     <div class="content-upload-button">
                       <span><i class="fa fa-upload me-2" aria-hidden="true"></i>Upload Files</span>
                     </div>
@@ -965,7 +965,7 @@ if(user.isSuperAdmin){
           });
         </script>
 
-        <div class="card-footer border-0"><a class="fw-bold fs-9 mt-4" href="#!" data-bs-toggle="modal" data-bs-target="#addTask1"><span class="fas fa-plus me-1"></span>Add new task</a></div>
+        <div class="card-footer border-0"><a class="fw-bold fs-9 mt-4 no-loader" href="#!" data-bs-toggle="modal" data-bs-target="#addTask1"><span class="fas fa-plus me-1"></span>Add new task</a></div>
 
         <div class="modal fade" id="addTask1" aria-hidden="true" tabindex="-1">
           <div class="modal-dialog modal-dialog-centered">
@@ -1046,7 +1046,7 @@ if(user.isSuperAdmin){
                       </div>
                     </button>
 
-                    <a class="fw-bold fs-9 my-auto ms-4" href="#!" data-bs-target="#addTaskFiles" data-bs-toggle="modal"><span class="fas fa-plus me-1"></span>Add file(s)</a>
+                    <a class="fw-bold fs-9 my-auto ms-4 no-loader" href="#!" data-bs-target="#addTaskFiles" data-bs-toggle="modal"><span class="fas fa-plus me-1"></span>Add file(s)</a>
                   </div>
                 </form>
 
@@ -1180,8 +1180,8 @@ if(user.isSuperAdmin){
                 </form>
               </div>
               <div class="modal-footer border-top-0">
-                <button class="btn btn-phoenix-primary" type="button" data-bs-target="#addTask" data-bs-toggle="modal">Back</button>
-                <button class="btn btn-phoenix-primary loading-upload-button" type="submit" id="uploadFiles">
+                <button class="btn btn-phoenix-primary no-loader" type="button" data-bs-target="#addTask" data-bs-toggle="modal">Back</button>
+                <button class="btn btn-phoenix-primary loading-upload-button no-loader" type="submit" id="uploadFiles">
                   <div class="content-upload-button">
                     <span><i class="fa fa-upload me-2" aria-hidden="true"></i>Upload Files</span>
                   </div>
@@ -1284,7 +1284,7 @@ if(user.isSuperAdmin){
                 <div class="col">
                   <div class="timeline-item-content ps-6 ps-md-3">
                     <h5 class="fs-9 lh-sm"><%= activity.title %></h5>
-                    <p class="fs-9">by <a class="fw-semibold notranslate" href="#!"><%= activity.user.fullname %></a></p>
+                    <p class="fs-9">by <a class="fw-semibold notranslate" href="/staff/details/<%= activity.user._id %>"><%= activity.user.fullname %></a></p>
                     <p class="fs-9 text-body fst-italic mb-5"><%= activity.description %></p>
                   </div>
                 </div>

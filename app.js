@@ -617,7 +617,7 @@ const leaveSchema = new mongoose.Schema({
         }
     },
     approvals: [approvalSchema]
-}, { timestamps: true });
+});
 leaveSchema.index({ status: 1 });
 leaveSchema.index({ user: 1 });
 leaveSchema.index({ department: 1 });
@@ -976,7 +976,7 @@ let transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
         user: 'protech@lakmns.org',
-        pass: 'qlnnmsaexggkkyco' // Consider using environment variables for sensitive information
+        pass: 'exhacrrboveuwfsn' // Consider using environment variables for sensitive information
     }
 });
 
@@ -1913,7 +1913,7 @@ app.post('/settings/upload/profile-image', isAuthenticated, async (req, res, nex
 });
 
 // Info route - method
-app.get('/info/:type/:method/:id', async (req, res, next) => {
+app.get('/info/:type/:method/:id', isAuthenticated, async (req, res, next) => {
     try {
         const user = req.user;
         const notifications = req.notifications;
@@ -1994,17 +1994,21 @@ app.get('/info/:type/:method/:id', async (req, res, next) => {
                 uuid: uuidv4(),
                 notifications: notifications,
                 info: info,
+                subscriptions: sub,
+                requestedInfo,
                 show: 'show',
                 alert: 'We already send email verification towards your email'
             });
         }
 
-        res.render('info', {
+        res.render('settings', {
             user,
             notifications,
             info,
             subscriptions: sub,
-            requestedInfo
+            requestedInfo,
+            show: '',
+            alert: ''
         });
     } catch (error) {
         console.error('Route Error:', error);
@@ -2294,7 +2298,7 @@ app.post('/files/upload', isAuthenticated, async (req, res, next) => {
 });
 
 // File route - downlaod
-app.get('/files/download/:id', async (req, res, next) => {
+app.get('/files/download/:id', isAuthenticated, async (req, res, next) => {
     try {
         const { id } = req.params;
 
@@ -2306,7 +2310,7 @@ app.get('/files/download/:id', async (req, res, next) => {
             console.log('Downloading file');
         } else {
             console.log('File not found');
-            res.status(404).send('File not found');
+            await renderHomePage(req, res, next, 'show', 'File not found');
         }
     } catch (error) {
         next(error);  // Use global error handler
@@ -2314,7 +2318,7 @@ app.get('/files/download/:id', async (req, res, next) => {
 });
 
 // File route - delete by id
-app.get('/files/delete/:id', async (req, res, next) => {
+app.get('/files/delete/:id', isAuthenticated, async (req, res, next) => {
     try {
         const { id } = req.params;
 
@@ -2337,7 +2341,7 @@ app.get('/files/delete/:id', async (req, res, next) => {
             await renderHomePage(req, res, next, 'show', deletedFile.name + ' has been deleted');
         } else {
             console.log('Error deleting the file');
-            res.status(404).send('Error deleting the file');
+            await renderHomePage(req, res, next, 'show', 'Error deleting the file');
         }
     } catch (error) {
         next(error);  // Use global error handler
@@ -3147,29 +3151,29 @@ app.get('/leave/request', isAuthenticated, async (req, res, next) => {
             const currentLeave = await Leave.create(leave);
             console.log('Leave request submitted');
 
-            // // Log the approval activity
-            // await logActivity(user._id, 'Leave application submitted', 'Leave request', 'Submitted a leave request');
+            // Log the approval activity
+            await logActivity(user._id, 'Leave application submitted', 'Leave request', 'Submitted a leave request');
 
-            // // Send notification via web push and portal
-            // if (sendNoti.length > 0) {
-            //     for (const recipientId of sendNoti) {
-            //         // Send push notification
-            //         await createAndSendNotification(
-            //             user._id, // Sender
-            //             recipientId, // Recipient
-            //             'Leave request',
-            //             `/leave/details/${currentLeave._id}`,
-            //             `${user.fullname} (${user.username}) has submitted their leave application. Please check for further action.`
-            //         );
+            // Send notification via web push and portal
+            if (sendNoti.length > 0) {
+                for (const recipientId of sendNoti) {
+                    // Send push notification
+                    await createAndSendNotification(
+                        user._id, // Sender
+                        recipientId, // Recipient
+                        'Leave request',
+                        `/leave/details/${currentLeave._id}`,
+                        `${user.fullname} (${user.username}) has submitted their leave application. Please check for further action.`
+                    );
 
-            //     }
-            // }
+                }
+            }
 
-            // // Send email notification
-            // await sendEmailNotification(sendEmail, {
-            //     content: `${user.fullname} (${user.username}) has submitted their leave application ( ${currentLeave.type}). Please check for further action.`,
-            //     url: `www.lakmnsportal.com/leave/details/${currentLeave._id}`
-            // });
+            // Send email notification
+            await sendEmailNotification(sendEmail, {
+                content: `${user.fullname} (${user.username}) has submitted their leave application ( ${currentLeave.type}). Please check for further action.`,
+                url: `www.lakmnsportal.com/leave/details/${currentLeave._id}`
+            });
 
             await renderHomePage(req, res, next, 'show', 'Leave requested successfully! Please wait for approvals, thank you.');
         }
@@ -7147,6 +7151,44 @@ app.get('/testing', isAuthenticated, async (req, res, next) => {
     }
 });
 
+// async function removeDuplicatesForDate(date) {
+//     try {
+//         // Group by user and timestamp to find duplicates for the specified date
+//         const duplicates = await Attendance.aggregate([
+//             {
+//                 $match: {
+//                     // Match records for the specific date (set to 15 October)
+//                     timestamp: {
+//                         $gte: new Date(date.setHours(0, 0, 0, 0)),
+//                         $lt: new Date(date.setHours(23, 59, 59, 999))
+//                     }
+//                 }
+//             },
+//             {
+//                 $group: {
+//                     _id: { user: "$user", timestamp: "$timestamp" },
+//                     count: { $sum: 1 },
+//                     ids: { $push: "$_id" }
+//                 }
+//             },
+//             {
+//                 $match: { count: { $gt: 1 } } // Only consider groups with duplicates
+//             }
+//         ]);
+
+//         // Iterate over each duplicate group
+//         for (const group of duplicates) {
+//             const idsToDelete = group.ids.slice(1); // Keep the first one, delete the rest
+
+//             // Delete duplicates by their IDs
+//             await Attendance.deleteMany({ _id: { $in: idsToDelete } });
+//             console.log(`Deleted duplicates for user ${group._id.user} on ${date.toDateString()}`);
+//         }
+//     } catch (error) {
+//         console.error("Error removing duplicates:", error);
+//     }
+// }
+
 // dummy data for child education - student
 // const childrenData = [
 //     {
@@ -9031,25 +9073,25 @@ const handleApproved = async (checkLeave, recipientIndices, user, res) => {
         let sendNoti = [];
         let sendEmail = [];
 
-        // // Check if the next approval is Admin HR
-        // if (checkLeave.approvals[nextIndex] && checkLeave.approvals[nextIndex].role === 'Human Resource') {
-        //     const adminHR = await User.findOne({ isAdmin: true, isHeadOfSection: true, section: 'Human Resource Management Division' });
-        //     const adminUsers = await User.find({
-        //         isAdmin: true,
-        //         section: 'Human Resource Management Division',
-        //         _id: { $ne: adminHR._id }
-        //     });
+        // Check if the next approval is Admin HR
+        if (checkLeave.approvals[nextIndex] && checkLeave.approvals[nextIndex].role === 'Human Resource') {
+            const adminHR = await User.findOne({ isAdmin: true, isHeadOfSection: true, section: 'Human Resource Management Division' });
+            const adminUsers = await User.find({
+                isAdmin: true,
+                section: 'Human Resource Management Division',
+                _id: { $ne: adminHR._id }
+            });
 
-        //     // Push the IDs of admin users to sendNoti
-        //     adminUsers.forEach(user => {
-        //         if (!sendNoti.includes(user._id)) {
-        //             sendNoti.push(user._id);
-        //         }
-        //     });
-        // } else if (checkLeave.approvals[nextIndex]) {
-        //     nextApprovalRecipientId = checkLeave.approvals[nextIndex].recipient;
-        //     sendNoti.push(nextApprovalRecipientId);
-        // }
+            // Push the IDs of admin users to sendNoti
+            adminUsers.forEach(user => {
+                if (!sendNoti.includes(user._id)) {
+                    sendNoti.push(user._id);
+                }
+            });
+        } else if (checkLeave.approvals[nextIndex]) {
+            nextApprovalRecipientId = checkLeave.approvals[nextIndex].recipient;
+            sendNoti.push(nextApprovalRecipientId);
+        }
 
         nextApprovalRecipientId = checkLeave.approvals[nextIndex].recipient;
         sendNoti.push(nextApprovalRecipientId);
@@ -9068,23 +9110,23 @@ const handleApproved = async (checkLeave, recipientIndices, user, res) => {
         console.log('Next recipient index:', nextApprovalRecipientId);
         console.log('Send notification array:', sendNoti);
 
-        // if (sendNoti.length > 0) {
-        //     // Create and save a new notification for the next multiple recipients
-        //     for (const recipientId of sendNoti) {
-        //         await createAndSendNotification(user, recipientId, 'Leave Approval', `/leave/details/${checkLeave._id}`, `Leave has been approved by ${user.fullname}`);
-        //     }
+        if (sendNoti.length > 0) {
+            // Create and save a new notification for the next multiple recipients
+            for (const recipientId of sendNoti) {
+                await createAndSendNotification(user, recipientId, 'Leave Approval', `/leave/details/${checkLeave._id}`, `Leave has been approved by ${user.fullname}`);
+            }
 
-        //     // Log the approval activity
-        //     await logActivity(user._id, 'Leave application approved', 'Leave request', 'Approved a leave request');
+            // Log the approval activity
+            await logActivity(user._id, 'Leave application approved', 'Leave request', 'Approved a leave request');
 
-        //     // Send an email notification to the next recipient
-        //     await sendEmailNotification(sendEmail, {
-        //         content: `Leave has been approved by ${user.fullname}`,
-        //         url: `www.lakmnsportal.com/leave/details/${checkLeave._id}`
-        //     });
-        // } else {
-        //     console.log('The leave has been approved by all recipients.');
-        // }
+            // Send an email notification to the next recipient
+            await sendEmailNotification(sendEmail, {
+                content: `Leave has been approved by ${user.fullname}`,
+                url: `www.lakmnsportal.com/leave/details/${checkLeave._id}`
+            });
+        } else {
+            console.log('The leave has been approved by all recipients.');
+        }
 
         // Redirect to leave details page after approval
         res.redirect(`/leave/details/${checkLeave._id}`);
@@ -9372,24 +9414,23 @@ const handleAcknowledged = async (checkLeave, user, res) => {
 
             // Save updated user leave data
             await userLeave.save();
-
         }
 
-        // // Log denial activity
-        // await logActivity(user._id, 'Leave Approved', 'Leave Approved', 'Leave acknowledged by ' + user.fullname + ' with ' + user.username);
+        // Log denial activity
+        await logActivity(user._id, 'Leave Approved', 'Leave Approved', 'Leave acknowledged by ' + user.fullname + ' with ' + user.username);
 
-        // // Notify the requester about the denial
-        // await createAndSendNotification(user._id, firstRecipientId, 'Leave Approved', `/leave/details/${checkLeave._id}`, 'Your leave request has been approved officially.');
+        // Notify the requester about the denial
+        await createAndSendNotification(user._id, firstRecipientId, 'Leave Approved', `/leave/details/${checkLeave._id}`, 'Your leave request has been approved officially.');
 
-        // // Send an email notification to the requester about the denial
-        // const userReqEmail = await User.findOne({ _id: firstRecipientId });
-        // if (userReqEmail) {
-        //     const emailData = {
-        //         content: `The leave request has been acknowledged by ${user.fullname} with work ID ${user.username}. Please click the button above to open the leave details.`,
-        //         url: 'www.lakmnsportal.com/leave/details/' + checkLeave._id,
-        //     };
-        //     await sendEmailNotification(userReqEmail.email, emailData);
-        // }
+        // Send an email notification to the requester about the denial
+        const userReqEmail = await User.findOne({ _id: firstRecipientId });
+        if (userReqEmail) {
+            const emailData = {
+                content: `The leave request has been acknowledged by ${user.fullname} with work ID ${user.username}. Please click the button above to open the leave details.`,
+                url: 'www.lakmnsportal.com/leave/details/' + checkLeave._id,
+            };
+            await sendEmailNotification(userReqEmail.email, emailData);
+        }
 
         res.redirect(`/leave/details/${checkLeave._id}`);
     } catch (error) {
@@ -9719,3 +9760,4 @@ app.use((error, req, res, next) => {
 // Port initialization route - Port 5002
 const PORT = process.env.PORT || 5002;
 app.listen(PORT, () => console.log(`Listening on ${PORT}`));
+67
