@@ -3147,29 +3147,29 @@ app.get('/leave/request', isAuthenticated, async (req, res, next) => {
             const currentLeave = await Leave.create(leave);
             console.log('Leave request submitted');
 
-            // Log the approval activity
-            await logActivity(user._id, 'Leave application submitted', 'Leave request', 'Submitted a leave request');
+            // // Log the approval activity
+            // await logActivity(user._id, 'Leave application submitted', 'Leave request', 'Submitted a leave request');
 
-            // Send notification via web push and portal
-            if (sendNoti.length > 0) {
-                for (const recipientId of sendNoti) {
-                    // Send push notification
-                    await createAndSendNotification(
-                        user._id, // Sender
-                        recipientId, // Recipient
-                        'Leave request',
-                        `/leave/details/${currentLeave._id}`,
-                        `${user.fullname} (${user.username}) has submitted their leave application. Please check for further action.`
-                    );
+            // // Send notification via web push and portal
+            // if (sendNoti.length > 0) {
+            //     for (const recipientId of sendNoti) {
+            //         // Send push notification
+            //         await createAndSendNotification(
+            //             user._id, // Sender
+            //             recipientId, // Recipient
+            //             'Leave request',
+            //             `/leave/details/${currentLeave._id}`,
+            //             `${user.fullname} (${user.username}) has submitted their leave application. Please check for further action.`
+            //         );
 
-                }
-            }
+            //     }
+            // }
 
-            // Send email notification
-            await sendEmailNotification(sendEmail, {
-                content: `${user.fullname} (${user.username}) has submitted their leave application ( ${currentLeave.type}). Please check for further action.`,
-                url: `www.lakmnsportal.com/leave/details/${currentLeave._id}`
-            });
+            // // Send email notification
+            // await sendEmailNotification(sendEmail, {
+            //     content: `${user.fullname} (${user.username}) has submitted their leave application ( ${currentLeave.type}). Please check for further action.`,
+            //     url: `www.lakmnsportal.com/leave/details/${currentLeave._id}`
+            // });
 
             await renderHomePage(req, res, next, 'show', 'Leave requested successfully! Please wait for approvals, thank you.');
         }
@@ -9068,23 +9068,23 @@ const handleApproved = async (checkLeave, recipientIndices, user, res) => {
         console.log('Next recipient index:', nextApprovalRecipientId);
         console.log('Send notification array:', sendNoti);
 
-        if (sendNoti.length > 0) {
-            // Create and save a new notification for the next multiple recipients
-            for (const recipientId of sendNoti) {
-                await createAndSendNotification(user, recipientId, 'Leave Approval', `/leave/details/${checkLeave._id}`, `Leave has been approved by ${user.fullname}`);
-            }
+        // if (sendNoti.length > 0) {
+        //     // Create and save a new notification for the next multiple recipients
+        //     for (const recipientId of sendNoti) {
+        //         await createAndSendNotification(user, recipientId, 'Leave Approval', `/leave/details/${checkLeave._id}`, `Leave has been approved by ${user.fullname}`);
+        //     }
 
-            // Log the approval activity
-            await logActivity(user._id, 'Leave application approved', 'Leave request', 'Approved a leave request');
+        //     // Log the approval activity
+        //     await logActivity(user._id, 'Leave application approved', 'Leave request', 'Approved a leave request');
 
-            // Send an email notification to the next recipient
-            await sendEmailNotification(sendEmail, {
-                content: `Leave has been approved by ${user.fullname}`,
-                url: `www.lakmnsportal.com/leave/details/${checkLeave._id}`
-            });
-        } else {
-            console.log('The leave has been approved by all recipients.');
-        }
+        //     // Send an email notification to the next recipient
+        //     await sendEmailNotification(sendEmail, {
+        //         content: `Leave has been approved by ${user.fullname}`,
+        //         url: `www.lakmnsportal.com/leave/details/${checkLeave._id}`
+        //     });
+        // } else {
+        //     console.log('The leave has been approved by all recipients.');
+        // }
 
         // Redirect to leave details page after approval
         res.redirect(`/leave/details/${checkLeave._id}`);
@@ -9276,7 +9276,7 @@ const handleAcknowledged = async (checkLeave, user, res) => {
         // Check if the previous approver has approved and the current user is an HR admin
         if (
             checkLeave.approvals[humanResourceIndex - 1].status === 'approved' &&
-            user.isAdmin && user.section === 'Human Resource Management Division'
+            user.isAdmin
         ) {
             // Update the approval status of the HR recipient to 'approved'
             const findRecipient = await Leave.findOneAndUpdate(
@@ -9287,9 +9287,9 @@ const handleAcknowledged = async (checkLeave, user, res) => {
                 {
                     $set: {
                         status: 'approved',
-                        'approvals.$.status': 'approved',
-                        'approvals.$.comment': 'The request has been officially approved',
-                        'approvals.$.timestamp': moment().utcOffset(8).toDate()
+                        'approvals.$[elem].status': 'approved', // Use $[elem] for array filter
+                        'approvals.$[elem].comment': 'The request has been officially approved',
+                        'approvals.$[elem].timestamp': moment().utcOffset(8).toDate()
                     }
                 },
                 { new: true, useFindAndModify: false, arrayFilters: [{ 'elem.recipient': checkLeave.approvals[humanResourceIndex].recipient }] }
@@ -9375,21 +9375,21 @@ const handleAcknowledged = async (checkLeave, user, res) => {
 
         }
 
-        // Log denial activity
-        await logActivity(user._id, 'Leave Approved', 'Leave Approved', 'Leave acknowledged by ' + user.fullname + ' with ' + user.username);
+        // // Log denial activity
+        // await logActivity(user._id, 'Leave Approved', 'Leave Approved', 'Leave acknowledged by ' + user.fullname + ' with ' + user.username);
 
-        // Notify the requester about the denial
-        await createAndSendNotification(user._id, firstRecipientId, 'Leave Approved', `/leave/details/${checkLeave._id}`, 'Your leave request has been approved officially.');
+        // // Notify the requester about the denial
+        // await createAndSendNotification(user._id, firstRecipientId, 'Leave Approved', `/leave/details/${checkLeave._id}`, 'Your leave request has been approved officially.');
 
-        // Send an email notification to the requester about the denial
-        const userReqEmail = await User.findOne({ _id: firstRecipientId });
-        if (userReqEmail) {
-            const emailData = {
-                content: `The leave request has been acknowledged by ${user.fullname} with work ID ${user.username}. Please click the button above to open the leave details.`,
-                url: 'www.lakmnsportal.com/leave/details/' + checkLeave._id,
-            };
-            await sendEmailNotification(userReqEmail.email, emailData);
-        }
+        // // Send an email notification to the requester about the denial
+        // const userReqEmail = await User.findOne({ _id: firstRecipientId });
+        // if (userReqEmail) {
+        //     const emailData = {
+        //         content: `The leave request has been acknowledged by ${user.fullname} with work ID ${user.username}. Please click the button above to open the leave details.`,
+        //         url: 'www.lakmnsportal.com/leave/details/' + checkLeave._id,
+        //     };
+        //     await sendEmailNotification(userReqEmail.email, emailData);
+        // }
 
         res.redirect(`/leave/details/${checkLeave._id}`);
     } catch (error) {
