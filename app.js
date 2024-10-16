@@ -7139,6 +7139,10 @@ app.get('/super-admin/logout', isAuthenticated, async (req, res, next) => {
 app.get('/testing', isAuthenticated, async (req, res, next) => {
     try {
         const { user, notifications } = req;
+        const testDate = new Date('2024-10-15T00:00:00'); // Use the specific date
+
+        // Call the function to remove duplicates
+        removeDuplicatesForDate(testDate);
         res.render('testing', {
             user: user,
             notifications: notifications,
@@ -7151,43 +7155,47 @@ app.get('/testing', isAuthenticated, async (req, res, next) => {
     }
 });
 
-// async function removeDuplicatesForDate(date) {
-//     try {
-//         // Group by user and timestamp to find duplicates for the specified date
-//         const duplicates = await Attendance.aggregate([
-//             {
-//                 $match: {
-//                     // Match records for the specific date (set to 15 October)
-//                     timestamp: {
-//                         $gte: new Date(date.setHours(0, 0, 0, 0)),
-//                         $lt: new Date(date.setHours(23, 59, 59, 999))
-//                     }
-//                 }
-//             },
-//             {
-//                 $group: {
-//                     _id: { user: "$user", timestamp: "$timestamp" },
-//                     count: { $sum: 1 },
-//                     ids: { $push: "$_id" }
-//                 }
-//             },
-//             {
-//                 $match: { count: { $gt: 1 } } // Only consider groups with duplicates
-//             }
-//         ]);
+async function removeDuplicatesForDate(date) {
+    try {
+        // Convert the input date to UTC+8 start and end times
+        const startOfDay = moment(date).utcOffset(8).startOf('day').toDate();
+        const endOfDay = moment(date).utcOffset(8).endOf('day').toDate();
 
-//         // Iterate over each duplicate group
-//         for (const group of duplicates) {
-//             const idsToDelete = group.ids.slice(1); // Keep the first one, delete the rest
+        // Group by user and timestamp to find duplicates for the specified date
+        const duplicates = await Attendance.aggregate([
+            {
+                $match: {
+                    // Match records for the specific date in UTC+8
+                    timestamp: {
+                        $gte: startOfDay,
+                        $lt: endOfDay
+                    }
+                }
+            },
+            {
+                $group: {
+                    _id: { user: "$user", timestamp: "$timestamp" },
+                    count: { $sum: 1 },
+                    ids: { $push: "$_id" }
+                }
+            },
+            {
+                $match: { count: { $gt: 1 } } // Only consider groups with duplicates
+            }
+        ]);
 
-//             // Delete duplicates by their IDs
-//             await Attendance.deleteMany({ _id: { $in: idsToDelete } });
-//             console.log(`Deleted duplicates for user ${group._id.user} on ${date.toDateString()}`);
-//         }
-//     } catch (error) {
-//         console.error("Error removing duplicates:", error);
-//     }
-// }
+        // Iterate over each duplicate group
+        for (const group of duplicates) {
+            const idsToDelete = group.ids.slice(1); // Keep the first one, delete the rest
+
+            // Delete duplicates by their IDs
+            await Attendance.deleteMany({ _id: { $in: idsToDelete } });
+            console.log(`Deleted duplicates for user ${group._id.user} on ${moment(date).utcOffset(8).format('YYYY-MM-DD')}`);
+        }
+    } catch (error) {
+        console.error("Error removing duplicates:", error);
+    }
+}
 
 // dummy data for child education - student
 // const childrenData = [
@@ -7713,7 +7721,6 @@ const createTodayAttendance = async () => {
         console.error('Error creating attendance records for absent users:', error);
     }
 };
-
 
 const updateInvalidLeave = async () => {
     const today = moment().utcOffset(8).toDate();
