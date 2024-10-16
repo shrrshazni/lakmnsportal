@@ -3676,19 +3676,23 @@ app.get('/human-resource/staff-members/overview/update/:id', isAuthenticated, as
             notifications: notifications,
             uuid: uuidv4(),
             otherUser: otherUser,
+            show: '',
+            alert: ''
         });
     } catch (error) {
         console.error('Error:', error);
         next(error);
     }
 }).post('/human-resource/staff-members/overview/update/:id', isAuthenticated, async function (req, res) {
+    const { user, notifications } = req;
     const userId = req.params.id;
     const {
-        fullname, classification, grade, position, department, section, dateEmployed, gender,
+        fullname, classification, grade, position, department, section, dateEmployed, gender, username,
         isOfficer, isAdmin, isHeadOfDepartment, isHeadOfSection, isManagement, isPersonalAssistant, isDriver, isTeaLady, isNonOfficeHour, isTeacher, isPublicUser
     } = req.body;
+    let alert;
 
-    const updatedFields = { fullname, classification, grade, position, department, section, dateEmployed, gender };
+    const updatedFields = { fullname, classification, grade, position, department, section, dateEmployed, gender, username };
 
     const filterEmptyFields = (fields) => {
         const filteredFields = {};
@@ -3716,35 +3720,73 @@ app.get('/human-resource/staff-members/overview/update/:id', isAuthenticated, as
     nonEmptyUpdatedFields.isTeacher = isFieldTrue(isTeacher);
     nonEmptyUpdatedFields.isPublicUser = isFieldTrue(isPublicUser);
 
-    const updatedUser = await User.findOneAndUpdate(
-        { _id: userId },
-        { $set: nonEmptyUpdatedFields },
-        { new: true, useFindAndModify: false, runValidators: true }
-    );
+    const checkUsername = await User.findOne({ username: username });
+    const otherUser = await User.findOne({ _id: userId });
 
-    const headOfDepartment = await User.findOne({ section: 'Human Resource Management Division', isHeadOfSection: true });
+    if (!checkUsername) {
 
-    if (updatedUser) {
-        await logActivity(req.user._id, 'Update Staff Data', 'Admin',
-            `${req.user.fullname} has updated staff ${updatedUser.username} at ${getDateFormat2(moment().utcOffset(8).toDate())}`);
+        const updatedUser = await User.findOneAndUpdate(
+            { _id: userId },
+            { $set: nonEmptyUpdatedFields },
+            { new: true, useFindAndModify: false, runValidators: true }
+        );
 
-        await createAndSendNotification(req.user._id, headOfDepartment._id, 'Staff Updated', `/human-resource/staff-members/overview/update/${userId}`,
-            `${req.user.fullname} has updated staff ${updatedUser.username}`);
+        const headOfDepartment = await User.findOne({ section: 'Human Resource Management Division', isHeadOfSection: true });
 
-        const message = `${updatedUser.fullname}, your staff (${req.user.fullname}) data has been updated  at ${getDateFormat2(moment().utcOffset(8).toDate())}.`
+        if (updatedUser) {
+            await logActivity(req.user._id, 'Update Staff Data', 'Admin',
+                `${req.user.fullname} has updated staff ${updatedUser.username} at ${getDateFormat2(moment().utcOffset(8).toDate())}`);
 
-        // Prepare email data
-        const emailData = {
-            content: message,
-            url: `https://www.lakmnsportal.com/human-resource/staff-members/overview/update/${userId}`
-        };
+            await createAndSendNotification(req.user._id, headOfDepartment._id, 'Staff Updated', `/human-resource/staff-members/overview/update/${userId}`,
+                `${req.user.fullname} has updated staff ${updatedUser.username}`);
 
-        await sendEmailNotification(headOfDepartment.email, emailData);
+            const message = `${updatedUser.fullname}, your staff (${req.user.fullname}) data has been updated  at ${getDateFormat2(moment().utcOffset(8).toDate())}.`
+
+            // Prepare email data
+            const emailData = {
+                content: message,
+                url: `https://www.lakmnsportal.com/human-resource/staff-members/overview/update/${userId}`
+            };
+
+            await sendEmailNotification(headOfDepartment.email, emailData);
+
+            console.log('Successfully update user!');
+            alert = 'Update user details success';
+        } else {
+            console.log('Failed to update');
+            alert = 'Failed to update user';
+        }
     } else {
-        console.log('Failed to update');
+        console.log('Username already exist');
+        alert = 'Username already exist';
     }
 
-    res.redirect('/human-resource/staff-members/overview/update/' + userId);
+    const allUser = await User.find();
+    const uniqueDepartments = new Set();
+    const uniqueSections = new Set();
+
+    allUser.forEach(user => {
+        if (user.department) {
+            uniqueDepartments.add(user.department);
+        }
+        if (user.section) {
+            uniqueSections.add(user.section);
+        }
+    });
+
+    const departments = Array.from(uniqueDepartments);
+    const sections = Array.from(uniqueSections);
+
+    res.render('hr-staffmembers-overview', {
+        user: user,
+        notifications: notifications,
+        uuid: uuidv4(),
+        departments: departments,
+        sections: sections,
+        allUser: allUser,
+        show: 'show',
+        alert: alert
+    });
 });
 
 // Staff members route - remove

@@ -21,7 +21,7 @@
 
       <form class="row g-3 mb-6 has-validation" action="/human-resource/staff-members/overview/update/<%= otherUser._id %>" method="post">
 
-        <div class="col-12 col-md-6">
+        <div class="col-12 col-md-4">
           <div class="form-floating">
             <input type="text" name="fullname" class="form-control" placeholder="" />
             <label class="form-label" for="fullname">Full Name</label>
@@ -31,7 +31,17 @@
           </div>
         </div>
 
-        <div class="col-sm-6 col-md-6">
+        <div class="col-12 col-md-4">
+          <div class="form-floating">
+            <input type="text" name="username" class="form-control" placeholder="" />
+            <label class="form-label" for="username">Username</label>
+            <div class="invalid-feedback">
+              Please enter username
+            </div>
+          </div>
+        </div>
+
+        <div class="col-sm-6 col-md-4">
           <div class="form-floating">
             <input type="text" class="form-control datetimepicker flatpickr-input" placeholder="" name="dateEmployed" data-options='{"disableMobile":true,"allowInput":true, "locale" : { "firstDayOfWeek" : 1}}'>
             <label for="floatingInputStartDate"></span>Joined date</label>
@@ -422,6 +432,23 @@
 
   </div>
 
+</div>
+
+<!-- toast alert submission -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 5">
+  <div class="d-flex">
+    <div class="toast <%= show %> align-items-center text-white border-0" role="alert" data-bs-autohide="false" aria-live="assertive" aria-atomic="true">
+      <div class="d-flex justify-content-between">
+        <div class="toast-body px-0 py-3">
+          <code class="text-primary"><%= alert %></code>
+        </div>
+
+        <button class="btn ms-2 p-0" type="button" data-bs-dismiss="toast" aria-label="Close">
+          <span class="uil uil-times fs-7"></span>
+        </button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <%- include('partials/private-footer.ejs') %>
