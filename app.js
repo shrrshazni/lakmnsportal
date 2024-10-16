@@ -4190,6 +4190,289 @@ app.get('/human-resource/leave/balances/update/:id', isAuthenticated, async func
     }
 });
 
+app.get('/human-resource/leave/add/:id', isAuthenticated, async function (req, res) {
+    const { user, notifications } = req;
+    const userId = req.params.id;
+
+    try {
+        const userLeave = await UserLeave.findOne({ user: userId }).populate('user').exec();
+
+        res.render('hr-leave-addleave', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4(),
+            userLeave, // Detailed leave data for the user
+            selectedNames: '', // Placeholder for selected names input
+            selectedSupervisors: '', // Placeholder for selected supervisors input
+            // Data fields for leave request form
+            type: '',
+            startDate: '',
+            returnDate: '',
+            purpose: '',
+            // Validation fields for form submission
+            validationType: '',
+            validationStartDate: '',
+            validationReturnDate: '',
+            validationPurpose: '',
+            startDateFeedback: 'Please select a start date', // Default feedback message for start date
+            returnDateFeedback: 'Please select a return date', // Default feedback message for return date
+            // Toast notifications for form actions
+            show: '',
+            alert: ''
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
+    }
+}).post('/human-resource/leave/add/:id', isAuthenticated, async function (req, res) {
+    const { user, notifications } = req;
+
+    try {
+        const userId = req.params.id;
+        const otherUser = await User.findOne({ _id: userId });
+        let alert;
+
+        // Extract data from the request body
+        const { uuid, type, startDate, returnDate, purpose } = req.body;
+        const selectedNames = req.body.selectedNames ? req.body.selectedNames.split(',') : [];
+        const selectedSupervisors = req.body.selectedSupervisors ? req.body.selectedSupervisors.split(',') : [];
+
+        // Initialize variables for leave request processing
+        let sendNoti = [];
+        let sendEmail = [];
+
+        // Prepare leave dates in the required format
+        const newDate = {
+            start: moment(startDate).utcOffset(8).toDate(),
+            return: moment(returnDate).utcOffset(8).toDate()
+        };
+
+        const [headOfSection, headOfDepartment, chiefExec, depChiefExec, adminHR, userLeave, assignee, supervisors, leave] = await Promise.all([
+            // Determine head of section and department based on user data
+            ['P549', 'P548'].includes(otherUser.username)
+                ? User.findOne({ isHeadOfSection: true, section: 'Administration and Communication Division' })
+                : User.findOne({ isHeadOfSection: true, section: otherUser.section }),
+
+            ['P549', 'P548'].includes(otherUser.username)
+                ? User.findOne({ isHeadOfDepartment: true, department: 'Management and Services Department' })
+                : User.findOne({ isHeadOfDepartment: true, department: otherUser.department }),
+
+            // Fetch key organizational roles for leave approval routing
+            User.findOne({ isChiefExec: true }),
+            User.findOne({ isDeputyChiefExec: true }),
+            User.findOne({ isAdmin: true, isHeadOfSection: true, section: 'Human Resource Management Division' }),
+
+            // Fetch user leave balance and related information
+            UserLeave.findOne({ user: otherUser._id }).populate('user').exec(),
+
+            // Fetch selected assignees and supervisors from names provided in request
+            User.find({ fullname: { $in: selectedNames } }),
+            User.find({ fullname: { $in: selectedSupervisors } }),
+
+            // Fetch all leave records for the current user
+            Leave.find({ user: otherUser._id })
+        ]);
+
+        const filesToDelete = await File.find({ uuid: uuid });
+
+        if (filesToDelete.length > 0) {
+            // submited new leave request via manual
+            const submitLeave = new Leave({
+                fileId: uuid,
+                user: otherUser._id,
+                department: otherUser.department,
+                grade: otherUser.grade,
+                assignee: assignee,
+                type: type,
+                date: newDate,
+                status: 'approved',
+                purpose: purpose,
+                approvals: '',
+                remarks: user.username + ' has added leave manually for ' + otherUser.fullname + ' with ' + otherUser.username + ' at ' + moment().utcOffset(8).format('DD/MM/YYYY')
+            });
+
+            const currentLeave = await Leave.create(submitLeave);
+            console.log('Leave request submitted');
+
+            const startDateConvert = moment(startDate).utcOffset(8).toDate();
+            const returnDateConvert = moment(returnDate).utcOffset(8).toDate();
+
+            // Use calculateNumberOfDays to get the days difference
+            const daysDifference = Math.abs(calculateNumberOfDays(
+                type,
+                startDateConvert,
+                returnDateConvert,
+                otherUser.isNonOfficeHour
+            ));
+
+            console.log('This is the day differences for manual add for leave request: ', daysDifference);
+            // Update the user's leave balance based on the type of leave
+            switch (type) {
+                case 'Annual Leave':
+                case 'Half Day Leave':
+                    userLeave.annual.taken += daysDifference;
+                    break;
+                case 'Sick Leave':
+                    userLeave.sick.taken += daysDifference;
+                    break;
+                case 'Sick Extended Leave':
+                    userLeave.sickExtended.taken += daysDifference;
+                    break;
+                case 'Emergency Leave':
+                    userLeave.annual.taken += daysDifference;
+                    userLeave.emergency.taken += daysDifference;
+                    break;
+                case 'Half Day Emergency Leave':
+                    userLeave.annual.taken += daysDifference;
+                    userLeave.emergency.taken += daysDifference;
+                    break;
+                case 'Attend Exam Leave':
+                    userLeave.attendExam.leave -= daysDifference;
+                    userLeave.attendExam.taken += 1;
+                    break;
+                case 'Maternity Leave':
+                    userLeave.maternity.leave -= daysDifference;
+                    userLeave.maternity.taken += 1;
+                    break;
+                case 'Paternity Leave':
+                    userLeave.paternity.leave -= daysDifference;
+                    userLeave.paternity.taken += 1;
+                    break;
+                case 'Hajj Leave':
+                    userLeave.hajj.taken += 1;
+                    break;
+                case 'Unpaid Leave':
+                    userLeave.unpaid.taken += 1;
+                    break;
+                case 'Special Leave':
+                    userLeave.special.taken += 1;
+                    break;
+                default:
+                    console.log('Leave type does not require balance update.');
+                    break;
+            }
+
+            // Save updated user leave data
+            await userLeave.save();
+
+            // Push
+            if (otherUser.isChiefExec) {
+                sendNoti.push(adminHR._id);
+            } else if (otherUser.isDeputyChiefExec) {
+                sendNoti.push(adminHR._id);
+                sendNoti.push(chiefExec);
+            } else if (otherUser.isHeadOfDepartment) {
+                sendNoti.push(chiefExec);
+                sendNoti.push(depChiefExec);
+                sendNoti.push(adminHR._id);
+            } else if (otherUser.isHeadOfSection) {
+                sendNoti.push(headOfDepartment._id);
+                sendNoti.push(adminHR._id);
+            } else {
+                sendNoti.push(headOfSection._id);
+                sendNoti.push(headOfDepartment._id);
+                sendNoti.push(adminHR._id);
+            }
+
+            let i = 0;
+            // set user id to be send
+            for (const recipient of sendNoti) {
+                const recipientId = recipient;
+
+                // Fetch the user by recipient ID
+                const email = await User.findById(recipientId);
+
+                // Check if the user is found and has an email
+                if (email && user.email) {
+                    // Add the user's email to sendEmail
+                    sendEmail.push(email.email);
+                }
+
+                i++;
+            }
+
+            // Log the approval activity
+            await logActivity(user._id, 'Leave application submitted and approved', 'Leave approved ', 'Leave request approved');
+
+            // Send notification via web push and portal
+            if (sendNoti.length > 0) {
+                for (const recipientId of sendNoti) {
+                    // Send push notification
+                    await createAndSendNotification(
+                        otherUser._id, // Sender
+                        recipientId, // Recipient
+                        'Leave request',
+                        `/leave/details/${currentLeave._id}`,
+                        `${otherUser.fullname} (${otherUser.username}), their leave application/request has officially been approved.`
+                    );
+
+                }
+            }
+
+            // Send email notification
+            await sendEmailNotification(sendEmail, {
+                content: `${otherUser.fullname} (${otherUser.username}),( ${currentLeave.type}) application/request has officially been approved.`,
+                url: `www.lakmnsportal.com/leave/details/${currentLeave._id}`
+            });
+
+            alert = 'The leave application of ' + otherUser.fullname + ' with ' + otherUser.username + ' has been officially approved';
+        } else {
+            alert = 'Must upload a leave form before you submit the leave request';
+            console.log('There is no leave form file uploaded for this leave request');
+        }
+
+        res.render('hr-leave-addleave', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4(),
+            userLeave, // Detailed leave data for the user
+            selectedNames: '', // Placeholder for selected names input
+            selectedSupervisors: '', // Placeholder for selected supervisors input
+            // Data fields for leave request form
+            type: '',
+            startDate: '',
+            returnDate: '',
+            purpose: '',
+            // Validation fields for form submission
+            validationType: '',
+            validationStartDate: '',
+            validationReturnDate: '',
+            validationPurpose: '',
+            startDateFeedback: '', // Default feedback message for start date
+            returnDateFeedback: '', // Default feedback message for return date
+            // Toast notifications for form actions
+            show: 'show',
+            alert: alert
+        });
+
+    } catch (err) {
+        console.error('Error:', err);
+        res.render('hr-leave-addleave', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4(),
+            userLeave, // Detailed leave data for the user
+            selectedNames: '', // Placeholder for selected names input
+            selectedSupervisors: '', // Placeholder for selected supervisors input
+            // Data fields for leave request form
+            type: '',
+            startDate: '',
+            returnDate: '',
+            purpose: '',
+            // Validation fields for form submission
+            validationType: '',
+            validationStartDate: '',
+            validationReturnDate: '',
+            validationPurpose: '',
+            startDateFeedback: 'Please select a start date', // Default feedback message for start date
+            returnDateFeedback: 'Please select a return date', // Default feedback message for return date
+            // Toast notifications for form actions
+            show: '',
+            alert: ''
+        });
+    }
+});
+
 // Attendance route - overview
 app.get('/human-resource/attendance/overview', isAuthenticated, async (req, res, next) => {
     const { user, notifications } = req;
