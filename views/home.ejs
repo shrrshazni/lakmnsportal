@@ -1,40 +1,5 @@
 <%- include('partials/private-header.ejs') %>
 
-<script>
-  // take the root of the colour from css for echarts
-  const style = getComputedStyle(document.body);
-  const theme = {
-    primary: style.getPropertyValue('--phoenix-primary'),
-    secondary: style.getPropertyValue('--phoenix-secondary'),
-    success: style.getPropertyValue('--phoenix-success'),
-    info: style.getPropertyValue('--phoenix-info'),
-    warning: style.getPropertyValue('--phoenix-warning'),
-    danger: style.getPropertyValue('--phoenix-danger'),
-    bg_primary_subtle: style.getPropertyValue('--phoenix-primary-bg-subtle'),
-    tertiary: style.getPropertyPriority('--phoenix-tertiary-color'),
-    light: style.getPropertyValue('--phoenix-light'),
-    dark: style.getPropertyValue('--phoenix-dark'),
-    secondary_subtle: style.getPropertyValue('--phoenix-secondary-border-subtle'),
-    cyan: style.getPropertyValue('--phoenix-cyan'),
-    gray_100: style.getPropertyValue('--phoenix-gray-100')
-
-  };
-
-  //   take css class color based on their property color/bg-colour for echarts
-  function getColor(className, property) {
-    var element = document.createElement('div');
-    element.className = className;
-    document.body.appendChild(element);
-
-    var computedStyle = window.getComputedStyle(element);
-    var color = computedStyle.getPropertyValue(property);
-
-    document.body.removeChild(element);
-
-    return color;
-  }
-</script>
-
 <!-- user -->
 <div class="mb-3 d-none">
   <div class="card px-2 py-1" id="closableCard">
