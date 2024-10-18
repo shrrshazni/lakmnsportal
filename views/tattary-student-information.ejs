@@ -1,0 +1,349 @@
+<%- include("partials/private-header.ejs") %>
+
+<div class="row gy-3 mb-3 justify-content-between d-flex mt-0">
+    <div class="col-md-9 col-auto">
+        <h2 class="mb-2 text-body-emphasis">Student Information</h2>
+        <h5 class="text-body-tertiary fw-semibold">We hope you have a great experience managing visitor entries and exits.</h5>
+    </div>
+</div>
+
+<div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis pt-7 pb-3 border-y mb-6">
+    <div id="" data-list=''>
+        <div class="row align-items-end justify-content-between pb-4 g-3">
+            <div class="filters d-flex justify-content-between align-items-center gap-3">
+                <!-- Class option -->
+                <select id="" name="" class="form-select" style="width: 150px; padding: 5px; font-size: 14px; border-radius: 8px;">
+                    <option value="">All Class</option>
+                    <option value="">Class 1</option>
+                    <option value="">Class 2</option>
+                </select>
+            </div>
+        </div>
+        
+        <div id="" data-list='{"page":10,"pagination":true}'>
+            <div class="table-responsive ms-n1 ps-1 scrollbar">
+                <table id="vis-table" class="table fs-9 mb-0 border-top border-translucent">
+                    <thead>
+                        <tr>
+                            <th class="sort align-middle text-start" scope="col" data-sort="" style="width:5%;">STUDENT NAME</th>
+                            <th class="sort align-middle text-center" scope="col" data-sort="" style="width:15%;">CLASS</th>
+                            <th class="sort align-middle text-center" scope="col" data-sort="" style="width:15%;">RANKING</th>
+                            <th class="sort align-middle text-center" scope="col" data-sort="" style="width:15%;">OVERALL PERFORMANCE (%)</th>
+                            <th class="sort align-middle text-end" scope="col" style="width:5%;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="">
+                        <tr>
+                            <td class="align-middle text-start">
+                                <a href="#" class="student-name text-decoration-none" data-bs-toggle="modal" data-bs-target="#studentModal">My name</a> 
+                            </td>
+                            <td class="align-middle text-center">Class 1</td>
+                            <td class="align-middle text-center">1</td>
+                            <td class="align-middle text-center">85%</td>
+                            <td class="align-middle text-end white-space-nowrap pe-0 action">
+                                <div class="btn-reveal-trigger position-static">
+                                    <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs-10" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
+                                        <span class="fas fa-ellipsis-h fs-10"></span>
+                                    </button>
+                                    <div class="dropdown-menu dropdown-menu-end py-2">
+                                        <a class="dropdown-item" href="#" data-bs-toggle="" data-bs-target="">Print</a>
+                                        <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#gradeModal">View Grade</a>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>  
+                </table>
+            </div>
+        </div>
+        <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
+            <div class="col-auto d-flex">
+                <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p>
+                <a class="fw-semibold" href="#!" data-list-view="*" id="">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
+                <a class="fw-semibold d-none" href="#!" data-list-view="less" id="">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
+            </div>
+            <div class="col-auto d-flex">
+                <button class="page-link" data-list-pagination="prev"><span class="fas fa-chevron-left"></span></button>
+                <ul class="mb-0 pagination"></ul>
+                <button class="page-link pe-0" data-list-pagination="next"><span class="fas fa-chevron-right"></span></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal to view more student details -->
+<div class="modal fade" id="studentModal" tabindex="-1" aria-labelledby="studentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="studentModalLabel">Student Information</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Information about the student -->
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="fullname" class="form-label"><b>Student Name</b></label>
+                        <p class="form-label">Alice Johnson</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="address" class="form-label"><b>Address</b></label>
+                        <p class="form-label">1234 Elm St, Cityville</p>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="paidAmount" class="form-label"><b>IC Number</b></label>
+                        <p class="form-label">990101-12-1234</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="paidAmount" class="form-label"><b>Date of Birth</b></label>
+                        <p class="form-label">23-10-2013</p>
+                    </div>
+                </div>
+                
+                <hr>
+
+                <!-- Information about the student's Parent -->
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="fullname" class="form-label"><b>Father's Name</b></label>
+                        <p class="form-label">George</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="address" class="form-label"><b>Address</b></label>
+                        <p class="form-label">1234 Elm St, Cityville</p>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="paidAmount" class="form-label"><b>IC Number</b></label>
+                        <p class="form-label">990101-12-1234</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="paidAmount" class="form-label"><b>Phone Number</b></label>
+                        <p class="form-label">0123456789</p>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="paidAmount" class="form-label"><b>Occupation</b></label>
+                    <p class="form-label">Pilot</p>
+                </div>
+            
+                <hr>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="fullname" class="form-label"><b>Mother's Name</b></label>
+                        <p class="form-label">Sarah</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="address" class="form-label"><b>Address</b></label>
+                        <p class="form-label">1234 Elm St, Cityville</p>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="paidAmount" class="form-label"><b>IC Number</b></label>
+                        <p class="form-label">990101-12-1234</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="paidAmount" class="form-label"><b>Phone Number</b></label>
+                        <p class="form-label">0123456789</p>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="paidAmount" class="form-label"><b>Occupation</b></label>
+                    <p class="form-label">Nurse</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal to display student grade details -->
+<div class="modal fade" id="gradeModal" tabindex="-1" aria-labelledby="gradeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="gradeModalLabel">Student Grade Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+
+                <!-- Exam Part 1 -->
+                <h6>Exam Part 1</h6>
+                <div class="table-responsive mb-2">
+                    <table class="table table-bordered text-center align-middle" id="part1Table">
+                        <thead class="table-primary">
+                            <tr>
+                                <th scope="col">What Learning</th>
+                                <th scope="col">Grade Point (%)</th>
+                                <th scope="col">Grade</th>
+                                <th scope="col">Things to Improve</th>
+                                <th scope="col">Comments</th>
+                                <th scope="col">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td contenteditable="false">Math</td>
+                                <td contenteditable="false" class="grade-point">85</td>
+                                <td class="grade">A</td>
+                                <td contenteditable="false">Practice algebra</td>
+                                <td contenteditable="false">Good progress in calculations.</td>
+                                <td>
+                                    <button class="btn btn-sm btn-primary edit-btn">Edit</button>
+                                    <button class="btn btn-sm btn-danger delete-btn">Delete</button>
+                                </td>
+                            </tr>
+                            <!-- Additional rows can be added here for Part 1 -->
+                        </tbody>
+                    </table>
+                </div>
+                <button id="addRowBtnPart1" class="btn btn-outline-primary btn-sm mb-4">Add Row to Part 1</button>
+
+                <!-- Exam Part 2 -->
+                <h6>Exam Part 2</h6>
+                <div class="table-responsive mb-2">
+                    <table class="table table-bordered text-center align-middle" id="part2Table">
+                        <thead class="table-primary">
+                            <tr>
+                                <th scope="col">What Learning</th>
+                                <th scope="col">Grade Point (%)</th>
+                                <th scope="col">Grade</th>
+                                <th scope="col">Things to Improve</th>
+                                <th scope="col">Comments</th>
+                                <th scope="col">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td contenteditable="false">English</td>
+                                <td contenteditable="false" class="grade-point">90</td>
+                                <td class="grade">A+</td>
+                                <td contenteditable="false">Improve vocabulary</td>
+                                <td contenteditable="false">Shows effort in writing skills.</td>
+                                <td>
+                                    <button class="btn btn-sm btn-primary edit-btn">Edit</button>
+                                    <button class="btn btn-sm btn-danger delete-btn">Delete</button>
+                                </td>
+                            </tr>
+                            <!-- Additional rows can be added here for Part 2 -->
+                        </tbody>
+                    </table>
+                </div>
+                <button id="addRowBtnPart2" class="btn btn-outline-primary btn-sm mb-4">Add Row to Part 2</button>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for Add/Delete Row and Edit/Save Functionality -->
+<script>
+    // Add a new row to a specified table
+    function addRow(tableId) {
+        const tableBody = document.querySelector(`#${tableId} tbody`);
+        const newRow = document.createElement("tr");
+
+        // Define cells for the new row
+        newRow.innerHTML = `
+            <td contenteditable="false">New Subject</td>
+            <td contenteditable="false" class="grade-point">0</td>
+            <td class="grade">F</td>
+            <td contenteditable="false">N/A</td>
+            <td contenteditable="false">N/A</td>
+            <td>
+                <button class="btn btn-sm btn-primary edit-btn">Edit</button>
+                <button class="btn btn-sm btn-danger delete-btn">Delete</button>
+            </td>
+        `;
+
+        // Append new row to table
+        tableBody.appendChild(newRow);
+
+        // Update grade cell based on grade point percentage
+        updateGrades(tableBody);
+    }
+
+    // Delete the row containing the clicked delete button
+    function deleteRow(event) {
+        const row = event.target.closest("tr");
+        row.remove();
+    }
+
+    // Update the grade based on grade point value
+    function updateGrades(tableBody) {
+        const rows = tableBody.querySelectorAll("tr");
+        rows.forEach(row => {
+            const gradePointCell = row.querySelector(".grade-point");
+            const gradeCell = row.querySelector(".grade");
+            const gradePoint = parseFloat(gradePointCell.textContent);
+
+            if (gradePoint >= 90) gradeCell.textContent = 'A+';
+            else if (gradePoint >= 80) gradeCell.textContent = 'A';
+            else if (gradePoint >= 76) gradeCell.textContent = 'B+';
+            else if (gradePoint >= 72) gradeCell.textContent = 'B';
+            else if (gradePoint >= 68) gradeCell.textContent = 'B-';
+            else if (gradePoint >= 65) gradeCell.textContent = 'C+';
+            else if (gradePoint >= 60) gradeCell.textContent = 'C';
+            else if (gradePoint >= 56) gradeCell.textContent = 'C-';
+            else if (gradePoint >= 50) gradeCell.textContent = 'D+';
+            else if (gradePoint >= 40) gradeCell.textContent = 'D';
+            else gradeCell.textContent = 'F';
+        });
+    }
+
+    // Edit row functionality to toggle between Edit and Save
+    function toggleEdit(event) {
+        const row = event.target.closest("tr");
+        const isEditMode = event.target.textContent === "Edit";
+        const editButton = event.target;
+        const cells = row.querySelectorAll("td[contenteditable]");
+        
+        if (isEditMode) {
+            cells.forEach(cell => cell.setAttribute("contenteditable", "true"));
+            row.style.backgroundColor = "#f9f9a3"; // Highlight color for edit mode
+            editButton.textContent = "Save";
+            editButton.classList.replace("btn-primary", "btn-success");
+        } else {
+            cells.forEach(cell => cell.setAttribute("contenteditable", "false"));
+            row.style.backgroundColor = ""; // Reset to default background
+            editButton.textContent = "Edit";
+            editButton.classList.replace("btn-success", "btn-primary");
+            updateGrades(row.closest("tbody"));
+        }
+    }
+
+    // Add event listeners for add row buttons
+    document.getElementById("addRowBtnPart1").addEventListener("click", () => addRow("part1Table"));
+    document.getElementById("addRowBtnPart2").addEventListener("click", () => addRow("part2Table"));
+
+    // Event delegation for delete and edit buttons within table bodies
+    document.querySelectorAll("tbody").forEach(tbody => {
+        tbody.addEventListener("click", function(event) {
+            if (event.target.classList.contains("delete-btn")) {
+                deleteRow(event);
+            }
+            if (event.target.classList.contains("edit-btn")) {
+                toggleEdit(event);
+            }
+        });
+    });
+
+    // Update grades for any grade point edits
+    document.querySelectorAll(".grade-point").forEach(cell => {
+        cell.addEventListener("input", function() {
+            updateGrades(cell.closest("tbody"));
+        });
+    });
+</script>
+
+<%- include('partials/private-footer.ejs') %>

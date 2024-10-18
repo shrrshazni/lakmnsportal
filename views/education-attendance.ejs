@@ -4,185 +4,244 @@
 <%- include('partials/private-header.ejs') %>
 <%}%>
     
-    
-    <div class="mb-6">
-      <div class="mb-3 d-xxl-flex justify-content-between">
-        <div class="mb-3 order-xl-0">
-            <h2 class="mb-2">Attendance</h2>
-            <h5 class="text-body-tertiary fw-semibold">Child, class, parent, attendance, payment</h5>
-          </div>
-    
-        <div class="mb-3 order-xl-1 text-center text-xl-end d-none">
-          <button class="btn btn-primary mt-3"><span class="fa-solid fa-plus"></span>&nbsp;Add child</button>
-        </div>
-      </div>
+<style>
+  .card-icon {
+    position: absolute;
+    top: 50%;
+    right: 20px; 
+    transform: translateY(-50%);
+    font-size: 2rem; 
+  }
 
-      <div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis pt-7 pb-3 border-y mb-6">
-        <div id="all-student" data-list='{"valueNames":["staff","type","startdate","returndate","department","reliefstaff","status"],"page":10,"pagination":true}'>
-  
-            <div class="row align-items-end justify-content-between pb-4 g-3">
-                
-              <div class="col-12 col-md-auto">
-                <div class="search-box">
-                  <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
-                    <input class="form-control search-input search form-control-sm" type="search" placeholder="Search staffs" aria-label="Search" />
-                    <span class="fas fa-search search-box-icon"></span>
-                  </form>
-                </div>
+  /* Media query for responsive */
+  @media (max-width: 768px) {
+    .filters {
+      flex-direction: column;
+    }
+  }
+</style>
+
+<div class="row gy-3 mb-3 justify-content-between d-flex mt-0">
+  <div class="col-md-9 col-auto">
+      <h2 class="mb-2 text-body-emphasis">Attendance Record</h2>
+      <h5 class="text-body-tertiary fw-semibold">Below is the attendance report for your child.</h5>
+  </div>
+</div>
+
+<div class="row justify-content-between mb-6 mt-6">
+  <div class="d-flex flex-fill col-md-4 col-xxl-2 text-center border-translucent border-end-0 border-md-end pb-4 pb-xxl-0">
+      <div class="flex-grow-1">
+          <span class="uil fs-5 lh-1 fa-solid fa-users-line text-primary"></span>
+          <h1 class="fs-5 pt-3">25</h1>
+          <p class="fs-9 mb-0">Total Students</p>
+      </div>
+  </div>
+  <div class="d-flex flex-fill col-md-4 col-xxl-2 text-center border-translucent border-start border-end-0 border-md-end pb-4 pb-xxl-0">
+      <div class="flex-grow-1">
+          <span class="uil fs-5 lh-1 fa-solid fa-check text-success"></span>
+          <h1 class="fs-5 pt-3">15</h1>
+          <p class="fs-9 mb-0">Total Present</p>
+      </div>
+  </div>
+  <div class="d-flex flex-fill col-md-4 col-xxl-2 text-center border-translucent border-start border-end border-end-md-0 pb-4 pb-xxl-0 pt-4 pt-md-0">
+      <div class="flex-grow-1">
+          <span class="uil fs-5 lh-1 fa-solid fa-times text-danger"></span>
+          <h1 class="fs-5 pt-3">10</h1>
+          <p class="fs-9 mb-0">Total Absent</p>
+      </div>
+  </div>
+</div>
+
+<div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis pt-7 pb-3 border-y mb-6">
+  <div id="" data-list=''>
+      <div class="row align-items-end justify-content-between pb-4 g-3">
+          <div class="filters d-flex justify-content-between align-items-center gap-3">
+              <!-- Search -->
+              <div class="position-relative" style="width: auto;">
+                  <span class="fas fa-search search-box-icon" style="position: absolute; top: 50%; left: 10px; transform: translateY(-50%); color: #aaa;"></span>
+                  <input type="search" class="form-control ps-5" id="searchInput" placeholder="Search" style="padding: 5px; font-size: 14px; border-radius: 8px; width: 200px;">
               </div>
-      
-              <div class="col-12 col-md-auto d-none">
-                <a class="btn btn-primary my-auto me-2" role="button" href="/"><span class="fa-solid fa-plus me-2"></span>Add new staff</a>
+              
+              <!-- Class option -->
+              <select id="" name="" class="form-select" style="width: 150px; padding: 5px; font-size: 14px; border-radius: 8px;">
+                  <option value="">Class 1</option>
+              </select>
+          
+              <!-- Datepicker -->
+              <div class="date ms-auto position-relative" style="padding-right: 0; width: auto;">
+                  <span class="fa-regular fa-calendar-xmark" style="position: absolute; top: 50%; left: 12px; transform: translateY(-50%); color: #aaa; font-size: 12px;"></span>
+                  <input type="text" class="form-control datetimepicker flatpickr-input ps-5" id="inputStartDate" placeholder="Select Date" name="startDate" data-options='' value="" style="padding: 5px 10px; font-size: 14px; border-radius: 8px; width: 200px;">
               </div>
-      
-            </div>
-      
-            <div class="table-responsive ms-n1 ps-1 scrollbar">
-              <table class="table fs-9 mb-0 border-top border-translucent">
-                <thead>
-                  <tr>
-                    <th class="sort white-space-nowrap align-middle ps-0" scope="col" data-sort="staff" style="width:15%;">STAFF</th>
-                    <th class="sort align-middle ps-3" scope="col" data-sort="type" style="width:10%;">TYPE</th>
-                    <th class="sort align-middle ps-3" scope="col" data-sort="department" style="width:15%;">DEPARTMENT</th>
-                    <th class="sort align-middle ps-3" scope="col" data-sort="reliefstaff" style="width:15%;">RELIEF STAFF</th>
-                    <th class="sort align-middle text-center text-center ps-3" scope="col" data-sort="startdate" style="width:10%;">START DATE</th>
-                    <th class="sort align-middle text-center text-center ps-3" scope="col" data-sort="returndate" style="width:10%;">RETURN DATE</th>
-                    <th class="sort align-middle text-center text-center ps-3" scope="col" data-sort="status" style="width:5%;">STATUS</th>
-                    <th class="sort align-middle text-end" scope="col" style="width:5%;"></th>
-                  </tr>
-                </thead>
-                <tbody class="list" id="project-summary-table-body">
-                  <% if(allLeave && allLeave.length>0){ %>
-                  <% allLeave.forEach(leave => { %>
-      
-                  <% 
-                  var statusApprovalColor = '';
-                  
-                        if (leave.status == "pending"){
-                            statusApprovalColor = 'info';
-                        } else if(leave.status == "approved") {
-                            statusApprovalColor = 'success';
-                        } else if(leave.status == "denied" ||  leave.status == "cancelled") {
-                            statusApprovalColor = 'danger';
-                        }else if (leave.status == "invalid"){
-                            statusApprovalColor = 'warning';
-                        }else if (leave.status == "submitted"){
-                            statusApprovalColor = 'info';
-                        }   
-                  %>
-      
-                  <% 
-                  function formatDate(inputDate) {
-                      if (!inputDate) {
-                          return ""; // Return an empty string if inputDate is undefined or null
-                      }
-              
-                      const dateObject = new Date(inputDate);
-              
-                      if (isNaN(dateObject.getTime())) {
-                          console.error("Invalid date format:", inputDate);
-                          return ""; // Return an empty string for invalid dates
-                      }
-              
-                      const day = String(dateObject.getDate()).padStart(2, '0');
-                      const month = String(dateObject.getMonth() + 1).padStart(2, '0');
-                      const year = dateObject.getFullYear();
-              
-                      return `${day}/${month}/${year}`;
-                  }
-                  %>
-      
-                  <tr class="position-static">
-                    <td class="align-middle text-body white-space-nowrap ps-0 staff">
-                      <% 
-                      const checkUser = allUser.find(check => check._id.toString() === leave.user.toString());
-                      %>
-                      <% if (checkUser) { %>
-                      <a class="mb-0 fw-bold fs-9 notranslate" href="/staff/details/<%= checkUser._id %>"><%= checkUser.fullname %></a>
-                      <% } else { %>
-                      <p class="mb-0 fs-9 fw-bold text-primary">User not found</p>
-                      <% } %>
-                    </td>
-      
-                    <td class="align-middle white-space-nowrap position ps-3">
-                      <a class="mb-0 fs-9 fw-bold" href="/leave/details/<%= leave._id %> "><%= leave.type %></a>
-                    </td>
-      
-                    <td class="align-middle department ps-3">
-                      <p class="mb-0 fs-9 text-body-highlight"><%= leave.department %></p>
-                    </td>
-      
-                    <td class="align-middle text-body white-space-nowrap reliefstaff ps-3">
-                      <%
-                      let userReliefName;
-                      let userLink;
-      
-                      if(leave.assignee[0] === undefined){
-                        userReliefName = '-';
-                        userLink = '#';
-                      }else{
-                        const checkUserRelief = allUser.find(check => check._id.toString() === leave.assignee[0].toString());
-                        if(checkUserRelief){
-                          userReliefName = checkUserRelief.fullname;
-                        userLink = '/staff/details/'+checkUserRelief._id;
-                        }else{
-                          userReliefName = '-';
-                          userLink = '#';
-                        }
-                      }
-                      
-                    %>
-                      <a class="mb-0 fs-9" href="<%= userLink %>"><%= userReliefName %></a>
-                    </td>
-      
-                    <td class="align-middle white-space-nowrap text-center startdate ps-0">
-                      <p class="mb-0 fs-9 text-body" id="start-date"><%= formatDate(leave.date.start) %></p>
-                    </td>
-      
-                    <td class="align-middle white-space-nowrap text-center returndate ps-0">
-                      <p class="mb-0 fs-9 text-body"><%= formatDate(leave.date.return) %></p>
-                    </td>
-      
-                    <td class="align-middle white-space-nowrap text-center status">
-                      <span class="badge badge-phoenix fs-10 badge-phoenix-<%= statusApprovalColor %>"><%= leave.status %></span>
-                    </td>
-      
-                    <td class="align-middle text-end white-space-nowrap pe-0">
-                      <div class="btn-reveal-trigger position-static">
-                        <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs-10" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fas fa-ellipsis-h fs-10"></span></button>
-                        <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item" href="/leave/details/<%= leave._id %>">View</a><a class="dropdown-item d-none" href="#!">Export</a>
-                          <div class="dropdown-divider d-none"></div><a class="dropdown-item d-none" href="#!">Edit</a>
-                          <div class="dropdown-divider d-none"></div><a class="dropdown-item d-none text-danger" href="#!">Remove</a>
-                        </div>
-                      </div>
-                    </td>
-      
-                  </tr>
-                  <% }); %>
-                  <% }else { %>
-                  <tr class="position-static">
-                    <td class="mb-0 fs-9 text-body">
-                      <p>There is no user found in your department</p>
-                    </td>
-                  </tr>
-                  <% } %>
-                </tbody>
-              </table>
-            </div>
-            <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
-              <div class="col-auto d-flex">
-                <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p><a class="fw-semibold" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semibold d-none" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
-              </div>
-              <div class="col-auto d-flex">
-                <button class="page-link" data-list-pagination="prev"><span class="fas fa-chevron-left"></span></button>
-                <ul class="mb-0 pagination"></ul>
-                <button class="page-link pe-0" data-list-pagination="next"><span class="fas fa-chevron-right"></span></button>
-              </div>
-            </div>
-        </div> 
+          </div>
       </div>
       
-    </div>
+      <div id="" data-list='{"page":10,"pagination":true}'>
+          <div class="table-responsive ms-n1 ps-1 scrollbar">
+              <table id="vis-table" class="table fs-9 mb-0 border-top border-translucent">
+                  <thead>
+                    <tr>
+                      <th class="sort align-middle text-start" scope="col" data-sort="" style="width:5%;">STUDENT NAME</th>
+                      <th class="sort align-middle text-center" scope="col" data-sort="" style="width:15%;">CLASS</th>
+                      <th class="sort align-middle text-center" scope="col" data-sort="" style="width:15%;">STATUS</th>
+                      <th class="sort align-middle text-center" scope="col" data-sort="" style="width:15%;">REMARKS</th>
+                      <th class="sort align-middle text-end" scope="col" style="width:5%;"></th>
+                    </tr>
+                  </thead>
+                  <tbody id="">
+                    <tr>
+                      <!-- Example student 1 -->
+                      <td class="align-middle text-start">
+                          <a href="#" class="student-name text-decoration-none" data-bs-toggle="modal" data-bs-target="#studentModal">John Doe</a> 
+                      </td>
+                      <td class="align-middle text-center">Class 1</td>
+                      <td class="align-middle text-center">
+                        <span class="badge badge-phoenix badge-phoenix-success fs-10 align-items-center">Present</span>
+                      </td>
+                      <td class="align-middle text-center" id="remarks1"><em>No remarks yet</em></td>
+                      <td class="align-middle text-end white-space-nowrap pe-0 action">
+                          <div class="btn-reveal-trigger position-static">
+                              <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs-10" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
+                                  <span class="fas fa-ellipsis-h fs-10"></span>
+                              </button>
+                              <div class="dropdown-menu dropdown-menu-end py-2">
+                                <a class="dropdown-item" href="#" data-bs-toggle="" data-bs-target="">Print</a>
+                                <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="">Add Remarks</a>
+                              </div>
+                          </div>
+                      </td>
+                    </tr>
+                  </tbody>  
+              </table>
+          </div>
+      </div>
+      <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
+          <div class="col-auto d-flex">
+              <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p>
+              <a class="fw-semibold" href="#!" data-list-view="*" id="">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
+              <a class="fw-semibold d-none" href="#!" data-list-view="less" id="">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
+          </div>
+          <div class="col-auto d-flex">
+              <button class="page-link" data-list-pagination="prev"><span class="fas fa-chevron-left"></span></button>
+              <ul class="mb-0 pagination"></ul>
+              <button class="page-link pe-0" data-list-pagination="next"><span class="fas fa-chevron-right"></span></button>
+          </div>
+      </div>
+  </div>
+</div>
+
+<!-- Modal to view more student details -->
+<div class="modal fade" id="studentModal" tabindex="-1" aria-labelledby="studentModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+          <div class="modal-header">
+              <h5 class="modal-title" id="studentModalLabel">Student Information</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+              <!-- Information about the student -->
+              <div class="row mb-3">
+                  <div class="col-md-6">
+                      <label for="fullname" class="form-label"><b>Student Name</b></label>
+                      <p class="form-label">Alice Johnson</p>
+                  </div>
+                  <div class="col-md-6">
+                      <label for="address" class="form-label"><b>Address</b></label>
+                      <p class="form-label">1234 Elm St, Cityville</p>
+                  </div>
+              </div>
+              <div class="row mb-3">
+                  <div class="col-md-6">
+                      <label for="paidAmount" class="form-label"><b>IC Number</b></label>
+                      <p class="form-label">990101-12-1234</p>
+                  </div>
+                  <div class="col-md-6">
+                      <label for="paidAmount" class="form-label"><b>Date of Birth</b></label>
+                      <p class="form-label">23-10-2013</p>
+                  </div>
+              </div>
+              
+              <hr>
+
+              <!-- Information about the student's Parent -->
+              <div class="row mb-3">
+                  <div class="col-md-6">
+                      <label for="fullname" class="form-label"><b>Father's Name</b></label>
+                      <p class="form-label">George</p>
+                  </div>
+                  <div class="col-md-6">
+                      <label for="address" class="form-label"><b>Address</b></label>
+                      <p class="form-label">1234 Elm St, Cityville</p>
+                  </div>
+              </div>
+              <div class="row mb-3">
+                  <div class="col-md-6">
+                      <label for="paidAmount" class="form-label"><b>IC Number</b></label>
+                      <p class="form-label">990101-12-1234</p>
+                  </div>
+                  <div class="col-md-6">
+                      <label for="paidAmount" class="form-label"><b>Phone Number</b></label>
+                      <p class="form-label">0123456789</p>
+                  </div>
+              </div>
+              <div class="mb-3">
+                  <label for="paidAmount" class="form-label"><b>Occupation</b></label>
+                  <p class="form-label">Pilot</p>
+              </div>
+          
+              <hr>
+
+              <div class="row mb-3">
+                  <div class="col-md-6">
+                      <label for="fullname" class="form-label"><b>Mother's Name</b></label>
+                      <p class="form-label">Sarah</p>
+                  </div>
+                  <div class="col-md-6">
+                      <label for="address" class="form-label"><b>Address</b></label>
+                      <p class="form-label">1234 Elm St, Cityville</p>
+                  </div>
+              </div>
+              <div class="row mb-3">
+                  <div class="col-md-6">
+                      <label for="paidAmount" class="form-label"><b>IC Number</b></label>
+                      <p class="form-label">990101-12-1234</p>
+                  </div>
+                  <div class="col-md-6">
+                      <label for="paidAmount" class="form-label"><b>Phone Number</b></label>
+                      <p class="form-label">0123456789</p>
+                  </div>
+              </div>
+              <div class="mb-3">
+                  <label for="paidAmount" class="form-label"><b>Occupation</b></label>
+                  <p class="form-label">Nurse</p>
+              </div>
+          </div>
+          <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+      </div>
+  </div>
+</div>
+
+<script>
+  // Handle the search input
+  document.getElementById('searchInput').addEventListener('keyup', function() {
+      const searchTerm = this.value.toLowerCase();
+      const rows = document.querySelectorAll('#vis-table tbody tr');
+      //let visibleRows = 0;
+      
+      rows.forEach(function(row) {
+          const name = row.cells[0].textContent.toLowerCase(); // Student Name column
+          const status = row.cells[3].textContent.toLowerCase(); // Status column
+          
+          if (name.includes(searchTerm) || status.includes(searchTerm)) {
+              row.style.display = ''; // Show row if matches
+              //visibleRows++;
+          } else {
+              row.style.display = 'none'; // Hide row if not matching
+          }
+      });
+  });
+</script>
 
     <% if(user.isPublicUser){ %>
 <%- include('partials/alternate-private-footer.ejs') %>

@@ -1,0 +1,241 @@
+<%- include('partials/private-header.ejs') %>
+
+<!-- Colour script for ECharts -->
+<script>
+    // Take the root of the color from CSS for ECharts
+    const style = getComputedStyle(document.body);
+    const theme = {
+        primary: style.getPropertyValue('--phoenix-primary'),
+        secondary: style.getPropertyValue('--phoenix-secondary'),
+        success: style.getPropertyValue('--phoenix-success'),
+        info: style.getPropertyValue('--phoenix-info'),
+        warning: style.getPropertyValue('--phoenix-warning'),
+        danger: style.getPropertyValue('--phoenix-danger'),
+        bg_primary_subtle: style.getPropertyValue('--phoenix-primary-bg-subtle'),
+        tertiary: style.getPropertyValue('--phoenix-tertiary-color'),
+        light: style.getPropertyValue('--phoenix-light'),
+        dark: style.getPropertyValue('--phoenix-dark'),
+        secondary_subtle: style.getPropertyValue('--phoenix-secondary-border-subtle'),
+        cyan: style.getPropertyValue('--phoenix-cyan'),
+        gray_100: style.getPropertyValue('--phoenix-gray-100')
+    };
+
+    // Get CSS class color based on property for ECharts
+    function getColor(className, property) {
+        const element = document.createElement('div');
+        element.className = className;
+        document.body.appendChild(element);
+
+        const computedStyle = window.getComputedStyle(element);
+        const color = computedStyle.getPropertyValue(property);
+
+        document.body.removeChild(element);
+        return color;
+    }
+</script>
+
+<div class="row gy-3 mb-3 justify-content-between d-flex mt-0">
+    <div class="col-md-9 col-auto">
+        <h2 class="mb-2 text-body-emphasis">Overview</h2>
+        <h5 class="text-body-tertiary fw-semibold">We hope you have a great experience managing visitor entries and exits.</h5>
+    </div>
+</div>
+
+<div class="row justify-content-between mb-6 mt-6 border-sections">
+    <div class="col-6 col-md-4 col-xxl-2 text-center border-translucent border-start-xxl border-end-xxl-0 border-bottom-xxl-0 border-end border-bottom pb-4 pb-xxl-0">
+        <div class="flex-grow-1">
+            <span class="uil fs-5 lh-1 fa-solid fa-users-line text-primary"></span>
+            <h1 class="fs-5 pt-3">25</h1>
+            <p class="fs-9 mb-0">Total Staffs</p>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-xxl-2 text-center border-translucent border-start-xxl border-end-xxl-0 border-bottom-xxl-0 border-end-md border-bottom pb-4 pb-xxl-0">
+        <div class="flex-grow-1">
+            <span class="uil fs-5 lh-1 fa-solid fa-graduation-cap text-primary"></span>
+            <h1 class="fs-5 pt-3">25</h1>
+            <p class="fs-9 mb-0">Total Students</p>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-xxl-2 text-center border-translucent border-start-xxl border-bottom-xxl-0 border-bottom border-end border-end-md-0 pb-4 pb-xxl-0 pt-4 pt-md-0">
+        <div class="flex-grow-1">
+            <span class="uil fs-5 lh-1 fa-solid fa-chalkboard text-warning"></span>
+            <h1 class="fs-5 pt-3">4</h1>
+            <p class="fs-9 mb-0">Total Class</p>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-xxl-2 text-center border-translucent border-start-xxl border-end-md border-end-xxl-0 border-bottom border-bottom-md-0 pb-4 pb-xxl-0 pt-4 pt-xxl-0">
+        <div class="flex-grow-1">
+            <span class="uil fs-5 lh-1 fa-solid fa-check text-success"></span>
+            <h1 class="fs-5 pt-3">15</h1>
+            <p class="fs-9 mb-0">Total Present</p>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-xxl-2 text-center border-translucent border-start-xxl border-end border-end-xxl-0 pb-md-4 pb-xxl-0 pt-4 pt-xxl-0">
+        <div class="flex-grow-1">
+            <span class="uil fs-5 lh-1 fa-solid fa-times text-danger"></span>
+            <h1 class="fs-5 pt-3">15</h1>
+            <p class="fs-9 mb-0">Total Absent</p>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-xxl-2 text-center border-translucent border-start-xxl border-end-xxl pb-md-4 pb-xxl-0 pt-4 pt-xxl-0">
+        <div class="flex-grow-1">
+            <span class="uil fs-5 lh-1 fa-solid fa-money-bill text-info"></span>
+            <h1 class="fs-5 pt-3">10</h1>
+            <p class="fs-9 mb-0">Monthly Income</p>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-6">
+    <!-- Monthly Income Statistics -->
+    <div class="col-12">
+        <div class="">
+            <div class="" style="min-height: 25vh;">
+                <h4 class="mb-0">Monthly Income Statistics</h4>
+                <p class="fs-9 mb-0">Income trends over the past months</p>
+
+                <div class="d-flex justify-content-center px-0 py-0">
+                    <div id="incomeChart" style="height:65vh; width: 100%;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Class Statistics -->
+    <div class="col-12 col-xxl-6">
+        <div class="card">
+            <div class="card-body" style="min-height: 25vh;">
+                <h4 class="mb-0">Class Statistics</h4>
+                <p class="fs-9 mb-0">Overview of Tatary class data</p>
+
+                <div class="d-flex justify-content-center px-0 py-0">
+                    <div id="classChart" style="height:30vh; width: 100%;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Stock -->
+    <div class="col-12 col-xxl-6">
+        <div class="card">
+            <div class="card-body" style="min-height: 25vh;">
+                <h4 class="mb-0">Product Stock</h4>
+                <p class="fs-9 mb-0">Current stock availability</p>
+
+                <div class="d-flex justify-content-center px-0 py-0">
+                    <div id="productStockChart" style="height:30vh; width: 100%;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis pt-7 pb-3 border-y mb-6">
+    <div id="" data-list=''>
+        <div class="mb-3">
+            <h3>Staff Members</h3>
+            <p class="text-body-tertiary lh-sm mb-0">Every team member contributes to organizational success.</p>
+        </div>
+
+        <div class="row align-items-end justify-content-between pb-4 g-3">
+            <div class="col-12 col-md-auto">
+                <div class="search-box">
+                    <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
+                        <input class="form-control search-input search form-control-sm" type="search" placeholder="Search staffs" aria-label="Search" />
+                        <span class="fas fa-search search-box-icon"></span>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-responsive ms-n1 ps-1 scrollbar">
+            <table class="table fs-9 mb-0 border-top border-translucent">
+                <thead>
+                    <tr>
+                        <th class="sort align-middle text-start" scope="col" data-sort="" style="width:5%;">STAFF NAME</th>
+                        <th class="sort align-middle text-center" scope="col" data-sort="" style="width:15%;">CLASS IN CHARGE</th>
+                        <th class="sort align-middle text-center" scope="col" data-sort="" style="width:15%;">POSITION</th>
+                        <th class="sort align-middle text-center" scope="col" data-sort="" style="width:15%;">OVERALL PERFORMANCE (%)</th>
+                        <th class="sort align-middle text-end" scope="col" style="width:5%;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                </tbody>
+            </table>
+        </div>
+        <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
+            <div class="col-auto d-flex">
+                <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p><a class="fw-semibold" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semibold d-none" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
+            </div>
+            <div class="col-auto d-flex">
+                <button class="page-link" data-list-pagination="prev"><span class="fas fa-chevron-left"></span></button>
+                <ul class="mb-0 pagination"></ul>
+                <button class="page-link pe-0" data-list-pagination="next"><span class="fas fa-chevron-right"></span></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Dummy data for Monthly Income
+        const incomeData = {
+            months: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+            income: [1800, 3200, 3500, 4200, 4600, 4800, 5000, 5200, 5400, 5600, 6000, 6200]
+        };
+
+        renderLineChart(incomeData, 'incomeChart', 'Monthly Income (RM)');
+
+        function renderLineChart(data, chartId, seriesName) {
+            const chart = echarts.init(document.getElementById(chartId));
+            const chartOption = {
+                tooltip: {
+                    trigger: 'axis',
+                    backgroundColor: getColor('bg-body', 'background-color'),
+                    borderColor: theme.secondary_subtle,
+                    textStyle: { color: getColor('text-body', 'color') },
+                    borderWidth: 1,
+                    padding: [7, 10],
+                    formatter: params => {
+                        let tooltipContent = `${params[0].name}<br/>`;
+                        params.forEach(item => {
+                            tooltipContent += `${item.seriesName}: RM${item.value.toLocaleString()}<br/>`;
+                        });
+                        return tooltipContent;
+                    }
+                },
+                xAxis: {
+                    type: 'category',
+                    data: data.months,
+                    axisLabel: { color: getColor('text-body', 'color') }
+                },
+                yAxis: {
+                    type: 'value',
+                    axisLabel: { 
+                        color: getColor('text-body', 'color'),
+                        formatter: value => `RM${value.toLocaleString()}` // Format y-axis labels
+                    }
+                },
+                series: [{
+                    name: seriesName,
+                    type: 'line',
+                    data: data.income,
+                    itemStyle: {
+                        color: theme.primary
+                    },
+                    smooth: true,
+                    areaStyle: {
+                        opacity: 0.1,
+                        color: theme.primary
+                    }
+                }]
+            };
+
+            chart.setOption(chartOption);
+            window.addEventListener('resize', () => chart.resize());
+        }
+    });
+</script>
+
+<%- include('partials/private-footer.ejs') %>

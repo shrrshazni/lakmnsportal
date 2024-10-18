@@ -1,0 +1,557 @@
+<%- include('partials/private-header.ejs') %>
+
+<div class="row gy-3 mb-3 justify-content-between d-flex mt-0">
+    <div class="col-md-9 col-auto">
+        <h2 class="mb-2 text-body-emphasis">Fee Payment</h2>
+        <h5 class="text-body-tertiary fw-semibold">We hope you have a great experience managing visitor entries and exits.</h5>
+    </div>
+</div>
+
+<div class="row justify-content-between mb-6 mt-6">
+    <!-- Total Students -->
+    <div class="d-flex flex-fill col-md-4 col-xxl-2 text-center border-translucent border-end-0 border-md-end pb-4 pb-xxl-0">
+        <div class="flex-grow-1">
+            <span class="uil fs-5 lh-1 fa-solid fa-users-line text-primary"></span>
+            <h1 class="fs-5 pt-3">25</h1>
+            <p class="fs-9 mb-0">Total Students</p>
+        </div>
+    </div>
+    
+    <!-- Total Paid -->
+    <div class="d-flex flex-fill col-md-4 col-xxl-2 text-center border-translucent border-start border-end-0 border-md-end pb-4 pb-xxl-0">
+        <div class="flex-grow-1">
+            <span class="uil fs-5 lh-1 fa-solid fa-check text-success"></span>
+            <h1 class="fs-5 pt-3">15</h1>
+            <p class="fs-9 mb-0">Total Paid</p>
+        </div>
+    </div>
+    
+    <!-- Total Pending (New Section) -->
+    <div class="d-flex flex-fill col-md-4 col-xxl-2 text-center border-translucent border-start border-end-0 border-md-end pb-4 pb-xxl-0">
+        <div class="flex-grow-1">
+            <span class="uil fs-5 lh-1 fa-solid fa-hourglass-half text-warning"></span>
+            <h1 class="fs-5 pt-3">5</h1>
+            <p class="fs-9 mb-0">Total Pending</p>
+        </div>
+    </div>
+
+    <!-- Total Not Paid -->
+    <div class="d-flex flex-fill col-md-4 col-xxl-2 text-center border-translucent border-start border-end border-end-md-0 pb-4 pb-xxl-0 pt-4 pt-md-0">
+        <div class="flex-grow-1">
+            <span class="uil fs-5 lh-1 fa-solid fa-times text-danger"></span>
+            <h1 class="fs-5 pt-3">10</h1>
+            <p class="fs-9 mb-0">Total Not Paid</p>
+        </div>
+    </div>
+</div>
+
+<div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis pt-7 pb-3 border-y mb-6">
+    <div id="" data-list=''>
+        <div class="row align-items-end justify-content-between pb-4 g-3">
+            <div class="filters d-flex align-items-center gap-2">
+                <!-- Search -->
+                <div class="position-relative" style="width: 200px;">
+                    <span class="fas fa-search search-box-icon" style="position: absolute; top: 50%; left: 10px; transform: translateY(-50%); color: #aaa;"></span>
+                    <input type="search" class="form-control ps-5" id="searchInput" placeholder="Search" style="padding: 5px; font-size: 14px; border-radius: 8px; width: 100%;">
+                </div>
+
+                <!-- Class option -->
+                <div style="width: 150px;">
+                    <select id="" name="" class="form-select" style="padding: 5px; font-size: 14px; border-radius: 8px; width: 100%;">
+                        <option value="">Select Class</option>
+                        <option value="">Class 1</option>
+                        <option value="">Class 2</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div id="" data-list='{"page":10,"pagination":true}'>
+            <div class="table-responsive ms-n1 ps-1 scrollbar">
+                <table id="vis-table" class="table fs-9 mb-0 border-top border-translucent">
+                    <thead>
+                        <tr>
+                            <th class="sort align-middle text-start" scope="col" style="width:2%;">NAME</th>
+                            <th class="sort align-middle text-center" scope="col" style="width:5%;">JAN</th>
+                            <th class="sort align-middle text-center" scope="col" style="width:5%;">FEB</th>
+                            <th class="sort align-middle text-center" scope="col" style="width:5%;">MAR</th>
+                            <th class="sort align-middle text-center" scope="col" style="width:5%;">APR</th>
+                            <th class="sort align-middle text-center" scope="col" style="width:5%;">MAY</th>
+                            <th class="sort align-middle text-center" scope="col" style="width:5%;">JUNE</th>
+                            <th class="sort align-middle text-center" scope="col" style="width:5%;">JUL</th>
+                            <th class="sort align-middle text-center" scope="col" style="width:5%;">AUG</th>
+                            <th class="sort align-middle text-center" scope="col" style="width:5%;">SEPT</th>
+                            <th class="sort align-middle text-center" scope="col" style="width:5%;">OCT</th>
+                            <th class="sort align-middle text-center" scope="col" style="width:5%;">NOV</th>
+                            <th class="sort align-middle text-center" scope="col" style="width:5%;">DEC</th>
+                            <th class="sort align-middle text-end" scope="col" style="width:2%;"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="align-middle text-start">
+                                <a href="#" class="student-name text-decoration-none" data-bs-toggle="modal" data-bs-target="#studentModal">Alice Johnson</a>
+                            </td>
+                            <!-- Paid Status with Modal Trigger -->
+                            <td class="align-middle text-center">
+                                <span class="badge badge-phoenix badge-phoenix-success fs-10 align-items-center cursor-pointer" data-bs-toggle="modal" data-bs-target="#feeStatusModal" data-status="paid">
+                                    Paid
+                                </span>
+                            </td>
+                    
+                            <!-- Pending Status with Modal Trigger -->
+                            <td class="align-middle text-center">
+                                <span class="badge badge-phoenix badge-phoenix-warning fs-10 align-items-center cursor-pointer" data-bs-toggle="modal" data-bs-target="#feeStatusModal" data-status="pending">
+                                    Pending
+                                </span>
+                            </td>
+                    
+                            <!-- Not Paid Status with Modal Trigger -->
+                            <td class="align-middle text-center">
+                                <span class="badge badge-phoenix badge-phoenix-danger fs-10 align-items-center cursor-pointer" data-bs-toggle="modal" data-bs-target="#feeStatusModal" data-status="notPaid">
+                                    Not Paid
+                                </span>
+                            </td>
+
+                            <!-- Not Paid Status with Modal Trigger -->
+                            <td class="align-middle text-center">
+                                <span class="badge badge-phoenix badge-phoenix-danger fs-10 align-items-center cursor-pointer" data-bs-toggle="modal" data-bs-target="#feeStatusModal" data-status="notPaid">
+                                    Not Paid
+                                </span>
+                            </td>
+
+                            <!-- Not Paid Status with Modal Trigger -->
+                            <td class="align-middle text-center">
+                                <span class="badge badge-phoenix badge-phoenix-danger fs-10 align-items-center cursor-pointer" data-bs-toggle="modal" data-bs-target="#feeStatusModal" data-status="notPaid">
+                                    Not Paid
+                                </span>
+                            </td>
+
+                            <!-- Not Paid Status with Modal Trigger -->
+                            <td class="align-middle text-center">
+                                <span class="badge badge-phoenix badge-phoenix-danger fs-10 align-items-center cursor-pointer" data-bs-toggle="modal" data-bs-target="#feeStatusModal" data-status="notPaid">
+                                    Not Paid
+                                </span>
+                            </td>
+
+                            <!-- Not Paid Status with Modal Trigger -->
+                            <td class="align-middle text-center">
+                                <span class="badge badge-phoenix badge-phoenix-danger fs-10 align-items-center cursor-pointer" data-bs-toggle="modal" data-bs-target="#feeStatusModal" data-status="notPaid">
+                                    Not Paid
+                                </span>
+                            </td>
+
+                            <!-- Not Paid Status with Modal Trigger -->
+                            <td class="align-middle text-center">
+                                <span class="badge badge-phoenix badge-phoenix-danger fs-10 align-items-center cursor-pointer" data-bs-toggle="modal" data-bs-target="#feeStatusModal" data-status="notPaid">
+                                    Not Paid
+                                </span>
+                            </td>
+
+                            <!-- Not Paid Status with Modal Trigger -->
+                            <td class="align-middle text-center">
+                                <span class="badge badge-phoenix badge-phoenix-danger fs-10 align-items-center cursor-pointer" data-bs-toggle="modal" data-bs-target="#feeStatusModal" data-status="notPaid">
+                                    Not Paid
+                                </span>
+                            </td>
+
+                            <!-- Not Paid Status with Modal Trigger -->
+                            <td class="align-middle text-center">
+                                <span class="badge badge-phoenix badge-phoenix-danger fs-10 align-items-center cursor-pointer" data-bs-toggle="modal" data-bs-target="#feeStatusModal" data-status="notPaid">
+                                    Not Paid
+                                </span>
+                            </td>
+
+                            <!-- Not Paid Status with Modal Trigger -->
+                            <td class="align-middle text-center">
+                                <span class="badge badge-phoenix badge-phoenix-danger fs-10 align-items-center cursor-pointer" data-bs-toggle="modal" data-bs-target="#feeStatusModal" data-status="notPaid">
+                                    Not Paid
+                                </span>
+                            </td>
+
+                            <!-- Not Paid Status with Modal Trigger -->
+                            <td class="align-middle text-center">
+                                <span class="badge badge-phoenix badge-phoenix-danger fs-10 align-items-center cursor-pointer" data-bs-toggle="modal" data-bs-target="#feeStatusModal" data-status="notPaid">
+                                    Not Paid
+                                </span>
+                            </td>
+                    
+                            <td class="align-middle text-end white-space-nowrap pe-0 action">
+                                <div class="btn-reveal-trigger position-static">
+                                    <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs-10" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
+                                        <span class="fas fa-ellipsis-h fs-10"></span>
+                                    </button>
+                                    <div class="dropdown-menu dropdown-menu-end py-2">
+                                        <a class="dropdown-item" href="#" data-bs-toggle="" data-bs-target="">Update Payment</a>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
+            <div class="col-auto d-flex">
+                <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p>
+                <a class="fw-semibold" href="#!" data-list-view="*" id="">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
+                <a class="fw-semibold d-none" href="#!" data-list-view="less" id="">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
+            </div>
+            <div class="col-auto d-flex">
+                <button class="page-link" data-list-pagination="prev"><span class="fas fa-chevron-left"></span></button>
+                <ul class="mb-0 pagination"></ul>
+                <button class="page-link pe-0" data-list-pagination="next"><span class="fas fa-chevron-right"></span></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal to view more student details -->
+<div class="modal fade" id="studentModal" tabindex="-1" aria-labelledby="studentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="studentModalLabel">Student Information</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Information about the student -->
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="fullname" class="form-label"><b>Student Name</b></label>
+                        <p class="form-label">Alice Johnson</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="address" class="form-label"><b>Address</b></label>
+                        <p class="form-label">1234 Elm St, Cityville</p>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="paidAmount" class="form-label"><b>IC Number</b></label>
+                    <p class="form-label">990101-12-1234</p>
+                </div>
+                
+                <hr>
+
+                <!-- Information about the student's Parent -->
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="fullname" class="form-label"><b>Father's Name</b></label>
+                        <p class="form-label">George</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="address" class="form-label"><b>Address</b></label>
+                        <p class="form-label">1234 Elm St, Cityville</p>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="paidAmount" class="form-label"><b>IC Number</b></label>
+                        <p class="form-label">990101-12-1234</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="paidAmount" class="form-label"><b>Phone Number</b></label>
+                        <p class="form-label">0123456789</p>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="paidAmount" class="form-label"><b>Occupation</b></label>
+                    <p class="form-label">Pilot</p>
+                </div>
+            
+                <hr>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="fullname" class="form-label"><b>Mother's Name</b></label>
+                        <p class="form-label">Sarah</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="address" class="form-label"><b>Address</b></label>
+                        <p class="form-label">1234 Elm St, Cityville</p>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="paidAmount" class="form-label"><b>IC Number</b></label>
+                        <p class="form-label">990101-12-1234</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="paidAmount" class="form-label"><b>Phone Number</b></label>
+                        <p class="form-label">0123456789</p>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="paidAmount" class="form-label"><b>Occupation</b></label>
+                    <p class="form-label">Nurse</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Update Payment Status -->
+<div class="modal fade" id="feeStatusModal" tabindex="-1" aria-labelledby="feeStatusModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="feeStatusModalLabel">Payment Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Paid section -->
+                <div id="paidDetails" style="display: none;">
+                    <p>This payment has been successfully completed. Here are the payment details:</p>
+                    <!-- Lottie Animation Section -->
+                    <div class="my-4 d-flex justify-content-center">
+                        <script src="https://unpkg.com/@dotlottie/player-component@latest/dist/dotlottie-player.mjs" type="module"></script> 
+                        <dotlottie-player src="https://lottie.host/e33647c4-2b24-4202-b2b1-2e05ac5a631f/wZhpJpjciR.json" background="transparent" speed="1" style="width: 150px; height: 150px;" loop autoplay></dotlottie-player>
+                    </div>
+                    <!-- Payment Information -->
+                    <div class="row gx-3 mb-3">
+                        <div class="col-6">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="text-muted mb-1">Payment Date:</h5>
+                                    <p class="mb-0">25-10-2024, 1:30 PM</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="text-muted mb-1">Date of Approval:</h5>
+                                    <p class="mb-0">26-10-2024, 9:30 AM</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row gx-3 mb-3">
+                        <div class="col-6">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="text-muted mb-1">Payment Method:</h5>
+                                    <p class="mb-0">Manual Receipt</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="text-muted mb-1">Sender Name:</h5>
+                                    <p class="mb-0">George</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pending section -->
+                <div id="pendingDetails" style="display: none;">
+                    <p>This payment is currently pending and needs approval.</p>
+                    <!-- Pending Animation -->
+                    <div class="my-4 d-flex justify-content-center">
+                        <script src="https://unpkg.com/@dotlottie/player-component@latest/dist/dotlottie-player.mjs" type="module"></script> 
+                        <dotlottie-player src="https://lottie.host/c5f47861-1afa-479c-b506-9c35fc270c4d/j8RZgLWt2W.json" background="transparent" speed="1" style="width: 150px; height: 150px;" loop autoplay></dotlottie-player>
+                    </div>
+                    <!-- Payment Information -->
+                    <div class="row gx-3 mb-3">
+                        <div class="col-6">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="text-muted mb-1">Payment Date:</h5>
+                                    <p class="mb-0">15-12-2024, 10:30 AM</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="text-muted mb-1">Date of Approval:</h5>
+                                    <p class="mb-0">-</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row gx-3 mb-3">
+                        <div class="col-6">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="text-muted mb-1">Payment Method:</h5>
+                                    <p class="mb-0">Manual Receipt</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="text-muted mb-1">Sender Name:</h5>
+                                    <p class="mb-0">George</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section for File Attachment -->
+                <div class="mt-4" id="attachmentSection" style="display: none;">
+                    <h5 class="text-muted">Attachment:</h5>
+                    <a href="dummy-receipt.pdf" class="text-body-info" download>
+                        Download Receipt PDF
+                    </a>
+                </div>
+
+                <div id="notPaidDetails" style="display: none;">
+                    <p>This payment has not been completed.</p>
+                    <!-- Not paid Animation -->
+                    <div class="my-4 d-flex justify-content-center">
+                        <script src="https://unpkg.com/@dotlottie/player-component@latest/dist/dotlottie-player.mjs" type="module"></script> 
+                        <dotlottie-player src="https://lottie.host/db0d7ca0-01a8-4493-b227-2ee358131559/NQN635kqLG.json" background="transparent" speed="1" style="width: 150px; height: 150px;" loop autoplay></dotlottie-player>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <!-- Approve Button (visible only for pending) -->
+                <button type="button" id="approveBtn" class="btn btn-phoenix-success" style="display: none;">Approve</button>
+                <!-- Close Button -->
+                <button type="button" class="btn btn-phoenix-secondary" data-bs-dismiss="modal">Close</button>
+                <!-- Download Button (visible for paid or pending) -->
+                <button type="button" id="downloadBtn" class="btn">Download</button>
+                <!-- Back Button (visible in the attachment section) -->
+                <button type="button" id="backBtn" class="btn btn-primary" style="display: none;">Back</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function formatCurrency(input) {
+        // Remove non-numeric characters
+        let value = input.value.replace(/[^0-9]/g, '');
+
+        // If the input is empty, return early
+        if (value === '') {
+            input.value = '';
+            return;
+        }
+
+        // Format the input by placing the decimal point
+        if (value.length > 2) {
+            value = value.slice(0, -2) + '.' + value.slice(-2);
+        } else if (value.length === 2) {
+            value = '0.' + value;  // If only two digits, treat as cents
+        } else if (value.length === 1) {
+            value = '0.0' + value;  // If one digit, show as cents
+        }
+
+        // Remove leading zeros
+        value = value.replace(/^0+(?!\.|$)/, '');
+
+        // If value is empty after leading zero removal, show 'RM 0.00'
+        if (value === '' || value === '.') {
+            input.value = 'RM 0.00';
+        } else {
+            input.value = 'RM ' + parseFloat(value).toFixed(2);
+        }
+    }
+
+    function finalizeAmount(input) {
+        // Extract the numeric part by removing the RM symbol
+        let value = parseFloat(input.value.replace(/RM\s/g, '').replace(/,/g, ''));
+
+        // Check if the value is valid
+        if (!isNaN(value)) {
+            // Format to two decimal places
+            input.value = 'RM ' + value.toFixed(2);
+        } else {
+            input.value = 'RM 0.00'; // Reset to zero if invalid
+        }
+    }
+    
+    let currentStatus = null;
+
+    document.querySelectorAll('[data-bs-target="#feeStatusModal"]').forEach(function(button) {
+        button.addEventListener('click', function() {
+            const status = this.getAttribute('data-status');
+            currentStatus = status; // Set the current status globally
+
+            // Reset all sections and button displays
+            document.getElementById('paidDetails').style.display = 'none';
+            document.getElementById('pendingDetails').style.display = 'none';
+            document.getElementById('notPaidDetails').style.display = 'none';
+            document.getElementById('downloadBtn').style.display = 'none';
+            document.getElementById('attachmentSection').style.display = 'none';
+            document.getElementById('backBtn').style.display = 'none';
+            document.getElementById('approveBtn').style.display = 'none'; 
+
+            // Change the button style and text based on payment status
+            const downloadBtn = document.getElementById('downloadBtn');
+            if (status === 'paid') {
+                document.getElementById('feeStatusModalLabel').innerText = 'Payment Status: Paid';
+                document.getElementById('paidDetails').style.display = 'block';
+                downloadBtn.style.display = 'inline-block';
+                downloadBtn.className = 'btn btn-success';
+                downloadBtn.innerText = 'Download Receipt';
+            } else if (status === 'pending') {
+                document.getElementById('feeStatusModalLabel').innerText = 'Payment Status: Pending';
+                document.getElementById('pendingDetails').style.display = 'block';
+                downloadBtn.style.display = 'inline-block';
+                downloadBtn.className = 'btn btn-warning';
+                downloadBtn.innerText = 'View Receipt';
+
+                // Display the approve button for pending status
+                document.getElementById('approveBtn').style.display = 'inline-block';
+            } else if (status === 'notPaid') {
+                document.getElementById('feeStatusModalLabel').innerText = 'Payment Status: Not Paid';
+                document.getElementById('notPaidDetails').style.display = 'block';
+                downloadBtn.style.display = 'inline-block';
+                downloadBtn.className = 'btn btn-danger';
+                downloadBtn.innerText = 'Send Invoice';
+            }
+        });
+    });
+
+    // Show attachmentSection and hide paidDetails or pendingDetails on downloadBtn click
+    document.getElementById('downloadBtn').addEventListener('click', function() {
+        // Only allow for paid or pending status
+        if (currentStatus === 'paid') {
+            document.getElementById('paidDetails').style.display = 'none';
+        } else if (currentStatus === 'pending') {
+            document.getElementById('pendingDetails').style.display = 'none';
+        }
+
+        if (currentStatus === 'paid' || currentStatus === 'pending') {
+            document.getElementById('attachmentSection').style.display = 'block';
+            document.getElementById('downloadBtn').style.display = 'none';  // Hide download button
+            document.getElementById('backBtn').style.display = 'inline-block';  // Show back button
+        }
+
+        // Keep the approve button visible only for pending status in the attachment view
+        if (currentStatus === 'pending') {
+            document.getElementById('approveBtn').style.display = 'inline-block';
+        } else {
+            document.getElementById('approveBtn').style.display = 'none';
+        }
+    });
+
+    // Back button to return to the initial paid or pending details section
+    document.getElementById('backBtn').addEventListener('click', function() {
+        document.getElementById('attachmentSection').style.display = 'none';  // Hide attachment section
+
+        // Show the appropriate section based on currentStatus
+        if (currentStatus === 'paid') {
+            document.getElementById('paidDetails').style.display = 'block';
+        } else if (currentStatus === 'pending') {
+            document.getElementById('pendingDetails').style.display = 'block';
+            document.getElementById('approveBtn').style.display = 'inline-block';  // Show approve button again for pending
+        }
+
+        document.getElementById('downloadBtn').style.display = 'inline-block';  // Show download button again
+        document.getElementById('backBtn').style.display = 'none';  // Hide back button
+    });
+</script>
+
+<%- include('partials/private-footer.ejs') %>
