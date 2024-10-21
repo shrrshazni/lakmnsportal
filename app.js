@@ -828,6 +828,31 @@ const subscriptionSchema = new mongoose.Schema({
 });
 subscriptionSchema.index({ endpoint: 1 });
 
+
+const classSchema = new mongoose.Schema({
+    classname: String,
+    teacher: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Teacher' }],
+    students: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Child' }]
+});
+// Add indexes for performance optimization
+classSchema.index({ classname: 1 });
+classSchema.index({ teacher: 1 });
+
+const parentSchema = new mongoose.Schema({
+    user: { type: mongoose.Schema.Types.ObjectId, required: true },
+    children: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Child' }]
+});
+// Add indexes for performance optimization
+parentSchema.index({ user: 1 });
+
+const teacherSchema = new mongoose.Schema({
+    user: { type: mongoose.Schema.Types.ObjectId },
+    class: { type: mongoose.Schema.Types.ObjectId, ref: 'Class', required: true }
+});
+// Add indexes for performance optimization
+teacherSchema.index({ user: 1 });
+teacherSchema.index({ class: 1 });
+
 const childSchema = new mongoose.Schema({
     name: { type: String },
     dob: { type: Date, default: Date.now },
@@ -854,42 +879,15 @@ childSchema.index({ dob: 1 });
 childSchema.index({ nric: 1 });
 childSchema.index({ class: 1 });
 childSchema.index({ parent: 1 });
-childSchema.index({ 'attendanceRecords.date': 1 });
-
-const classSchema = new mongoose.Schema({
-    classname: String,
-    teacher: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Teacher' }],
-    students: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Child' }]
-});
-
-// Add indexes for performance optimization
-classSchema.index({ classname: 1 });
-classSchema.index({ teacher: 1 });
-
-const parentSchema = new mongoose.Schema({
-    user: { type: mongoose.Schema.Types.ObjectId, required: true },
-    children: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Child' }]
-});
-
-// Add indexes for performance optimization
-parentSchema.index({ user: 1 });
-
-const teacherSchema = new mongoose.Schema({
-    user: { type: mongoose.Schema.Types.ObjectId },
-    class: { type: mongoose.Schema.Types.ObjectId, ref: 'Class', required: true }
-});
-
-// Add indexes for performance optimization
-teacherSchema.index({ user: 1 });
-teacherSchema.index({ class: 1 });
 
 const schoolAttendanceSchema = new mongoose.Schema({
-    child: { type: mongoose.Schema.Types.ObjectId, ref: 'Child', required: true },
-    status: { type: String, enum: ['Present', 'Absent'], required: true },
+    child: { type: mongoose.Schema.Types.ObjectId, ref: 'Children', required: true },
+    status: { type: String, enum: ['Present', 'Absent'] },
     remarks: { type: String },
-    date: { type: Date, required: true }
+    date: { type: Date }
+}, {
+    timestamps: true // Automatically adds createdAt and updatedAt fields
 });
-
 // Add indexes for performance optimization
 schoolAttendanceSchema.index({ child: 1, date: 1 });
 schoolAttendanceSchema.index({ status: 1 });
@@ -912,7 +910,6 @@ const paymentSchema = new mongoose.Schema({
     file: String,
     status: { type: String, enum: ['Pay Now', 'Pending', 'Paid', 'Invalid'] }
 });
-
 // Add indexes for performance optimization
 paymentSchema.index({ child: 1 });
 paymentSchema.index({ date: 1 });
@@ -3349,7 +3346,6 @@ app.get('/leave/details/:id', isAuthenticated, async (req, res, next) => {
     }
 });
 
-
 // Leave approval route
 app.get('/leave/:approval/:id', isAuthenticated, async (req, res, next) => {
     try {
@@ -5758,23 +5754,26 @@ app.get('/education/overview', isAuthenticated, async function (req, res) {
 });
 
 // Student: attendance section route
-app.get('/education/attendance/record', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    })
-        .populate('sender')
-        .sort({ timestamp: -1 });
+app.get('/education/attendance/record', isAuthenticated, async (req, res, next) => {
+    try {
+        const { user, notifications } = req;
+        const attendances = await AttendanceEducation.find()
+            .populate('child')
+            .sort({ date: -1 })
+            .exec();
 
-    if (user) {
+        console.log(attendances);
 
         res.render('education-attendance-record', {
             user: user,
             notifications: notifications,
             uuid: uuidv4(),
+            attendances: attendances
         });
+
+    } catch (error) {
+        console.error('Error fetching data:', error);
+        next(error);
     }
 });
 
@@ -7554,10 +7553,9 @@ app.get('/super-admin/logout', isAuthenticated, async (req, res, next) => {
 app.get('/testing', isAuthenticated, async (req, res, next) => {
     try {
         const { user, notifications } = req;
-        const testDate = new Date('2024-10-15T00:00:00'); // Use the specific date
 
-        // Call the function to remove duplicates
-        removeDuplicatesForDate(testDate);
+        createDummyData();
+
         res.render('testing', {
             user: user,
             notifications: notifications,
@@ -7613,73 +7611,62 @@ async function removeDuplicatesForDate(date) {
 }
 
 // dummy data for child education - student
-// const childrenData = [
-//     {
-//         name: "Richard Hodge",
-//         dob: new Date(1965, 0, 27),
-//         nric: "758-61-5792",
-//         gender: "Female",
-//         pob: "Marcusshire",
-//         race: "Indian",
-//         citizenship: "Foreigner",
-//         attendanceRecords: [
-//             { date: new Date(2023, 9, 1), status: "Absent" },
-//             { date: new Date(2023, 9, 2), status: "Present" }
-//         ],
-//         siblings: [
-//             { nama: "Sarah", dob: new Date(1995, 5, 12), status: "Study", education: "PHD" },
-//             { nama: "Justin", dob: new Date(1997, 3, 5), status: "Study", education: "Master" }
-//         ]
-//     },
-//     {
-//         name: "Justin McNeil",
-//         dob: new Date(1999, 8, 3),
-//         nric: "523-77-2220",
-//         gender: "Female",
-//         pob: "New Suzannestad",
-//         race: "Other",
-//         citizenship: "Malaysian",
-//         attendanceRecords: [
-//             { date: new Date(2023, 9, 1), status: "Present" },
-//             { date: new Date(2023, 9, 2), status: "Absent" }
-//         ],
-//         siblings: [
-//             { nama: "Larry", dob: new Date(2010, 6, 10), status: "Study", education: "Primary School" },
-//             { nama: "Robert", dob: new Date(2008, 11, 22), status: "Study", education: "High School" }
-//         ]
-//     },
-//     {
-//         name: "Brandon Gilmore",
-//         dob: new Date(1984, 0, 3),
-//         nric: "707-99-4379",
-//         gender: "Female",
-//         pob: "Brianville",
-//         race: "Chinese",
-//         citizenship: "Malaysian",
-//         attendanceRecords: [
-//             { date: new Date(2023, 9, 1), status: "Present" }
-//         ],
-//         siblings: [
-//             { nama: "Stephen", dob: new Date(2005, 10, 15), status: "Study", education: "High School" }
-//         ]
-//     },
-//     {
-//         name: "Sharon Chambers",
-//         dob: new Date(1948, 7, 7),
-//         nric: "108-95-0460",
-//         gender: "Male",
-//         pob: "Thomasport",
-//         race: "Other",
-//         citizenship: "Foreigner",
-//         attendanceRecords: [
-//             { date: new Date(2023, 9, 1), status: "Present" }
-//         ],
-//         siblings: [
-//             { nama: "Nicole", dob: new Date(2001, 3, 17), status: "Study", education: "Diploma" },
-//             { nama: "Scott", dob: new Date(2009, 5, 30), status: "Study", education: "Primary School" }
-//         ]
-//     }
-// ];
+async function createDummyData() {
+    try {
+        // Create a dummy child record
+        const child = new ChildEducation({
+            name: 'John Doe',
+            dob: new Date('2010-05-15'),
+            nric: '123456789012',
+            gender: 'Male',
+            pob: 'Kuala Lumpur',
+            race: 'Malay',
+            citizenship: 'Malaysian',
+            swkNative: 'No',
+            profile: '',
+            class: null, // Replace with ObjectId if there's a class
+            receiptUploaded: false,
+            parent: null, // Replace with ObjectId if there's a parent
+            siblings: [
+                {
+                    nama: 'Jane Doe',
+                    dob: new Date('2008-03-10'),
+                    status: 'Study',
+                    education: 'High School'
+                }
+            ]
+        });
+
+        await child.save();
+
+        console.log('Child created:', child);
+
+        // Create dummy attendance records for the child
+        const attendance1 = new AttendanceEducation({
+            child: child._id,
+            status: 'Present',
+            remarks: 'On time',
+            date: new Date('2024-10-21')
+        });
+
+        const attendance2 = new AttendanceEducation({
+            child: child._id,
+            status: 'Absent',
+            remarks: 'Sick',
+            date: new Date('2024-10-22')
+        });
+
+        await attendance1.save();
+        await attendance2.save();
+
+        console.log('Attendance records created:', attendance1, attendance2);
+    } catch (error) {
+        console.error('Error creating dummy data:', error);
+    } finally {
+        educationDatabase.close();
+    }
+}
+
 
 const checkAttendanceOutOfOfficeToday = async () => {
     try {

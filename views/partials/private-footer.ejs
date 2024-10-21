@@ -489,21 +489,21 @@
     });
 
     // Attach event listener to all forms
-    const forms = document.querySelectorAll('form');
-    forms.forEach((form) => {
-      form.addEventListener('submit', function(event) {
-        // Check if the form has the no-loader class
-        if (!form.classList.contains('no-loader')) {
-          showLoader(); // Show loader on form submission
-          // Prevent the form submission to allow the loader to display
-          // Simulate a delay before submitting the form
-          setTimeout(() => {
-            form.submit(); // Submit the form after 3 seconds
-          }, 3000);
-          event.preventDefault();
-        }
-      });
-    });
+    // const forms = document.querySelectorAll('form');
+    // forms.forEach((form) => {
+    //   form.addEventListener('submit', function(event) {
+    //     // Check if the form has the no-loader class
+    //     if (!form.classList.contains('no-loader')) {
+    //       showLoader(); // Show loader on form submission
+    //       // Prevent the form submission to allow the loader to display
+    //       // Simulate a delay before submitting the form
+    //       setTimeout(() => {
+    //         form.submit(); // Submit the form after 3 seconds
+    //       }, 3000);
+    //       event.preventDefault();
+    //     }
+    //   });
+    // });
   });
 
   // Event listener to hide loader when the new page is fully loaded
