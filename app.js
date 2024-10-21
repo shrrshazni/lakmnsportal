@@ -5606,191 +5606,6 @@ app.get('/total_timeout_visitors', async function (req, res) {
 // Education
 // ============================
 
-// Overview
-app.get('/tattary/overview', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    })
-        .populate('sender')
-        .sort({ timestamp: -1 });
-
-    if (user) {
-
-        res.render('tattary-overview', {
-            user: user,
-            notifications: notifications,
-            uuid: uuidv4(),
-        });
-    }
-});
-
-// Student: attendance section route
-app.get('/tattary/attendance/record', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    })
-        .populate('sender')
-        .sort({ timestamp: -1 });
-
-    if (user) {
-
-        res.render('tattary-attendance-record', {
-            user: user,
-            notifications: notifications,
-            uuid: uuidv4(),
-        });
-    }
-});
-
-// Student: information section route
-app.get('/tattary/student/information', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    })
-        .populate('sender')
-        .sort({ timestamp: -1 });
-
-    if (user) {
-
-        res.render('tattary-student-information', {
-            user: user,
-            notifications: notifications,
-            uuid: uuidv4(),
-        });
-    }
-});
-
-// Student: schedule section route
-app.get('/tattary/student/schedule', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    })
-        .populate('sender')
-        .sort({ timestamp: -1 });
-
-    if (user) {
-
-        res.render('tattary-student-schedule', {
-            user: user,
-            notifications: notifications,
-            uuid: uuidv4(),
-        });
-    }
-});
-
-// Teacher: information section route
-app.get('/tattary/teacher/information', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    })
-        .populate('sender')
-        .sort({ timestamp: -1 });
-
-    if (user) {
-
-        res.render('tattary-teacher-information', {
-            user: user,
-            notifications: notifications,
-            uuid: uuidv4(),
-        });
-    }
-});
-
-// Payment: fee section route
-app.get('/tattary/fee/payment', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    })
-        .populate('sender')
-        .sort({ timestamp: -1 });
-
-    if (user) {
-
-        res.render('tattary-fee-payment', {
-            user: user,
-            notifications: notifications,
-            uuid: uuidv4(),
-        });
-    }
-});
-
-// Payment: record payment section route
-app.get('/tattary/record/payment', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    })
-        .populate('sender')
-        .sort({ timestamp: -1 });
-
-    if (user) {
-
-        res.render('tattary-record-payment', {
-            user: user,
-            notifications: notifications,
-            uuid: uuidv4(),
-        });
-    }
-});
-
-// Payment: register student section route
-app.get('/tattary/register/student', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    })
-        .populate('sender')
-        .sort({ timestamp: -1 });
-
-    if (user) {
-
-        res.render('tattary-register-student', {
-            user: user,
-            notifications: notifications,
-            uuid: uuidv4(),
-        });
-    }
-});
-
-// Education overview route
-app.get('/education/overview', isAuthenticated, async (req, res, next) => {
-    try {
-        const { user, notifications } = req;
-
-        res.render('education-overview', {
-            user,
-            notifications,
-            uuid: uuidv4()
-        });
-
-    } catch (error) {
-        console.error('Error fetching data:', error);
-        next(error);
-    }
-});
-
 // Education parent route - application form
 app.get('/education/parent/application', async (req, res, next) => {
     try {
@@ -5921,64 +5736,171 @@ app.get('/education/parent/sign-in', async (req, res, next) => {
     }
 });
 
-// Education student route
-app.get('/education/student', isAuthenticatedEdu, async (req, res, next) => {
-    try {
-        const { user, notifications } = req;
-        const allUser = await User.find();
-        const allStudents = await ChildEducation.find();
+// Overview
+app.get('/education/overview', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    })
+        .populate('sender')
+        .sort({ timestamp: -1 });
 
-        res.render('education-student', {
-            user,
-            notifications,
+    if (user) {
+
+        res.render('education-overview', {
+            user: user,
+            notifications: notifications,
             uuid: uuidv4(),
-            allUser,
-            allStudents
         });
-
-    } catch (error) {
-        console.error('Error fetching data:', error);
-        next(error);
     }
 });
 
-// Education payment route
-app.get('/education/payment', isAuthenticatedEdu, async (req, res, next) => {
-    try {
-        const { user, notifications } = req;
-        const allUser = await User.find();
-        const allLeave = await Leave.find();
-        res.render('education-payment', {
-            user,
-            notifications,
-            uuid: uuidv4(),
-            allUser,
-            allLeave
-        });
+// Student: attendance section route
+app.get('/education/attendance/record', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    })
+        .populate('sender')
+        .sort({ timestamp: -1 });
 
-    } catch (error) {
-        console.error('Error fetching data:', error);
-        next(error);
+    if (user) {
+
+        res.render('education-attendance-record', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4(),
+        });
     }
 });
 
-// Education attendance route
-app.get('/education/attendance', isAuthenticatedEdu, async (req, res, next) => {
-    try {
-        const { user, notifications } = req;
-        const allUser = await User.find();
-        const allLeave = await Leave.find();
-        res.render('education-attendance', {
-            user,
-            notifications,
-            uuid: uuidv4(),
-            allUser,
-            allLeave
-        });
+// Student: information section route
+app.get('/education/student/information', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    })
+        .populate('sender')
+        .sort({ timestamp: -1 });
 
-    } catch (error) {
-        console.error('Error fetching data:', error);
-        next(error);
+    if (user) {
+
+        res.render('education-student-information', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4(),
+        });
+    }
+});
+
+// Student: schedule section route
+app.get('/education/student/schedule', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    })
+        .populate('sender')
+        .sort({ timestamp: -1 });
+
+    if (user) {
+
+        res.render('education-student-schedule', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4(),
+        });
+    }
+});
+
+// Teacher: information section route
+app.get('/education/teacher/information', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    })
+        .populate('sender')
+        .sort({ timestamp: -1 });
+
+    if (user) {
+
+        res.render('education-teacher-information', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4(),
+        });
+    }
+});
+
+// Payment: fee section route
+app.get('/education/fee/payment', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    })
+        .populate('sender')
+        .sort({ timestamp: -1 });
+
+    if (user) {
+
+        res.render('education-fee-payment', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4(),
+        });
+    }
+});
+
+// Payment: record payment section route
+app.get('/education/record/payment', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    })
+        .populate('sender')
+        .sort({ timestamp: -1 });
+
+    if (user) {
+
+        res.render('education-record-payment', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4(),
+        });
+    }
+});
+
+// Payment: register student section route
+app.get('/education/register/student', isAuthenticated, async function (req, res) {
+    const username = req.user.username;
+    const user = await User.findOne({ username: username });
+    const notifications = await Notification.find({
+        recipient: user._id,
+        read: false
+    })
+        .populate('sender')
+        .sort({ timestamp: -1 });
+
+    if (user) {
+
+        res.render('education-register-student', {
+            user: user,
+            notifications: notifications,
+            uuid: uuidv4(),
+        });
     }
 });
 
@@ -9514,6 +9436,10 @@ const processLeaveRequest = async (type, user, userLeave, startDate, returnDate,
 // Helper function for handling approved status
 const handleApproved = async (checkLeave, recipientIndices, user, res) => {
     try {
+        // Initialize the next approvals
+        let nextApprovalRecipientId;
+        let sendNoti = [];
+        let sendEmail = [];
         let indexOfRecipient = recipientIndices[0];
         if (recipientIndices.length > 1) {
             indexOfRecipient = recipientIndices.find(index => checkLeave.approvals[index].timestamp === null);
@@ -9568,30 +9494,25 @@ const handleApproved = async (checkLeave, recipientIndices, user, res) => {
             console.log('No document was updated, it might have been updated by another process.');
         }
 
-        // Initialize the next approvals
-        let nextApprovalRecipientId;
-        let sendNoti = [];
-        let sendEmail = [];
+        // Check if the next approval is Admin HR to send notification and sedn email
+        // if (checkLeave.approvals[nextIndex] && checkLeave.approvals[nextIndex].role === 'Human Resource') {
+        //     const adminHR = await User.findOne({ isAdmin: true, isHeadOfSection: true, section: 'Human Resource Management Division' });
+        //     const adminUsers = await User.find({
+        //         isAdmin: true,
+        //         section: 'Human Resource Management Division',
+        //         _id: { $ne: adminHR._id }
+        //     });
 
-        // Check if the next approval is Admin HR
-        if (checkLeave.approvals[nextIndex] && checkLeave.approvals[nextIndex].role === 'Human Resource') {
-            const adminHR = await User.findOne({ isAdmin: true, isHeadOfSection: true, section: 'Human Resource Management Division' });
-            const adminUsers = await User.find({
-                isAdmin: true,
-                section: 'Human Resource Management Division',
-                _id: { $ne: adminHR._id }
-            });
-
-            // Push the IDs of admin users to sendNoti
-            adminUsers.forEach(user => {
-                if (!sendNoti.includes(user._id)) {
-                    sendNoti.push(user._id);
-                }
-            });
-        } else if (checkLeave.approvals[nextIndex]) {
-            nextApprovalRecipientId = checkLeave.approvals[nextIndex].recipient;
-            sendNoti.push(nextApprovalRecipientId);
-        }
+        //     // Push the IDs of admin users to sendNoti
+        //     adminUsers.forEach(user => {
+        //         if (!sendNoti.includes(user._id)) {
+        //             sendNoti.push(user._id);
+        //         }
+        //     });
+        // } else if (checkLeave.approvals[nextIndex]) {
+        //     nextApprovalRecipientId = checkLeave.approvals[nextIndex].recipient;
+        //     sendNoti.push(nextApprovalRecipientId);
+        // }
 
         nextApprovalRecipientId = checkLeave.approvals[nextIndex].recipient;
         sendNoti.push(nextApprovalRecipientId);

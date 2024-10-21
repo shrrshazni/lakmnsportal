@@ -819,29 +819,29 @@
             %>
             <li class="nav-item <%= showEducation %>">
               <!-- label-->
-              <p class="navbar-vertical-label">Tattary</p>
+              <p class="navbar-vertical-label">Education</p>
               <hr class="navbar-vertical-line" />
 
               <!-- Overview Section -->
               <% if(user.isAdmin) { %>
               <div class="nav-item-wrapper">
-                <a class="nav-link label-1" href="/tattary/overview" role="button" data-bs-toggle="" aria-expanded="false">
+                <a class="nav-link label-1" href="/education/overview" role="button" data-bs-toggle="" aria-expanded="false">
                   <div class="d-flex align-items-center">
-                    <span class="nav-link-icon"><span class="mb-1" data-feather="pie-chart"></span></span>
+                    <span class="nav-link-icon"><span class="mb-1" data-feather="bar-chart-2"></span></span>
                     <span class="nav-link-text-wrapper"><span class="nav-link-text">Overview</span></span>
                   </div>
                 </a>
               </div>
               <% } %>
-              
+
               <!-- Section  1 -->
               <div class="nav-item-wrapper">
-                <a class="nav-link dropdown-indicator label-1" href="#nv-student" role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-tables">
+                <a class="nav-link dropdown-indicator label-1 no-loader" href="#nv-student" role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-tables">
                   <div class="d-flex align-items-center">
                     <div class="dropdown-indicator-icon">
                       <span class="fas fa-caret-right"></span>
                     </div>
-                    <span class="nav-link-icon"><span data-feather="smile"></span></span>
+                    <span class="nav-link-icon"><span data-feather="sun"></span></span>
                     <span class="nav-link-text">Student</span>
                   </div>
                 </a>
@@ -849,29 +849,29 @@
                   <ul class="nav collapse parent" data-bs-parent="#navbarVerticalCollapse" id="nv-student">
                     <li class="collapsed-nav-item-title d-none">Student</li>
                     <li class="nav-item">
-                      <a class="nav-link" href="/tattary/attendance/record" aria-expanded="false">
+                      <a class="nav-link" href="/education/attendance/record" aria-expanded="false">
                         <div class="d-flex align-items-center">
                           <span class="nav-link-text">Attendance Record</span>
                         </div>
                       </a>
                     </li>
                     <li class="nav-item">
-                      <a class="nav-link" href="/tattary/student/information" aria-expanded="false">
+                      <a class="nav-link" href="/education/student/information" aria-expanded="false">
                         <div class="d-flex align-items-center">
                           <span class="nav-link-text">Information</span>
                         </div>
                       </a>
                     </li>
-                    <li class="nav-item">
-                      <a class="nav-link" href="/tattary/student/schedule" aria-expanded="false">
+                    <li class="nav-item d-none">
+                      <a class="nav-link" href="/education/student/schedule" aria-expanded="false">
                         <div class="d-flex align-items-center">
                           <span class="nav-link-text">Schedule</span>
                         </div>
                       </a>
                     </li>
                     <% if(user.isAdmin) { %>
-                    <li class="nav-item">
-                      <a class="nav-link" href="/tattary/register/student" aria-expanded="false">
+                    <li class="nav-item d-none">
+                      <a class="nav-link" href="/education/register/student" aria-expanded="false">
                         <div class="d-flex align-items-center">
                           <span class="nav-link-text">Register Student</span>
                         </div>
@@ -890,27 +890,12 @@
 
               <!-- Section 2 -->
               <div class="nav-item-wrapper">
-                <a class="nav-link dropdown-indicator label-1" href="#nv-teacher" role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-tables">
+                <a class="nav-link label-1" href="/education/teacher/information" role="button" data-bs-toggle="" aria-expanded="false">
                   <div class="d-flex align-items-center">
-                    <div class="dropdown-indicator-icon">
-                      <span class="fas fa-caret-right"></span>
-                    </div>
-                    <span class="nav-link-icon"><span data-feather="users"></span></span>
-                    <span class="nav-link-text">Teacher</span>
+                    <span class="nav-link-icon"><span class="mb-1" data-feather="user-plus"></span></span>
+                    <span class="nav-link-text-wrapper"><span class="nav-link-text">Teacher</span></span>
                   </div>
                 </a>
-                <div class="parent-wrapper label-1">
-                  <ul class="nav collapse parent" data-bs-parent="#navbarVerticalCollapse" id="nv-teacher">
-                    <li class="collapsed-nav-item-title d-none">Teacher</li>
-                    <li class="nav-item">
-                      <a class="nav-link" href="/tattary/teacher/information" aria-expanded="false">
-                        <div class="d-flex align-items-center">
-                          <span class="nav-link-text">Information</span>
-                        </div>
-                      </a>
-                    </li>
-                  </ul>
-                </div>
               </div>
 
               <!-- <div class="nav-item-wrapper"><a class="nav-link label-1" href="/education/student" role="button" data-bs-toggle="" aria-expanded="false">
@@ -921,35 +906,13 @@
 
               <!-- Section 3 -->
               <% if(user.isAdmin) { %>
-              <div class="nav-item-wrapper">
-                <a class="nav-link dropdown-indicator label-1" href="#nv-payment" role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-tables">
+               <div class="nav-item-wrapper">
+                <a class="nav-link label-1" href="/education/fee/payment" role="button" data-bs-toggle="" aria-expanded="false">
                   <div class="d-flex align-items-center">
-                    <div class="dropdown-indicator-icon">
-                      <span class="fas fa-caret-right"></span>
-                    </div>
-                    <span class="nav-link-icon"><span data-feather="credit-card"></span></span>
-                    <span class="nav-link-text">Payment</span>
+                    <span class="nav-link-icon"><span class="mb-1" data-feather="credit-card"></span></span>
+                    <span class="nav-link-text-wrapper"><span class="nav-link-text">Payment</span></span>
                   </div>
                 </a>
-                <div class="parent-wrapper label-1">
-                  <ul class="nav collapse parent" data-bs-parent="#navbarVerticalCollapse" id="nv-payment">
-                    <li class="collapsed-nav-item-title d-none">Payment</li>
-                    <li class="nav-item">
-                      <a class="nav-link" href="/tattary/fee/payment" aria-expanded="false"> 
-                        <div class="d-flex align-items-center">
-                          <span class="nav-link-text">Fee Payment</span>
-                        </div>
-                      </a>
-                    </li>
-                    <li class="nav-item d-none">
-                      <a class="nav-link" href="/tattary/record/payment" aria-expanded="false">
-                        <div class="d-flex align-items-center">
-                          <span class="nav-link-text">Record Payment</span>
-                        </div>
-                      </a>
-                    </li>
-                  </ul>
-                </div>
               </div>
               <% } %>
 
