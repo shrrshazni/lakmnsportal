@@ -1,0 +1,74 @@
+<div class="border-bottom border-translucent mt-3" id="todayStudentsAttendance" data-list='{"valueNames":["fullname","attendance","status","datetime", remarks],"page":5,"pagination":true}'>
+    <div class="row align-items-end justify-content-between pb-4 g-3">
+
+      <div class="col-12 col-md-auto">
+        <div class="search-box">
+          <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
+            <input class="form-control search-input search form-control-sm" type="search" placeholder="Search attendance" aria-label="Search" />
+            <span class="fas fa-search search-box-icon"></span>
+          </form>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="table-responsive ms-n1 ps-1 scrollbar">
+      <table class="table fs-9 mb-0 border-top border-translucent">
+        <thead>
+          <tr>
+            <th class="sort white-space-nowrap align-middle ps-0 text-uppercase" scope="col" data-sort="fullname" style="width:15%;min-width: 100px;">Full Name</th>
+            <th class="sort align-middle text-uppercase text-center" scope="col" data-sort="attendance" style="width:20%;min-width: 150px; ">Attendance</th>
+            <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="status" style="width:15%;min-width: 100px;">Status</th>
+            <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="datetime" style="width:15%;min-width: 100px;">Date Time</th>
+            <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="remarks" style="width:15%;min-width: 100px;">Remarks</th>
+            <th class="sort align-middle text-end" scope="col" style="width: 5%"></th>
+          </tr>
+        </thead>
+
+        <tbody class="list" id="attendance-table-content">
+          <% if(attendances && attendances.length > 0){ %>
+          <% attendances.forEach((item, index) => { %>
+          <tr class="position-static">
+            <td class="fullname align-middle white-space-nowrap py-4 ps-0 fw-bold fs-9 fs-xxl-8">
+              <%= item.child.name %>
+            </td>
+            <td class="attendance align-middle fw-semibold text-center py-2 ps-0 fs-9">
+              <div class="d-inline-flex">
+                <span class="btn btn-outline-success">Present</span>&nbsp;&nbsp;<span class="btn btn-outline-danger">Absent</span>
+              </div>
+            </td>
+            <td class="status align-middle text-center py-2 ps-2 fs-9"><span class="badge badge-phoenix badge-phoenix-primary"><%= item.status %></span></td>
+            <td class="datetime align-middle text-center py-2 ps-0 fs-9"><%= item.date %></td>
+            <td class="remarks align-middle text-center py-2 ps-0 fs-9 fw-semibold text-body-highlight fst-italic"><%= item.remarks %></td>
+            <td class="align-middle text-end white-space-nowrap pe-0 action">
+              <div class="font-sans-serif btn-reveal-trigger position-static">
+                <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs--2" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
+                  <span class="fas fa-ellipsis-h fs-9"></span>
+                </button>
+                <div class="dropdown-menu dropdown-menu-end py-2">
+                  <a class="dropdown-item" href="">Update Remarks</a>
+                </div>
+              </div>
+            </td>
+          </tr>
+          <% }); %>
+          <% }else{ %>
+          <tr>
+            <td colspan="5" class="text-center fw-bold fs-9">No students attendance detected</td>
+          </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
+      <div class="col-auto d-flex">
+        <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p><a class="fw-semibold no-loader" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semibold d-none no-loader" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
+      </div>
+      <div class="col-auto d-flex">
+        <button class="page-link" data-list-pagination="prev"><span class="fas fa-chevron-left"></span></button>
+        <ul class="mb-0 pagination"></ul>
+        <button class="page-link pe-0" data-list-pagination="next"><span class="fas fa-chevron-right"></span></button>
+      </div>
+    </div>
+  </div>

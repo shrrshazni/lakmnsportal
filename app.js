@@ -815,7 +815,6 @@ const vmsSchema = new mongoose.Schema({
 vmsSchema.index({ firstName: 1 });
 vmsSchema.index({ lastName: 1 });
 
-
 const subscriptionSchema = new mongoose.Schema({
     endpoint: { type: String, required: true },
     expirationTime: { type: Date },
@@ -828,7 +827,6 @@ const subscriptionSchema = new mongoose.Schema({
 });
 subscriptionSchema.index({ endpoint: 1 });
 
-
 const classSchema = new mongoose.Schema({
     classname: String,
     teacher: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Teacher' }],
@@ -840,7 +838,7 @@ classSchema.index({ teacher: 1 });
 
 const parentSchema = new mongoose.Schema({
     user: { type: mongoose.Schema.Types.ObjectId, required: true },
-    children: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Child' }]
+    children: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Children' }]
 });
 // Add indexes for performance optimization
 parentSchema.index({ user: 1 });
@@ -4222,11 +4220,11 @@ app.get('/human-resource/leave/add/:id', isAuthenticated, async function (req, r
     }
 }).post('/human-resource/leave/add/:id', isAuthenticated, async function (req, res) {
     const { user, notifications } = req;
+    const userId = req.params.id;
+    const otherUser = await User.findOne({ _id: userId });
+    let alert;
 
     try {
-        const userId = req.params.id;
-        const otherUser = await User.findOne({ _id: userId });
-        let alert;
 
         // Extract data from the request body
         const { uuid, type, startDate, returnDate, purpose } = req.body;
@@ -4262,12 +4260,14 @@ app.get('/human-resource/leave/add/:id', isAuthenticated, async function (req, r
             UserLeave.findOne({ user: otherUser._id }).populate('user').exec(),
 
             // Fetch selected assignees and supervisors from names provided in request
-            User.find({ fullname: { $in: selectedNames } }),
-            User.find({ fullname: { $in: selectedSupervisors } }),
+            User.find({ fullname: { $in: selectedNames } }).select('_id'),
+            User.find({ fullname: { $in: selectedSupervisors } }).select('_id'),
 
             // Fetch all leave records for the current user
             Leave.find({ user: otherUser._id })
         ]);
+
+        console.log(assignee);
 
         const filesToDelete = await File.find({ uuid: uuid });
 
@@ -4283,7 +4283,7 @@ app.get('/human-resource/leave/add/:id', isAuthenticated, async function (req, r
                 date: newDate,
                 status: 'approved',
                 purpose: purpose,
-                approvals: '',
+                approvals: [],
                 remarks: user.username + ' has added leave manually for ' + otherUser.fullname + ' with ' + otherUser.username + ' at ' + moment().utcOffset(8).format('DD/MM/YYYY')
             });
 
@@ -4443,6 +4443,7 @@ app.get('/human-resource/leave/add/:id', isAuthenticated, async function (req, r
 
     } catch (err) {
         console.error('Error:', err);
+        const userLeave = await UserLeave.findOne({ user: otherUser._id }).populate('user').exec();
         res.render('hr-leave-addleave', {
             user: user,
             notifications: notifications,
@@ -4463,8 +4464,8 @@ app.get('/human-resource/leave/add/:id', isAuthenticated, async function (req, r
             startDateFeedback: 'Please select a start date', // Default feedback message for start date
             returnDateFeedback: 'Please select a return date', // Default feedback message for return date
             // Toast notifications for form actions
-            show: '',
-            alert: ''
+            show: 'show',
+            alert: 'Error adding leave manually'
         });
     }
 });
@@ -5768,7 +5769,7 @@ app.get('/education/attendance/record', isAuthenticated, async (req, res, next) 
             user: user,
             notifications: notifications,
             uuid: uuidv4(),
-            attendances: attendances
+            attendances: attendances,
         });
 
     } catch (error) {
@@ -7554,7 +7555,7 @@ app.get('/testing', isAuthenticated, async (req, res, next) => {
     try {
         const { user, notifications } = req;
 
-        createDummyData();
+        // createDummyData();
 
         res.render('testing', {
             user: user,
@@ -7567,6 +7568,94 @@ app.get('/testing', isAuthenticated, async (req, res, next) => {
         next(error);
     }
 });
+
+async function createDummyData() {
+    try {
+        // Replace these with actual ObjectIds of users in your system
+        const teacherUserIds = [
+            '66b025210e3ea6976ab604dc',
+            '66b026070e3ea6976ab607aa',
+            '66b1bfc20f11e09eca16b4f9',
+            '66befefae5c59a752f6806ae'
+        ];
+
+        const parentUserIds = [
+            '6716f63b1c4c9a33c63dde62',
+            '6716f6ac1c4c9a33c63dea71',
+            '6716f70d1c4c9a33c63df673',
+            '6716f7721c4c9a33c63e0278'
+        ];
+
+        const savedClasses = [];
+        const savedTeachers = [];
+        const savedParents = [];
+        const savedChildren = [];
+
+        // Step 2a: Create 4 classes and assign teachers
+        for (let i = 0; i < 4; i++) {
+            // Create a class
+            const newClass = new ClassEducation({
+                classname: `Class ${String.fromCharCode(65 + i)}`, // Class A, B, C, D
+                teacher: [teacherUserIds[i]]
+            });
+
+            const savedClass = await newClass.save();
+            savedClasses.push(savedClass);
+
+            // Create a teacher for each class
+            const newTeacher = new TeacherEducation({
+                user: teacherUserIds[i],
+                class: savedClass._id
+            });
+
+            const savedTeacher = await newTeacher.save();
+            savedTeachers.push(savedTeacher);
+        }
+
+        // Step 2b: Create parents and children for testing purposes
+        for (let i = 0; i < 4; i++) {
+            // Create parent
+            const newParent = new ParentEducation({
+                user: parentUserIds[i]
+            });
+
+            const savedParent = await newParent.save();
+            savedParents.push(savedParent);
+
+            // Create 2 children for each parent
+            for (let j = 0; j < 2; j++) {
+                const newChild = new ChildEducation({
+                    name: `Student ${i}${j}`,
+                    dob: new Date(2010, i, j + 1),
+                    nric: `123456-78-90${i}${j}`,
+                    gender: j % 2 === 0 ? 'Male' : 'Female',
+                    pob: 'City X',
+                    race: 'Race X',
+                    citizenship: 'Country X',
+                    swkNative: 'No',
+                    profile: `profile-student-${i}${j}.jpg`,
+                    class: savedClasses[i]._id,
+                    parent: savedParent._id
+                });
+
+                const savedChild = await newChild.save();
+                savedChildren.push(savedChild);
+
+                // Associate the child with the parent and class
+                savedParent.children.push(savedChild._id);
+                savedClasses[i].students.push(savedChild._id);
+            }
+
+            // Save the updated parent and class
+            await savedParent.save();
+            await savedClasses[i].save();
+        }
+
+        console.log('Dummy data created successfully!');
+    } catch (error) {
+        console.error('Error creating dummy data:', error);
+    }
+}
 
 async function removeDuplicatesForDate(date) {
     try {
@@ -7609,64 +7698,6 @@ async function removeDuplicatesForDate(date) {
         console.error("Error removing duplicates:", error);
     }
 }
-
-// dummy data for child education - student
-async function createDummyData() {
-    try {
-        // Create a dummy child record
-        const child = new ChildEducation({
-            name: 'John Doe',
-            dob: new Date('2010-05-15'),
-            nric: '123456789012',
-            gender: 'Male',
-            pob: 'Kuala Lumpur',
-            race: 'Malay',
-            citizenship: 'Malaysian',
-            swkNative: 'No',
-            profile: '',
-            class: null, // Replace with ObjectId if there's a class
-            receiptUploaded: false,
-            parent: null, // Replace with ObjectId if there's a parent
-            siblings: [
-                {
-                    nama: 'Jane Doe',
-                    dob: new Date('2008-03-10'),
-                    status: 'Study',
-                    education: 'High School'
-                }
-            ]
-        });
-
-        await child.save();
-
-        console.log('Child created:', child);
-
-        // Create dummy attendance records for the child
-        const attendance1 = new AttendanceEducation({
-            child: child._id,
-            status: 'Present',
-            remarks: 'On time',
-            date: new Date('2024-10-21')
-        });
-
-        const attendance2 = new AttendanceEducation({
-            child: child._id,
-            status: 'Absent',
-            remarks: 'Sick',
-            date: new Date('2024-10-22')
-        });
-
-        await attendance1.save();
-        await attendance2.save();
-
-        console.log('Attendance records created:', attendance1, attendance2);
-    } catch (error) {
-        console.error('Error creating dummy data:', error);
-    } finally {
-        educationDatabase.close();
-    }
-}
-
 
 const checkAttendanceOutOfOfficeToday = async () => {
     try {

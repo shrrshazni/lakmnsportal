@@ -114,7 +114,7 @@
   <!-- Student info button -->
   <div class="col-md-3 col-auto d-flex align-items-center justify-content-end">
     <div class="col-auto">
-      <a class="btn btn-phoenix-primary" role="button" href="/tattary/student/information">Student Info</a>
+      <a class="btn btn-phoenix-primary" role="button" href="/education/student/information">Student Info</a>
     </div>
   </div>
 </div>
@@ -144,7 +144,7 @@
 </div>
 
 <div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis pt-7 pb-3 border-y mb-6">
-  <div class="border-bottom border-translucent mt-3" id="activities" data-list='{"valueNames":["fullname","attendance","status","datetime"],"page":10,"pagination":true}'>
+  <div class="mt-3" id="todayStudentsAttendance" data-list='{"valueNames":["fullname","attendance","status","datetime", "remarks"],"page":10,"pagination":true}'>
     <div class="row align-items-end justify-content-between pb-4 g-3">
 
       <div class="col-12 col-md-auto">
@@ -162,35 +162,150 @@
       <table class="table fs-9 mb-0 border-top border-translucent">
         <thead>
           <tr>
-            <th class="sort white-space-nowrap align-middle pe-3 ps-0 text-uppercase" scope="col" data-sort="title" style="width:25%;min-width: 125px;">Full Name</th>
-            <th class="sort align-middle pe-6 text-uppercase text-start" scope="col" data-sort="description" style="width:35%;min-width: 250px; ">Attendance</th>
-            <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="type" style="width:15%;min-width: 100px;">Status</th>
-            <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="date" style="width:15%;min-width: 100px;">Date Time</th>
-            <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="time" style="width:15%;min-width: 100px;">Remarks</th>
+            <th class="sort white-space-nowrap align-middle ps-0 text-uppercase" scope="col" data-sort="fullname" style="width:15%;min-width: 100px;">Full Name</th>
+            <th class="sort align-middle text-uppercase text-center" scope="col" data-sort="attendance" style="width:20%;min-width: 150px; ">Attendance</th>
+            <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="status" style="width:15%;min-width: 100px;">Status</th>
+            <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="datetime" style="width:15%;min-width: 100px;">Date Time</th>
+            <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="remarks" style="width:15%;min-width: 100px;">Remarks</th>
             <th class="sort align-middle text-end" scope="col" style="width: 5%"></th>
           </tr>
         </thead>
 
-        <tbody class="list" id="activities-table-content">
+        <tbody class="list" id="attendance-table-content">
           <% if(attendances && attendances.length > 0){ %>
           <% attendances.forEach((item, index) => { %>
           <tr class="position-static">
-            <td class="title align-middle white-space-nowrap py-4 ps-0 fw-bold text-body-highlight fs-9 fs-xxl-8"><%= item.child.name %></td>
-            <td class="description align-middle text-start fw-semibold py-2 text-start text-body-highlight ps-2 fst-italic fs-9"><%= item.status %></td>
-            <td class="type align-middle fw-semibold text-center py-2 ps-0 fs-9"><%=  %></td>
-            <td class="date align-middle text-center py-2 ps-0 fs-9"><%=  %></td>
-            <td class="time align-middle text-center py-2 ps-0 fs-9"><%=  %></td>
+            <td class="fullname align-middle white-space-nowrap py-4 ps-0 fw-bold fs-9 fs-xxl-8">
+              <a class="no-loader" data-bs-toggle="modal" data-bs-target="#studentModal<%= index %>" href="#"><%= item.child.name %></a>
+            </td>
+            <td class="attendance align-middle fw-semibold text-center py-2 ps-0 fs-9">
+              <div class="d-inline-flex">
+                <span class="btn btn-outline-success">Present</span>&nbsp;&nbsp;<span class="btn btn-outline-danger">Absent</span>
+              </div>
+            </td>
+            <td class="status align-middle text-center py-2 ps-2 fs-9"><span class="badge badge-phoenix badge-phoenix-primary"><%= item.status %></span></td>
+            <td class="datetime align-middle text-center fw-semibold py-2 ps-0 fs-9"><%= item.date ? item.date.toLocaleDateString('en-MY') : '-' %></td>
+            <td class="remarks align-middle text-center py-2 ps-0 fs-9 fw-semibold text-body-highlight fst-italic"><%= item.remarks ? item.remarks : 'No remarks yet' %></td>
             <td class="align-middle text-end white-space-nowrap pe-0 action">
               <div class="font-sans-serif btn-reveal-trigger position-static">
                 <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs--2" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
                   <span class="fas fa-ellipsis-h fs-9"></span>
                 </button>
                 <div class="dropdown-menu dropdown-menu-end py-2">
-                  <a class="dropdown-item" href="">View</a>
+                  <a class="dropdown-item no-loader" data-bs-toggle="modal" data-bs-target="#updateRemark<%= index %>" href="#">Update Remarks</a>
                 </div>
               </div>
             </td>
           </tr>
+
+          <!-- Modal to view more student details -->
+          <div class="modal fade" id="studentModal<%= index %>" tabindex="-1" aria-labelledby="studentModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="studentModalLabel">Student Information</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                  <!-- Information about the student -->
+                  <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                      <label for="fullname" class="form-label"><b>Student Name</b></label>
+                      <p class="form-label text-primary"><%= item.child.name %></p>
+                    </div>
+                    <div class="col-md-6">
+                      <label for="address" class="form-label"><b>Address</b></label>
+                      <p class="form-label text-primary"><%= item.child.adress %></p>
+                    </div>
+                  </div>
+                  <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                      <label for="paidAmount" class="form-label"><b>IC Number</b></label>
+                      <p class="form-label text-primary"><%= item.child.nric %></p>
+                    </div>
+                    <div class="col-md-6">
+                      <label for="paidAmount" class="form-label"><b>Date of Birth</b></label>
+                      <p class="form-label text-primary"><%= item.child.dob.toLocaleDateString('en-MY') %></p>
+                    </div>
+                    <div class="col-md-6">
+                      <label for="paidAmount" class="form-label"><b>Place of Birth</b></label>
+                      <p class="form-label text-primary"><%= item.child.pob %></p>
+                    </div>
+                    <div class="col-md-6">
+                      <label for="paidAmount" class="form-label"><b>Citizenship</b></label>
+                      <p class="form-label text-primary"><%= item.child.citizenship %></p>
+                    </div>
+                    <div class="col-md-6">
+                      <label for="paidAmount" class="form-label"><b>Race</b></label>
+                      <p class="form-label text-primary"><%= item.child.race %></p>
+                    </div>
+                  </div>
+
+                  <!-- Information about the student's Parent -->
+                  <%
+                  let showParent;
+                  if(!item.child.parent || item.child.parent === null){
+                    showParent = "d-none";
+                  }else {
+                    showParent = "";
+                  }
+                  %>
+                  <div class="<%= showParent %>">
+                    <hr>
+                    <div class="row mb-3">
+                      <div class="col-md-6">
+                        <label for="fullname" class="form-label"><b>Father's Name</b></label>
+                        <p class="form-label">George</p>
+                      </div>
+                      <div class="col-md-6">
+                        <label for="address" class="form-label"><b>Address</b></label>
+                        <p class="form-label">1234 Elm St, Cityville</p>
+                      </div>
+                    </div>
+                    <div class="row mb-3">
+                      <div class="col-md-6">
+                        <label for="paidAmount" class="form-label"><b>IC Number</b></label>
+                        <p class="form-label">990101-12-1234</p>
+                      </div>
+                      <div class="col-md-6">
+                        <label for="paidAmount" class="form-label"><b>Phone Number</b></label>
+                        <p class="form-label">0123456789</p>
+                      </div>
+                    </div>
+                    <div class="mb-3">
+                      <label for="paidAmount" class="form-label"><b>Occupation</b></label>
+                      <p class="form-label">Pilot</p>
+                    </div>
+                  </div>
+
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Modal add/update remarks -->
+          <div class="modal fade" id="updateRemark<%= index %>" tabindex="-1">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <form action="" method="post">
+                  <div class="modal-body">
+                    <label class="form-label" for="udpateDescription">Remarks</label>
+                    <textarea class="form-control scrollbar-overlay" placeholder="Leave a attendance remark here" style="height: 100px" name="remarks"></textarea>
+                  </div>
+                  <div class="modal-footer border-top-0">
+                    <button class="btn btn-primary loading-button" type="submit">
+                      <div class="content-button">
+                        <span>Update</span>
+                      </div>
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
           <% }); %>
           <% }else{ %>
           <tr>
@@ -200,6 +315,7 @@
         </tbody>
       </table>
     </div>
+
     <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
       <div class="col-auto d-flex">
         <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p><a class="fw-semibold no-loader" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semibold d-none no-loader" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
@@ -208,123 +324,6 @@
         <button class="page-link" data-list-pagination="prev"><span class="fas fa-chevron-left"></span></button>
         <ul class="mb-0 pagination"></ul>
         <button class="page-link pe-0" data-list-pagination="next"><span class="fas fa-chevron-right"></span></button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Modal to view more student details -->
-<div class="modal fade" id="studentModal" tabindex="-1" aria-labelledby="studentModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="studentModalLabel">Student Information</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <!-- Information about the student -->
-        <div class="row mb-3">
-          <div class="col-md-6">
-            <label for="fullname" class="form-label"><b>Student Name</b></label>
-            <p class="form-label">Alice Johnson</p>
-          </div>
-          <div class="col-md-6">
-            <label for="address" class="form-label"><b>Address</b></label>
-            <p class="form-label">1234 Elm St, Cityville</p>
-          </div>
-        </div>
-        <div class="row mb-3">
-          <div class="col-md-6">
-            <label for="paidAmount" class="form-label"><b>IC Number</b></label>
-            <p class="form-label">990101-12-1234</p>
-          </div>
-          <div class="col-md-6">
-            <label for="paidAmount" class="form-label"><b>Date of Birth</b></label>
-            <p class="form-label">23-10-2013</p>
-          </div>
-        </div>
-
-        <hr>
-
-        <!-- Information about the student's Parent -->
-        <div class="row mb-3">
-          <div class="col-md-6">
-            <label for="fullname" class="form-label"><b>Father's Name</b></label>
-            <p class="form-label">George</p>
-          </div>
-          <div class="col-md-6">
-            <label for="address" class="form-label"><b>Address</b></label>
-            <p class="form-label">1234 Elm St, Cityville</p>
-          </div>
-        </div>
-        <div class="row mb-3">
-          <div class="col-md-6">
-            <label for="paidAmount" class="form-label"><b>IC Number</b></label>
-            <p class="form-label">990101-12-1234</p>
-          </div>
-          <div class="col-md-6">
-            <label for="paidAmount" class="form-label"><b>Phone Number</b></label>
-            <p class="form-label">0123456789</p>
-          </div>
-        </div>
-        <div class="mb-3">
-          <label for="paidAmount" class="form-label"><b>Occupation</b></label>
-          <p class="form-label">Pilot</p>
-        </div>
-
-        <hr>
-
-        <div class="row mb-3">
-          <div class="col-md-6">
-            <label for="fullname" class="form-label"><b>Mother's Name</b></label>
-            <p class="form-label">Sarah</p>
-          </div>
-          <div class="col-md-6">
-            <label for="address" class="form-label"><b>Address</b></label>
-            <p class="form-label">1234 Elm St, Cityville</p>
-          </div>
-        </div>
-        <div class="row mb-3">
-          <div class="col-md-6">
-            <label for="paidAmount" class="form-label"><b>IC Number</b></label>
-            <p class="form-label">990101-12-1234</p>
-          </div>
-          <div class="col-md-6">
-            <label for="paidAmount" class="form-label"><b>Phone Number</b></label>
-            <p class="form-label">0123456789</p>
-          </div>
-        </div>
-        <div class="mb-3">
-          <label for="paidAmount" class="form-label"><b>Occupation</b></label>
-          <p class="form-label">Nurse</p>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Modal for Updating Remarks -->
-<div class="modal fade" id="updateRemarksModal" tabindex="-1" aria-labelledby="updateRemarksModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="updateRemarksModalLabel">Add Remarks</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <form>
-          <div class="mb-3">
-            <label for="remarksInput" class="form-label">Remarks</label>
-            <textarea class="form-control" id="remarksInput" placeholder="Enter remarks" rows="4"></textarea>
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-primary" id="saveRemarks">Add</button>
       </div>
     </div>
   </div>
