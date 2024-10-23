@@ -617,7 +617,7 @@ const leaveSchema = new mongoose.Schema({
         }
     },
     approvals: [approvalSchema]
-});
+}, { timestamps: false });
 leaveSchema.index({ status: 1 });
 leaveSchema.index({ user: 1 });
 leaveSchema.index({ department: 1 });
@@ -9473,6 +9473,7 @@ const handleApproved = async (checkLeave, recipientIndices, user, res) => {
         const roleMap = {
             'Relief Staff': true,
             'Supervisor': true,
+            'Head of Section': false,
             'Head of Department': false,
             'Deputy Chief Executive Officer': false,
             'Chief Executive Officer': false,
@@ -9489,9 +9490,13 @@ const handleApproved = async (checkLeave, recipientIndices, user, res) => {
             [`approvals.${indexOfRecipient}.timestamp`]: moment().utcOffset(8).toDate() // Record the timestamp
         };
 
+        console.log(checkLeave.date.return);
+
         // Set the estimated time for the next approval if needed
         if (!nextRoleIsHR || (role === 'Relief Staff' || role === 'Supervisor')) {
             updateQuery[`approvals.${nextIndex}.estimated`] = moment().utcOffset(8).add(1, 'days').toDate();
+        } else if (nextRoleIsHR) {
+            updateQuery[`approvals.${nextIndex}.estimated`] = moment(checkLeave.date.return).utcOffset(8).subtract(1, 'days').toDate();
         }
 
         const updatedLeave = await Leave.findOneAndUpdate(
