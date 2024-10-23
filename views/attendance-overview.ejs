@@ -360,7 +360,7 @@
             <!-- Success lottie animation -->
             <lottie-player id="success-icon" class="mx-auto mt-n5 d-none" src="https://lottie.host/9286c4fc-dca4-4d7f-b918-85480656a0cf/bLVZCz5laC.json" speed="1" style="width: 300px; height: 300px" loop autoplay direction="1" mode="normal"></lottie-player>
             <!-- Invalid lottie animation -->
-            <lottie-player id="invalid-icon" class="mx-auto mt-n5 d-none" src="https://lottie.host/db0d7ca0-01a8-4493-b227-2ee358131559/NQN635kqLG.json" speed="1" style="width: 200px; height: 200px" loop autoplay direction="1" mode="normal"></lottie-player>
+            <dotlottie-player src="https://lottie.host/db0d7ca0-01a8-4493-b227-2ee358131559/NQN635kqLG.json" background="transparent" speed="1" style="width: 150px; height: 150px;" loop autoplay></dotlottie-player>
           </div>
         </div>
       </div>
@@ -411,13 +411,19 @@
         scanner.classList.add('d-none');
         cardContainer.classList.remove('d-none');
 
-        // Show the appropriate Lottie animation based on response status
-        if (userResponse.status === 'success') {
+        // Display the correct icon based on the server response
+        if (userResponse.message.includes('Successfully signed') || userResponse.message.includes('thank you')) {
+          // Display success icon for valid scans (sign in or sign out)
           successIcon.classList.remove('d-none');
           invalidIcon.classList.add('d-none');
-        } else {
+        } else if (userResponse.message.includes('invalid')) {
+          // Display invalid icon for invalid scans
           successIcon.classList.add('d-none');
           invalidIcon.classList.remove('d-none');
+        } else {
+          // Handle any other unexpected cases
+          successIcon.classList.add('d-none');
+          invalidIcon.classList.add('d-none');
         }
 
         // Flip the card after a short delay
