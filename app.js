@@ -845,7 +845,7 @@ parentSchema.index({ user: 1 });
 
 const teacherSchema = new mongoose.Schema({
     user: { type: mongoose.Schema.Types.ObjectId },
-    class: { type: mongoose.Schema.Types.ObjectId, ref: 'Class', required: true }
+    class: { type: mongoose.Schema.Types.ObjectId, ref: 'Classes', required: true }
 });
 // Add indexes for performance optimization
 teacherSchema.index({ user: 1 });
@@ -861,9 +861,9 @@ const childSchema = new mongoose.Schema({
     citizenship: { type: String },
     swkNative: { type: String },
     profile: { type: String },
-    class: { type: mongoose.Schema.Types.ObjectId, ref: 'Class', required: false },
+    class: { type: mongoose.Schema.Types.ObjectId, ref: 'Classes', required: false },
     receiptUploaded: { type: Boolean, default: false },
-    parent: { type: mongoose.Schema.Types.ObjectId, ref: 'Parent' },
+    parent: { type: mongoose.Schema.Types.ObjectId, ref: 'Parents' },
     siblings: [{
         nama: String,
         dob: Date,
@@ -891,7 +891,7 @@ schoolAttendanceSchema.index({ child: 1, date: 1 });
 schoolAttendanceSchema.index({ status: 1 });
 
 const paymentSchema = new mongoose.Schema({
-    child: { type: mongoose.Schema.Types.ObjectId, ref: 'Child' },
+    child: { type: mongoose.Schema.Types.ObjectId, ref: 'Children' },
     products: [{
         name: String,
         desc: String,
@@ -5759,7 +5759,13 @@ app.get('/education/attendance/record', isAuthenticated, async (req, res, next) 
     try {
         const { user, notifications } = req;
         const attendances = await AttendanceEducation.find()
-            .populate('child')
+            .populate({
+                path: 'child',
+                populate: [
+                    { path: 'class', model: 'Classes' }, // Populate the class details
+                    { path: 'parent', model: 'Parents' } // Populate the parent details
+                ]
+            })
             .sort({ date: -1 })
             .exec();
 
@@ -7556,6 +7562,7 @@ app.get('/testing', isAuthenticated, async (req, res, next) => {
         const { user, notifications } = req;
 
         // createDummyData();
+        createDummyAttendance();
 
         res.render('testing', {
             user: user,
@@ -7568,6 +7575,55 @@ app.get('/testing', isAuthenticated, async (req, res, next) => {
         next(error);
     }
 });
+
+// Replace these with the actual child ObjectIds you've shared
+const childIds = [
+    '67185410cd43394a7e983b59', // Richard Hodge
+    '67185410cd43394a7e983b5b', // Justin McNeil
+    '67185410cd43394a7e983b61', // Sharon Chambers
+    '67185410cd43394a7e983b63'  // New Child ID (example)
+];
+
+async function createDummyAttendance() {
+    try {
+
+        // Create dummy attendance records for the provided child IDs
+        const dummyData = [
+            {
+                child: childIds[0], // Richard Hodge
+                status: 'Absent',
+                remarks: 'Was on medical leave',
+                date: new Date('2024-10-19')
+            },
+            {
+                child: childIds[1], // Justin McNeil
+                status: 'Present',
+                remarks: 'On time and participated',
+                date: new Date('2024-10-20')
+            },
+            {
+                child: childIds[2], // Sharon Chambers
+                status: 'Absent',
+                remarks: 'Family emergency',
+                date: new Date('2024-10-20')
+            },
+            {
+                child: childIds[3], // New Child ID (example)
+                status: 'Present',
+                remarks: 'Attended the class session',
+                date: new Date('2024-10-21')
+            }
+        ];
+
+        // Insert the dummy data into the AttendanceEducation collection
+        await AttendanceEducation.insertMany(dummyData);
+        console.log('Dummy attendance data inserted successfully!');
+    } catch (error) {
+        console.error('Error inserting dummy attendance data:', error);
+    } finally {
+        mongoose.connection.close();
+    }
+}
 
 async function createDummyData() {
     try {

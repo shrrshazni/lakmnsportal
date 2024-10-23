@@ -17,7 +17,7 @@
               <button class="btn btn-primary px-5 loading-button" role="button" id="startButton"><span class="fa-solid fa-qrcode"></span>&nbsp;&nbsp;&nbsp;Scan</button>
             </div>
             <div class="col-auto">
-              <button class="btn btn-phoenix-primary px-5 no-loader" data-bs-toggle="modal" data-bs-target="#outOfOfficeRequest" role="button">Out Of Office</button>
+              <button class="btn btn-phoenix-primary px-5" data-bs-toggle="modal" data-bs-target="#outOfOfficeRequest" role="button">Out Of Office</button>
             </div>
             <div class="col-auto">
               <button class="btn px-3 btn-phoenix-secondary" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fa-solid fa-ellipsis"></span></button>
@@ -30,7 +30,7 @@
       </div>
 
       <div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis pt-7 pb-3 border-y mb-6">
-        <div class="border-bottom border-translucent mt-3 mb-8" id="attendance" data-list='{"valueNames":["type","clockin","clockout","outofoffice", "remarks"],"page":10,"pagination":true}'>
+        <div class="border-bottom border-translucent mt-3 mb-8" id="attendance" data-list='{"valueNames":["type","date","clockin","clockout","outofoffice", "remarks"],"page":10,"pagination":true}'>
           <div class="row align-items-end justify-content-between pb-4 g-3">
 
             <div class="col-12 col-md-auto">
@@ -48,7 +48,7 @@
             <table class="table fs-9 mb-0 border-top border-translucent">
               <thead>
                 <tr>
-                  <th class="align-middle ps-0 text-start text-uppercase" scope="col" data-sort="date" style="width:15%;min-width: 150px;">Date</th>
+                  <th class="sort align-middle ps-0 text-start text-uppercase" scope="col" data-sort="date" style="width:15%;min-width: 150px;">Date</th>
                   <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="type" style="width:15%;min-width: 100px;">Status</th>
                   <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="clockin" style="width:10%;min-width: 100px;">Clock In</th>
                   <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="clockout" style="width:10%;min-width: 100px;">Clock Out</th>
@@ -101,7 +101,7 @@
                   <td class="type align-middle fw-semibold text-center py-2 ps-0 fs-9 fs-md-8 text-body-highlight"><span class="badge badge-phoenix fs-10 badge-phoenix-<%= badgeColour %>"><%= item.status %></span></td>
                   <td class="clockin align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-success"><%= signInTime %></span><br><span class="fw-bold fst-italic fs-10 text-primary"><%= item.location.signIn || '' %></span></td>
                   <td class="clockout align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-warning"><%= signOutTime %></span><br><span class="fw-bold fst-italic fs-10 text-primary"><%= item.location.signOut || '' %></span></td>
-                  <td class="outofoffice align-middle text-center py-2 ps-0 fs-9"><a href="#" data-bs-toggle="modal" data-bs-target="#outOfOffice<%= index %>" class="badge badge-phoenix badge-phoenix-<%= outOfOfficeEnabled %> no-loader"><%= item.outOfOffice.enabled %></a></td>
+                  <td class="outofoffice align-middle text-center py-2 ps-0 fs-9"><a href="#" data-bs-toggle="modal" data-bs-target="#outOfOffice<%= index %>" class="badge badge-phoenix badge-phoenix-<%= outOfOfficeEnabled %>"><%= item.outOfOffice.enabled %></a></td>
                   <td class="remarks align-middle fst-italic text-center py-2 ps-0 fs-9"><%= item.remarks || 'No remarks added.' %></td>
                   <td class="align-middle text-end white-space-nowrap ps-0 action">
                     <div class="font-sans-serif btn-reveal-trigger position-static">
@@ -109,7 +109,7 @@
                         <span class="fas fa-ellipsis-h fs-9"></span>
                       </button>
                       <div class="dropdown-menu dropdown-menu-end py-2">
-                        <a class="dropdown-item no-loader" href="#" data-bs-toggle="modal" data-bs-target="#addRemark<%= index %>">Update Remarks</a>
+                        <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#addRemark<%= index %>">Update Remarks</a>
                       </div>
                     </div>
                   </td>
@@ -233,7 +233,7 @@
           <% }); %>
           <% }else{ %>
           <tr>
-            <td colspan="7" class="text-center fw-bold fs-9">No attendance detected from <span class="fw-bold text-primary notranslate"><%= user.fullname %></span></td>
+            <td colspan="6" class="text-center fw-bold fs-9">No attendance detected from <span class="fw-bold text-primary notranslate"><%= user.fullname %></span></td>
           </tr>
           <% } %>
           </tbody>
@@ -241,7 +241,7 @@
         </div>
         <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
           <div class="col-auto d-flex">
-            <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p><a class="fw-semibold no-loader" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semibold d-none no-loader" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
+            <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p><a class="fw-semibold" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semibold d-none" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
           </div>
           <div class="col-auto d-flex">
             <button class="page-link" data-list-pagination="prev"><span class="fas fa-chevron-left"></span></button>
@@ -345,7 +345,9 @@
     <div class="card-container d-none mb-3">
       <div class="card mx-auto w-100 w-lg-50 mb-0" id="card">
         <div class="card-body text-center front">
-          <div class="avatar avatar-4xl mb-3 mx-auto"><img class="rounded-circle border border-primary" src="/assets/img/team/avatar.webp" alt="" /></div>
+          <div class="avatar avatar-4xl mb-3 mx-auto">
+            <img class="rounded-circle border border-primary" src="/assets/img/team/avatar.webp" alt="" />
+          </div>
           <p class="fw-bold fs-7 mb-0"><%= user.fullname %></p>
           <p class="fw-bold fst-italic mb-3"><%= user.username %></p>
           <p class="mb-3"><%= user.position %></p>
@@ -355,7 +357,10 @@
         <div class="card-body back text-center">
           <h4 class="mb-0 mt-2" id="message"></h4>
           <div class="d-flex justify-content-center align-items-center">
-            <lottie-player class="mx-auto mt-n5" src="https://lottie.host/9286c4fc-dca4-4d7f-b918-85480656a0cf/bLVZCz5laC.json" speed="1" style="width: 300px; height: 300px" loop autoplay direction="1" mode="normal"></lottie-player>
+            <!-- Success lottie animation -->
+            <lottie-player id="success-icon" class="mx-auto mt-n5 d-none" src="https://lottie.host/9286c4fc-dca4-4d7f-b918-85480656a0cf/bLVZCz5laC.json" speed="1" style="width: 300px; height: 300px" loop autoplay direction="1" mode="normal"></lottie-player>
+            <!-- Invalid lottie animation -->
+            <lottie-player id="invalid-icon" class="mx-auto mt-n5 d-none" src="https://lottie.host/db0d7ca0-01a8-4493-b227-2ee358131559/NQN635kqLG.json" speed="1" style="width: 300px; height: 300px" loop autoplay direction="1" mode="normal"></lottie-player>
           </div>
         </div>
       </div>
@@ -396,14 +401,29 @@
         const cardContainer = document.querySelector('.card-container');
         const scanner = document.getElementById('scanner');
         const message = document.getElementById('message');
+        const successIcon = document.getElementById('success-icon');
+        const invalidIcon = document.getElementById('invalid-icon');
 
+        // Set the message from the server response
         message.textContent = userResponse.message;
+
+        // Hide the scanner and show the card container
         scanner.classList.add('d-none');
         cardContainer.classList.remove('d-none');
+
+        // Show the appropriate Lottie animation based on response status
+        if (userResponse.status === 'success') {
+          successIcon.classList.remove('d-none');
+          invalidIcon.classList.add('d-none');
+        } else {
+          successIcon.classList.add('d-none');
+          invalidIcon.classList.remove('d-none');
+        }
+
+        // Flip the card after a short delay
         setTimeout(() => {
           document.getElementById('card').classList.toggle('flip');
         }, 500);
-
       })
       .catch(error => {
         console.error('Error processing scanned data:', error);
