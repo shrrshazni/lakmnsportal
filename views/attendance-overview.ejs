@@ -30,7 +30,7 @@
       </div>
 
       <div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis pt-7 pb-3 border-y mb-6">
-        <div class="border-bottom border-translucent mt-3 mb-8" id="attendance" data-list='{"valueNames":["type","date","clockin","clockout","outofoffice", "remarks"],"page":10,"pagination":true}'>
+        <div class="border-bottom border-translucent mt-3 mb-8" id="attendance" data-list='{"valueNames":["type","clockin","clockout","outofoffice", "remarks"],"page":10,"pagination":true}'>
           <div class="row align-items-end justify-content-between pb-4 g-3">
 
             <div class="col-12 col-md-auto">
@@ -48,7 +48,7 @@
             <table class="table fs-9 mb-0 border-top border-translucent">
               <thead>
                 <tr>
-                  <th class="sort align-middle ps-0 text-start text-uppercase" scope="col" data-sort="date" style="width:15%;min-width: 150px;">Date</th>
+                  <th class="align-middle ps-0 text-start text-uppercase" scope="col" data-sort="date" style="width:15%;min-width: 150px;">Date</th>
                   <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="type" style="width:15%;min-width: 100px;">Status</th>
                   <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="clockin" style="width:10%;min-width: 100px;">Clock In</th>
                   <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="clockout" style="width:10%;min-width: 100px;">Clock Out</th>
@@ -233,7 +233,7 @@
           <% }); %>
           <% }else{ %>
           <tr>
-            <td colspan="6" class="text-center fw-bold fs-9">No attendance detected from <span class="fw-bold text-primary notranslate"><%= user.fullname %></span></td>
+            <td colspan="7" class="text-center fw-bold fs-9">No attendance detected from <span class="fw-bold text-primary notranslate"><%= user.fullname %></span></td>
           </tr>
           <% } %>
           </tbody>
@@ -345,9 +345,7 @@
     <div class="card-container d-none mb-3">
       <div class="card mx-auto w-100 w-lg-50 mb-0" id="card">
         <div class="card-body text-center front">
-          <div class="avatar avatar-4xl mb-3 mx-auto">
-            <img class="rounded-circle border border-primary" src="/assets/img/team/avatar.webp" alt="" />
-          </div>
+          <div class="avatar avatar-4xl mb-3 mx-auto"><img class="rounded-circle border border-primary" src="/assets/img/team/avatar.webp" alt="" /></div>
           <p class="fw-bold fs-7 mb-0"><%= user.fullname %></p>
           <p class="fw-bold fst-italic mb-3"><%= user.username %></p>
           <p class="mb-3"><%= user.position %></p>
@@ -357,10 +355,7 @@
         <div class="card-body back text-center">
           <h4 class="mb-0 mt-2" id="message"></h4>
           <div class="d-flex justify-content-center align-items-center">
-            <!-- Success lottie animation -->
-            <lottie-player id="success-icon" class="mx-auto mt-n5 d-none" src="https://lottie.host/9286c4fc-dca4-4d7f-b918-85480656a0cf/bLVZCz5laC.json" speed="1" style="width: 300px; height: 300px" loop autoplay direction="1" mode="normal"></lottie-player>
-            <!-- Invalid lottie animation -->
-            <dotlottie-player src="https://lottie.host/db0d7ca0-01a8-4493-b227-2ee358131559/NQN635kqLG.json" background="transparent" speed="1" style="width: 150px; height: 150px;" loop autoplay></dotlottie-player>
+            <lottie-player class="mx-auto mt-n5" src="https://lottie.host/9286c4fc-dca4-4d7f-b918-85480656a0cf/bLVZCz5laC.json" speed="1" style="width: 300px; height: 300px" loop autoplay direction="1" mode="normal"></lottie-player>
           </div>
         </div>
       </div>
@@ -401,35 +396,14 @@
         const cardContainer = document.querySelector('.card-container');
         const scanner = document.getElementById('scanner');
         const message = document.getElementById('message');
-        const successIcon = document.getElementById('success-icon');
-        const invalidIcon = document.getElementById('invalid-icon');
 
-        // Set the message from the server response
         message.textContent = userResponse.message;
-
-        // Hide the scanner and show the card container
         scanner.classList.add('d-none');
         cardContainer.classList.remove('d-none');
-
-        // Display the correct icon based on the server response
-        if (userResponse.message.includes('Successfully signed') || userResponse.message.includes('thank you')) {
-          // Display success icon for valid scans (sign in or sign out)
-          successIcon.classList.remove('d-none');
-          invalidIcon.classList.add('d-none');
-        } else if (userResponse.message.includes('invalid')) {
-          // Display invalid icon for invalid scans
-          successIcon.classList.add('d-none');
-          invalidIcon.classList.remove('d-none');
-        } else {
-          // Handle any other unexpected cases
-          successIcon.classList.add('d-none');
-          invalidIcon.classList.add('d-none');
-        }
-
-        // Flip the card after a short delay
         setTimeout(() => {
           document.getElementById('card').classList.toggle('flip');
         }, 500);
+
       })
       .catch(error => {
         console.error('Error processing scanned data:', error);
