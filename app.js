@@ -5758,6 +5758,12 @@ app.get('/education/overview', isAuthenticated, async function (req, res) {
 app.get('/education/attendance/record', isAuthenticated, async (req, res, next) => {
     try {
         const { user, notifications } = req;
+        const classTeacher = await TeacherEducation.findOne({
+            user: user._id
+        });
+        const parent = await ParentEducation.findOne({
+            user: user._id
+        });
         const attendances = await AttendanceEducation.find()
             .populate({
                 path: 'child',
@@ -5769,13 +5775,23 @@ app.get('/education/attendance/record', isAuthenticated, async (req, res, next) 
             .sort({ date: -1 })
             .exec();
 
-        console.log(attendances);
+        const todayStart = moment().utcOffset(8).startOf('day').toDate(); // Start of today
+        const todayEnd = moment().utcOffset(8).endOf('day').toDate(); // End of today
+
+        const attendancesToday = attendances.filter(attendance => {
+            const attendanceDate = new Date(attendance.createdAt); // Assuming date field in attendance is a valid date
+            return attendanceDate >= todayStart && attendanceDate <= todayEnd;
+        });
 
         res.render('education-attendance-record', {
             user: user,
             notifications: notifications,
             uuid: uuidv4(),
-            attendances: attendances,
+            attendancesToday: attendancesToday,
+            classTeacher: classTeacher,
+            parent: parent,
+            todayStart,
+            todayEnd
         });
 
     } catch (error) {
@@ -7561,9 +7577,6 @@ app.get('/testing', isAuthenticated, async (req, res, next) => {
     try {
         const { user, notifications } = req;
 
-        // createDummyData();
-        createDummyAttendance();
-
         res.render('testing', {
             user: user,
             notifications: notifications,
@@ -7578,10 +7591,10 @@ app.get('/testing', isAuthenticated, async (req, res, next) => {
 
 // Replace these with the actual child ObjectIds you've shared
 const childIds = [
-    '67185410cd43394a7e983b59', // Richard Hodge
-    '67185410cd43394a7e983b5b', // Justin McNeil
-    '67185410cd43394a7e983b61', // Sharon Chambers
-    '67185410cd43394a7e983b63'  // New Child ID (example)
+    '6719c6a081d9169c16bc231c',
+    '6719c6a081d9169c16bc231e',
+    '6719c6a181d9169c16bc2324',
+    '6719c6a181d9169c16bc2326'
 ];
 
 async function createDummyAttendance() {
