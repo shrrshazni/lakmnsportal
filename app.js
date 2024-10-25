@@ -2302,22 +2302,20 @@ app.get('/files/download/:id', isAuthenticated, async (req, res, next) => {
         if (file) {
             const filePath = path.join(__dirname, 'public', 'uploads', file.name);
 
-            // Check if the file exists
-            if (fs.existsSync(filePath)) {
-                res.download(filePath, file.name, (err) => {
-                    if (err) {
-                        console.log('Error downloading file:', err);
-                        renderHomePage(req, res, next, 'show', 'File not found/Error downloading the file');
-                    } else {
-                        console.log('Downloading file');
-                    }
-                });
-            } else {
-                console.log('File not found on the server');
-                await renderHomePage(req, res, next, 'show', 'File not found');
+            try {
+                await fs.access(filePath); // Check if the file exists
+
+                // Proceed to download the file
+                const download = res.download(filePath, file.name);
+                if (download) {
+                    console.log('Downloading file');
+                }
+            } catch (err) {
+                console.error('File does not exist, rendering home page...');
+                await renderHomePage(req, res, next, 'show', 'File not found/Error downloading the file');
             }
         } else {
-            console.log('File not found in the database');
+            console.log('File not found in database');
             await renderHomePage(req, res, next, 'show', 'File not found');
         }
     } catch (error) {
