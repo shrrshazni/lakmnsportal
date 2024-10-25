@@ -2300,16 +2300,24 @@ app.get('/files/download/:id', isAuthenticated, async (req, res, next) => {
         const file = await File.findById(id);
 
         if (file) {
-            const filePath = __dirname + '/public/uploads/' + file.name;
-            const download = res.download(filePath, file.name);
-            if (download) {
-                console.log('Downloading file');
+            const filePath = path.join(__dirname, 'public', 'uploads', file.name);
+
+            // Check if the file exists
+            if (fs.existsSync(filePath)) {
+                res.download(filePath, file.name, (err) => {
+                    if (err) {
+                        console.log('Error downloading file:', err);
+                        renderHomePage(req, res, next, 'show', 'File not found/Error downloading the file');
+                    } else {
+                        console.log('Downloading file');
+                    }
+                });
             } else {
-                console.log('Error downloading file');
-                await renderHomePage(req, res, next, 'show', 'File not found/Error downloading the file');
+                console.log('File not found on the server');
+                await renderHomePage(req, res, next, 'show', 'File not found');
             }
         } else {
-            console.log('File not found');
+            console.log('File not found in the database');
             await renderHomePage(req, res, next, 'show', 'File not found');
         }
     } catch (error) {
@@ -3100,19 +3108,6 @@ app.get('/leave/request', isAuthenticated, async (req, res, next) => {
             }
         } else {
 
-            // const adminUsers = await User.find({
-            //     isAdmin: true,
-            //     section: 'Human Resource Management Division',
-            //     _id: { $ne: adminHR._id }
-            // });
-
-            // // Push the IDs of admin users to sendNoti
-            // adminUsers.forEach(user => {
-            //     if (!sendNoti.includes(user._id)) {
-            //         sendNoti.push(user._id);
-            //     }
-            // });
-
             const nextRecipient = checkProcess.approvals[1].recipient;
             sendNoti.push(nextRecipient);
 
@@ -3128,7 +3123,11 @@ app.get('/leave/request', isAuthenticated, async (req, res, next) => {
 
                 // Check if the user is found and has an email
                 if (email && user.email) {
-                    // Add the user's email to sendEmail
+
+                    // if(email.email !== "noratinisebri@lakmns.org.my" ){
+                    //     sendEmail.push(email.email);
+                    // }
+
                     sendEmail.push(email.email);
                 }
 
@@ -9569,6 +9568,8 @@ const handleApproved = async (checkLeave, recipientIndices, user, res) => {
         // Set the estimated time for the next approval if needed
         if (!nextRoleIsHR || (role === 'Relief Staff' || role === 'Supervisor')) {
             updateQuery[`approvals.${nextIndex}.estimated`] = moment().utcOffset(8).add(1, 'days').toDate();
+            nextApprovalRecipientId = checkLeave.approvals[nextIndex].recipient;
+            sendNoti.push(nextApprovalRecipientId);
         } else if (nextRoleIsHR) {
             updateQuery[`approvals.${nextIndex}.estimated`] = moment(checkLeave.date.return).utcOffset(8).subtract(1, 'days').toDate();
         }
@@ -9590,29 +9591,6 @@ const handleApproved = async (checkLeave, recipientIndices, user, res) => {
             // Handle the case where no document was updated (e.g., it was already updated by another process)
             console.log('No document was updated, it might have been updated by another process.');
         }
-
-        // Check if the next approval is Admin HR to send notification and sedn email
-        // if (checkLeave.approvals[nextIndex] && checkLeave.approvals[nextIndex].role === 'Human Resource') {
-        //     const adminHR = await User.findOne({ isAdmin: true, isHeadOfSection: true, section: 'Human Resource Management Division' });
-        //     const adminUsers = await User.find({
-        //         isAdmin: true,
-        //         section: 'Human Resource Management Division',
-        //         _id: { $ne: adminHR._id }
-        //     });
-
-        //     // Push the IDs of admin users to sendNoti
-        //     adminUsers.forEach(user => {
-        //         if (!sendNoti.includes(user._id)) {
-        //             sendNoti.push(user._id);
-        //         }
-        //     });
-        // } else if (checkLeave.approvals[nextIndex]) {
-        //     nextApprovalRecipientId = checkLeave.approvals[nextIndex].recipient;
-        //     sendNoti.push(nextApprovalRecipientId);
-        // }
-
-        nextApprovalRecipientId = checkLeave.approvals[nextIndex].recipient;
-        sendNoti.push(nextApprovalRecipientId);
 
         // Find and push email to sendEmail
         for (const recipient of sendNoti) {
