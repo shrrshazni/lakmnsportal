@@ -161,7 +161,7 @@
   <!--    Main Content-->
   <!-- ===============================================-->
   <main class="main" id="top">
-    <nav class="navbar navbar-vertical navbar-expand-lg d-inline-flex">
+    <nav class="navbar navbar-vertical navbar-expand-lg" id="navbarComboSlim2">
 
       <div class="collapse navbar-collapse" id="navbarVerticalCollapse">
 
@@ -906,7 +906,7 @@
 
               <!-- Section 3 -->
               <% if(user.isAdmin) { %>
-               <div class="nav-item-wrapper">
+              <div class="nav-item-wrapper">
                 <a class="nav-link label-1" href="/education/fee/payment" role="button" data-bs-toggle="" aria-expanded="false">
                   <div class="d-flex align-items-center">
                     <span class="nav-link-icon"><span class="mb-1" data-feather="credit-card"></span></span>
@@ -968,12 +968,12 @@
 
     </nav>
 
-    <nav class="navbar navbar-top fixed-top navbar-slim justify-content-between navbar-expand-lg d-inline-flex" id="navbarComboSlim" data-navbar-top="combo" data-move-target="#navbarVerticalNav">
+    <nav class="navbar navbar-top fixed-top navbar-slim justify-content-between navbar-expand-lg" id="navbarComboSlim" data-navbar-top="combo" data-move-target="#navbarVerticalNav">
       <!-- logo -->
-      <div class="navbar-logo">
+      <div class="navbar-logo mx-0 px-0">
 
         <button class="btn navbar-toggler navbar-toggler-humburger-icon hover-bg-transparent" type="button" data-bs-toggle="collapse" data-bs-target="#navbarVerticalCollapse" aria-controls="navbarVerticalCollapse" aria-expanded="false" aria-label="Toggle Navigation"><span class="navbar-toggle-icon"><span class="toggle-line"></span></span></button>
-        <a class="navbar-brand navbar-brand fw-semibold" href="/">my<span class="text-body-highlight d-sm-inline">LAKMNS</span></a>
+        <a class="navbar-brand navbar-brand fw-semibold mx-0 px-0" href="/">my<span class="text-body-highlight d-sm-inline">LAKMNS</span></a>
       </div>
 
       <!-- middlle top bar nav display none for now -->
@@ -1817,20 +1817,20 @@
       </div>
 
       <!-- right side -->
-      <ul class="navbar-nav navbar-nav-icons flex-row">
+      <ul class="navbar-nav navbar-nav-icons flex-row pe-0">
 
         <li class="nav-item">
           <div class="pe-1">
 
             <div class="d-none d-lg-block">
-              <button id="btn-ms" class="fw-bold fs-9" onclick="changeLanguage('ms')"><span class="fa-brands fa-google fs-10 me-1"></span>Malay</button>
-              <button id="btn-en" class="fw-bold fs-9 d-none" onclick="changeLanguage('en')"><span class="fa-brands fa-google fs-10 me-1"></span>English</button>
+              <button id="btn-ms" class="fw-bold fs-9" onclick="changeLanguage('ms')"><span class="fa-brands fa-google fs-10 me-0 me-xl-1"></span><span class="d-none d-xl-inline-flex">Malay</span></button>
+              <button id="btn-en" class="fw-bold fs-9 d-none" onclick="changeLanguage('en')"><span class="fa-brands fa-google fs-10 me-0 me-xl-1"></span><span class="d-none d-xl-inline-flex">English</span></button>
             </div>
 
             <!-- Buttons for language selection -->
             <div class="d-block d-lg-none">
-              <button id="btn-ms-mobile" class="" onclick="changeLanguage('ms')"><span class="fa-brands fa-google me-1"></span>Malay</button>
-              <button id="btn-en-mobile" class="d-none" onclick="changeLanguage('en')"><span class="fa-brands fa-google me-1"></span>English</button>
+              <button id="btn-ms-mobile" class="" onclick="changeLanguage('ms')"><span class="fa-brands fa-google me-0 me-xl-1"></span><span class="d-none d-xl-inline-flex">Malay</span></button>
+              <button id="btn-en-mobile" class="d-none" onclick="changeLanguage('en')"><span class="fa-brands fa-google me-0 me-xl-1"></span><span class="d-none d-xl-inline-flex">English</span></button>
             </div>
 
           </div>

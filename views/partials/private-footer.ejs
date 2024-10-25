@@ -450,20 +450,16 @@
 <script>
   function showLoader() {
     const wrap = document.getElementById('wrap');
-    const navbar1 = document.getElementById('navbarComboSlim');
-    const navbar2 = document.getElementById('navbarComboSlim-2');
-
     wrap.classList.remove('d-none'); // Show the loader
-    wrap.classList.add('d-block'); // Set display to block
+    wrap.classList.add('d-flex'); // Set display to block
 
     // Hide navbar during loading
     // Show the navbar
-    // navbar1.classList.add('d-none');
-    // navbar1.classList.remove('d-inline-flex');
 
-    // navbar2.classList.add('d-none');
-    // navbar2.classList.remove('d-inline-flex');
-    // navbar2.classList.remove('d-xl-inline-block');
+    navbar1.classList.remove('d-inline-flex');
+    navbar2.classList.remove('d-inline-flex');
+    navbar2.classList.remove('d-xl-inline-block');
+
     // Keep the loader visible for at least 3 seconds
     setTimeout(() => {
       // Loader will remain until the page is fully loaded
@@ -487,23 +483,6 @@
         }
       });
     });
-
-    // Attach event listener to all forms
-    // const forms = document.querySelectorAll('form');
-    // forms.forEach((form) => {
-    //   form.addEventListener('submit', function(event) {
-    //     // Check if the form has the no-loader class
-    //     if (!form.classList.contains('no-loader')) {
-    //       showLoader(); // Show loader on form submission
-    //       // Prevent the form submission to allow the loader to display
-    //       // Simulate a delay before submitting the form
-    //       setTimeout(() => {
-    //         form.submit(); // Submit the form after 3 seconds
-    //       }, 3000);
-    //       event.preventDefault();
-    //     }
-    //   });
-    // });
   });
 
   // Event listener to hide loader when the new page is fully loaded
@@ -515,12 +494,10 @@
     wrap.classList.add('d-none'); // Hide the loader when the new page is fully loaded
 
     // Show the navbar
-    // navbar1.classList.remove('d-none');
-    // navbar1.classList.add('d-inline-flex');
 
-    // navbar2.classList.remove('d-none');
-    // navbar2.classList.add('d-inline-flex');
-    // navbar2.classList.add('d-xl-inline-block');
+    navbar1.classList.add('d-inline-flex');
+    navbar2.classList.add('d-inline-flex');
+    navbar2.classList.add('d-xl-inline-block');
   });
 
   // Ensure the loader is hidden if navigating via the back button
@@ -531,8 +508,8 @@
       const navbar2 = document.getElementById('navbarComboSlim-2');
 
       wrap.classList.add('d-none'); // Hide the loader
-      //   navbar1.style.display = 'inline-flex'; // Show the navbar
-      //   navbar2.style.display = 'inline-flex';
+      navbar1.style.display = 'inline-flex'; // Show the navbar
+      navbar2.style.display = 'inline-flex';
     }
   });
 </script>

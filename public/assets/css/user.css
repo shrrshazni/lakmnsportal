@@ -225,7 +225,7 @@ body {
   -webkit-box-pack: center;
   -ms-flex-pack: center;
   justify-content: center;
-  border: 1px solid var(--phoenix-border-color);
+  border: 1px solid var(--phoenix-primary-lighter);
   background-color: var(--phoenix-primary-lighter);
   color: var(--phoenix-primary);
   cursor: pointer;
@@ -253,7 +253,7 @@ body {
   -webkit-box-pack: center;
   -ms-flex-pack: center;
   justify-content: center;
-  border: 1px solid var(--phoenix-border-color);
+  border: 1px solid var(--phoenix-primary);
   background-color: var(--phoenix-primary);
   color: var(--phoenix-body-bg);
   cursor: pointer;
@@ -282,7 +282,7 @@ body {
   -webkit-box-pack: center;
   -ms-flex-pack: center;
   justify-content: center;
-  border: 1px solid var(--phoenix-border-color);
+  border: 1px solid var(--phoenix-body-bg);
   background-color: var(--phoenix-body-bg);
   color: var(--phoenix-primary);
   cursor: pointer;
@@ -310,7 +310,7 @@ body {
   -webkit-box-pack: center;
   -ms-flex-pack: center;
   justify-content: center;
-  border: 1px solid var(--phoenix-border-color);
+  border: 1px solid var(--phoenix-primary);
   background-color: var(--phoenix-primary);
   color: var(--phoenix-body-bg);
   cursor: pointer;
