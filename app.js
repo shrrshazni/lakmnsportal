@@ -2301,8 +2301,13 @@ app.get('/files/download/:id', isAuthenticated, async (req, res, next) => {
 
         if (file) {
             const filePath = __dirname + '/public/uploads/' + file.name;
-            res.download(filePath, file.name);
-            console.log('Downloading file');
+            const download = res.download(filePath, file.name);
+            if (download) {
+                console.log('Downloading file');
+            } else {
+                console.log('Error downloading file');
+                await renderHomePage(req, res, next, 'show', 'File not found/Error downloading the file');
+            }
         } else {
             console.log('File not found');
             await renderHomePage(req, res, next, 'show', 'File not found');
