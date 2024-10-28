@@ -1,110 +1,5 @@
 <%- include("partials/private-header.ejs") %>
 
-<style>
-  .card-icon {
-    position: absolute;
-    top: 50%;
-    right: 20px;
-    transform: translateY(-50%);
-    font-size: 2rem;
-  }
-
-  /* Custom checkbox styling */
-  .attendance-checkbox-wrapper {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .attendance-checkbox-wrapper label {
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    margin-right: 10px;
-    font-size: 14px;
-  }
-
-  .attendance-checkbox {
-    display: none;
-  }
-
-  .custom-checkbox {
-    position: relative;
-    width: 16px;
-    /* Reduced size */
-    height: 16px;
-    /* Reduced size */
-    border: 2px solid #d1d1d1;
-    border-radius: 3px;
-    display: inline-block;
-    margin-right: 8px;
-    transition: all 0.2s ease;
-  }
-
-  /* Blue hover effect before checkbox is clicked */
-  .attendance-checkbox:not(:disabled)+.custom-checkbox:hover {
-    border-color: #2196F3;
-    /* Blue hover color */
-  }
-
-  /* Green and red styles for present/absent */
-  .custom-checkbox:before {
-    content: '';
-    position: absolute;
-    width: 8px;
-    /* Adjusted size */
-    height: 8px;
-    /* Adjusted size */
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(0);
-    background-color: transparent;
-    border-radius: 2px;
-    transition: transform 0.3s ease;
-  }
-
-  .custom-checkbox.checked-green:before {
-    background-color: #4caf50;
-    /* Green for present */
-    transform: translate(-50%, -50%) scale(1);
-  }
-
-  .custom-checkbox.checked-red:before {
-    background-color: #f44336;
-    /* Red for absent */
-    transform: translate(-50%, -50%) scale(1);
-  }
-
-  /* Disabled checkbox styles */
-  .attendance-checkbox:disabled+.custom-checkbox {
-    border-color: #aaa;
-    background-color: #e0e0e0;
-  }
-
-  /* Disabled state hover removal */
-  .attendance-checkbox:disabled+.custom-checkbox:hover {
-    border-color: #aaa;
-    /* No hover effect for disabled checkboxes */
-  }
-
-  /* Label styles */
-  .attendance-checkbox-wrapper label {
-    color: #555;
-  }
-
-  .attendance-checkbox:disabled+.custom-checkbox+label {
-    color: #aaa;
-    /* Grey out the text when disabled */
-  }
-
-  /* Media query for responsive */
-  @media (max-width: 768px) {
-    .filters {
-      flex-direction: column;
-    }
-  }
-</style>
-
 <div class="row gy-3 mb-3 justify-content-between d-flex mt-0">
   <div class="col-md-9 col-auto">
     <h2 class="mb-2 text-body-emphasis">Attendance Record</h2>
@@ -178,25 +73,25 @@
         <tbody class="list" id="attendance-table-content">
           <% 
            let filteredTodayAttendances;
-           if(attendancesToday && attendancesToday.length > 0){  
-              if(user.isTeacher){
-                filteredTodayAttendances = attendancesToday.filter(attendance => {
-                    return attendance.child.class && attendance.child.class._id.toString() === classTeacher.class.toString(); });
-              }else if(user.isPublicUser){
-                if(parent){
-                    filteredTodayAttendances = attendancesToday.filter(attendance => {
-                        return attendance.child.parent && attendance.child.parent.user.toString() === parent.user.toString(); });
-                }else{
-                    filteredTodayAttendances = '';
-                }
-              }else{
-                filteredTodayAttendances = attendancesToday;
-              }
-           }else{  
-            filteredTodayAttendances = '';  
-           } 
+        //    if(attendancesToday && attendancesToday.length > 0){  
+        //       if(user.isTeacher){
+        //         filteredTodayAttendances = attendancesToday.filter(attendance => {
+        //             return attendance.child.class && attendance.child.class._id.toString() === classTeacher.class.toString(); });
+        //       }else if(user.isPublicUser){
+        //         if(parent){
+        //             filteredTodayAttendances = attendancesToday.filter(attendance => {
+        //                 return attendance.child.parent && attendance.child.parent.user.toString() === parent.user.toString(); });
+        //         }else{
+        //             filteredTodayAttendances = '';
+        //         }
+        //       }else{
+        //         filteredTodayAttendances = attendancesToday;
+        //       }
+        //    }else{  
+        //     filteredTodayAttendances = '';  
+        //    } 
 
-        
+           filteredTodayAttendances = attendances
           %>
 
           <% if(filteredTodayAttendances && filteredTodayAttendances.length > 0){ %>
@@ -208,7 +103,13 @@
             </td>
             <td class="attendance align-middle fw-semibold text-center py-2 ps-0 fs-9">
               <div class="d-inline-flex">
-                <span class="btn btn-outline-success">Present</span>&nbsp;&nbsp;<span class="btn btn-outline-danger">Absent</span>
+                <a id="btn-present-<%= item._id %>" class="btn btn-outline-success no-loader z-index me-2" href="#" data-status="present">
+                  Present
+                </a>
+                <a id="btn-absent-<%= item._id %>" class="btn btn-outline-danger z-index no-loader" href="#" data-status="absent">
+                  Absent
+                </a>
+                </button>
               </div>
             </td>
             <td class="status align-middle text-center py-2 ps-2 fs-9"><span class="badge badge-phoenix badge-phoenix-primary"><%= item.status %></span></td>
@@ -226,110 +127,6 @@
             </td>
           </tr>
 
-          <!-- Modal to view more student details -->
-          <div class="modal fade" id="studentModal<%= index %>" tabindex="-1" aria-labelledby="studentModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-              <div class="modal-content">
-                <div class="modal-header">
-                  <h5 class="modal-title" id="studentModalLabel">Student Information</h5>
-                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                  <!-- Information about the student -->
-                  <div class="row g-3 mb-3">
-                    <div class="col-md-6">
-                      <label for="fullname" class="form-label"><b>Student Name</b></label>
-                      <p class="form-label text-primary"><%= item.child.name %></p>
-                    </div>
-                    <div class="col-md-6">
-                      <label for="address" class="form-label"><b>Address</b></label>
-                      <p class="form-label text-primary"><%= item.child.adress %></p>
-                    </div>
-                  </div>
-                  <div class="row g-3 mb-3">
-                    <div class="col-md-6">
-                      <label for="paidAmount" class="form-label"><b>IC Number</b></label>
-                      <p class="form-label text-primary"><%= item.child.nric %></p>
-                    </div>
-                    <div class="col-md-6">
-                      <label for="paidAmount" class="form-label"><b>Date of Birth</b></label>
-                      <p class="form-label text-primary"><%= item.child.dob.toLocaleDateString('en-MY') %></p>
-                    </div>
-                    <div class="col-md-6">
-                      <label for="paidAmount" class="form-label"><b>Place of Birth</b></label>
-                      <p class="form-label text-primary"><%= item.child.pob %></p>
-                    </div>
-                    <div class="col-md-6">
-                      <label for="paidAmount" class="form-label"><b>Citizenship</b></label>
-                      <p class="form-label text-primary"><%= item.child.citizenship %></p>
-                    </div>
-                    <div class="col-md-6">
-                      <label for="paidAmount" class="form-label"><b>Race</b></label>
-                      <p class="form-label text-primary"><%= item.child.race %></p>
-                    </div>
-                  </div>
-
-                  <!-- Information about the student's Parent -->
-                  <%
-                  let showParent;
-                  if(!item.child.parent || item.child.parent === null){
-                    showParent = "d-none";
-                  }else {
-                    showParent = "";
-                  }
-                  %>
-                  <div class="<%= showParent %>">
-                    <hr>
-                    <div class="row mb-3">
-                      <div class="col-md-6">
-                        <label for="fullname" class="form-label"><b>Parent's Name</b></label>
-                        <p class="form-label text-primary">George</p>
-                      </div>
-                      <div class="col-md-6">
-                        <label for="paidAmount" class="form-label"><b>Occupation</b></label>
-                        <p class="form-label text-primary">Pilot</p>
-                      </div>
-                    </div>
-                    <div class="row mb-3">
-                      <div class="col-md-6">
-                        <label for="paidAmount" class="form-label"><b>IC Number</b></label>
-                        <p class="form-label text-primary">990101-12-1234</p>
-                      </div>
-                      <div class="col-md-6">
-                        <label for="paidAmount" class="form-label"><b>Phone Number</b></label>
-                        <p class="form-label text-primary">0123456789</p>
-                      </div>
-                    </div>
-                  </div>
-
-                </div>
-                <div class="modal-footer">
-                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Modal add/update remarks -->
-          <div class="modal fade" id="updateRemark<%= index %>" tabindex="-1">
-            <div class="modal-dialog">
-              <div class="modal-content">
-                <form action="" method="post">
-                  <div class="modal-body">
-                    <label class="form-label" for="udpateDescription">Remarks</label>
-                    <textarea class="form-control scrollbar-overlay" placeholder="Leave a attendance remark here" style="height: 100px" name="remarks"></textarea>
-                  </div>
-                  <div class="modal-footer border-top-0">
-                    <button class="btn btn-primary loading-button" type="submit">
-                      <div class="content-button">
-                        <span>Update</span>
-                      </div>
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
           <% }); %>
           <% }else{ %>
           <tr>
@@ -354,159 +151,57 @@
 </div>
 
 <script>
-  let currentRemarkId = null; // Store the current remark ID for the modal
+  document.addEventListener("DOMContentLoaded", () => {
+    // Select all present and absent buttons
+    const presentButtons = document.querySelectorAll("[id^='btn-present-']");
+    const absentButtons = document.querySelectorAll("[id^='btn-absent-']");
 
-  // Open modal and capture remark ID
-  document.querySelectorAll('.dropdown-item[data-remark-id]').forEach(function(item) {
-    item.addEventListener('click', function() {
-      currentRemarkId = this.getAttribute('data-remark-id'); // Capture the remark ID for the clicked row
-      const remarkText = document.getElementById(currentRemarkId).innerText.trim();
-      document.getElementById('remarksInput').value = remarkText !== 'No remarks yet' ? remarkText : ''; // Pre-fill with existing remark if available
-    });
-  });
+    const handleAttendanceClick = async (status, attendanceId) => {
+      console.log(`${status.charAt(0).toUpperCase() + status.slice(1)} link clicked for ID: ${attendanceId}`);
 
-  // Handle the Save Remarks button click
-  document.getElementById('saveRemarks').addEventListener('click', function() {
-    const remarkInput = document.getElementById('remarksInput').value.trim();
-    const remarksElement = document.getElementById(currentRemarkId);
+      try {
+        const response = await fetch("/testing/attendance/update", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            status,
+            attendanceId,
+          }),
+        });
 
-    if (remarkInput) {
-      // Update the remarks in the table
-      remarksElement.innerHTML = `<span class="text-info">${remarkInput}</span>`;
-    } else {
-      // Default if no remark is provided
-      remarksElement.innerHTML = `<em>No remarks yet</em>`;
-    }
+        const result = await response.json();
 
-    // Close the modal after saving
-    const modal = bootstrap.Modal.getInstance(document.getElementById('updateRemarksModal'));
-    modal.hide();
-  });
-
-  // Handle the attendance checkbox
-  document.querySelectorAll('.attendance-checkbox').forEach(function(checkbox) {
-    checkbox.addEventListener('change', function() {
-      const statusId = this.getAttribute('data-status-id');
-      const statusElement = document.getElementById(statusId);
-      const checkboxes = document.getElementsByName(this.name);
-
-      // Get current time
-      const currentTime = new Date().toLocaleTimeString([], {
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-
-      // Uncheck other checkboxes
-      checkboxes.forEach(function(box) {
-        if (box !== checkbox) {
-          box.checked = false;
-        }
-        // Disable all checkboxes after one is selected
-        box.disabled = true;
-      });
-
-      // Update status based on the checkbox value and apply styling
-      if (this.id.includes('present')) {
-        if (this.checked) {
-          statusElement.innerHTML = `
-                    <span class="badge badge-phoenix badge-phoenix-success fs-10 align-items-center">Present</span>
-                    <br>
-                    <span class="badge badge-phoenix badge-phoenix-warning fs-10 align-items-center">${currentTime}</span>`;
+        if (response.ok) {
+          console.log("Attendance updated successfully:", result);
+          // Optionally, update the UI to reflect the new status
         } else {
-          statusElement.innerHTML = '-';
+          console.error("Failed to update attendance:", result.message);
         }
-      } else if (this.id.includes('absent')) {
-        if (this.checked) {
-          statusElement.innerHTML = `
-                    <span class="badge badge-phoenix badge-phoenix-danger fs-10 align-items-center">Absent</span>
-                    <br>
-                    <span class="badge badge-phoenix badge-phoenix-warning fs-10 align-items-center">${currentTime}</span>`;
-        } else {
-          statusElement.innerHTML = '-';
-        }
+      } catch (error) {
+        console.error("Error while sending data:", error);
       }
+    };
+
+    // Attach event listeners to present buttons
+    presentButtons.forEach((button) => {
+      button.addEventListener("click", (event) => {
+        event.preventDefault(); // Prevent default anchor behavior
+        const attendanceId = button.id.split("-").pop(); // Get ID from button's ID
+        handleAttendanceClick("present", attendanceId);
+      });
     });
-  });
 
-  document.addEventListener('DOMContentLoaded', function() {
-    const checkboxes = document.querySelectorAll('.attendance-checkbox');
-
-    checkboxes.forEach((checkbox) => {
-      checkbox.addEventListener('change', function() {
-        if (this.checked) {
-          // Disable both checkboxes (Present and Absent) once one is clicked
-          const statusId = this.getAttribute('data-status-id');
-          const relatedCheckboxes = document.querySelectorAll(`input[data-status-id="${statusId}"]`);
-
-          // Handle checkbox coloring and disabling
-          relatedCheckboxes.forEach(cb => {
-            cb.disabled = true; // Disable both checkboxes
-            const checkboxLabel = cb.nextElementSibling;
-            if (cb.checked && cb.value === "present") {
-              checkboxLabel.classList.add('checked-green'); // Show green for present
-            } else if (cb.checked && cb.value === "absent") {
-              checkboxLabel.classList.add('checked-red'); // Show red for absent
-            }
-          });
-        }
+    // Attach event listeners to absent buttons
+    absentButtons.forEach((button) => {
+      button.addEventListener("click", (event) => {
+        event.preventDefault(); // Prevent default anchor behavior
+        const attendanceId = button.id.split("-").pop(); // Get ID from button's ID
+        handleAttendanceClick("absent", attendanceId);
       });
     });
   });
-
-  // Handle the search input
-  document.getElementById('searchInput').addEventListener('keyup', function() {
-    const searchTerm = this.value.toLowerCase();
-    const rows = document.querySelectorAll('#vis-table tbody tr');
-    //let visibleRows = 0;
-
-    rows.forEach(function(row) {
-      const name = row.cells[0].textContent.toLowerCase(); // Student Name column
-      const status = row.cells[3].textContent.toLowerCase(); // Status column
-
-      if (name.includes(searchTerm) || status.includes(searchTerm)) {
-        row.style.display = ''; // Show row if matches
-        //visibleRows++;
-      } else {
-        row.style.display = 'none'; // Hide row if not matching
-      }
-    });
-
-    // Check if any rows are visible
-    // if (visibleRows === 0) {
-    //     document.querySelector('#vis-table tbody').innerHTML = 
-    //         '<tr><td colspan="12" style="text-align:center;">No search list found</td></tr>';
-    // }
-  });
-
-  // Enable checkboxes when 'Edit Attendance' is clicked
-  // document.querySelectorAll('.edit-attendance-link').forEach(function(editLink) {
-  //     editLink.addEventListener('click', function(event) {
-  //         event.preventDefault(); 
-
-  //         // Enable the related checkboxes
-  //         const studentId = this.getAttribute('data-student-id');
-  //         const attendanceCheckboxes = document.querySelectorAll('input[name="attendance' + studentId + '"]');
-
-  //         attendanceCheckboxes.forEach(function(checkbox) {
-  //             checkbox.disabled = false; 
-  //         });
-  //     });
-  // });
-
-  // Initialize Datepicker
-  // $(document).ready(function () {
-  //     const today = new Date();
-  //     const day = String(today.getDate()).padStart(2, '0');
-  //     const month = String(today.getMonth() + 1).padStart(2, '0');
-  //     const year = today.getFullYear();
-  //     const currentDate = `${day}-${month}-${year}`;
-
-  //     flatpickr("#inputStartDate", {
-  //         defaultDate: currentDate,
-  //         dateFormat: "d-m-Y", 
-  //         disableMobile: true 
-  //     });
-  // });
 </script>
 
 <%- include('partials/private-footer.ejs') %>

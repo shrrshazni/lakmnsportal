@@ -1,161 +1,207 @@
 <%- include('partials/private-header.ejs') %>
 
-<style>
-    .active-section {
-        background-color: #007bff;
-        color: white;
+<% 
+let filteredClasses = [];
+let filteredTeachers = [];
+
+// Filtering classes based on user type
+if (classes && classes.length > 0) {
+    if (user.isTeacher && classTeacher) {
+        // Filter by the teacher's class
+        filteredClasses = classes.filter(function(classItem) {
+            return classItem && classItem._id.toString() === classTeacher.class._id.toString();
+        });
+    } else if (user.isPublicUser && parentClass && parentClass.children && parentClass.children.length > 0) {
+        // Filter classes based on the parent's children
+        filteredClasses = classes.filter(function(classItem) {
+            return classItem.students.some(function(studentId) {
+                return parentClass.children.includes(studentId.toString());
+            });
+        });
+    } else {
+        // Default case for other users
+        filteredClasses = classes;
     }
-</style>
+} else {
+    filteredClasses = [];
+}
+
+// Assuming parentClass has the children IDs and classTeacher has class IDs
+if (parentClass && parentClass.children) {
+    // Get the list of child IDs for the logged-in parent
+    const parentChildrenIds = parentClass.children.map(childId => childId.toString());
+
+    // Filter teachers based on the classes of their students
+    filteredTeachers = teachers.filter(teacher => {
+        // Get the classes taught by this teacher
+        const teacherClassIds = teacher.class.map(c => c._id.toString()); // Assuming teacher class references
+
+        // Check if any students in the teacher's classes are children of the parent
+        return teacherClassIds.some(classId => {
+            // Get the class details to check student IDs
+            const classDetails = classes.find(c => c._id.toString() === classId);
+            return classDetails && classDetails.students.some(studentId => {
+                return parentChildrenIds.includes(studentId.toString());
+            });
+        });
+    });
+}else{
+    filteredTeachers = teachers;
+}
+
+// Log the length of filtered teachers for debugging
+console.log(filteredTeachers.length);
+%>
 
 <div class="row gy-3 mb-3 justify-content-between d-flex mt-0">
-    <div class="col-md-9 col-auto">
-        <h2 class="mb-2 text-body-emphasis">Information</h2>
-        <h5 class="text-body-tertiary fw-semibold">We hope you have a great experience managing visitor entries and exits.</h5>
-    </div>
+  <div class="col-md-9 col-auto">
+    <h2 class="mb-2 text-body-emphasis">Information</h2>
+    <h5 class="text-body-tertiary fw-semibold">We hope you have a great experience managing visitor entries and exits.</h5>
+  </div>
 </div>
 
 <!-- New row for option buttons -->
 <div class="row gy-3 mb-4 mt-3">
-    <div class="d-flex">
-        <!-- Button to show Class List section -->
-        <button id="showClassListBtn" class="btn btn-primary me-2">Class List</button>
-    
-        <!-- Button to show Teacher List section -->
-        <button id="showTeacherListBtn" class="btn btn-outline-primary">Teacher List</button>
-    </div>
+  <div class="d-flex">
+    <!-- Button to show Class List section -->
+    <button id="showClassListBtn" class="btn btn-primary me-2">Class List</button>
+
+    <!-- Button to show Teacher List section -->
+    <button id="showTeacherListBtn" class="btn btn-outline-primary">Teacher List</button>
+  </div>
 </div>
 
 <!-- Class List Table -->
 <div id="classListSection" class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis pt-7 pb-3 border-y mb-6">
-    <div id="" data-list=''>
-        <div class="row align-items-end justify-content-between pb-4 g-3">
-            <div class="filters d-flex justify-content-between align-items-center gap-3">
-                <!-- Search -->
-                <div class="position-relative" style="width: auto;">
-                    <span class="fas fa-search search-box-icon" style="position: absolute; top: 50%; left: 10px; transform: translateY(-50%); color: #aaa;"></span>
-                    <input type="search" class="form-control ps-5" id="searchInput" placeholder="Search" style="padding: 5px; font-size: 14px; border-radius: 8px; width: 200px;">
-                </div>
-            </div>
+  <div id="" data-list=''>
+    <div class="row align-items-end justify-content-between pb-4 g-3">
+      <div class="filters d-flex justify-content-between align-items-center gap-3">
+        <!-- Search -->
+        <div class="position-relative" style="width: auto;">
+          <span class="fas fa-search search-box-icon" style="position: absolute; top: 50%; left: 10px; transform: translateY(-50%); color: #aaa;"></span>
+          <input type="search" class="form-control ps-5" id="searchInput" placeholder="Search" style="padding: 5px; font-size: 14px; border-radius: 8px; width: 200px;">
         </div>
-        
-        <div id="" data-list='{"page":10,"pagination":true}'>
-            <div class="table-responsive ms-n1 ps-1 scrollbar">
-                <table id="vis-table" class="table fs-9 mb-0 border-top border-translucent">
-                    <thead>
-                        <tr>
-                        <th class="sort align-middle text-start" scope="col" data-sort="" style="width:5%;">CLASS</th>
-                        <th class="sort align-middle text-center" scope="col" data-sort="" style="width:15%;">TEACHER NAME</th>
-                        <th class="sort align-middle text-center" scope="col" data-sort="" style="width:15%;">MAX CAPACITY</th>
-                        <th class="sort align-middle text-center" scope="col" data-sort="" style="width:15%;">CURRENT ENROLLMENT</th>
-                        <th class="sort align-middle text-center" scope="col" data-sort="" style="width:15%;">STATUS</th>
-                        <th class="sort align-middle text-end" scope="col" style="width:5%;"></th>
-                        </tr>
-                    </thead>
-                    <tbody id="">
-                        <tr>
-                            <td class="align-middle text-start">4 Arif</td>
-                            <td class="align-middle text-center">Alice</td>
-                            <td class="align-middle text-center">50</td>
-                            <td class="align-middle text-center">50</td>
-                            <td class="align-middle text-center">Active</td>
-                            <td class="align-middle text-end white-space-nowrap pe-0 action">
-                                <div class="btn-reveal-trigger position-static">
-                                    <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs-10" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
-                                        <span class="fas fa-ellipsis-h fs-10"></span>
-                                    </button>
-                                    <div class="dropdown-menu dropdown-menu-end py-2">
-                                        <a class="dropdown-item" href="#" data-bs-toggle="" data-bs-target="">View</a>
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>  
-                </table>
-            </div>
-        </div>
-        <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
-            <div class="col-auto d-flex">
-                <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p>
-                <a class="fw-semibold" href="#!" data-list-view="*" id="">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
-                <a class="fw-semibold d-none" href="#!" data-list-view="less" id="">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
-            </div>
-            <div class="col-auto d-flex">
-                <button class="page-link" data-list-pagination="prev"><span class="fas fa-chevron-left"></span></button>
-                <ul class="mb-0 pagination"></ul>
-                <button class="page-link pe-0" data-list-pagination="next"><span class="fas fa-chevron-right"></span></button>
-            </div>
-        </div>
+      </div>
     </div>
+
+    <div id="" data-list='{"page":10,"pagination":true}'>
+      <div class="table-responsive ms-n1 ps-1 scrollbar">
+        <table id="vis-table" class="table fs-9 mb-0 border-top border-translucent">
+          <thead>
+            <tr>
+              <th class="sort align-middle text-start" scope="col" data-sort="" style="width:5%;">CLASS</th>
+              <th class="sort align-middle text-center" scope="col" data-sort="" style="width:15%;">TEACHER NAME</th>
+              <th class="sort align-middle text-center" scope="col" data-sort="" style="width:15%;">MAX CAPACITY</th>
+              <th class="sort align-middle text-center" scope="col" data-sort="" style="width:15%;">CURRENT ENROLLMENT</th>
+              <th class="sort align-middle text-center" scope="col" data-sort="" style="width:15%;">STATUS</th>
+              <th class="sort align-middle text-end" scope="col" style="width:5%;"></th>
+            </tr>
+          </thead>
+          <tbody id="">
+            <tr>
+              <td class="align-middle text-start">4 Arif</td>
+              <td class="align-middle text-center">Alice</td>
+              <td class="align-middle text-center">50</td>
+              <td class="align-middle text-center">50</td>
+              <td class="align-middle text-center">Active</td>
+              <td class="align-middle text-end white-space-nowrap pe-0 action">
+                <div class="btn-reveal-trigger position-static">
+                  <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs-10" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
+                    <span class="fas fa-ellipsis-h fs-10"></span>
+                  </button>
+                  <div class="dropdown-menu dropdown-menu-end py-2">
+                    <a class="dropdown-item" href="#" data-bs-toggle="" data-bs-target="">View</a>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
+      <div class="col-auto d-flex">
+        <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p>
+        <a class="fw-semibold" href="#!" data-list-view="*" id="">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
+        <a class="fw-semibold d-none" href="#!" data-list-view="less" id="">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
+      </div>
+      <div class="col-auto d-flex">
+        <button class="page-link" data-list-pagination="prev"><span class="fas fa-chevron-left"></span></button>
+        <ul class="mb-0 pagination"></ul>
+        <button class="page-link pe-0" data-list-pagination="next"><span class="fas fa-chevron-right"></span></button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Teacher List Table -->
 <div id="teacherListSection" class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis pt-7 pb-3 border-y mb-6 d-none">
-    <div data-list=''>
-        <div class="row align-items-end justify-content-between pb-4 g-3">
-            <div class="filters d-flex justify-content-between align-items-center gap-3">
-                <!-- Search -->
-                <div class="position-relative" style="width: auto;">
-                    <span class="fas fa-search search-box-icon" style="position: absolute; top: 50%; left: 10px; transform: translateY(-50%); color: #aaa;"></span>
-                    <input type="search" class="form-control ps-5" id="searchInputTeacher" placeholder="Search" style="padding: 5px; font-size: 14px; border-radius: 8px; width: 200px;">
-                </div>
-            </div>
+  <div data-list=''>
+    <div class="row align-items-end justify-content-between pb-4 g-3">
+      <div class="filters d-flex justify-content-between align-items-center gap-3">
+        <!-- Search -->
+        <div class="position-relative" style="width: auto;">
+          <span class="fas fa-search search-box-icon" style="position: absolute; top: 50%; left: 10px; transform: translateY(-50%); color: #aaa;"></span>
+          <input type="search" class="form-control ps-5" id="searchInputTeacher" placeholder="Search" style="padding: 5px; font-size: 14px; border-radius: 8px; width: 200px;">
         </div>
-        
-        <div data-list='{"page":10,"pagination":true}'>
-            <div class="table-responsive ms-n1 ps-1 scrollbar">
-                <table id="teacher-table" class="table fs-9 mb-0 border-top border-translucent">
-                    <thead>
-                        <tr>
-                        <th class="sort align-middle text-start" scope="col" style="width:15%;">TEACHER NAME</th>
-                        <th class="sort align-middle text-center" scope="col" style="width:15%;">EMAIL ADDRESS</th>
-                        <th class="sort align-middle text-center" scope="col" style="width:15%;">PHONE NUMBER</th>
-                        <th class="sort align-middle text-center" scope="col" style="width:15%;">POSITION</th>
-                        <th class="sort align-middle text-center" scope="col" style="width:15%;">HIRE DATE</th>
-                        <th class="sort align-middle text-center" scope="col" style="width:15%;">CLASS IN CHARGE</th>
-                        <th class="sort align-middle text-end" scope="col" style="width:5%;"></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Example teacher data -->
-                        <tr>
-                            <td class="align-middle text-start">Michael</td>
-                            <td class="align-middle text-center">michael@gmail.com</td>
-                            <td class="align-middle text-center">0002223345</td>
-                            <td class="align-middle text-center">teacher</td>
-                            <td class="align-middle text-center">10 september 2007</td>
-                            <td class="align-middle text-center">4 Arif</td>
-                            <td class="align-middle text-end white-space-nowrap pe-0 action">
-                                <div class="btn-reveal-trigger position-static">
-                                    <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs-10" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
-                                        <span class="fas fa-ellipsis-h fs-10"></span>
-                                    </button>
-                                    <div class="dropdown-menu dropdown-menu-end py-2">
-                                        <a class="dropdown-item" href="#">View</a>
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>  
-                </table>
-            </div>
-        </div>
-        <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
-            <div class="col-auto d-flex">
-                <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p>
-                <a class="fw-semibold" href="#!" data-list-view="*" id="">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
-                <a class="fw-semibold d-none" href="#!" data-list-view="less" id="">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
-            </div>
-            <div class="col-auto d-flex">
-                <button class="page-link" data-list-pagination="prev"><span class="fas fa-chevron-left"></span></button>
-                <ul class="mb-0 pagination"></ul>
-                <button class="page-link pe-0" data-list-pagination="next"><span class="fas fa-chevron-right"></span></button>
-            </div>
-        </div>
+      </div>
     </div>
+
+    <div data-list='{"page":10,"pagination":true}'>
+      <div class="table-responsive ms-n1 ps-1 scrollbar">
+        <table id="teacher-table" class="table fs-9 mb-0 border-top border-translucent">
+          <thead>
+            <tr>
+              <th class="sort align-middle text-start" scope="col" style="width:15%;">TEACHER NAME</th>
+              <th class="sort align-middle text-center" scope="col" style="width:15%;">EMAIL ADDRESS</th>
+              <th class="sort align-middle text-center" scope="col" style="width:15%;">PHONE NUMBER</th>
+              <th class="sort align-middle text-center" scope="col" style="width:15%;">POSITION</th>
+              <th class="sort align-middle text-center" scope="col" style="width:15%;">HIRE DATE</th>
+              <th class="sort align-middle text-center" scope="col" style="width:15%;">CLASS IN CHARGE</th>
+              <th class="sort align-middle text-end" scope="col" style="width:5%;"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Example teacher data -->
+            <tr>
+              <td class="align-middle text-start">Michael</td>
+              <td class="align-middle text-center">michael@gmail.com</td>
+              <td class="align-middle text-center">0002223345</td>
+              <td class="align-middle text-center">teacher</td>
+              <td class="align-middle text-center">10 september 2007</td>
+              <td class="align-middle text-center">4 Arif</td>
+              <td class="align-middle text-end white-space-nowrap pe-0 action">
+                <div class="btn-reveal-trigger position-static">
+                  <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs-10" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
+                    <span class="fas fa-ellipsis-h fs-10"></span>
+                  </button>
+                  <div class="dropdown-menu dropdown-menu-end py-2">
+                    <a class="dropdown-item" href="#">View</a>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
+      <div class="col-auto d-flex">
+        <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p>
+        <a class="fw-semibold" href="#!" data-list-view="*" id="">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
+        <a class="fw-semibold d-none" href="#!" data-list-view="less" id="">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
+      </div>
+      <div class="col-auto d-flex">
+        <button class="page-link" data-list-pagination="prev"><span class="fas fa-chevron-left"></span></button>
+        <ul class="mb-0 pagination"></ul>
+        <button class="page-link pe-0" data-list-pagination="next"><span class="fas fa-chevron-right"></span></button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('DOMContentLoaded', function() {
     const showClassListBtn = document.getElementById('showClassListBtn');
     const showTeacherListBtn = document.getElementById('showTeacherListBtn');
     const classListSection = document.getElementById('classListSection');
@@ -169,26 +215,26 @@
 
     // Click event for Class List button
     showClassListBtn.addEventListener('click', function() {
-        classListSection.classList.remove('d-none');
-        teacherListSection.classList.add('d-none');
+      classListSection.classList.remove('d-none');
+      teacherListSection.classList.add('d-none');
 
-        showClassListBtn.classList.add('btn-primary');
-        showClassListBtn.classList.remove('btn-outline-primary');
-        showTeacherListBtn.classList.add('btn-outline-primary');
-        showTeacherListBtn.classList.remove('btn-primary');
+      showClassListBtn.classList.add('btn-primary');
+      showClassListBtn.classList.remove('btn-outline-primary');
+      showTeacherListBtn.classList.add('btn-outline-primary');
+      showTeacherListBtn.classList.remove('btn-primary');
     });
 
     // Click event for Teacher List button
     showTeacherListBtn.addEventListener('click', function() {
-        teacherListSection.classList.remove('d-none');
-        classListSection.classList.add('d-none');
+      teacherListSection.classList.remove('d-none');
+      classListSection.classList.add('d-none');
 
-        showTeacherListBtn.classList.add('btn-primary');
-        showTeacherListBtn.classList.remove('btn-outline-primary');
-        showClassListBtn.classList.add('btn-outline-primary');
-        showClassListBtn.classList.remove('btn-primary');
+      showTeacherListBtn.classList.add('btn-primary');
+      showTeacherListBtn.classList.remove('btn-outline-primary');
+      showClassListBtn.classList.add('btn-outline-primary');
+      showClassListBtn.classList.remove('btn-primary');
     });
-});
+  });
 </script>
 
 <%- include('partials/private-footer.ejs') %>

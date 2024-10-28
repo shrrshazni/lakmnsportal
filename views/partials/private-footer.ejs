@@ -456,9 +456,9 @@
     // Hide navbar during loading
     // Show the navbar
 
-    navbar1.classList.remove('d-inline-flex');
-    navbar2.classList.remove('d-inline-flex');
-    navbar2.classList.remove('d-xl-inline-block');
+    // navbar1.classList.remove('d-inline-flex');
+    // navbar2.classList.remove('d-inline-flex');
+    // navbar2.classList.remove('d-xl-inline-block');
 
     // Keep the loader visible for at least 3 seconds
     setTimeout(() => {
@@ -488,28 +488,19 @@
   // Event listener to hide loader when the new page is fully loaded
   window.addEventListener('load', function() {
     const wrap = document.getElementById('wrap');
-    const navbar1 = document.getElementById('navbarComboSlim');
-    const navbar2 = document.getElementById('navbarComboSlim-2');
 
     wrap.classList.add('d-none'); // Hide the loader when the new page is fully loaded
-
-    // Show the navbar
-
-    navbar1.classList.add('d-inline-flex');
-    navbar2.classList.add('d-inline-flex');
-    navbar2.classList.add('d-xl-inline-block');
   });
 
   // Ensure the loader is hidden if navigating via the back button
   window.addEventListener('pageshow', function(event) {
     if (event.persisted) {
       const wrap = document.getElementById('wrap');
-      const navbar1 = document.getElementById('navbarComboSlim');
-      const navbar2 = document.getElementById('navbarComboSlim-2');
+      //   const navbar1 = document.getElementById('navbarComboSlim');
+      //   const navbar2 = document.getElementById('navbarComboSlim-2');
 
       wrap.classList.add('d-none'); // Hide the loader
-      navbar1.style.display = 'inline-flex'; // Show the navbar
-      navbar2.style.display = 'inline-flex';
+      //   navbar2.style.display = 'inline-flex';
     }
   });
 </script>

@@ -893,6 +893,7 @@ schoolAttendanceSchema.index({ status: 1 });
 const paymentSchema = new mongoose.Schema({
     child: { type: mongoose.Schema.Types.ObjectId, ref: 'Children' },
     products: [{
+        sku: String,
         name: String,
         desc: String,
         type: { type: String },
@@ -903,12 +904,15 @@ const paymentSchema = new mongoose.Schema({
     }],
     isProduct: { type: Boolean },
     totalAmount: { type: Number },
-    date: { type: Date, default: Date.now },
+    date: {
+        payment: { type: Date, default: null },
+        approval: { type: Date, default: null }
+    },
+    method: { type: String, enum: ['Manual', 'Online', 'Cash', 'Invalid'] },
     timestamp: { type: Date, default: Date.now },
     file: String,
     status: { type: String, enum: ['Pay Now', 'Pending', 'Paid', 'Invalid'] }
 });
-// Add indexes for performance optimization
 paymentSchema.index({ child: 1 });
 paymentSchema.index({ date: 1 });
 paymentSchema.index({ status: 1 });
@@ -5793,7 +5797,8 @@ app.get('/education/attendance/record', isAuthenticated, async (req, res, next) 
             classTeacher: classTeacher,
             parent: parent,
             todayStart,
-            todayEnd
+            todayEnd,
+            attendances // temp all student attendance
         });
 
     } catch (error) {
@@ -5802,87 +5807,150 @@ app.get('/education/attendance/record', isAuthenticated, async (req, res, next) 
     }
 });
 
-// Student: information section route
-app.get('/education/student/information', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    })
-        .populate('sender')
-        .sort({ timestamp: -1 });
+// Student : attendance setting route - fetch api
+app.post("/education/attendance/update", async (req, res) => {
+    const { attendanceId, status } = req.body;
 
-    if (user) {
+    console.log('fetching api');
+
+    try {
+        // Update the attendance status in the database
+        const updatedAttendance = await AttendanceEducation.findByIdAndUpdate(
+            attendanceId,
+            { status },
+            { new: true }
+        );
+
+        if (updatedAttendance) {
+            res.json({ success: true, message: "Attendance updated successfully" });
+        } else {
+            res.status(404).json({ success: false, message: "Attendance not found" });
+        }
+    } catch (error) {
+        console.error("Error updating attendance:", error);
+        res.status(500).json({ success: false, message: "Internal server error" });
+    }
+});
+
+// Student: information section route
+app.get('/education/student/information', isAuthenticated, async (req, res, next) => {
+    try {
+        const { user, notifications } = req;
+
+        const classTeacher = await TeacherEducation.findOne({ user: user._id }).populate('class');
+        const parent = await ParentEducation.findOne({ user: user._id });
+
+        // Fetch children and populate their class and parent details
+        const children = await ChildEducation.find()
+            .populate({
+                path: 'class',  // Populate class details
+                model: 'Classes'
+            })
+            .populate({
+                path: 'parent',  // Populate parent details
+                model: 'Parents'
+            })
+            .exec();
+
+        console.log(parent);
 
         res.render('education-student-information', {
             user: user,
             notifications: notifications,
             uuid: uuidv4(),
+            children,
+            parent,
+            classTeacher
         });
-    }
-});
 
-// Student: schedule section route
-app.get('/education/student/schedule', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    })
-        .populate('sender')
-        .sort({ timestamp: -1 });
-
-    if (user) {
-
-        res.render('education-student-schedule', {
-            user: user,
-            notifications: notifications,
-            uuid: uuidv4(),
-        });
+    } catch (error) {
+        console.error('Error fetching data:', error);
+        next(error);
     }
 });
 
 // Teacher: information section route
-app.get('/education/teacher/information', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    })
-        .populate('sender')
-        .sort({ timestamp: -1 });
+app.get('/education/teacher/information', isAuthenticated, async (req, res, next) => {
+    try {
+        const { user, notifications } = req;
 
-    if (user) {
+        // fetch all user data to be used for at teacher
+        const allUser = await User.find();
+        // fetch for teacher with specific class
+        const classTeacher = await TeacherEducation.findOne({ user: user._id }).populate('class');
+        // fetch for parent with specific child class
+        const parentClass = await ParentEducation.findOne({ user: user._id });
 
+        // Fetch all teachers (no user filtering)
+        const teachers = await TeacherEducation.find().populate('class');
+
+        // Fetch all classes and populate their parent details
+        const classes = await ClassEducation.find()
+            .populate({
+                path: 'teacher',  // Assuming classes have a parent reference
+                model: 'Teachers'
+            });
+
+        // Fetch children and populate their class and parent details
+        const children = await ChildEducation.find()
+            .populate({
+                path: 'class',  // Populate class details
+                model: 'Classes'
+            })
+            .populate({
+                path: 'parent',  // Populate parent details
+                model: 'Parents'
+            })
+            .exec();
+
+        // Render the EJS template with the populated data
         res.render('education-teacher-information', {
             user: user,
             notifications: notifications,
             uuid: uuidv4(),
+            teachers,  // Use 'teachers' instead of 'teacher'
+            classes,
+            children,  // Pass children to the template
+            classTeacher,
+            parentClass,
+            allUser
         });
+
+    } catch (error) {
+        console.error('Error fetching data:', error);
+        next(error);
     }
 });
 
 // Payment: fee section route
-app.get('/education/fee/payment', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    })
-        .populate('sender')
-        .sort({ timestamp: -1 });
+app.get('/education/fee/payment', isAuthenticated, async (req, res, next) => {
+    try {
+        const { user, notifications } = req;
 
-    if (user) {
+        // find all payment
+        const payments = await PaymentEducation.find().populate('child');
+
+        const children = await ChildEducation.find()
+            .populate({
+                path: 'class',  // Populate class details
+                model: 'Classes'
+            })
+            .populate({
+                path: 'parent',  // Populate parent details
+                model: 'Parents'
+            })
+            .exec();
+
+        console.log(payments);
 
         res.render('education-fee-payment', {
             user: user,
             notifications: notifications,
             uuid: uuidv4(),
         });
+    } catch (error) {
+        console.error('Error fetching data:', error);
+        next(error);
     }
 });
 
@@ -7579,6 +7647,53 @@ app.get('/testing', isAuthenticated, async (req, res, next) => {
     try {
         const { user, notifications } = req;
 
+        // // Fetch all children from the database
+        // const children = await ChildEducation.find();
+
+        // // Define the sample products array
+        // const sampleProducts = [
+        //     {
+        //         name: 'Product A',
+        //         desc: 'Description of Product A',
+        //         type: 'Stationery',
+        //         color: 'Red',
+        //         size: 'M',
+        //         quantity: 1,
+        //         price: 15.00
+        //     }
+        // ];
+
+        // // Create payments for each child for 3 different months
+        // const paymentPromises = [];
+
+        // children.forEach((child) => {
+        //     // Generate 3 dates for the last 3 months
+        //     const now = new Date();
+        //     const months = [new Date(), new Date(now.setMonth(now.getMonth() - 1)), new Date(now.setMonth(now.getMonth() - 2))];
+
+        //     // Create payment documents for each month
+        //     months.forEach((month) => {
+        //         const payment = new PaymentEducation({
+        //             child: child._id,
+        //             products: sampleProducts,
+        //             isProduct: true,
+        //             totalAmount: sampleProducts.reduce((total, product) => total + (product.price * product.quantity), 0),
+        //             date: month,
+        //             status: 'Paid'
+        //         });
+
+        //         console.log(payment);
+
+        //         // Push to the array of promises to save later
+        //         paymentPromises.push(payment.save());
+        //     });
+        // });
+
+        // // Save all payments to the database
+        // const payments = await Promise.all(paymentPromises);
+
+        // console.log(`${payments.length} payments created successfully!`);
+
         res.render('testing', {
             user: user,
             notifications: notifications,
@@ -7592,229 +7707,229 @@ app.get('/testing', isAuthenticated, async (req, res, next) => {
 });
 
 // Replace these with the actual child ObjectIds you've shared
-const childIds = [
-    '6719c6a081d9169c16bc231c',
-    '6719c6a081d9169c16bc231e',
-    '6719c6a181d9169c16bc2324',
-    '6719c6a181d9169c16bc2326'
-];
+// const childIds = [
+//     '6719c6a081d9169c16bc231c',
+//     '6719c6a081d9169c16bc231e',
+//     '6719c6a181d9169c16bc2324',
+//     '6719c6a181d9169c16bc2326'
+// ];
 
-async function createDummyAttendance() {
-    try {
+// async function createDummyAttendance() {
+//     try {
 
-        // Create dummy attendance records for the provided child IDs
-        const dummyData = [
-            {
-                child: childIds[0], // Richard Hodge
-                status: 'Absent',
-                remarks: 'Was on medical leave',
-                date: new Date('2024-10-19')
-            },
-            {
-                child: childIds[1], // Justin McNeil
-                status: 'Present',
-                remarks: 'On time and participated',
-                date: new Date('2024-10-20')
-            },
-            {
-                child: childIds[2], // Sharon Chambers
-                status: 'Absent',
-                remarks: 'Family emergency',
-                date: new Date('2024-10-20')
-            },
-            {
-                child: childIds[3], // New Child ID (example)
-                status: 'Present',
-                remarks: 'Attended the class session',
-                date: new Date('2024-10-21')
-            }
-        ];
+//         // Create dummy attendance records for the provided child IDs
+//         const dummyData = [
+//             {
+//                 child: childIds[0], // Richard Hodge
+//                 status: 'Absent',
+//                 remarks: 'Was on medical leave',
+//                 date: new Date('2024-10-19')
+//             },
+//             {
+//                 child: childIds[1], // Justin McNeil
+//                 status: 'Present',
+//                 remarks: 'On time and participated',
+//                 date: new Date('2024-10-20')
+//             },
+//             {
+//                 child: childIds[2], // Sharon Chambers
+//                 status: 'Absent',
+//                 remarks: 'Family emergency',
+//                 date: new Date('2024-10-20')
+//             },
+//             {
+//                 child: childIds[3], // New Child ID (example)
+//                 status: 'Present',
+//                 remarks: 'Attended the class session',
+//                 date: new Date('2024-10-21')
+//             }
+//         ];
 
-        // Insert the dummy data into the AttendanceEducation collection
-        await AttendanceEducation.insertMany(dummyData);
-        console.log('Dummy attendance data inserted successfully!');
-    } catch (error) {
-        console.error('Error inserting dummy attendance data:', error);
-    } finally {
-        mongoose.connection.close();
-    }
-}
+//         // Insert the dummy data into the AttendanceEducation collection
+//         await AttendanceEducation.insertMany(dummyData);
+//         console.log('Dummy attendance data inserted successfully!');
+//     } catch (error) {
+//         console.error('Error inserting dummy attendance data:', error);
+//     } finally {
+//         mongoose.connection.close();
+//     }
+// }
 
-async function createDummyData() {
-    try {
-        // Replace these with actual ObjectIds of users in your system
-        const teacherUserIds = [
-            '66b025210e3ea6976ab604dc',
-            '66b026070e3ea6976ab607aa',
-            '66b1bfc20f11e09eca16b4f9',
-            '66befefae5c59a752f6806ae'
-        ];
+// async function createDummyData() {
+//     try {
+//         // Replace these with actual ObjectIds of users in your system
+//         const teacherUserIds = [
+//             '66b025210e3ea6976ab604dc',
+//             '66b026070e3ea6976ab607aa',
+//             '66b1bfc20f11e09eca16b4f9',
+//             '66befefae5c59a752f6806ae'
+//         ];
 
-        const parentUserIds = [
-            '6716f63b1c4c9a33c63dde62',
-            '6716f6ac1c4c9a33c63dea71',
-            '6716f70d1c4c9a33c63df673',
-            '6716f7721c4c9a33c63e0278'
-        ];
+//         const parentUserIds = [
+//             '6716f63b1c4c9a33c63dde62',
+//             '6716f6ac1c4c9a33c63dea71',
+//             '6716f70d1c4c9a33c63df673',
+//             '6716f7721c4c9a33c63e0278'
+//         ];
 
-        const savedClasses = [];
-        const savedTeachers = [];
-        const savedParents = [];
-        const savedChildren = [];
+//         const savedClasses = [];
+//         const savedTeachers = [];
+//         const savedParents = [];
+//         const savedChildren = [];
 
-        // Step 2a: Create 4 classes and assign teachers
-        for (let i = 0; i < 4; i++) {
-            // Create a class
-            const newClass = new ClassEducation({
-                classname: `Class ${String.fromCharCode(65 + i)}`, // Class A, B, C, D
-                teacher: [teacherUserIds[i]]
-            });
+//         // Step 2a: Create 4 classes and assign teachers
+//         for (let i = 0; i < 4; i++) {
+//             // Create a class
+//             const newClass = new ClassEducation({
+//                 classname: `Class ${String.fromCharCode(65 + i)}`, // Class A, B, C, D
+//                 teacher: [teacherUserIds[i]]
+//             });
 
-            const savedClass = await newClass.save();
-            savedClasses.push(savedClass);
+//             const savedClass = await newClass.save();
+//             savedClasses.push(savedClass);
 
-            // Create a teacher for each class
-            const newTeacher = new TeacherEducation({
-                user: teacherUserIds[i],
-                class: savedClass._id
-            });
+//             // Create a teacher for each class
+//             const newTeacher = new TeacherEducation({
+//                 user: teacherUserIds[i],
+//                 class: savedClass._id
+//             });
 
-            const savedTeacher = await newTeacher.save();
-            savedTeachers.push(savedTeacher);
-        }
+//             const savedTeacher = await newTeacher.save();
+//             savedTeachers.push(savedTeacher);
+//         }
 
-        // Step 2b: Create parents and children for testing purposes
-        for (let i = 0; i < 4; i++) {
-            // Create parent
-            const newParent = new ParentEducation({
-                user: parentUserIds[i]
-            });
+//         // Step 2b: Create parents and children for testing purposes
+//         for (let i = 0; i < 4; i++) {
+//             // Create parent
+//             const newParent = new ParentEducation({
+//                 user: parentUserIds[i]
+//             });
 
-            const savedParent = await newParent.save();
-            savedParents.push(savedParent);
+//             const savedParent = await newParent.save();
+//             savedParents.push(savedParent);
 
-            // Create 2 children for each parent
-            for (let j = 0; j < 2; j++) {
-                const newChild = new ChildEducation({
-                    name: `Student ${i}${j}`,
-                    dob: new Date(2010, i, j + 1),
-                    nric: `123456-78-90${i}${j}`,
-                    gender: j % 2 === 0 ? 'Male' : 'Female',
-                    pob: 'City X',
-                    race: 'Race X',
-                    citizenship: 'Country X',
-                    swkNative: 'No',
-                    profile: `profile-student-${i}${j}.jpg`,
-                    class: savedClasses[i]._id,
-                    parent: savedParent._id
-                });
+//             // Create 2 children for each parent
+//             for (let j = 0; j < 2; j++) {
+//                 const newChild = new ChildEducation({
+//                     name: `Student ${i}${j}`,
+//                     dob: new Date(2010, i, j + 1),
+//                     nric: `123456-78-90${i}${j}`,
+//                     gender: j % 2 === 0 ? 'Male' : 'Female',
+//                     pob: 'City X',
+//                     race: 'Race X',
+//                     citizenship: 'Country X',
+//                     swkNative: 'No',
+//                     profile: `profile-student-${i}${j}.jpg`,
+//                     class: savedClasses[i]._id,
+//                     parent: savedParent._id
+//                 });
 
-                const savedChild = await newChild.save();
-                savedChildren.push(savedChild);
+//                 const savedChild = await newChild.save();
+//                 savedChildren.push(savedChild);
 
-                // Associate the child with the parent and class
-                savedParent.children.push(savedChild._id);
-                savedClasses[i].students.push(savedChild._id);
-            }
+//                 // Associate the child with the parent and class
+//                 savedParent.children.push(savedChild._id);
+//                 savedClasses[i].students.push(savedChild._id);
+//             }
 
-            // Save the updated parent and class
-            await savedParent.save();
-            await savedClasses[i].save();
-        }
+//             // Save the updated parent and class
+//             await savedParent.save();
+//             await savedClasses[i].save();
+//         }
 
-        console.log('Dummy data created successfully!');
-    } catch (error) {
-        console.error('Error creating dummy data:', error);
-    }
-}
+//         console.log('Dummy data created successfully!');
+//     } catch (error) {
+//         console.error('Error creating dummy data:', error);
+//     }
+// }
 
-async function removeDuplicatesForDate(date) {
-    try {
-        // Convert the input date to UTC+8 start and end times
-        const startOfDay = moment(date).utcOffset(8).startOf('day').toDate();
-        const endOfDay = moment(date).utcOffset(8).endOf('day').toDate();
+// async function removeDuplicatesForDate(date) {
+//     try {
+//         // Convert the input date to UTC+8 start and end times
+//         const startOfDay = moment(date).utcOffset(8).startOf('day').toDate();
+//         const endOfDay = moment(date).utcOffset(8).endOf('day').toDate();
 
-        // Group by user and timestamp to find duplicates for the specified date
-        const duplicates = await Attendance.aggregate([
-            {
-                $match: {
-                    // Match records for the specific date in UTC+8
-                    timestamp: {
-                        $gte: startOfDay,
-                        $lt: endOfDay
-                    }
-                }
-            },
-            {
-                $group: {
-                    _id: { user: "$user", timestamp: "$timestamp" },
-                    count: { $sum: 1 },
-                    ids: { $push: "$_id" }
-                }
-            },
-            {
-                $match: { count: { $gt: 1 } } // Only consider groups with duplicates
-            }
-        ]);
+//         // Group by user and timestamp to find duplicates for the specified date
+//         const duplicates = await Attendance.aggregate([
+//             {
+//                 $match: {
+//                     // Match records for the specific date in UTC+8
+//                     timestamp: {
+//                         $gte: startOfDay,
+//                         $lt: endOfDay
+//                     }
+//                 }
+//             },
+//             {
+//                 $group: {
+//                     _id: { user: "$user", timestamp: "$timestamp" },
+//                     count: { $sum: 1 },
+//                     ids: { $push: "$_id" }
+//                 }
+//             },
+//             {
+//                 $match: { count: { $gt: 1 } } // Only consider groups with duplicates
+//             }
+//         ]);
 
-        // Iterate over each duplicate group
-        for (const group of duplicates) {
-            const idsToDelete = group.ids.slice(1); // Keep the first one, delete the rest
+//         // Iterate over each duplicate group
+//         for (const group of duplicates) {
+//             const idsToDelete = group.ids.slice(1); // Keep the first one, delete the rest
 
-            // Delete duplicates by their IDs
-            await Attendance.deleteMany({ _id: { $in: idsToDelete } });
-            console.log(`Deleted duplicates for user ${group._id.user} on ${moment(date).utcOffset(8).format('YYYY-MM-DD')}`);
-        }
-    } catch (error) {
-        console.error("Error removing duplicates:", error);
-    }
-}
+//             // Delete duplicates by their IDs
+//             await Attendance.deleteMany({ _id: { $in: idsToDelete } });
+//             console.log(`Deleted duplicates for user ${group._id.user} on ${moment(date).utcOffset(8).format('YYYY-MM-DD')}`);
+//         }
+//     } catch (error) {
+//         console.error("Error removing duplicates:", error);
+//     }
+// }
 
-const checkAttendanceOutOfOfficeToday = async () => {
-    try {
-        const today = moment().utcOffset(8).startOf('day').toDate();
-        const endOfDay = moment(today).endOf('day').toDate(); // Calculate the end of the day
+// const checkAttendanceOutOfOfficeToday = async () => {
+//     try {
+//         const today = moment().utcOffset(8).startOf('day').toDate();
+//         const endOfDay = moment(today).endOf('day').toDate(); // Calculate the end of the day
 
-        // Find all attendance records for today that have outOfOffice enabled
-        const attendances = await Attendance.find({
-            timestamp: {
-                $gte: today,
-                $lt: endOfDay
-            },
-            'outOfOffice.enabled': true // Filter for records where outOfOffice is enabled
-        });
+//         // Find all attendance records for today that have outOfOffice enabled
+//         const attendances = await Attendance.find({
+//             timestamp: {
+//                 $gte: today,
+//                 $lt: endOfDay
+//             },
+//             'outOfOffice.enabled': true // Filter for records where outOfOffice is enabled
+//         });
 
-        if (attendances.length > 0) {
-            console.log(`Found ${attendances.length} attendance records with outOfOffice enabled for today:`);
-            attendances.forEach(attendance => {
-                console.log(`User: ${attendance.user}, Reason: ${attendance.outOfOffice.reason}, Location: ${attendance.outOfOffice.location}`);
-            });
-        } else {
-            console.log('No attendance records with outOfOffice enabled for today.');
-        }
-    } catch (error) {
-        console.error('Error checking attendance for out of office today:', error);
-    }
-};
+//         if (attendances.length > 0) {
+//             console.log(`Found ${attendances.length} attendance records with outOfOffice enabled for today:`);
+//             attendances.forEach(attendance => {
+//                 console.log(`User: ${attendance.user}, Reason: ${attendance.outOfOffice.reason}, Location: ${attendance.outOfOffice.location}`);
+//             });
+//         } else {
+//             console.log('No attendance records with outOfOffice enabled for today.');
+//         }
+//     } catch (error) {
+//         console.error('Error checking attendance for out of office today:', error);
+//     }
+// };
 
-const deleteTodayAttendanceRecords = async () => {
-    try {
-        const today = moment().utcOffset(8).startOf('day').toDate();
-        const endOfDay = moment(today).endOf('day').toDate(); // Calculate the end of the day
+// const deleteTodayAttendanceRecords = async () => {
+//     try {
+//         const today = moment().utcOffset(8).startOf('day').toDate();
+//         const endOfDay = moment(today).endOf('day').toDate(); // Calculate the end of the day
 
-        // Delete all attendance records for today
-        const result = await Attendance.deleteMany({
-            timestamp: {
-                $gte: today,
-                $lt: endOfDay
-            }
-        });
+//         // Delete all attendance records for today
+//         const result = await Attendance.deleteMany({
+//             timestamp: {
+//                 $gte: today,
+//                 $lt: endOfDay
+//             }
+//         });
 
-        console.log(`Deleted ${result.deletedCount} attendance records for today.`);
-    } catch (error) {
-        console.error('Error deleting attendance records for today:', error);
-    }
-};
+//         console.log(`Deleted ${result.deletedCount} attendance records for today.`);
+//     } catch (error) {
+//         console.error('Error deleting attendance records for today:', error);
+//     }
+// };
 
 // * Route to search for schedules based on date and location
 // * This route is accessible to all users.

@@ -1,8 +1,86 @@
 <%- include('partials/public-header.ejs') %>
 
-<div class="mb-6">
-  <h1>Testing loading page</h1>
-  <a href="/testing" class="btn btn-primary">Test now</a>
+<div class="mb-6 p-10">
+  <div id="attendance-buttons"></div> <!-- Container for dynamic buttons -->
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      console.log("Script loaded and ready");
+
+      const attendanceData = [{
+          id: "1",
+          name: "Student A"
+        },
+        {
+          id: "2",
+          name: "Student B"
+        },
+        {
+          id: "3",
+          name: "Student C"
+        }
+        // Add more students as needed
+      ];
+
+      const attendanceButtonsContainer = document.getElementById("attendance-buttons");
+
+      // Function to create buttons for each student
+      const createButtons = () => {
+        attendanceData.forEach(student => {
+          const buttonDiv = document.createElement("div");
+          buttonDiv.className = "my-2"; // Add some spacing
+
+          const presentButton = document.createElement("button");
+          presentButton.className = "btn btn-outline-success";
+          presentButton.dataset.status = "present";
+          presentButton.textContent = `Present ${student.name}`;
+          presentButton.onclick = () => handleAttendanceClick("present", student.id);
+
+          const absentButton = document.createElement("button");
+          absentButton.className = "btn btn-outline-danger";
+          absentButton.dataset.status = "absent";
+          absentButton.textContent = `Absent ${student.name}`;
+          absentButton.onclick = () => handleAttendanceClick("absent", student.id);
+
+          buttonDiv.appendChild(presentButton);
+          buttonDiv.appendChild(absentButton);
+          attendanceButtonsContainer.appendChild(buttonDiv);
+        });
+      };
+
+      // Handle attendance button clicks
+      const handleAttendanceClick = async (status, studentId) => {
+        console.log(`${status.charAt(0).toUpperCase() + status.slice(1)} button clicked for ID: ${studentId}`);
+
+        try {
+          const response = await fetch("/testing/attendance/update", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              status,
+              attendanceId: studentId, // Include the student ID
+            }),
+          });
+
+          const result = await response.json();
+
+          if (response.ok) {
+            console.log("Attendance updated successfully:", result);
+          } else {
+            console.error("Failed to update attendance:", result.message);
+          }
+        } catch (error) {
+          console.error("Error while sending data:", error);
+        }
+      };
+
+      // Create buttons on page load
+      createButtons();
+    });
+  </script>
 </div>
+
 
 <%- include('partials/public-footer.ejs') %>

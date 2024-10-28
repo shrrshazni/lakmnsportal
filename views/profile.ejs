@@ -473,7 +473,7 @@
                 </div>
                 <div class="btn-reveal-trigger me-3">
                   <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fas fa-ellipsis-h"></span></button>
-                  <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item" href="/files/download/<%= file._id %>">Download</a><a class="dropdown-item" href="/files/delete/<%= file.id %>">Delete</a></div>
+                  <div class="dropdown-menu dropdown-menu-end py-2 no-loader"><a class="dropdown-item" href="/files/download/<%= file._id %>">Download</a><a class="dropdown-item" href="/files/delete/<%= file.id %>">Delete</a></div>
                 </div>
               </div>
               <div class="d-flex fs-9 text-body-tertiary mb-2 flex-wrap"><span><%= file.size %></span><span class="text-body-quaternary mx-1">| </span><a class="notranslate" href="/staff/details/<%= userFile._id %>"><%= userFile.fullname %> </a><span class="text-body-quaternary mx-1">| </span><span class="text-nowrap"><%= formatDateFile(file.date) %></span></div><img class="rounded-2" src="<%= file.path %>" alt="" style="max-width:230px" />
