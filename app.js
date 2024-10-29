@@ -3204,10 +3204,10 @@ app.get('/leave/history', isAuthenticated, async (req, res, next) => {
             staffOnLeave,
         ] = await Promise.all([
             User.find().sort({ timestamp: -1 }),
-            Leave.find().sort({ timestamp: -1 }),
+            Leave.find().sort({ timestamp: -1 }).exec(),
             UserLeave.find().sort({ timestamp: -1 }),
             UserLeave.findOne({ user: user._id }).populate('user').exec(),
-            Leave.find({ user: user._id }),
+            Leave.find({ user: user._id }).sort({ timestamp: -1 }).exec(),
             user.isAdmin || user.isChiefExec || user.isDeputyChiefExec
                 ? Leave.find({ status: 'approved' })
                 : Leave.find({ status: 'approved', department: user.department }),
@@ -3274,6 +3274,9 @@ app.get('/leave/history', isAuthenticated, async (req, res, next) => {
 
         const departments = Array.from(uniqueDepartments);
         const sections = Array.from(uniqueSections);
+
+
+        console.log(leave);
 
         // Render the leave history page with the fetched data
         res.render('leave-history', {
