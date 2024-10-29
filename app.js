@@ -830,7 +830,8 @@ subscriptionSchema.index({ endpoint: 1 });
 const classSchema = new mongoose.Schema({
     classname: String,
     teacher: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Teacher' }],
-    students: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Child' }]
+    students: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Child' }],
+    status: { type: String }
 });
 // Add indexes for performance optimization
 classSchema.index({ classname: 1 });
@@ -5855,7 +5856,7 @@ app.get('/education/student/information', isAuthenticated, async (req, res, next
             })
             .exec();
 
-        console.log(parent);
+        const allUser = await User.find();
 
         res.render('education-student-information', {
             user: user,
@@ -5863,7 +5864,8 @@ app.get('/education/student/information', isAuthenticated, async (req, res, next
             uuid: uuidv4(),
             children,
             parent,
-            classTeacher
+            classTeacher,
+            allUser
         });
 
     } catch (error) {

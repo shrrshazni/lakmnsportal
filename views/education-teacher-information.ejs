@@ -49,14 +49,13 @@ if (parentClass && parentClass.children) {
     filteredTeachers = teachers;
 }
 
-// Log the length of filtered teachers for debugging
-console.log(filteredTeachers.length);
+console.log(filteredTeachers);
 %>
 
 <div class="row gy-3 mb-3 justify-content-between d-flex mt-0">
   <div class="col-md-9 col-auto">
-    <h2 class="mb-2 text-body-emphasis">Information</h2>
-    <h5 class="text-body-tertiary fw-semibold">We hope you have a great experience managing visitor entries and exits.</h5>
+    <h2 class="mb-2 text-body-emphasis">Classroom</h2>
+    <h5 class="text-body-tertiary fw-semibold">A room where students receive instruction.</h5>
   </div>
 </div>
 
@@ -73,57 +72,99 @@ console.log(filteredTeachers.length);
 
 <!-- Class List Table -->
 <div id="classListSection" class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis pt-7 pb-3 border-y mb-6">
-  <div id="" data-list=''>
+  <div class="border-bottom-0 border-translucent mt-3" data-list='{"valueNames":["class","enrollment","teacher","attendance", "status"],"page":10,"pagination":true}'>
     <div class="row align-items-end justify-content-between pb-4 g-3">
-      <div class="filters d-flex justify-content-between align-items-center gap-3">
-        <!-- Search -->
-        <div class="position-relative" style="width: auto;">
-          <span class="fas fa-search search-box-icon" style="position: absolute; top: 50%; left: 10px; transform: translateY(-50%); color: #aaa;"></span>
-          <input type="search" class="form-control ps-5" id="searchInput" placeholder="Search" style="padding: 5px; font-size: 14px; border-radius: 8px; width: 200px;">
+
+      <div class="col-12 col-md-auto">
+        <div class="search-box">
+          <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
+            <input class="form-control search-input search form-control-sm" type="search" placeholder="Search student" aria-label="Search" />
+            <span class="fas fa-search search-box-icon"></span>
+          </form>
         </div>
       </div>
+
     </div>
 
-    <div id="" data-list='{"page":10,"pagination":true}'>
-      <div class="table-responsive ms-n1 ps-1 scrollbar">
-        <table id="vis-table" class="table fs-9 mb-0 border-top border-translucent">
-          <thead>
-            <tr>
-              <th class="sort align-middle text-start" scope="col" data-sort="" style="width:5%;">CLASS</th>
-              <th class="sort align-middle text-center" scope="col" data-sort="" style="width:15%;">TEACHER NAME</th>
-              <th class="sort align-middle text-center" scope="col" data-sort="" style="width:15%;">MAX CAPACITY</th>
-              <th class="sort align-middle text-center" scope="col" data-sort="" style="width:15%;">CURRENT ENROLLMENT</th>
-              <th class="sort align-middle text-center" scope="col" data-sort="" style="width:15%;">STATUS</th>
-              <th class="sort align-middle text-end" scope="col" style="width:5%;"></th>
-            </tr>
-          </thead>
-          <tbody id="">
-            <tr>
-              <td class="align-middle text-start">4 Arif</td>
-              <td class="align-middle text-center">Alice</td>
-              <td class="align-middle text-center">50</td>
-              <td class="align-middle text-center">50</td>
-              <td class="align-middle text-center">Active</td>
-              <td class="align-middle text-end white-space-nowrap pe-0 action">
-                <div class="btn-reveal-trigger position-static">
-                  <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs-10" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
-                    <span class="fas fa-ellipsis-h fs-10"></span>
-                  </button>
-                  <div class="dropdown-menu dropdown-menu-end py-2">
-                    <a class="dropdown-item" href="#" data-bs-toggle="" data-bs-target="">View</a>
-                  </div>
+    <div class="table-responsive ms-n1 ps-1 scrollbar">
+      <table class="table fs-9 mb-0 border-top border-translucent">
+        <thead>
+          <tr>
+            <th class="sort white-space-nowrap align-middle text-start" scope="col" data-sort="class" style="width:16.67%;">
+              CLASS
+            </th>
+            <th class="sort align-middle text-center" scope="col" data-sort="teacher" style="width:16.67%;">
+              TEACHER
+            </th>
+            <th class="sort align-middle text-center" scope="col" data-sort="enrollment" style="width:16.67%;">
+              ENROLLMENT
+            </th>
+            <th class="sort align-middle text-center" scope="col" data-sort="attendance" style="width:16.67%;">
+              ATTENDANCE TODAY
+            </th>
+            <th class="sort align-middle text-center" scope="col" data-sort="status" style="width:16.67%;">
+              STATUS
+            </th>
+            <th class="sort align-middle text-end" scope="col" style="width: 12%"></th>
+          </tr>
+        </thead>
+
+        <tbody class="list" id="project-summary-table-body">
+          <% if (filteredClasses && filteredClasses.length > 0) { %>
+          <!-- table item -->
+          <% filteredClasses.forEach(function(item) { %>
+
+          <% 
+             const allTeachers = teachers.filter(teacher => {return teacher.class._id.toString() === item._id.toString()});
+             console.log(allTeachers);
+          %>
+          <tr class="position-static">
+            <td class="class align-middle white-space-nowrap text-start py-4">
+              <a class="fw-bold fs-9 fs-xxl-8 no-loader" href="#"><%= item.classname %></a>
+            </td>
+            <% allTeachers.forEach((otherUser)=> {
+                const otherTeacher = allUser.find(allUser => { return allUser._id.toString() === otherUser.user.toString()});
+            %>
+            <td class="teacher align-middle white-space-nowrap text-center py-4">
+              <a class="mb-0 fs-9 fw-semibold fst-italic" href="#"><%= otherTeacher.fullname %></a>
+            </td>
+            <% }); %>
+            <td class="enrollment align-middle text-body white-space-nowrap text-center">
+              <p class="mb-0 fs-9 notranslate no-loader" href="#"><%= item.students.length %></p>
+            </td>
+            <td class="attendance align-middle white-space-nowrap text-center py-4">
+              <div class="progress progress-stack mt-3" style="height:3px;">
+                <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar bg-info" style="width:<%= 25 %>%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100" role="progressbar"></div>
+                <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar bg-success" style="width:<%= 25 %>%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100" data-bs-toggle="tooltip" data-bs-placement="top" title="5% Damage" role="progressbar"></div>
+                <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar bg-warning" style="width:<%= 25 %>%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100" data-bs-toggle="tooltip" data-bs-placement="top" title="45% Damage" role="progressbar"></div>
+                <div <% /* eslint-disable css-propertyvalueexpected */ %> class="progress-bar bg-danger" style="width:<%= 25 %>%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100" data-bs-toggle="tooltip" data-bs-placement="top" title="15% Damage" role="progressbar"></div>
+              </div>
+            </td>
+            <td class="status align-middle white-space-nowrap text-center py-4">
+              <p class="mb-0 fs-10 text-body badge badge-phoenix badge-phoenix-success"><%= item.status %></p>
+            </td>
+            <td class="align-middle text-end white-space-nowrap action">
+              <div class="font-sans-serif btn-reveal-trigger position-static">
+                <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs--2" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
+                  <span class="fas fa-ellipsis-h fs-9"></span>
+                </button>
+                <div class="dropdown-menu dropdown-menu-end py-2">
+                  <a class="dropdown-item" href="#">View</a>
                 </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+              </div>
+            </td>
+          </tr>
+          <%  }); %> <% } else { %>
+          <tr>
+            <td colspan="6" class="text-center fw-bold fs-9">No student/children detected</td>
+          </tr>
+          <% } %>
+        </tbody>
+      </table>
     </div>
     <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
       <div class="col-auto d-flex">
-        <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p>
-        <a class="fw-semibold" href="#!" data-list-view="*" id="">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
-        <a class="fw-semibold d-none" href="#!" data-list-view="less" id="">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
+        <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p><a class="fw-semibold no-translate no-loader" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semibold d-none no-loader" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
       </div>
       <div class="col-auto d-flex">
         <button class="page-link" data-list-pagination="prev"><span class="fas fa-chevron-left"></span></button>
@@ -136,60 +177,98 @@ console.log(filteredTeachers.length);
 
 <!-- Teacher List Table -->
 <div id="teacherListSection" class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis pt-7 pb-3 border-y mb-6 d-none">
-  <div data-list=''>
+  <div class="border-bottom-0 border-translucent mt-3" data-list='{"valueNames":["teacher","email","teacher","phone", "position", "hiredate", "class"],"page":5,"pagination":true}'>
     <div class="row align-items-end justify-content-between pb-4 g-3">
-      <div class="filters d-flex justify-content-between align-items-center gap-3">
-        <!-- Search -->
-        <div class="position-relative" style="width: auto;">
-          <span class="fas fa-search search-box-icon" style="position: absolute; top: 50%; left: 10px; transform: translateY(-50%); color: #aaa;"></span>
-          <input type="search" class="form-control ps-5" id="searchInputTeacher" placeholder="Search" style="padding: 5px; font-size: 14px; border-radius: 8px; width: 200px;">
+
+      <div class="col-12 col-md-auto">
+        <div class="search-box">
+          <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
+            <input class="form-control search-input search form-control-sm" type="search" placeholder="Search student" aria-label="Search" />
+            <span class="fas fa-search search-box-icon"></span>
+          </form>
         </div>
       </div>
+
     </div>
 
-    <div data-list='{"page":10,"pagination":true}'>
-      <div class="table-responsive ms-n1 ps-1 scrollbar">
-        <table id="teacher-table" class="table fs-9 mb-0 border-top border-translucent">
-          <thead>
-            <tr>
-              <th class="sort align-middle text-start" scope="col" style="width:15%;">TEACHER NAME</th>
-              <th class="sort align-middle text-center" scope="col" style="width:15%;">EMAIL ADDRESS</th>
-              <th class="sort align-middle text-center" scope="col" style="width:15%;">PHONE NUMBER</th>
-              <th class="sort align-middle text-center" scope="col" style="width:15%;">POSITION</th>
-              <th class="sort align-middle text-center" scope="col" style="width:15%;">HIRE DATE</th>
-              <th class="sort align-middle text-center" scope="col" style="width:15%;">CLASS IN CHARGE</th>
-              <th class="sort align-middle text-end" scope="col" style="width:5%;"></th>
-            </tr>
-          </thead>
-          <tbody>
-            <!-- Example teacher data -->
-            <tr>
-              <td class="align-middle text-start">Michael</td>
-              <td class="align-middle text-center">michael@gmail.com</td>
-              <td class="align-middle text-center">0002223345</td>
-              <td class="align-middle text-center">teacher</td>
-              <td class="align-middle text-center">10 september 2007</td>
-              <td class="align-middle text-center">4 Arif</td>
-              <td class="align-middle text-end white-space-nowrap pe-0 action">
-                <div class="btn-reveal-trigger position-static">
-                  <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs-10" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
-                    <span class="fas fa-ellipsis-h fs-10"></span>
-                  </button>
-                  <div class="dropdown-menu dropdown-menu-end py-2">
-                    <a class="dropdown-item" href="#">View</a>
-                  </div>
+    <div class="table-responsive ms-n1 ps-1 scrollbar">
+      <table class="table fs-9 mb-0 border-top border-translucent">
+        <thead>
+          <tr>
+            <th class="sort white-space-nowrap align-middle text-start" scope="col" data-sort="teacher" style="width:16.67%;">
+              TEACHER
+            </th>
+            <th class="sort align-middle text-center" scope="col" data-sort="email" style="width:16.67%;">
+              EMAIL ADDRESS
+            </th>
+            <th class="sort align-middle text-center" scope="col" data-sort="phone" style="width:16.67%;">
+              PHONE
+            </th>
+            <th class="sort align-middle text-center" scope="col" data-sort="position" style="width:16.67%;">
+              POSITION
+            </th>
+            <th class="sort align-middle text-center" scope="col" data-sort="hiredate" style="width:16.67%;">
+              HIRE DATE
+            </th>
+            <th class="sort align-middle text-center" scope="col" data-sort="class" style="width:16.67%;">
+              CLASS INCHARGE
+            </th>
+            <th class="sort align-middle text-end" scope="col" style="width: 12%"></th>
+          </tr>
+        </thead>
+
+        <tbody class="list" id="project-summary-table-body">
+          <% if (filteredTeachers && filteredTeachers.length > 0) { %>
+          <% filteredTeachers.forEach(function(item) { %>
+          <% 
+          const allTeachers = teachers.filter(teacher => {return teacher.class._id.toString() === item._id.toString()});
+          %>
+          <tr class="position-static">
+
+            <% allTeachers.forEach((otherUser)=> {
+                const otherTeacher = allUser.find(allUser => { return allUser._id.toString() === otherUser.user.toString()});
+            %>
+            <td class="teacher align-middle white-space-nowrap text-start py-4">
+              <a class="fw-bold fs-9 fs-xxl-8 no-loader" href="#"><%= otherUser.fullname %></a>
+            </td>
+            <td class="email align-middle white-space-nowrap text-center py-4">
+              <a class="mb-0 fs-9 fw-semibold fst-italic" href="#"><%= otherUser.email %></a>
+            </td>
+            <td class="phone align-middle text-body white-space-nowrap text-center">
+              <p class="mb-0 fs-9 notranslate no-loader" href="#"><%= otherUser.phone %></p>
+            </td>
+            <td class="position align-middle white-space-nowrap text-center py-4">
+              <p class="mb-0 fs-10 text-body"><%=  %></p>
+            </td>
+            <td class="hiredate align-middle white-space-nowrap text-center py-4">
+              <p class="mb-0 fs-10 text-body"><%=  %></p>
+            </td>
+            <% }); %>
+            <td class="class align-middle white-space-nowrap text-center py-4">
+              <p class="mb-0 fs-10 text-body badge badge-phoenix badge-phoenix-success"><%=  %></p>
+            </td>
+            <td class="align-middle text-end white-space-nowrap action">
+              <div class="font-sans-serif btn-reveal-trigger position-static">
+                <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs--2" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
+                  <span class="fas fa-ellipsis-h fs-9"></span>
+                </button>
+                <div class="dropdown-menu dropdown-menu-end py-2">
+                  <a class="dropdown-item" href="#">View</a>
                 </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+              </div>
+            </td>
+          </tr>
+          <%  }); %> <% } else { %>
+          <tr>
+            <td colspan="6" class="text-center fw-bold fs-9">No student/children detected</td>
+          </tr>
+          <% } %>
+        </tbody>
+      </table>
     </div>
     <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
       <div class="col-auto d-flex">
-        <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p>
-        <a class="fw-semibold" href="#!" data-list-view="*" id="">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
-        <a class="fw-semibold d-none" href="#!" data-list-view="less" id="">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
+        <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p><a class="fw-semibold no-translate no-loader" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semibold d-none no-loader" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
       </div>
       <div class="col-auto d-flex">
         <button class="page-link" data-list-pagination="prev"><span class="fas fa-chevron-left"></span></button>
