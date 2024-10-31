@@ -48,8 +48,6 @@ if (parentClass && parentClass.children) {
 }else{
     filteredTeachers = teachers;
 }
-
-console.log(filteredTeachers);
 %>
 
 <div class="row gy-3 mb-3 justify-content-between d-flex mt-0">
@@ -116,7 +114,6 @@ console.log(filteredTeachers);
 
           <% 
              const allTeachers = teachers.filter(teacher => {return teacher.class._id.toString() === item._id.toString()});
-             console.log(allTeachers);
           %>
           <tr class="position-static">
             <td class="class align-middle white-space-nowrap text-start py-4">
@@ -221,7 +218,7 @@ console.log(filteredTeachers);
           <% if (filteredTeachers && filteredTeachers.length > 0) { %>
           <% filteredTeachers.forEach(function(item) { %>
           <% 
-          const allTeachers = teachers.filter(teacher => {return teacher.class._id.toString() === item._id.toString()});
+          const allTeachers = teachers.filter(teacher => {return teacher.class._id.toString() === item.class._id.toString()});
           %>
           <tr class="position-static">
 
@@ -229,23 +226,27 @@ console.log(filteredTeachers);
                 const otherTeacher = allUser.find(allUser => { return allUser._id.toString() === otherUser.user.toString()});
             %>
             <td class="teacher align-middle white-space-nowrap text-start py-4">
-              <a class="fw-bold fs-9 fs-xxl-8 no-loader" href="#"><%= otherUser.fullname %></a>
+              <a class="fw-bold fs-9 fs-xxl-8 no-loader" href="#"><%= otherTeacher.fullname %></a>
             </td>
             <td class="email align-middle white-space-nowrap text-center py-4">
-              <a class="mb-0 fs-9 fw-semibold fst-italic" href="#"><%= otherUser.email %></a>
+              <a class="mb-0 fs-9 fw-semibold fst-italic" href="#"><%= otherTeacher.email %></a>
             </td>
             <td class="phone align-middle text-body white-space-nowrap text-center">
-              <p class="mb-0 fs-9 notranslate no-loader" href="#"><%= otherUser.phone %></p>
+              <p class="mb-0 fs-9 notranslate no-loader" href="#"><%=  otherUser.phone ? otherUser.phone : 'Phone number not added'  %></p>
             </td>
             <td class="position align-middle white-space-nowrap text-center py-4">
-              <p class="mb-0 fs-10 text-body"><%=  %></p>
+              <p class="mb-0 fs-9 text-body"><%= otherTeacher.position %></p>
             </td>
             <td class="hiredate align-middle white-space-nowrap text-center py-4">
-              <p class="mb-0 fs-10 text-body"><%=  %></p>
+              <p class="mb-0 fs-9 text-body"><%=  new Date(otherTeacher.dateEmployed).toLocaleDateString('en-MY', {
+    day: '2-digit',
+    month: '2-digit',
+    year: '2-digit'
+}); %></p>
             </td>
             <% }); %>
             <td class="class align-middle white-space-nowrap text-center py-4">
-              <p class="mb-0 fs-10 text-body badge badge-phoenix badge-phoenix-success"><%=  %></p>
+              <p class="mb-0 fs-10 text-body badge badge-phoenix badge-phoenix-success"><%= item.class.classname %></p>
             </td>
             <td class="align-middle text-end white-space-nowrap action">
               <div class="font-sans-serif btn-reveal-trigger position-static">

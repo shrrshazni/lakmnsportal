@@ -26,6 +26,8 @@ const { performance } = require('perf_hooks');
 const webPush = require('web-push');
 const { QRCodeCanvas } = require('@loskir/styled-qr-code-node');
 const momentHijri = require('moment-hijri');
+const { Parser } = require('json2csv');
+
 
 const app = express();
 
@@ -2995,6 +2997,7 @@ app.get('/leave/request', isAuthenticated, async (req, res, next) => {
         const { uuid, type, startDate, returnDate, purpose } = req.body;
         const selectedNames = req.body.selectedNames ? req.body.selectedNames.split(',') : [];
         const selectedSupervisors = req.body.selectedSupervisors ? req.body.selectedSupervisors.split(',') : [];
+        console.log(selectedSupervisors);
 
         // Initialize variables for leave request processing
         let sendNoti = [];
@@ -5932,21 +5935,74 @@ app.get('/education/fee/payment', isAuthenticated, async (req, res, next) => {
     try {
         const { user, notifications } = req;
 
-        // find all payment
+        // Fetch all payments without filtering by year
         const payments = await PaymentEducation.find().populate('child');
 
-        const children = await ChildEducation.find()
-            .populate({
-                path: 'class',  // Populate class details
-                model: 'Classes'
-            })
-            .populate({
-                path: 'parent',  // Populate parent details
-                model: 'Parents'
-            })
-            .exec();
+        // Create a map to hold grouped payments by child and year
+        const groupedPayments = {};
 
-        console.log(payments);
+        // Loop through each payment and group them by child and year
+        payments.forEach(payment => {
+            if (payment.date.payment) { // Only process payments with a valid date
+                const paymentYear = moment(payment.date.payment).year(); // Get the year of the payment date
+                const childId = payment.child._id.toString(); // Get child ID as string
+
+                // Format for month-year in English
+                const monthYear = moment(payment.date.payment).locale('en').format("YYYY-MM"); // Set locale to English
+
+                // Initialize child grouping if not already set
+                if (!groupedPayments[childId]) {
+                    groupedPayments[childId] = {
+                        child: payment.child,
+                        yearlyPayments: {} // Initialize for yearly payments
+                    };
+                }
+
+                // Initialize the year grouping if not already set
+                if (!groupedPayments[childId].yearlyPayments[paymentYear]) {
+                    groupedPayments[childId].yearlyPayments[paymentYear] = {
+                        year: paymentYear,
+                        payments: [],
+                        totalAmount: 0 // Initialize total amount for the year
+                    };
+                }
+
+                // Prepare the payment details to push
+                const paymentDetails = {
+                    month: monthYear, // Use the formatted month-year in English
+                    amount: payment.totalAmount, // Add payment amount
+                    status: payment.status, // Add payment status
+                    method: payment.method, // Add payment method
+                    isProduct: payment.isProduct, // Add isProduct flagl
+                };
+
+                // Include paymentDate only if it's not null
+                if (payment.date.approval) {
+                    paymentDetails.paymentDate = payment.date.approval; // Include paymentDate if it exists
+                }
+
+                // Include products array if it exists
+                if (payment.products && payment.products.length > 0) {
+                    paymentDetails.products = payment.products; // Add products array
+                }
+
+                // Push the payment into the respective child's yearly payments array
+                groupedPayments[childId].yearlyPayments[paymentYear].payments.push(paymentDetails);
+
+                // Update total amount for the year
+                groupedPayments[childId].yearlyPayments[paymentYear].totalAmount += payment.totalAmount;
+            }
+        });
+
+        // Prepare an array of grouped payment documents to log or insert
+        const groupedPaymentDocs = Object.values(groupedPayments).map(childGroup => ({
+            child: childGroup.child,
+            yearlyPayments: Object.values(childGroup.yearlyPayments)
+        }));
+
+        // Log the grouped payments for verification
+        console.log("Grouped Payments for Each Child by Year:");
+        console.log(JSON.stringify(groupedPaymentDocs, null, 2));
 
         res.render('education-fee-payment', {
             user: user,
@@ -7651,53 +7707,16 @@ app.get('/super-admin/logout', isAuthenticated, async (req, res, next) => {
 app.get('/testing', isAuthenticated, async (req, res, next) => {
     try {
         const { user, notifications } = req;
+        // const excludedUsernames = ['Test1', 'Test2', 'Test3', 'Test4', 'Test5', 'Test6', 'Test7', 'Test8'];
 
-        // // Fetch all children from the database
-        // const children = await ChildEducation.find();
+        // // Step 1: Fetch user IDs of excluded usernames
+        // const excludedUsers = await User.find({ username: { $in: excludedUsernames } }, '_id'); // Get user IDs
 
-        // // Define the sample products array
-        // const sampleProducts = [
-        //     {
-        //         name: 'Product A',
-        //         desc: 'Description of Product A',
-        //         type: 'Stationery',
-        //         color: 'Red',
-        //         size: 'M',
-        //         quantity: 1,
-        //         price: 15.00
-        //     }
-        // ];
+        // // Step 2: Delete leave entries associated with those user IDs
+        // await Leave.deleteMany({ user: { $in: excludedUsers.map(user => user._id) } });
 
-        // // Create payments for each child for 3 different months
-        // const paymentPromises = [];
-
-        // children.forEach((child) => {
-        //     // Generate 3 dates for the last 3 months
-        //     const now = new Date();
-        //     const months = [new Date(), new Date(now.setMonth(now.getMonth() - 1)), new Date(now.setMonth(now.getMonth() - 2))];
-
-        //     // Create payment documents for each month
-        //     months.forEach((month) => {
-        //         const payment = new PaymentEducation({
-        //             child: child._id,
-        //             products: sampleProducts,
-        //             isProduct: true,
-        //             totalAmount: sampleProducts.reduce((total, product) => total + (product.price * product.quantity), 0),
-        //             date: month,
-        //             status: 'Paid'
-        //         });
-
-        //         console.log(payment);
-
-        //         // Push to the array of promises to save later
-        //         paymentPromises.push(payment.save());
-        //     });
-        // });
-
-        // // Save all payments to the database
-        // const payments = await Promise.all(paymentPromises);
-
-        // console.log(`${payments.length} payments created successfully!`);
+        // // Optional: Log the result or handle any further logic
+        // console.log(`Deleted leave entries for users: ${excludedUsernames.join(', ')}`);
 
         res.render('testing', {
             user: user,
@@ -7710,6 +7729,136 @@ app.get('/testing', isAuthenticated, async (req, res, next) => {
         next(error);
     }
 });
+
+app.get('/download-leave-report', isAuthenticated, async (req, res) => {
+    try {
+        // Step 1: Fetch all users
+        const allUsers = await User.find({}, 'fullname username isNonOfficeHour _id'); // Include isNonOfficeHour
+
+        // Step 2: Fetch all leave entries
+        const leaves = await Leave.find(); // Fetch leave entries
+
+        // Step 3: Map user details to leaves
+        const data = leaves.map(leave => {
+            const user = allUsers.find(u => u._id.toString() === leave.user.toString()) || {}; // Find user by ID
+            const assignees = leave.assignee || []; // Get assignee IDs
+
+            // Step 3.1: Map assignees to usernames
+            const assigneeUsernames = assignees.map(assigneeId => {
+                const assignee = allUsers.find(u => u._id.toString() === assigneeId.toString());
+                return assignee ? assignee.username : ''; // Return username or empty if not found
+            });
+
+            // Step 3.2: Calculate number of days using user.isNonOfficeHour
+            const numberOfDays = calculateNumberOfDays(leave.type, leave.date.start, leave.date.return, user.isNonOfficeHour);
+
+            return {
+                fullname: user.fullname || '',
+                username: user.username || '',
+                assignees: assigneeUsernames.join(', '), // Join usernames of assignees
+                type: leave.type,
+                status: leave.status,
+                purpose: leave.purpose,
+                fileId: leave.fileId,
+                start: leave.date.start, // Apply UTC offset and format
+                return: leave.date.return, // Apply UTC offset and format
+                timestamp: leave.timestamp, // Format timestamp
+                isNonOfficeHour: user.isNonOfficeHour, // Use user.isNonOfficeHour
+                numberOfDays: numberOfDays // Add calculated number of days
+            };
+        });
+
+        // Step 4: Define CSV fields and parse the data
+        const fields = [
+            'fullname', 'username', 'assignees', 'type', 'status',
+            'purpose', 'fileId', 'start', 'return', 'timestamp', 'isNonOfficeHour', 'numberOfDays'
+        ];
+        const json2csvParser = new Parser({ fields });
+        const csv = json2csvParser.parse(data);
+
+        // Step 5: Send CSV as a download
+        res.header('Content-Type', 'text/csv; charset=utf-8');
+        res.attachment('leave-report-details.csv');
+
+        // Convert CSV to Buffer with UTF-8 encoding
+        const buffer = Buffer.from(csv, 'utf-8');
+        res.send(buffer);
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Error generating CSV');
+    }
+});
+
+// Download user leave report in csv file
+const downloadUserLeaveReport = async () => {
+    try {
+        const usersWithLeave = await UserLeave.find().populate({
+            path: 'user',
+            model: User,
+            select: 'fullname username'
+        });
+
+        // Define an array of usernames to exclude
+        const excludeUsernames = ['Test1', 'Test2', 'Test3', 'Test4', 'Test5', 'Test6', 'Test7', 'Test8'];
+
+        // Step 2: Filter, Format Data for CSV
+        const data = usersWithLeave
+            .filter(userLeave => !excludeUsernames.includes(userLeave.user?.username)) // Exclude specific usernames
+            .map(userLeave => {
+                const user = userLeave.user || {};
+                return {
+                    fullname: user.fullname,
+                    username: user.username,
+                    annualLeave: userLeave.annual?.leave || 0,
+                    annualTaken: userLeave.annual?.taken || 0,
+                    sickLeave: userLeave.sick?.leave || 0,
+                    sickTaken: userLeave.sick?.taken || 0,
+                    sickExtendedLeave: userLeave.sickExtended?.leave || 0,
+                    sickExtendedTaken: userLeave.sickExtended?.taken || 0,
+                    emergencyLeave: userLeave.emergency?.leave || 0,
+                    emergencyTaken: userLeave.emergency?.taken || 0,
+                    paternityLeave: userLeave.paternity?.leave || 0,
+                    paternityTaken: userLeave.paternity?.taken || 0,
+                    maternityLeave: userLeave.maternity?.leave || 0,
+                    maternityTaken: userLeave.maternity?.taken || 0,
+                    attendExamLeave: userLeave.attendExam?.leave || 0,
+                    attendExamTaken: userLeave.attendExam?.taken || 0,
+                    hajjLeave: userLeave.hajj?.leave || 0,
+                    hajjTaken: userLeave.hajj?.taken || 0,
+                    unpaidLeave: userLeave.unpaid?.leave || 0,
+                    unpaidTaken: userLeave.unpaid?.taken || 0,
+                    umrahLeave: userLeave.umrah?.leave || 0,
+                    umrahTaken: userLeave.umrah?.taken || 0,
+                    marriageLeave: userLeave.marriage?.leave || 0,
+                    marriageTaken: userLeave.marriage?.taken || 0,
+                    studyLeave: userLeave.study?.leave || 0,
+                    studyTaken: userLeave.study?.taken || 0,
+                    specialLeave: userLeave.special?.leave || 0,
+                    specialTaken: userLeave.special?.taken || 0
+                };
+            });
+
+        // Define CSV fields and parse the data
+        const fields = [
+            'fullname', 'username', 'annualLeave', 'annualTaken', 'sickLeave', 'sickTaken',
+            'sickExtendedLeave', 'sickExtendedTaken', 'emergencyLeave', 'emergencyTaken',
+            'paternityLeave', 'paternityTaken', 'maternityLeave', 'maternityTaken', 'studyLeave',
+            'studyTaken', 'marriageLeave', 'marriageTaken', 'attendExamLeave', 'attendExamTaken',
+            'hajjLeave', 'hajjTaken', 'unpaidLeave', 'unpaidTaken', 'specialLeave', 'specialTaken',
+            'umrahLeave', 'umrahTaken'
+        ];
+        const json2csvParser = new Parser({ fields });
+        const csv = json2csvParser.parse(data);
+
+        // Step 3: Send CSV as a download
+        res.header('Content-Type', 'text/csv');
+        res.attachment('leave-report.csv');
+        res.send(csv);
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Error generating CSV');
+    }
+};
 
 // Replace these with the actual child ObjectIds you've shared
 // const childIds = [
