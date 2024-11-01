@@ -12,7 +12,7 @@
   <div class="d-flex flex-fill col-md-4 col-xxl-2 text-center border-translucent border-end-0 border-md-end pb-4 pb-xxl-0">
     <div class="flex-grow-1">
       <span class="uil fs-5 lh-1 fa-solid fa-users-line text-primary"></span>
-      <h1 class="fs-5 pt-3">25</h1>
+      <h1 class="fs-5 pt-3"><%= students.length %></h1>
       <p class="fs-9 mb-0">Total Students</p>
     </div>
   </div>
@@ -21,7 +21,7 @@
   <div class="d-flex flex-fill col-md-4 col-xxl-2 text-center border-translucent border-start border-end-0 border-md-end pb-4 pb-xxl-0">
     <div class="flex-grow-1">
       <span class="uil fs-5 lh-1 fa-solid fa-check text-success"></span>
-      <h1 class="fs-5 pt-3">15</h1>
+      <h1 class="fs-5 pt-3"><%= otherPayments.length %></h1>
       <p class="fs-9 mb-0">Total Paid</p>
     </div>
   </div>
@@ -83,21 +83,18 @@
         </thead>
 
         <tbody class="list" id="attendance-table-content">
+          <% 
+            if(payments && payments.length>0){
+            payments.forEach((item,index)=>{
+          %>
           <tr class="position-static">
-            <td class="fullname align-middle fw-blod text-start text-body-highlight fst-italic fw-bold py-2 ps-0 fs-9 fs-xxl-8"></td>
-            <td class="status align-middle fw-semibold text-center py-2 ps-0 fs-9 fs-md-8 text-body-highlight"><span class="badge badge-phoenix fs-10 badge-phoenix-success"></span></td>
-            <td class="jan align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-success"></span></td>
-            <td class="feb align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-warning"></span></td>
-            <td class="mar align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-success"></span></td>
-            <td class="apr align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-success"></span></td>
-            <td class="may align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-success"></span></td>
-            <td class="jun align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-success"></span></td>
-            <td class="jul align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-success"></span></td>
-            <td class="aug align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-success"></span></td>
-            <td class="sep align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-success"></span></td>
-            <td class="oct align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-success"></span></td>
-            <td class="nov align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-success"></span></td>
-            <td class="dec align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-success"></span></td>
+            <td class="fullname align-middle fw-blod text-start text-body-highlight fst-italic fw-bold py-2 ps-0 fs-9 fs-xxl-8"><%= item.child.name %></td>
+            <td class="status align-middle fw-semibold text-center py-2 ps-0 fs-9 fs-md-8 text-body-highlight"><%= %><span class="badge badge-phoenix fs-10 badge-phoenix-success"></span></td>
+            <% item.yearlyPayments.forEach(yearlyPayment => { %>
+            <% yearlyPayment.payments.forEach(monthlyPayment => { %>
+            <td class="status align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix badge-phoenix-warning"><%= monthlyPayment.month %></span></td>
+            <% }); %>
+            <% }); %>
             <td class="align-middle text-end white-space-nowrap ps-0 action">
               <div class="font-sans-serif btn-reveal-trigger position-static">
                 <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs--2" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
@@ -109,6 +106,14 @@
               </div>
             </td>
           </tr>
+          <%
+          });
+          }else{
+          %>
+          <td colspan="14" class="text-center fw-bold fs-9">No payment detected</td>
+          <%
+          }
+          %>
 
           <div class="modal fade" id="addRemark" tabindex="-1">
             <div class="modal-dialog">
@@ -129,9 +134,6 @@
               </div>
             </div>
           </div>
-          <!-- <tr>
-                <td colspan="6" class="text-center fw-bold fs-9">No attendance detected from <span class="fw-bold text-primary notranslate"><%= user.fullname %></span></td>
-              </tr> -->
         </tbody>
       </table>
     </div>

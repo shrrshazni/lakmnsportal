@@ -5994,20 +5994,28 @@ app.get('/education/fee/payment', isAuthenticated, async (req, res, next) => {
             }
         });
 
-        // Prepare an array of grouped payment documents to log or insert
-        const groupedPaymentDocs = Object.values(groupedPayments).map(childGroup => ({
-            child: childGroup.child,
-            yearlyPayments: Object.values(childGroup.yearlyPayments)
-        }));
+        const groupedPaymentsArray = Object.values(groupedPayments).map(childData => {
+            // Convert yearlyPayments object to an array and sort months
+            childData.yearlyPayments = Object.values(childData.yearlyPayments).map(yearData => {
+                yearData.payments = Array.isArray(yearData.payments) ? yearData.payments : Object.values(yearData.payments);
 
-        // Log the grouped payments for verification
-        console.log("Grouped Payments for Each Child by Year:");
-        console.log(JSON.stringify(groupedPaymentDocs, null, 2));
+                // Sort payments by `month`
+                yearData.payments.sort((a, b) => a.month.localeCompare(b.month));
+                return yearData;
+            });
+            return childData;
+        });
+        console.log(JSON.stringify(groupedPaymentsArray, null, 2));
+
+        const students = await ChildEducation.find();
 
         res.render('education-fee-payment', {
             user: user,
             notifications: notifications,
             uuid: uuidv4(),
+            payments: groupedPaymentsArray,
+            students,
+            otherPayments : payments
         });
     } catch (error) {
         console.error('Error fetching data:', error);
@@ -9701,7 +9709,7 @@ const processLeaveRequest = async (type, user, userLeave, startDate, returnDate,
                     return { approvals, renderDataError };
                 }
             } else {
-                renderDataError.alert = 'The sick leave request must be applied today or up to 5 days before';
+                renderDataError.alert = 'The sick leave request must be applied today or up to 5 days before/Your sick leave balance is insufficient.';
             }
             break;
         case 'Emergency Leave':
