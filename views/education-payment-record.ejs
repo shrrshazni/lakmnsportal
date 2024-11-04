@@ -1,0 +1,35 @@
+<%- include('partials/private-header.ejs') %>
+
+<nav class="mb-2" aria-label="breadcrumb">
+  <ol class="breadcrumb mb-0">
+    <li class="breadcrumb-item"><a href="#!">Payment</a></li>
+    <li class="breadcrumb-item"><a href="#!">Details</a></li>
+    <li class="breadcrumb-item active" aria-current="page"><%= payment._id %></li>
+  </ol>
+</nav>
+
+<div class="row d-flex flex-wrap justify-content-between align-items-end mb-2">
+  <div class="col-auto">
+    <h2>Payment <%= new Date(payment.date.payment).toLocaleString('en-MY', { year: 'numeric', month: 'long' }) %> <a class="notranslate" href="#">#<%= payment.child.name %></a></h2>
+    <p class="text-body-secondary mb-0">Payment must be made before <br class="d-sm-none"><span class="ms-sm-1"><%= payment.date.payment ? new Date(payment.date.payment ).toLocaleString('en-MY', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }) : '-' %></span></p>
+  </div>
+
+  <div class="col-auto d-flex justify-content-center">
+
+    <div class="">
+      <a class="btn btn-primary me-2" role="button" href="">Approve</a>
+      <a class="btn btn-outline-danger me-2" role="button" href="">Deny</a>
+    </div>
+    <div>
+      <button class="btn px-3 btn-phoenix-secondary" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fa-solid fa-ellipsis"></span></button>
+      <ul class="dropdown-menu dropdown-menu-end p-0" style="z-index: 9999;">
+        <li><a class="dropdown-item d-none" href="">Leave History</a></li>
+        <li><a class="dropdown-item" href="">Cancel Request</a></li>
+        <li><a class="dropdown-item no-loader" href="#!" data-bs-target="#add-comment" data-bs-toggle="modal">Add Remarks</a></li>
+        <li><a class="dropdown-item no-loader" href="#!">Print</a></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/private-footer.ejs') %>

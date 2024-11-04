@@ -5931,20 +5931,34 @@ app.get('/education/teacher/information', isAuthenticated, async (req, res, next
 });
 
 // Payment: fee section route
-app.get('/education/fee/payment', isAuthenticated, async (req, res, next) => {
+app.get('/education/payment', isAuthenticated, async (req, res, next) => {
     try {
         const { user, notifications } = req;
 
         // Fetch all payments without filtering by year
-        const payments = await PaymentEducation.find().populate('child');
+        const payments = await PaymentEducation.find().populate({
+            path: 'child',
+            populate: {
+                path: 'parent',
+                model: 'Parents'
+            }
+        });
 
         // Create a map to hold grouped payments by child and year
         const groupedPayments = {};
+
+        // Array to hold unique years of payment dates
+        const paymentYears = new Set();
+
+        // Create const allUser
+        const allUser = await User.find();
 
         // Loop through each payment and group them by child and year
         payments.forEach(payment => {
             if (payment.date.payment) { // Only process payments with a valid date
                 const paymentYear = moment(payment.date.payment).year(); // Get the year of the payment date
+                paymentYears.add(paymentYear); // Add the year to the set
+
                 const childId = payment.child._id.toString(); // Get child ID as string
 
                 // Format for month-year in English
@@ -5962,18 +5976,20 @@ app.get('/education/fee/payment', isAuthenticated, async (req, res, next) => {
                 if (!groupedPayments[childId].yearlyPayments[paymentYear]) {
                     groupedPayments[childId].yearlyPayments[paymentYear] = {
                         year: paymentYear,
+                        overallStatus: {}, // Initialize overall status for the year
                         payments: [],
-                        totalAmount: 0 // Initialize total amount for the year
+                        totalAmount: 0, // Initialize total amount for the year
                     };
                 }
 
                 // Prepare the payment details to push
                 const paymentDetails = {
+                    id: payment._id,
                     month: monthYear, // Use the formatted month-year in English
                     amount: payment.totalAmount, // Add payment amount
                     status: payment.status, // Add payment status
                     method: payment.method, // Add payment method
-                    isProduct: payment.isProduct, // Add isProduct flagl
+                    isProduct: payment.isProduct, // Add isProduct flag
                 };
 
                 // Include paymentDate only if it's not null
@@ -5991,6 +6007,35 @@ app.get('/education/fee/payment', isAuthenticated, async (req, res, next) => {
 
                 // Update total amount for the year
                 groupedPayments[childId].yearlyPayments[paymentYear].totalAmount += payment.totalAmount;
+
+                // Update overall status for the current month and previous months
+                const currentMonth = moment().format("YYYY-MM");
+                // Initialize overall status to "due"
+                groupedPayments[childId].yearlyPayments[paymentYear].overallStatus = "due";
+
+                // Loop through each month of the year
+                for (let month = 1; month <= 12; month++) {
+                    const monthString = moment(`${paymentYear}-${month}`, "YYYY-MM").format("YYYY-MM");
+                    if (monthString <= currentMonth) {
+                        // Check if the payment status for the current month is "pending" or "due"
+                        if (payment.status === "pending" || payment.status === "due") {
+                            // If pending or due, do nothing (overall status is already "due")
+                        } else if (payment.status === "paid") {
+                            // If paid, update the overall status to "paid" only if all payments are paid
+                            // (this condition is not met, so do nothing)
+                            groupedPayments[childId].yearlyPayments[paymentYear].overallStatus = "paid";
+                        }
+                    }
+                }
+
+                // If all payments are paid, update the overall status to "paid"
+                if (
+                    groupedPayments[childId].yearlyPayments[paymentYear].payments.every(
+                        payment => payment.status === "paid"
+                    )
+                ) {
+                    groupedPayments[childId].yearlyPayments[paymentYear].overallStatus = "paid";
+                }
             }
         });
 
@@ -6005,17 +6050,21 @@ app.get('/education/fee/payment', isAuthenticated, async (req, res, next) => {
             });
             return childData;
         });
-        console.log(JSON.stringify(groupedPaymentsArray, null, 2));
 
         const students = await ChildEducation.find();
 
-        res.render('education-fee-payment', {
+        // Convert paymentYears set to an array
+        const paymentYearsArray = Array.from(paymentYears);
+
+        res.render('education-payment', {
             user: user,
             notifications: notifications,
             uuid: uuidv4(),
             payments: groupedPaymentsArray,
             students,
-            otherPayments : payments
+            otherPayments: payments,
+            allUser,
+            paymentYears: paymentYearsArray
         });
     } catch (error) {
         console.error('Error fetching data:', error);
@@ -6023,26 +6072,54 @@ app.get('/education/fee/payment', isAuthenticated, async (req, res, next) => {
     }
 });
 
-// Payment: record payment section route
-app.get('/education/record/payment', isAuthenticated, async function (req, res) {
-    const username = req.user.username;
-    const user = await User.findOne({ username: username });
-    const notifications = await Notification.find({
-        recipient: user._id,
-        read: false
-    })
-        .populate('sender')
-        .sort({ timestamp: -1 });
+// Payment route - record monthly payment
+app.get('/education/payment/record/:id', isAuthenticated, async (req, res, next) => {
+    try {
+        const { user, notifications } = req;
+        const id = req.params.id;
 
-    if (user) {
+        // find one documents education
+        const payment = await PaymentEducation.findOne({ _id: id })
+            .populate({
+                path: 'child',
+                populate: [
+                    { path: 'parent', model: 'Parents' },
+                    { path: 'class', model: 'Classes' }
+                ]
+            });
 
-        res.render('education-record-payment', {
+        res.render('education-payment-record', {
             user: user,
             notifications: notifications,
             uuid: uuidv4(),
+            payment
         });
+    } catch (error) {
+        console.log(error);
+        next(error);
     }
 });
+
+// // Payment: record payment section route
+// app.get('/education/record/payment', isAuthenticated, async function (req, res) {
+//     const username = req.user.username;
+//     const user = await User.findOne({ username: username });
+//     const notifications = await Notification.find({
+//         recipient: user._id,
+//         read: false
+//     })
+//         .populate('sender')
+//         .sort({ timestamp: -1 });
+
+//     if (user) {
+
+//         res.render('education-record-payment', {
+//             user: user,
+//             notifications: notifications,
+//             uuid: uuidv4(),
+//         });
+//     }
+// });
 
 // Payment: register student section route
 app.get('/education/register/student', isAuthenticated, async function (req, res) {

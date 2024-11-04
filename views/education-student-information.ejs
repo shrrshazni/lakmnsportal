@@ -77,7 +77,7 @@ console.log(classTeacher);
         <tbody class="list" id="project-summary-table-body">
           <% if (filteredChildren && filteredChildren.length>0) { %>
           <!-- table item -->
-          <% filteredChildren.forEach(function(child) { %>
+          <% filteredChildren.forEach(function(child,index) { %>
 
           <% 
             const calculateAge = (dob) => {
@@ -95,7 +95,7 @@ console.log(classTeacher);
 
           <tr class="position-static">
             <td class="name align-middle white-space-nowrap text-start py-4">
-              <a class="fw-bold fs-9 fs-xxl-8 no-loader" href="#"><%= child.name %></a>
+              <a class="fw-bold fs-9 fs-xxl-8 no-loader" data-bs-toggle="modal" data-bs-target="#showDetail<%= index %>" href="#"><%= child.name %></a>
             </td>
             <% 
             const userTeacher = allUser.find(userTeacher =>{ return userTeacher._id.toString() === child.class.teacher.toString()});
@@ -126,6 +126,109 @@ console.log(classTeacher);
               </div>
             </td>
           </tr>
+
+          <!-- Modal for showing student details -->
+          <div class="modal fade" id="showDetail<%= index %>" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+              <div class="modal-content">
+                <div class="modal-header border-bottom-0">
+                  <h5 class="modal-title">Student</h5>
+                  <div class="btn-group ms-auto">
+                    <button type="button" class="btn btn-primary rounded-pill" data-bs-target="#showParent<%= index %>" data-bs-toggle="modal" data-bs-dismiss="modal"><span class="fa-solid fa-user-shield"></span></button>
+                  </div>
+                </div>
+                <div class="modal-body">
+                  <div class="text-center">
+                    <% 
+                    child.profile = child.profile || '/assets/img/team/avatar.webp';
+                    %>
+                    <div class="avatar avatar-4xl mb-3"><img class="rounded-circle border border-primary" src="<%= child.profile %>" alt="" /></div>
+                    <ul class="list-unstyled">
+                      <li>
+                        <div class="form-floating">
+                          <input type="text" class="form-control mb-2" value="<%= child.name %>" readonly />
+                          <label class="form-label" for="#">Full Name</label>
+                        </div>
+                      </li>
+                      <li>
+                        <div class="form-floating">
+                          <input type="text" class="form-control mb-2" value="<%= child.nric %>" readonly />
+                          <label class="form-label" for="#">NRIC</label>
+                        </div>
+                      </li>
+                      <li>
+                        <div class="form-floating">
+                          <input type="text" class="form-control mb-2" value="<%= child.citizenship %>" readonly />
+                          <label class="form-label" for="#">Citizenship</label>
+                        </div>
+                      </li>
+                      <li>
+                        <div class="form-floating">
+                          <input type="text" class="form-control mb-2" value="<%= child.swkNative %>" readonly />
+                          <label class="form-label" for="#">Sarawak Native</label>
+                        </div>
+                      </li>
+                      <li>
+                        <div class="form-floating">
+                          <input type="text" class="form-control mb-2" value="<%= child.race %>" readonly />
+                          <label class="form-label" for="#">Race</label>
+                        </div>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal fade" id="showParent<%= index %>" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+              <div class="modal-content">
+                <div class="modal-header border-bottom-0">
+                  <h5 class="modal-title">Parent</h5>
+                  <div class="btn-group ms-auto">
+                    <button type="button" class="btn btn-primary rounded-pill" data-bs-target="#showDetail<%= index %>" data-bs-toggle="modal" data-bs-dismiss="modal"><span class="fa-solid fa-users"></span></button>
+                  </div>
+                </div>
+                <div class="modal-body">
+                  <div class="text-center">
+                    <% 
+                    const userParent = allUser.find(userParent =>{ return userParent._id.toString() === child.parent.user.toString()});
+                    console.log(userParent);
+                    userParent.profile = userParent.profile || '/assets/img/team/avatar.webp';
+                    %>
+                    <div class="avatar avatar-4xl mb-3"><img class="rounded-circle border border-primary" src="<%= userParent.profile %>" alt="" /></div>
+                    <ul class="list-unstyled">
+                      <li>
+                        <div class="form-floating">
+                          <input type="text" class="form-control mb-2" value="<%= userParent.fullname %>" readonly />
+                          <label class="form-label" for="#">Full Name</label>
+                        </div>
+                      </li>
+                      <li>
+                        <div class="form-floating">
+                          <input type="text" class="form-control mb-2" value="<%= userParent.email %>" readonly />
+                          <label class="form-label" for="#">Email</label>
+                        </div>
+                      </li>
+                      <li>
+                        <div class="form-floating">
+                          <input type="text" class="form-control mb-2" value="<%= userParent.phone %>" readonly />
+                          <label class="form-label" for="#">Phone</label>
+                        </div>
+                      </li>
+                      <li>
+                        <div class="form-floating">
+                          <input type="text" class="form-control mb-2" value="<%= userParent.address %>" readonly />
+                          <label class="form-label" for="#">Address</label>
+                        </div>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
           <%  }); %> <% } else { %>
           <tr>
             <td colspan="6" class="text-center fw-bold fs-9">No student/children detected</td>
