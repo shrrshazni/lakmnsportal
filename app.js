@@ -27,6 +27,10 @@ const webPush = require('web-push');
 const { QRCodeCanvas } = require('@loskir/styled-qr-code-node');
 const momentHijri = require('moment-hijri');
 const { Parser } = require('json2csv');
+// new added npm
+const http = require('http');
+const cheerio = require('cheerio');
+const axios = require('axios');
 
 
 const app = express();
@@ -913,8 +917,8 @@ const paymentSchema = new mongoose.Schema({
     },
     method: { type: String, enum: ['Manual', 'Online', 'Cash', 'Invalid'] },
     timestamp: { type: Date, default: Date.now },
-    file: String,
-    status: { type: String, enum: ['Pay Now', 'Pending', 'Paid', 'Invalid'] }
+    fileId: String,
+    status: { type: String, enum: ['Due', 'Pending', 'Paid', 'Invalid'] }
 });
 paymentSchema.index({ child: 1 });
 paymentSchema.index({ date: 1 });
@@ -6088,11 +6092,14 @@ app.get('/education/payment/record/:id', isAuthenticated, async (req, res, next)
                 ]
             });
 
+        const files = await File.find({ uuid: payment.fileId });
+
         res.render('education-payment-record', {
             user: user,
             notifications: notifications,
             uuid: uuidv4(),
-            payment
+            payment,
+            files
         });
     } catch (error) {
         console.log(error);
@@ -7792,22 +7799,16 @@ app.get('/super-admin/logout', isAuthenticated, async (req, res, next) => {
 app.get('/testing', isAuthenticated, async (req, res, next) => {
     try {
         const { user, notifications } = req;
-        // const excludedUsernames = ['Test1', 'Test2', 'Test3', 'Test4', 'Test5', 'Test6', 'Test7', 'Test8'];
 
-        // // Step 1: Fetch user IDs of excluded usernames
-        // const excludedUsers = await User.find({ username: { $in: excludedUsernames } }, '_id'); // Get user IDs
-
-        // // Step 2: Delete leave entries associated with those user IDs
-        // await Leave.deleteMany({ user: { $in: excludedUsers.map(user => user._id) } });
-
-        // // Optional: Log the result or handle any further logic
-        // console.log(`Deleted leave entries for users: ${excludedUsernames.join(', ')}`);
+        // Test the code by calling the updatePublicHolidays function directly
+        updatePublicHolidays();
 
         res.render('testing', {
             user: user,
             notifications: notifications,
             uuid: uuidv4(),
         });
+
     } catch (error) {
         // Pass rendering errors to global error handler
         console.error('Error:', error);
@@ -7944,55 +7945,6 @@ const downloadUserLeaveReport = async () => {
         res.status(500).send('Error generating CSV');
     }
 };
-
-// Replace these with the actual child ObjectIds you've shared
-// const childIds = [
-//     '6719c6a081d9169c16bc231c',
-//     '6719c6a081d9169c16bc231e',
-//     '6719c6a181d9169c16bc2324',
-//     '6719c6a181d9169c16bc2326'
-// ];
-
-// async function createDummyAttendance() {
-//     try {
-
-//         // Create dummy attendance records for the provided child IDs
-//         const dummyData = [
-//             {
-//                 child: childIds[0], // Richard Hodge
-//                 status: 'Absent',
-//                 remarks: 'Was on medical leave',
-//                 date: new Date('2024-10-19')
-//             },
-//             {
-//                 child: childIds[1], // Justin McNeil
-//                 status: 'Present',
-//                 remarks: 'On time and participated',
-//                 date: new Date('2024-10-20')
-//             },
-//             {
-//                 child: childIds[2], // Sharon Chambers
-//                 status: 'Absent',
-//                 remarks: 'Family emergency',
-//                 date: new Date('2024-10-20')
-//             },
-//             {
-//                 child: childIds[3], // New Child ID (example)
-//                 status: 'Present',
-//                 remarks: 'Attended the class session',
-//                 date: new Date('2024-10-21')
-//             }
-//         ];
-
-//         // Insert the dummy data into the AttendanceEducation collection
-//         await AttendanceEducation.insertMany(dummyData);
-//         console.log('Dummy attendance data inserted successfully!');
-//     } catch (error) {
-//         console.error('Error inserting dummy attendance data:', error);
-//     } finally {
-//         mongoose.connection.close();
-//     }
-// }
 
 // async function createDummyData() {
 //     try {
@@ -10372,10 +10324,10 @@ const calculateNumberOfDays = (type, startDate, returnDate, isNonOfficeHour) => 
                 ? (endMoment.diff(startMoment, 'days') + 1) / 2
                 : calculateBusinessDays(startDate, returnDate) / 2;
         } else if (fullDayLeaves.includes(type)) {
-            if (type === 'Annual Leave') {
+            if (type === 'Annual Leave' || type === "Maternity Leave") {
                 daysDifference = isNonOfficeHour
                     ? (endMoment.diff(startMoment, 'days') + 1)
-                    : calculateBusinessDays(startDate, returnDate);
+                    : calculateBusinessDays(startDate, returnDate, true);
             } else {
                 daysDifference = endMoment.diff(startMoment, 'days') + 1;
             }
@@ -10389,21 +10341,76 @@ const calculateNumberOfDays = (type, startDate, returnDate, isNonOfficeHour) => 
 };
 
 // * Default public holidays for the year
-const defaultPublicHolidays = ['2024-02-16', '2024-05-01', '2024-05-07', '2024-09-16', '2024-12-25', '2024-09-05'];
+let defaultPublicHolidays = [];
+
+// * Function to scrape public holidays from a website
+// * Returns an array of objects containing the date and holiday
+const scrapePublicHolidays = async () => {
+    console.log('Scraping public holidays...');
+    const url = 'https://sarawak.gov.my/web/home/article_view/198/374/198?id=198';
+    const response = await axios.get(url);
+    const $ = cheerio.load(response.data);
+
+    const publicHolidays = $('table tr').map((_, element) => {
+        const tds = $(element).find('td');
+        const date = tds.eq(0).text().trim();
+        const day = tds.eq(1).text().trim();
+        let holiday = '';
+
+        for (let i = 2; i < tds.length; i++) {
+            holiday += tds.eq(i).text().trim() + ', ';
+        }
+
+        holiday = holiday.trim().replace(/, $/, '');
+
+        // Check if date already exists in defaultPublicHolidays
+        const existingHoliday = defaultPublicHolidays.find(h => h.date === date);
+        if (existingHoliday) {
+            // Append new event to existing event
+            existingHoliday.holiday += `, ${holiday}`;
+        } else {
+            // Add new event to defaultPublicHolidays
+            defaultPublicHolidays.push({ date, holiday: `${day}, ${holiday}` });
+        }
+    }).get();
+
+    console.log('Public holidays scraped:', publicHolidays);
+    return publicHolidays;
+};
+
+// * Update public holidays
+// * Function to update the array of public holidays
+// * Calls the scrapePublicHolidays function and updates the defaultPublicHolidays array
+const updatePublicHolidays = async () => {
+    console.log('Updating public holidays...');
+    const publicHolidays = await scrapePublicHolidays();
+    console.log('Public holidays updated:', defaultPublicHolidays);
+}
+
+// // * Run cron job to update public holidays
+// cron.schedule('0 8 * * *', () => {
+//     console.log('Running cron job to update public holidays');
+//     updatePublicHolidays();
+// }, {
+//     scheduled: true,
+//     timezone: 'Asia/Kuala_Lumpur'
+// });
+
+// * Default public holidays for the year
 const allPublicHolidays = defaultPublicHolidays.map(date => moment(date).startOf('day').toDate());
 
 // * Check if a date is a public holiday
 const isPublicHoliday = (date, holidays) => holidays.some(holiday => moment(date).isSame(moment(holiday), 'day'));
 
 // * Calculate business days between two dates
-const calculateBusinessDays = (startDateString, endDateString) => {
+const calculateBusinessDays = (startDateString, endDateString, includeDefaultPublicHolidays = false) => {
     let start = moment(startDateString).startOf('day');
     let end = moment(endDateString).startOf('day');
 
     // If start and end are the same day
     if (start.isSame(end, 'day')) {
         // Check if it's a business day (Mon-Fri) and not a public holiday
-        if (start.day() >= 1 && start.day() <= 5 && !isPublicHoliday(start.toDate(), allPublicHolidays)) {
+        if (start.day() >= 1 && start.day() <= 5 && !isPublicHoliday(start.toDate(), includeDefaultPublicHolidays ? allPublicHolidays : [])) {
             return 1; // 1 business day
         } else {
             return 0; // Not a business day
@@ -10420,14 +10427,14 @@ const calculateBusinessDays = (startDateString, endDateString) => {
 
     // Iterate through the days between earlier and later dates
     while (earlier.isBefore(later)) {
-        if (earlier.day() >= 1 && earlier.day() <= 5 && !isPublicHoliday(earlier.toDate(), allPublicHolidays)) {
+        if (earlier.day() >= 1 && earlier.day() <= 5 && !isPublicHoliday(earlier.toDate(), includeDefaultPublicHolidays ? allPublicHolidays : [])) {
             count++;
         }
         earlier.add(1, 'days');
     }
 
     // Include the later day in the calculation if it's a business day
-    if (later.day() >= 1 && later.day() <= 5 && !isPublicHoliday(later.toDate(), allPublicHolidays)) {
+    if (later.day() >= 1 && later.day() <= 5 && !isPublicHoliday(later.toDate(), includeDefaultPublicHolidays ? allPublicHolidays : [])) {
         count++;
     }
 

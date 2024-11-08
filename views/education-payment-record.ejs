@@ -3,33 +3,171 @@
 <nav class="mb-2" aria-label="breadcrumb">
   <ol class="breadcrumb mb-0">
     <li class="breadcrumb-item"><a href="#!">Payment</a></li>
+    <li class="breadcrumb-item"><a href="#!">Fees</a></li>
     <li class="breadcrumb-item"><a href="#!">Details</a></li>
     <li class="breadcrumb-item active" aria-current="page"><%= payment._id %></li>
   </ol>
 </nav>
 
 <div class="row d-flex flex-wrap justify-content-between align-items-end mb-2">
-  <div class="col-auto">
+
+  <div class="col-auto mb-2">
     <h2>Payment <%= new Date(payment.date.payment).toLocaleString('en-MY', { year: 'numeric', month: 'long' }) %> <a class="notranslate" href="#">#<%= payment.child.name %></a></h2>
     <p class="text-body-secondary mb-0">Payment must be made before <br class="d-sm-none"><span class="ms-sm-1"><%= payment.date.payment ? new Date(payment.date.payment ).toLocaleString('en-MY', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }) : '-' %></span></p>
   </div>
 
-  <div class="col-auto d-flex justify-content-center">
-
-    <div class="">
-      <a class="btn btn-primary me-2" role="button" href="">Approve</a>
+  <div class="col-auto d-flex justify-content-center mb-3 mb-xl-0">
+    <div>
+      <button class="btn btn-success me-2" type="button">Pay</button>
+    </div>
+    <div>
+      <a class="btn btn-outline-primary me-2" role="button" href="">Approve</a>
       <a class="btn btn-outline-danger me-2" role="button" href="">Deny</a>
     </div>
     <div>
       <button class="btn px-3 btn-phoenix-secondary" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fa-solid fa-ellipsis"></span></button>
       <ul class="dropdown-menu dropdown-menu-end p-0" style="z-index: 9999;">
-        <li><a class="dropdown-item d-none" href="">Leave History</a></li>
-        <li><a class="dropdown-item" href="">Cancel Request</a></li>
+        <li><a class="dropdown-item" href="">Download Invoice</a></li>
         <li><a class="dropdown-item no-loader" href="#!" data-bs-target="#add-comment" data-bs-toggle="modal">Add Remarks</a></li>
         <li><a class="dropdown-item no-loader" href="#!">Print</a></li>
       </ul>
     </div>
   </div>
+
 </div>
 
-<%- include('partials/private-footer.ejs') %>
+<div class="row gy-5 gx-5 mb-xxl-6 mb-6">
+  <div class="col-12 col-xl-6">
+    <div class="rounded-3 border overflow-auto scrollbar">
+      <div class="p-3 vh-50">
+
+        <div class="row g-3 d-flex justify-content-between mb-0 px-1 py-2">
+
+          <div class="col-auto">
+            <h5>
+              Fees Amount : <span class="fst-italic">RM<%= payment.totalAmount %></span>
+            </h5>
+            <!-- <p class="badge badge-phoenix badge-phoenix-warning fs-10"><%= payment.status %></p> -->
+          </div>
+
+          <div class="col-auto">
+            <lottie-player class="mt-n4 me-n4" src="https://lottie.host/2f792096-09e2-4afa-951f-03c7bb0c19db/ZWID7JG5YG.json" background="transparent" speed="1" style="width: 75px; height: 75px;" loop autoplay></lottie-player>
+          </div>
+        </div>
+
+        <div class="mb-2">
+          <h5 class="mb-2">Fees Inquiry</h5>
+          <div class="border p-3 rounded-3">
+            <%= payment.products %>
+            <%= payment.products %>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <h5 class="mb-2">Products</h5>
+          <div class="border p-3 rounded-3">
+            <%= payment.products %>
+          </div>
+        </div>
+
+        <div class="mb-6">
+          <h5 class="mb-2">Remarks</h5>
+          <div class="border p-3 rounded-3">
+            <p class="text-body-highlight"><%= payment.remarks %></p>
+          </div>
+        </div>
+
+        <hr>
+
+        <%
+            const formatDateFile = (date) => {
+              const options = { day: 'numeric', month: 'short', hour: 'numeric', minute: 'numeric', hour12: true };
+              const formattedDate = new Intl.DateTimeFormat('en-US', options).format(date);
+            
+              // Add day suffix (st, nd, rd, or th)
+              const day = date.getDate();
+              const daySuffix = (day) => {
+                if (day >= 11 && day <= 13) {
+                  return 'th';
+                }
+                const lastDigit = day % 10;
+                   switch (lastDigit) {
+                  case 1: return 'st';
+                  case 2: return 'nd';
+                  case 3: return 'rd';
+                  default: return 'th';
+                }
+              };
+            
+              return formattedDate.replace(/(\d+)/, (match, p1) => `${p1}${daySuffix(day)}`);
+            };
+          %>
+
+        <div class="mb-6 mt-6">
+          <div class="card mb-3">
+            <div class="card-body">
+              <% const modalFiles = files.filter((file) => file.uuid === payment.fileId); %>
+              <% const lastIndexFile = modalFiles.length - 1; var borderModalFile = ''; %>
+              <% if(modalFiles && modalFiles.length > 0){ %>
+              <% modalFiles.forEach((file, index) => { %>
+
+              <% 
+            if(index === lastIndexFile){
+                borderModalFile = 'border-bottom';
+            } else {
+                borderModalFile = '';
+            }
+        %>
+
+              <% if(file.type === '.png' || file.type === '.webp' || file.type === '.jpg' || file.type === '.jpeg' || file.type === '.gif' ){ %>
+              <div class="px-0 pt-0 pb-3">
+                <div class="me-n3">
+                  <div class="d-flex flex-between-center">
+                    <div class="d-flex mb-1"><span class="fa-solid fa-image me-2 text-body-tertiary fs-9"></span>
+                      <p class="text-body-highlight mb-0 lh-1"><%= file.name %></p>
+                    </div>
+                    <div class="btn-reveal-trigger">
+                      <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fas fa-ellipsis-h"></span></button>
+                      <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item text-danger" href="/files/delete/<%= file._id %>">Delete</a><a class="dropdown-item" href="/files/download/<%= file._id %>">Download</a><a class="dropdown-item d-none" href="#!">Report abuse</a></div>
+                    </div>
+                  </div>
+                  <div class="d-flex fs-9 text-body-tertiary mb-2 flex-wrap"><span><%= file.size %></span><span class="text-body-quaternary mx-1">| </span><a href="/staff/details/<%= file.user %>"><%= file.user %> </a><span class="text-body-quaternary mx-1">| </span><span class="text-nowrap"><%= formatDateFile(file.date) %></span></div><img class="rounded-2" src="<%= file.path %>" alt="" style="max-width:230px" />
+                </div>
+              </div>
+
+              <% }else { %>
+
+              <div class="px-0 pt-4 pb-3">
+                <div class="me-n3">
+                  <div class="d-flex flex-between-center">
+                    <div>
+                      <div class="d-flex align-items-center mb-1"><span class="fa-solid fa-image me-2 fs-9 text-body-tertiary"></span>
+                        <p class="text-body-highlight mb-0 lh-1"><%= file.name %></p>
+                      </div>
+                      <div class="d-flex fs-9 text-body-tertiary mb-0 flex-wrap"><span><%= file.size %></span><span class="text-body-quaternary mx-1">| </span><a href="/staff/details/<%= file.user %>"><%= file.user %> </a><span class="text-body-quaternary mx-1">| </span><span class="text-nowrap"><%= formatDateFile(file.date) %></span></div>
+                    </div>
+                    <div class="btn-reveal-trigger">
+                      <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fas fa-ellipsis-h"></span></button>
+                      <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item d-none" href="#!">Edit</a><a class="dropdown-item text-danger" href="/files/delete/<%= file._id %>">Delete</a><a class="dropdown-item" href="/files/download/<%= file._id %>">Download</a><a class="dropdown-item d-none" href="#!">Report abuse</a></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <% } %>
+              <% }); %>
+              <% }else { %>
+              <p class="fs-9">There is no file attached</p>
+              <% } %>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <div class="col-12 col-xl-6">
+
+    </div>
+  </div>
+
+  <%- include('partials/private-footer.ejs') %>
