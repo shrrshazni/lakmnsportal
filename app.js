@@ -3338,7 +3338,7 @@ app.get('/leave/details/:id', isAuthenticated, async (req, res, next) => {
         // Calculate the number of leave days
         const startDate = leave.date.start;
         const returnDate = leave.date.return;
-        const daysDifference = Math.abs(calculateNumberOfDays(leave.type, leave.date.start, leave.date.return, userReq.isNonOfficeHour));
+        const daysDifference = Math.abs(await calculateNumberOfDays(leave.type, leave.date.start, leave.date.return, userReq.isNonOfficeHour));
 
         // Find associated files for the leave
         const file = await File.find({ uuid: leave.fileId });
@@ -4311,7 +4311,7 @@ app.get('/human-resource/leave/add/:id', isAuthenticated, async function (req, r
             const returnDateConvert = moment(returnDate).utcOffset(8).toDate();
 
             // Use calculateNumberOfDays to get the days difference
-            const daysDifference = Math.abs(calculateNumberOfDays(
+            const daysDifference = Math.abs(await calculateNumberOfDays(
                 type,
                 startDateConvert,
                 returnDateConvert,
@@ -7834,34 +7834,38 @@ app.get('/download-leave-report', isAuthenticated, async (req, res) => {
         const leaves = await Leave.find(); // Fetch leave entries
 
         // Step 3: Map user details to leaves
-        const data = leaves.map(leave => {
-            const user = allUsers.find(u => u._id.toString() === leave.user.toString()) || {}; // Find user by ID
-            const assignees = leave.assignee || []; // Get assignee IDs
+        const data = await Promise.all(
+            leaves.map(async (leave) => {
+                const user = allUsers.find(u => u._id.toString() === leave.user.toString()) || {}; // Find user by ID
+                const assignees = leave.assignee || []; // Get assignee IDs
 
-            // Step 3.1: Map assignees to usernames
-            const assigneeUsernames = assignees.map(assigneeId => {
-                const assignee = allUsers.find(u => u._id.toString() === assigneeId.toString());
-                return assignee ? assignee.username : ''; // Return username or empty if not found
-            });
+                // Step 3.1: Map assignees to usernames
+                const assigneeUsernames = (await Promise.all(
+                    assignees.map(async (assigneeId) => {
+                        const assignee = allUsers.find(u => u._id.toString() === assigneeId.toString());
+                        return assignee ? assignee.username : ''; // Return username or empty if not found
+                    })
+                )).filter(username => username !== ''); // Remove empty strings
 
-            // Step 3.2: Calculate number of days using user.isNonOfficeHour
-            const numberOfDays = calculateNumberOfDays(leave.type, leave.date.start, leave.date.return, user.isNonOfficeHour);
+                // Step 3.2: Calculate number of days using user.isNonOfficeHour
+                const numberOfDays = await calculateNumberOfDays(leave.type, leave.date.start, leave.date.return, user.isNonOfficeHour);
 
-            return {
-                fullname: user.fullname || '',
-                username: user.username || '',
-                assignees: assigneeUsernames.join(', '), // Join usernames of assignees
-                type: leave.type,
-                status: leave.status,
-                purpose: leave.purpose,
-                fileId: leave.fileId,
-                start: leave.date.start, // Apply UTC offset and format
-                return: leave.date.return, // Apply UTC offset and format
-                timestamp: leave.timestamp, // Format timestamp
-                isNonOfficeHour: user.isNonOfficeHour, // Use user.isNonOfficeHour
-                numberOfDays: numberOfDays // Add calculated number of days
-            };
-        });
+                return {
+                    fullname: user.fullname || '',
+                    username: user.username || '',
+                    assignees: assigneeUsernames.join(', '), // Join usernames of assignees
+                    type: leave.type,
+                    status: leave.status,
+                    purpose: leave.purpose,
+                    fileId: leave.fileId,
+                    start: moment(leave.date.start).utcOffset(8).format('DD/MM/YYYY'), // Apply UTC offset and format
+                    return: moment(leave.date.return).utcOffset(8).format('DD/MM/YYYY'), // Apply UTC offset and format
+                    timestamp: moment(leave.timestamp).format('DD/MM/YYYY HH:mm'), // Format timestamp
+                    isNonOfficeHour: user.isNonOfficeHour, // Use user.isNonOfficeHour
+                    numberOfDays: numberOfDays // Add calculated number of days
+                };
+            })
+        );
 
         // Step 4: Define CSV fields and parse the data
         const fields = [
@@ -9595,7 +9599,7 @@ const checkFileAttachment = async (uuid, renderDataError, errorMessage = 'File a
 // * Leave request
 // * Main processing leave request
 const processLeaveRequest = async (type, user, userLeave, startDate, returnDate, uuid, approvers) => {
-    let numberOfDays = calculateNumberOfDays(type, startDate, returnDate, user.isNonOfficeHour);
+    let numberOfDays = await calculateNumberOfDays(type, startDate, returnDate, user.isNonOfficeHour);
     const amountDayRequest = await calculateBusinessDays(moment(), startDate);
     let leaveBalance, leaveTaken;
     let renderDataError = { show: '', alert: '' };
@@ -10014,7 +10018,7 @@ const handleCancelled = async (checkLeave, user, res) => {
             });
 
             // Calculate the number of days affected by the leave using the provided function
-            const daysDifference = Math.abs(calculateNumberOfDays(checkLeave.type, checkLeave.date.start, checkLeave.date.return, checkLeave.isNonOfficeHour));
+            const daysDifference = Math.abs(await calculateNumberOfDays(checkLeave.type, checkLeave.date.start, checkLeave.date.return, checkLeave.isNonOfficeHour));
 
             // Adjust leave balances based on the leave type and days difference
             switch (checkLeave.type) {
@@ -10167,7 +10171,7 @@ const handleAcknowledged = async (checkLeave, user, res) => {
             const returnDate = checkLeave.date.return;
 
             // Use calculateNumberOfDays to get the days difference
-            const daysDifference = Math.abs(calculateNumberOfDays(
+            const daysDifference = Math.abs(await calculateNumberOfDays(
                 checkLeave.type,
                 startDate,
                 returnDate,
