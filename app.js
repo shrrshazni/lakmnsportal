@@ -7800,8 +7800,16 @@ app.get('/testing', isAuthenticated, async (req, res, next) => {
     try {
         const { user, notifications } = req;
 
-        // Test the code by calling the updatePublicHolidays function directly
-        updatePublicHolidays();
+        const publicHolidays = await updatePublicHolidays();
+        console.log(publicHolidays);
+
+        // Backdated dates
+        const startDateString4 = '2024-06-17';
+        const endDateString4 = '2024-06-01';
+
+        const businessDays4 = await calculateBusinessDays(startDateString4, endDateString4);
+        console.log('Backdated dates:', businessDays4);
+        // Expected result: 8
 
         res.render('testing', {
             user: user,
@@ -7815,6 +7823,7 @@ app.get('/testing', isAuthenticated, async (req, res, next) => {
         next(error);
     }
 });
+
 
 app.get('/download-leave-report', isAuthenticated, async (req, res) => {
     try {
@@ -9570,6 +9579,7 @@ const checkLeaveBalance = (leaveBalance, numberOfDays, minDays = 0, renderDataEr
     }
     return true;
 };
+
 // * Leave request
 // * Helper function to check if files are attached
 const checkFileAttachment = async (uuid, renderDataError, errorMessage = 'File attachment is required!') => {
@@ -9586,7 +9596,7 @@ const checkFileAttachment = async (uuid, renderDataError, errorMessage = 'File a
 // * Main processing leave request
 const processLeaveRequest = async (type, user, userLeave, startDate, returnDate, uuid, approvers) => {
     let numberOfDays = calculateNumberOfDays(type, startDate, returnDate, user.isNonOfficeHour);
-    const amountDayRequest = calculateBusinessDays(moment(), startDate);
+    const amountDayRequest = await calculateBusinessDays(moment(), startDate);
     let leaveBalance, leaveTaken;
     let renderDataError = { show: '', alert: '' };
     let approvals = null;
@@ -10293,7 +10303,7 @@ const addComment = async (checkLeave, user, comment, res) => {
 // * Leave request / approval
 // * Helper function to calculate number of days based on leave type and user working hours
 // * Use helper function calculateBussinessDays
-const calculateNumberOfDays = (type, startDate, returnDate, isNonOfficeHour) => {
+const calculateNumberOfDays = async (type, startDate, returnDate, isNonOfficeHour) => {
     const halfDayTypes = ['Half Day Leave', 'Half Day Emergency Leave'];
     const fullDayLeaves = [
         'Marriage Leave', 'Paternity Leave', 'Maternity Leave',
@@ -10322,12 +10332,12 @@ const calculateNumberOfDays = (type, startDate, returnDate, isNonOfficeHour) => 
         if (halfDayTypes.includes(type)) {
             daysDifference = isNonOfficeHour
                 ? (endMoment.diff(startMoment, 'days') + 1) / 2
-                : calculateBusinessDays(startDate, returnDate) / 2;
+                : await calculateBusinessDays(startDate, returnDate) / 2;
         } else if (fullDayLeaves.includes(type)) {
-            if (type === 'Annual Leave' || type === "Maternity Leave") {
+            if (type === 'Annual Leave') {
                 daysDifference = isNonOfficeHour
                     ? (endMoment.diff(startMoment, 'days') + 1)
-                    : calculateBusinessDays(startDate, returnDate, true);
+                    : await calculateBusinessDays(startDate, returnDate, true);
             } else {
                 daysDifference = endMoment.diff(startMoment, 'days') + 1;
             }
@@ -10340,41 +10350,38 @@ const calculateNumberOfDays = (type, startDate, returnDate, isNonOfficeHour) => 
     return daysDifference;
 };
 
+// * Check if a date is a public holiday
+const isPublicHoliday = (date, holidays) => holidays.some(holiday => moment(date).isSame(moment(holiday), 'day'));
+
 // * Default public holidays for the year
 let defaultPublicHolidays = [];
 
 // * Function to scrape public holidays from a website
 // * Returns an array of objects containing the date and holiday
 const scrapePublicHolidays = async () => {
-    console.log('Scraping public holidays...');
     const url = 'https://sarawak.gov.my/web/home/article_view/198/374/198?id=198';
     const response = await axios.get(url);
     const $ = cheerio.load(response.data);
 
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
     const publicHolidays = $('table tr').map((_, element) => {
         const tds = $(element).find('td');
-        const date = tds.eq(0).text().trim();
-        const day = tds.eq(1).text().trim();
-        let holiday = '';
+        const dateStr = tds.eq(0).text().trim();
 
-        for (let i = 2; i < tds.length; i++) {
-            holiday += tds.eq(i).text().trim() + ', ';
+        const [day, month, year] = dateStr.split(' '); // Split the string into 3 parts
+
+        if (isNaN(day) || isNaN(year) || !monthNames.includes(month)) {
+            return;
         }
 
-        holiday = holiday.trim().replace(/, $/, '');
+        const monthNumber = monthNames.indexOf(month) + 1; // Get the month number from the month name
 
-        // Check if date already exists in defaultPublicHolidays
-        const existingHoliday = defaultPublicHolidays.find(h => h.date === date);
-        if (existingHoliday) {
-            // Append new event to existing event
-            existingHoliday.holiday += `, ${holiday}`;
-        } else {
-            // Add new event to defaultPublicHolidays
-            defaultPublicHolidays.push({ date, holiday: `${day}, ${holiday}` });
-        }
+        const formattedDate = `${day}/${monthNumber}/${year}`; // Format the date string to DD/MM/YYYYf
+
+        // Add new event to defaultPublicHolidays
+        defaultPublicHolidays.push({ date: formattedDate });
     }).get();
-
-    console.log('Public holidays scraped:', publicHolidays);
     return publicHolidays;
 };
 
@@ -10383,34 +10390,24 @@ const scrapePublicHolidays = async () => {
 // * Calls the scrapePublicHolidays function and updates the defaultPublicHolidays array
 const updatePublicHolidays = async () => {
     console.log('Updating public holidays...');
-    const publicHolidays = await scrapePublicHolidays();
-    console.log('Public holidays updated:', defaultPublicHolidays);
+    await scrapePublicHolidays();
+    return defaultPublicHolidays;
 }
 
-// // * Run cron job to update public holidays
-// cron.schedule('0 8 * * *', () => {
-//     console.log('Running cron job to update public holidays');
-//     updatePublicHolidays();
-// }, {
-//     scheduled: true,
-//     timezone: 'Asia/Kuala_Lumpur'
-// });
-
-// * Default public holidays for the year
-const allPublicHolidays = defaultPublicHolidays.map(date => moment(date).startOf('day').toDate());
-
-// * Check if a date is a public holiday
-const isPublicHoliday = (date, holidays) => holidays.some(holiday => moment(date).isSame(moment(holiday), 'day'));
-
 // * Calculate business days between two dates
-const calculateBusinessDays = (startDateString, endDateString, includeDefaultPublicHolidays = false) => {
+const calculateBusinessDays = async (startDateString, endDateString) => {
+    const publicHolidays = await updatePublicHolidays();
+
+    // Convert public holidays to ISO datetime format
+    const isoPublicHolidays = publicHolidays.map(holiday => moment(holiday.date, 'DD/MM/YYYY').format('YYYY-MM-DD'));
+
     let start = moment(startDateString).startOf('day');
     let end = moment(endDateString).startOf('day');
 
     // If start and end are the same day
     if (start.isSame(end, 'day')) {
         // Check if it's a business day (Mon-Fri) and not a public holiday
-        if (start.day() >= 1 && start.day() <= 5 && !isPublicHoliday(start.toDate(), includeDefaultPublicHolidays ? allPublicHolidays : [])) {
+        if (start.day() >= 1 && start.day() <= 5 && !isoPublicHolidays.some(holiday => moment(holiday).isSame(start))) {
             return 1; // 1 business day
         } else {
             return 0; // Not a business day
@@ -10427,14 +10424,14 @@ const calculateBusinessDays = (startDateString, endDateString, includeDefaultPub
 
     // Iterate through the days between earlier and later dates
     while (earlier.isBefore(later)) {
-        if (earlier.day() >= 1 && earlier.day() <= 5 && !isPublicHoliday(earlier.toDate(), includeDefaultPublicHolidays ? allPublicHolidays : [])) {
+        if (earlier.day() >= 1 && earlier.day() <= 5 && !isoPublicHolidays.some(holiday => moment(holiday).isSame(earlier))) {
             count++;
         }
         earlier.add(1, 'days');
     }
 
     // Include the later day in the calculation if it's a business day
-    if (later.day() >= 1 && later.day() <= 5 && !isPublicHoliday(later.toDate(), includeDefaultPublicHolidays ? allPublicHolidays : [])) {
+    if (later.day() >= 1 && later.day() <= 5 && !isoPublicHolidays.some(holiday => moment(holiday).isSame(later))) {
         count++;
     }
 
