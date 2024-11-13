@@ -128,7 +128,8 @@
               }
             });
 
-            $('.slick-slider').on('click', '.delete-slide-btn', function() {
+            $('.slick-slider').on('click', '.delete-slide-btn', function(event) {
+              event.stopPropagation();
               var index = $(this).data('index');
               var fees = parseFloat($(this).siblings('p').attr('data-fees'));
               var product = $(this).siblings('p').attr('data-product');

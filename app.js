@@ -9746,42 +9746,42 @@ const processLeaveRequest = async (type, user, userLeave, startDate, returnDate,
             break;
         case 'Emergency Leave':
             if (amountDayRequest <= 7 && amountDayRequest >= -5) {
-                if (await checkFileAttachment(uuid, renderDataError, `There is no file attached for ${type.toLowerCase()}!`)) {
-                    approvals = generateApprovals(
-                        user,
-                        approvers.headOfSection,
-                        approvers.headOfDepartment,
-                        approvers.depChiefExec,
-                        approvers.chiefExec,
-                        approvers.adminHR,
-                        approvers.assignee,
-                        approvers.supervisors,
-                        type,
-                        startDate
-                    );
-                    return { approvals, renderDataError };
-                }
+
+                approvals = generateApprovals(
+                    user,
+                    approvers.headOfSection,
+                    approvers.headOfDepartment,
+                    approvers.depChiefExec,
+                    approvers.chiefExec,
+                    approvers.adminHR,
+                    approvers.assignee,
+                    approvers.supervisors,
+                    type,
+                    startDate
+                );
+                return { approvals, renderDataError };
+
             } else {
                 renderDataError.alert = 'There is an error in requesting the emergency leave';
             }
             break;
         case 'Half Day Emergency Leave':
             if (amountDayRequest <= 7 && numberOfDays <= 1 && amountDayRequest >= -5) {
-                if (await checkFileAttachment(uuid, renderDataError, `There is no file attached for ${type.toLowerCase()}!`)) {
-                    approvals = generateApprovals(
-                        user,
-                        approvers.headOfSection,
-                        approvers.headOfDepartment,
-                        approvers.depChiefExec,
-                        approvers.chiefExec,
-                        approvers.adminHR,
-                        approvers.assignee,
-                        approvers.supervisors,
-                        type,
-                        startDate
-                    );
-                    return { approvals, renderDataError };
-                }
+
+                approvals = generateApprovals(
+                    user,
+                    approvers.headOfSection,
+                    approvers.headOfDepartment,
+                    approvers.depChiefExec,
+                    approvers.chiefExec,
+                    approvers.adminHR,
+                    approvers.assignee,
+                    approvers.supervisors,
+                    type,
+                    startDate
+                );
+                return { approvals, renderDataError };
+
             } else {
                 renderDataError.alert = 'Required only 1 day of leave date in requesting the half day emergency leave';
             }
