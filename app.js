@@ -7800,17 +7800,6 @@ app.get('/testing', isAuthenticated, async (req, res, next) => {
     try {
         const { user, notifications } = req;
 
-        const publicHolidays = await updatePublicHolidays();
-        console.log(publicHolidays);
-
-        // Backdated dates
-        const startDateString4 = '2024-06-17';
-        const endDateString4 = '2024-06-01';
-
-        const businessDays4 = await calculateBusinessDays(startDateString4, endDateString4);
-        console.log('Backdated dates:', businessDays4);
-        // Expected result: 8
-
         res.render('testing', {
             user: user,
             notifications: notifications,
