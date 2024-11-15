@@ -3437,7 +3437,13 @@ app.get('/attendance', async function (req, res, next) {
 // Scan QR route
 app.get('/attendance/overview', isAuthenticated, async function (req, res, next) {
     try {
-        const attendance = await Attendance.find({ user: req.user._id }).sort({ timestamp: -1 });
+        const start = process.hrtime();
+        const today = moment().startOf('month').toDate();
+        const endOfMonth = moment().endOf('month').toDate();
+        const attendance = await Attendance.find({ user: req.user._id, timestamp: { $gte: today, $lte: endOfMonth } }).sort({ timestamp: -1 });
+        const end = process.hrtime(start);
+        const timeTaken = (end[0] + end[1] / 1e9).toFixed(2);
+        console.log(`Attendance page loaded in ${timeTaken} seconds.`);
 
         res.render('attendance-overview', {
             user: req.user,
