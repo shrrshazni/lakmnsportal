@@ -897,18 +897,26 @@ const schoolAttendanceSchema = new mongoose.Schema({
 schoolAttendanceSchema.index({ child: 1, date: 1 });
 schoolAttendanceSchema.index({ status: 1 });
 
+const productSchema = new mongoose.Schema({
+    sku: String,
+    name: String,
+    desc: String,
+    type: { type: String },
+    color: String,
+    size: { type: String },
+    quantity: { type: Number, default: 1 },
+    price: Number
+});
+productSchema.index({ sku: 1 });
+productSchema.index({ name: 1 });
+productSchema.index({ type: 1 });
+productSchema.index({ color: 1 });
+productSchema.index({ size: 1 });
+productSchema.index({ price: 1 });
+
 const paymentSchema = new mongoose.Schema({
     child: { type: mongoose.Schema.Types.ObjectId, ref: 'Children' },
-    products: [{
-        sku: String,
-        name: String,
-        desc: String,
-        type: { type: String },
-        color: String,
-        size: { type: String },
-        quantity: { type: Number, default: 1 },
-        price: Number
-    }],
+    products: [],
     isProduct: { type: Boolean },
     totalAmount: { type: Number },
     date: {
@@ -953,6 +961,7 @@ const TeacherEducation = educationDatabase.model('Teachers', teacherSchema);
 const ClassEducation = educationDatabase.model('Classes', classSchema);
 const PaymentEducation = educationDatabase.model('Payments', paymentSchema);
 const AttendanceEducation = educationDatabase.model('Attendances', schoolAttendanceSchema);
+const ProductEducation = educationDatabase.model('Products', productSchema);
 
 // ============================
 // Configure Passport Local Strategy
@@ -1198,8 +1207,8 @@ const renderHomePage = async (req, res, next, show = '', alert = '') => {
 
 // Allowed IP addresses for restricted access
 const allowedIPs = [
-    '175.140.45.73', '104.28.242.42', '210.186.48.79',
-    '60.50.17.102', '175.144.217.244', '203.106.120.240'
+    '175.140.45.73', '180.74.242.190', '180.75.77.36',
+    '180.74.242.233', '210.186.48.186'
 ];
 
 // Middleware to restrict access based on IP address
@@ -3421,7 +3430,7 @@ app.post('/leave/comment/:id', isAuthenticated, async (req, res, next) => {
 // ============================
 
 // Main attendance route
-app.get('/attendance', async function (req, res, next) {
+app.get('/attendance', restrictAccess, async function (req, res, next) {
     const uniqueIdentifier = generateUniqueIdentifier();
     try {
         res.render('attendance', {
@@ -6098,6 +6107,8 @@ app.get('/education/payment/record/:id', isAuthenticated, async (req, res, next)
                 ]
             });
 
+        const productIds = JSON.stringify(payment.products.map(product => product._id));
+
         const files = await File.find({ uuid: payment.fileId });
 
         res.render('education-payment-record', {
@@ -6105,13 +6116,26 @@ app.get('/education/payment/record/:id', isAuthenticated, async (req, res, next)
             notifications: notifications,
             uuid: uuidv4(),
             payment,
-            files
+            files,
+            productIds
         });
     } catch (error) {
         console.log(error);
         next(error);
     }
+}).post('/education/payment/record/:id', isAuthenticated, async (req, res, next) => {
+    try {
+        const id = req.params.id;
+        const payment = await PaymentEducation.findOne({ _id: id });
+
+
+    } catch (error) {
+        console.log(error);
+        next(error);
+    }
 });
+
+
 
 // // Payment: record payment section route
 // app.get('/education/record/payment', isAuthenticated, async function (req, res) {
@@ -6932,11 +6956,10 @@ app.post('/api/qrcode/process-data', isAuthenticated, async (req, res) => {
     // Determine location based on client IP
     const locationMap = {
         '175.140.45.73': 'BMI',
-        '203.106.120.240': 'BMI',
-        '104.28.242.42': 'BMI',
-        '210.186.48.79': 'JM',
-        '60.50.17.102': 'CM',
-        '175.144.217.244': 'RS'
+        '180.74.242.190': 'BMII',
+        '180.75.77.36': 'JM',
+        '180.74.242.233': 'RS',
+        '210.186.48.186': 'CM',
     };
     const location = locationMap[clientIp] || 'Invalid';
 
@@ -7818,7 +7841,6 @@ app.get('/testing', isAuthenticated, async (req, res, next) => {
         next(error);
     }
 });
-
 
 app.get('/download-leave-report', isAuthenticated, async (req, res) => {
     try {
