@@ -1208,7 +1208,8 @@ const renderHomePage = async (req, res, next, show = '', alert = '') => {
 // Allowed IP addresses for restricted access
 const allowedIPs = [
     '175.140.45.73', '180.74.242.190', '180.75.77.36',
-    '180.74.242.233', '210.186.48.186'
+    '180.74.242.233', '210.186.48.186', '210.186.48.112',
+    '110.159.86.125'
 ];
 
 // Middleware to restrict access based on IP address
@@ -6958,8 +6959,10 @@ app.post('/api/qrcode/process-data', isAuthenticated, async (req, res) => {
         '175.140.45.73': 'BMI',
         '180.74.242.190': 'BMII',
         '180.75.77.36': 'JM',
+        '110.159.86.125': 'JM',
         '180.74.242.233': 'RS',
         '210.186.48.186': 'CM',
+        '210.186.48.112': 'CM', 
     };
     const location = locationMap[clientIp] || 'Invalid';
 
