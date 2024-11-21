@@ -916,7 +916,7 @@ productSchema.index({ price: 1 });
 
 const paymentSchema = new mongoose.Schema({
     child: { type: mongoose.Schema.Types.ObjectId, ref: 'Children' },
-    products: [],
+    products: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Products' }],
     isProduct: { type: Boolean },
     totalAmount: { type: Number },
     date: {
@@ -928,6 +928,7 @@ const paymentSchema = new mongoose.Schema({
     fileId: String,
     status: { type: String, enum: ['Due', 'Pending', 'Paid', 'Invalid'] }
 });
+
 paymentSchema.index({ child: 1 });
 paymentSchema.index({ date: 1 });
 paymentSchema.index({ status: 1 });
@@ -6106,7 +6107,15 @@ app.get('/education/payment/record/:id', isAuthenticated, async (req, res, next)
                     { path: 'parent', model: 'Parents' },
                     { path: 'class', model: 'Classes' }
                 ]
+            })
+            .populate({
+                path: 'products',
+                model: 'Products' // Ensure this matches the actual model name
             });
+        
+        console.log(payment);
+
+        const products = await ProductEducation.find();
 
         const productIds = JSON.stringify(payment.products.map(product => product._id));
 
@@ -6118,45 +6127,34 @@ app.get('/education/payment/record/:id', isAuthenticated, async (req, res, next)
             uuid: uuidv4(),
             payment,
             files,
+            products,
             productIds
         });
     } catch (error) {
         console.log(error);
         next(error);
     }
-}).post('/education/payment/record/:id', isAuthenticated, async (req, res, next) => {
+});
+
+// Payment route - update payment
+app.post('/education/payment/record/:method', isAuthenticated, async (req, res, next) => {
     try {
-        const id = req.params.id;
-        const payment = await PaymentEducation.findOne({ _id: id });
+        const { user, notifications } = req;
+        const method = req.params.method;
 
+        const { totalFees, paymentId, products } = req.body;
 
-    } catch (error) {
+        console.log('update payment method:', method);
+        console.log('totalFees:', totalFees);
+        console.log('paymentId:', paymentId);
+        console.log('products:', products);
+
+        res.redirect('/education/payment');
+    } catch {
         console.log(error);
         next(error);
     }
 });
-
-
-
-// // Payment: record payment section route
-// app.get('/education/record/payment', isAuthenticated, async function (req, res) {
-//     const username = req.user.username;
-//     const user = await User.findOne({ username: username });
-//     const notifications = await Notification.find({
-//         recipient: user._id,
-//         read: false
-//     })
-//         .populate('sender')
-//         .sort({ timestamp: -1 });
-
-//     if (user) {
-
-//         res.render('education-record-payment', {
-//             user: user,
-//             notifications: notifications,
-//             uuid: uuidv4(),
-//         });
-//     }
 // });
 
 // Payment: register student section route
@@ -6962,7 +6960,7 @@ app.post('/api/qrcode/process-data', isAuthenticated, async (req, res) => {
         '110.159.86.125': 'JM',
         '180.74.242.233': 'RS',
         '210.186.48.186': 'CM',
-        '210.186.48.112': 'CM', 
+        '210.186.48.112': 'CM',
     };
     const location = locationMap[clientIp] || 'Invalid';
 
@@ -7844,6 +7842,49 @@ app.get('/testing', isAuthenticated, async (req, res, next) => {
         next(error);
     }
 });
+
+// Function to create yearly payments for each child
+async function createYearlyPaymentsForChildren() {
+    try {
+        const children = await ChildEducation.find();
+        const products = await ProductEducation.find();
+
+        if (products.length === 0) {
+            throw new Error('No products found');
+        }
+
+        for (const child of children) {
+            for (let month = 0; month < 12; month++) {
+                const paymentDate = new Date();
+                paymentDate.setMonth(month, 1);
+                paymentDate.setHours(0, 0, 0, 0);
+
+                const payment = new PaymentEducation({
+                    child: child._id,
+                    products: products.map(product => product._id),
+                    isProduct: true,
+                    totalAmount: products.reduce((sum, product) => sum + product.price, 2),
+                    date: {
+                        payment: paymentDate,
+                        approval: null,
+                    },
+                    method: 'Manual',
+                    timestamp: new Date(),
+                    fileId: uuidv4(),
+                    status: 'Due'
+                });
+
+                await payment.save();
+            }
+        }
+
+        console.log('Yearly payments created for all children');
+    } catch (error) {
+        console.error('Error creating payments:', error);
+    } finally {
+        educationDatabase.close();
+    }
+}
 
 app.get('/download-leave-report', isAuthenticated, async (req, res) => {
     try {

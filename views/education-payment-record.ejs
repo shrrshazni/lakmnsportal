@@ -18,7 +18,7 @@
 
   <div class="col-auto d-flex justify-content-center mb-3 mb-xl-0">
     <div>
-      <button class="btn btn-success me-2" type="button">Pay</button>
+      <button class="btn btn-success me-2" type="button" id="pay-button">Pay</button>
     </div>
     <div>
       <a class="btn btn-outline-primary me-2" role="button" href="">Approve</a>
@@ -75,7 +75,7 @@
             <div class="border p-3 rounded-3 overflow-y-auto overflow-x-hidden scrollbar" id="fees" style="height: 17.5vh;">
               <ul class="list-group list-group-flush" id="fees-list">
                 <% payment.products.forEach(product => { %>
-                <li class="list-group-item" data-id="<%= product._id %>"><%= product.name %>: RM <%= product.price %></li>
+                <li class="list-group-item border-top-0 border-bottom border-start-0 border-end-0 border-2" data-id="<%= product._id %>"><%= product.name %>: RM <%= product.price %></li>
                 <% }) %>
               </ul>
             </div>
@@ -184,10 +184,11 @@
           <label for="productSelect" class="form-label">Select Product</label>
           <select class="form-select mx-2" id="add-slide-select">
             <option value="">Select an option</option>
-            <option value="Product 1 - RM 10.00" data-price="10.00" data-product="Product 1 - RM 10.00">Product 1 - RM 10.00</option>
-            <option value="Product 2 - RM 20.00" data-price="20.00" data-product="Product 2 - RM 20.00">Product 2 - RM 20.00</option>
-            <option value="Product 3 - RM 30.00" data-price="30.00" data-product="Product 3 - RM 30.00">Product 3 - RM 30.00</option>
-            <option value="Product 4 - RM 40.00" data-price="40.00" data-product="Product 4 - RM 40.00">Product 4 - RM 40.00</option>
+            <% products.forEach(product => { %>
+            <option value="<%= product.name %> - RM <%= product.price %>" data-sku="<%= product.sku %>" data-price="<%= product.price %>" data-product="<%= product.name %>" class="<%= product.quantity === 0 ? 'd-none' : '' %>">
+              <%= product.name %> - RM <%= product.price %>
+            </option>
+            <% }) %>
           </select>
         </div>
         <div class="mb-3 col-2">
@@ -243,26 +244,31 @@
         }
 
         $('#add-slide-btn').click(function() {
-          var text = $('#add-slide-select').val();
-          var fees = parseFloat($('#add-slide-select').find('option:selected').attr('data-price'));
-          var product = $('#add-slide-select').find('option:selected').attr('data-product');
+          var selectedOption = $('#add-slide-select').find('option:selected');
+          var text = selectedOption.val();
+          var fees = parseFloat(selectedOption.data('price'));
+          var product = selectedOption.data('product');
+          var sku = selectedOption.data('sku');
           var uniqueId = generateUniqueId(); // Generate unique ID for the slide
 
           if (text !== '') {
             console.log('add slide with unique ID: ' + uniqueId);
-            $('.slick-slider').slick('slickAdd', '<div class="card mx-2" data-unique-id="' + uniqueId + '">' +
-              '<div class="card-body d-flex justify-content-center">' +
-              '<p class="card-text mx-auto">' + text + '</p>' +
-              '</div>' +
-              '<div class="card-footer d-flex justify-content-center">' +
-              '<button class="btn btn-danger delete-slide-btn mx-auto" data-id="' + uniqueId + '">Delete</button>' +
-              '<p class="mx-2 d-none" data-fees="' + fees + '">RM ' + fees + '</p>' +
-              '<p class="mx-2 d-none" data-product="' + product + '">' + product + '</p>' +
-              '</div>' +
-              '</div>');
+            $('.slick-slider').slick('slickAdd', `
+             <div class="card mx-2" data-unique-id="${uniqueId}">
+               <div class="card-body d-flex justify-content-center">
+                 <p class="card-text mx-auto">${text}</p>
+               </div>
+               <div class="card-footer d-flex justify-content-center">
+                 <button class="btn btn-danger delete-slide-btn mx-auto" data-id="${uniqueId}">Delete</button>
+                 <p class="mx-2 d-none" data-fees="${fees}">RM ${fees}</p>
+                 <p class="mx-2 d-none" data-product="${product}">${product}</p>
+                 <p class="mx-2 d-none" data-sku="${sku}">${sku}</p>
+               </div>
+             </div>
+           `);
             var totalFees = parseFloat($('#total-fees').text()) + fees;
             $('#total-fees').text(totalFees.toFixed(2));
-            $('#fees-list').append('<li class="list-group-item" data-id="' + uniqueId + '">' + product + ': RM ' + fees + '</li>');
+            $('#fees-list').append(`<li class="list-group-item border-top-0 border-bottom border-start-0 border-end-0 border-2" data-id="${uniqueId}">${product}: RM ${fees}</li>`);
 
             // Add the unique ID to the array
             slideIds.push(uniqueId);
@@ -295,6 +301,42 @@
           $('#total-fees').text(totalFees.toFixed(2));
 
           $('#fees-list li[data-id="' + uniqueId + '"]').remove();
+        });
+
+        $('#pay-button').click(function() {
+          const totalFees = parseFloat($('#total-fees').text());
+          const paymentId = '<%= payment._id %>';
+          const productDetails = [];
+
+          // Iterate over dynamically added products to collect SKUs and other details
+          $('.slick-slider .card').each(function() {
+            const productSKU = $(this).find('p[data-sku]').data('sku');
+            const productName = $(this).find('p[data-product]').data('product');
+            const productPrice = $(this).find('p[data-fees]').data('fees');
+            if (productSKU && productName && productPrice) {
+              productDetails.push({
+                sku: productSKU,
+                name: productName,
+                price: productPrice
+              });
+            }
+          });
+
+          $.post('/education/payment/record/pay', {
+              totalFees: totalFees,
+              paymentId: paymentId,
+              products: productDetails
+            })
+            .done(function(response) {
+              alert('Payment succesful.');
+              setTimeout(function(){
+                location.reload();
+              }, 1000);
+            })
+            .fail(function(error) {
+              alert('Payment failed.');
+              console.error('Payment error:', error);
+            });
         });
       });
     </script>
