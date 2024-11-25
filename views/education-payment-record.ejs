@@ -46,7 +46,7 @@
           <div class="row g-3 d-flex justify-content-between mb-0 px-1 py-2">
 
             <div class="col-auto d-flex align-items-center">
-              <p class="text-end fw-bold fs-7 fst-italic">RM <span id="total-fees"><%= payment.totalAmount.toFixed(2) %></span></p>
+              <span class="badge badge-phoenix badge-phoenix-warning fw-semibold fs-10 me-2 mt-n2"><%= payment.status %></span>
             </div>
 
             <div class="col-auto">
@@ -58,13 +58,12 @@
             <div class="slick-slider">
               <% payment.products.forEach(product => { %>
               <div class="card mx-2" data-unique-id="<%= product._id %>">
-                <div class="card-body d-flex justify-content-center">
-                  <p class="card-text mx-auto"><%= product.name %> - RM <%= product.price %></p>
-                </div>
-                <div class="card-footer d-flex justify-content-center">
+                <div class="card-body d-flex flex-column justify-content-center align-items-center" style="height: 15vh;">
+                  <p class="card-text text-center mb-4"><%= product.name %> - RM <%= product.price %></p>
                   <button class="btn btn-danger delete-slide-btn mx-auto" data-id="<%= product._id %>">Delete</button>
-                  <p class="mx-2 d-none" data-fees="<%= product.price %>">RM <%= product.price %></p>
-                  <p class="mx-2 d-none" data-product="<%= product.name %>"><%= product.name %></p>
+                  <p class="mx-2 d-none" data-sku="<%= product.sku %>" data-fees="<%= product.price %>" data-product="<%= product.name %>">
+                    RM <%= product.price %>
+                  </p>
                 </div>
               </div>
               <% }) %>
@@ -72,12 +71,18 @@
           </div>
 
           <div class="mb-3">
-            <div class="border p-3 rounded-3 overflow-y-auto overflow-x-hidden scrollbar" id="fees" style="height: 17.5vh;">
-              <ul class="list-group list-group-flush" id="fees-list">
-                <% payment.products.forEach(product => { %>
-                <li class="list-group-item border-top-0 border-bottom border-start-0 border-end-0 border-2" data-id="<%= product._id %>"><%= product.name %>: RM <%= product.price %></li>
-                <% }) %>
-              </ul>
+            <div class="overflow-y-auto overflow-x-hidden scrollbar" id="fees" style="height: 17.5vh;">
+              <table class="table table-borderless">
+                <tbody id="fees-list">
+                  <% payment.products.forEach(product => { %>
+                  <tr class="border-top border-bottom border-start-0 border-end-0 border-2" data-id="<%= product._id %>" data-sku="<%= product.sku %>" data-product="<%= product.name %>" data-fees="<%= product.price %>">
+                    <td class="text-start"><%= product.name %> (<%= product.sku %>) - <%= product.size %></td>
+                    <td class="text-end">RM <%= product.price %></td>
+                  </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+              <p class="text-end fw-bold fs-8 fst-italic ms-auto">RM <span id="total-fees"><%= payment.totalAmount.toFixed(2) %></span></p>
             </div>
           </div>
 
@@ -185,7 +190,7 @@
           <select class="form-select mx-2" id="add-slide-select">
             <option value="">Select an option</option>
             <% products.forEach(product => { %>
-            <option value="<%= product.name %> - RM <%= product.price %>" data-sku="<%= product.sku %>" data-price="<%= product.price %>" data-product="<%= product.name %>" class="<%= product.quantity === 0 ? 'd-none' : '' %>">
+            <option value="<%= product.sku %> - RM <%= product.price %>" data-sku="<%= product.sku %>" data-price="<%= product.price %>" data-product="<%= product.name %>" data-size="<%= product.size %>" class="<%= product.quantity === 0 ? 'd-none' : '' %>">
               <%= product.name %> - RM <%= product.price %>
             </option>
             <% }) %>
@@ -210,6 +215,8 @@
           arrows: false,
           dots: true,
           infinite: true,
+          autoplay: true,
+          autoplaySpeed: 2000,
           speed: 300,
           slidesToShow: 3,
           slidesToScroll: 3,
@@ -245,30 +252,52 @@
 
         $('#add-slide-btn').click(function() {
           var selectedOption = $('#add-slide-select').find('option:selected');
-          var text = selectedOption.val();
+          var text = selectedOption.text();
           var fees = parseFloat(selectedOption.data('price'));
           var product = selectedOption.data('product');
           var sku = selectedOption.data('sku');
-          var uniqueId = generateUniqueId(); // Generate unique ID for the slide
+          var size = selectedOption.data('size');
+          var uniqueId = generateUniqueId();
 
           if (text !== '') {
             console.log('add slide with unique ID: ' + uniqueId);
             $('.slick-slider').slick('slickAdd', `
-             <div class="card mx-2" data-unique-id="${uniqueId}">
-               <div class="card-body d-flex justify-content-center">
-                 <p class="card-text mx-auto">${text}</p>
-               </div>
-               <div class="card-footer d-flex justify-content-center">
-                 <button class="btn btn-danger delete-slide-btn mx-auto" data-id="${uniqueId}">Delete</button>
-                 <p class="mx-2 d-none" data-fees="${fees}">RM ${fees}</p>
-                 <p class="mx-2 d-none" data-product="${product}">${product}</p>
-                 <p class="mx-2 d-none" data-sku="${sku}">${sku}</p>
-               </div>
-             </div>
-           `);
+              <div class="card mx-2" data-unique-id="${uniqueId}">
+                <div class="card-body d-flex flex-column justify-content-center align-items-center" style="height: 15vh;">
+                  <p class="card-text text-center mb-4">${product} - RM ${fees}</p>
+                  <button class="btn btn-danger delete-slide-btn mx-auto" data-id="${uniqueId}">Delete</button>
+                  <p class="mx-2 d-none" data-sku="${sku}" data-fees="${fees}" data-product="${product}">
+                    RM ${fees}
+                  </p>
+                </div>
+              </div>
+            `);
+
+            // Update total fees
             var totalFees = parseFloat($('#total-fees').text()) + fees;
             $('#total-fees').text(totalFees.toFixed(2));
-            $('#fees-list').append(`<li class="list-group-item border-top-0 border-bottom border-start-0 border-end-0 border-2" data-id="${uniqueId}">${product}: RM ${fees}</li>`);
+
+            // Add the product details to the fee list
+            // $('#fees-list').append(`
+            //   <li class="list-group-item border-top-0 border-bottom border-start-0 border-end-0 border-2" 
+            //       data-id="${uniqueId}" 
+            //       data-sku="${sku}" 
+            //       data-product="${product}" 
+            //       data-fees="${fees}">
+            //     ${product}: RM ${fees}
+            //   </li>
+            // `);
+
+            $('#fees-list').append(`
+              <tr class="border-top border-bottom border-start-0 border-end-0 border-2" 
+                  data-id="${uniqueId}" 
+                  data-sku="${sku}" 
+                  data-product="${product}" 
+                  data-fees="${fees}">
+                  <td class="text-start">${product} (${sku}) - ${size}</td>
+                  <td class="text-end">RM ${uniqueId}</td>
+              </tr>
+            `);
 
             // Add the unique ID to the array
             slideIds.push(uniqueId);
@@ -300,7 +329,9 @@
           var totalFees = parseFloat($('#total-fees').text()) - fees;
           $('#total-fees').text(totalFees.toFixed(2));
 
-          $('#fees-list li[data-id="' + uniqueId + '"]').remove();
+          // Debugging: Log the element to be removed
+          console.log($('#fees-list tr[data-id="' + uniqueId + '"]'));
+          $('#fees-list tr[data-id="' + uniqueId + '"]').remove();
         });
 
         $('#pay-button').click(function() {
@@ -308,11 +339,11 @@
           const paymentId = '<%= payment._id %>';
           const productDetails = [];
 
-          // Iterate over dynamically added products to collect SKUs and other details
-          $('.slick-slider .card').each(function() {
-            const productSKU = $(this).find('p[data-sku]').data('sku');
-            const productName = $(this).find('p[data-product]').data('product');
-            const productPrice = $(this).find('p[data-fees]').data('fees');
+          // Iterate over the fees list to collect SKUs and other details
+          $('#fees-list .list-group-item').each(function() {
+            const productSKU = $(this).data('sku');
+            const productName = $(this).data('product');
+            const productPrice = $(this).data('fees');
             if (productSKU && productName && productPrice) {
               productDetails.push({
                 sku: productSKU,
@@ -328,8 +359,8 @@
               products: productDetails
             })
             .done(function(response) {
-              alert('Payment succesful.');
-              setTimeout(function(){
+              alert('Payment successful.');
+              setTimeout(function() {
                 location.reload();
               }, 1000);
             })
@@ -344,5 +375,23 @@
   </div>
 
 </div>
+
+<!-- toast alert submission -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 5">
+  <div class="d-flex">
+    <div class="toast <%= show %> align-items-center text-white border-0" role="alert" data-bs-autohide="false" aria-live="assertive" aria-atomic="true">
+      <div class="d-flex justify-content-between">
+        <div class="toast-body px-0 py-3">
+          <code class="text-primary"><%= alert %></code>
+        </div>
+
+        <button class="btn ms-2 p-0" type="button" data-bs-dismiss="toast" aria-label="Close">
+          <span class="uil uil-times fs-7"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 
 <%- include('partials/private-footer.ejs') %>

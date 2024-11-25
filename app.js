@@ -928,7 +928,6 @@ const paymentSchema = new mongoose.Schema({
     fileId: String,
     status: { type: String, enum: ['Due', 'Pending', 'Paid', 'Invalid'] }
 });
-
 paymentSchema.index({ child: 1 });
 paymentSchema.index({ date: 1 });
 paymentSchema.index({ status: 1 });
@@ -6111,9 +6110,7 @@ app.get('/education/payment/record/:id', isAuthenticated, async (req, res, next)
             .populate({
                 path: 'products',
                 model: 'Products' // Ensure this matches the actual model name
-            });
-        
-        console.log(payment);
+            }).lean();
 
         const products = await ProductEducation.find();
 
@@ -6128,7 +6125,9 @@ app.get('/education/payment/record/:id', isAuthenticated, async (req, res, next)
             payment,
             files,
             products,
-            productIds
+            productIds,
+            show: '',
+            alert: ''
         });
     } catch (error) {
         console.log(error);
@@ -6139,23 +6138,100 @@ app.get('/education/payment/record/:id', isAuthenticated, async (req, res, next)
 // Payment route - update payment
 app.post('/education/payment/record/:method', isAuthenticated, async (req, res, next) => {
     try {
-        const { user, notifications } = req;
         const method = req.params.method;
 
-        const { totalFees, paymentId, products } = req.body;
+        if (method === 'pay') {
+            const { totalFees, paymentId, products } = req.body;
+            console.log('update payment method:', method);
+            console.log('totalFees:', totalFees);
+            console.log('paymentId:', paymentId);
+            console.log('products:', products);
 
-        console.log('update payment method:', method);
-        console.log('totalFees:', totalFees);
-        console.log('paymentId:', paymentId);
-        console.log('products:', products);
+            const productIds = await Promise.all(
+                products.map(async ({ sku }) => {
+                    const product = await ProductEducation.findOne({ sku });
+                    return product ? product._id : null;
+                })
+            ).then(ids => ids.filter(id => id !== null));
 
-        res.redirect('/education/payment');
+            console.log('productIds:', productIds);
+
+            const payment = await PaymentEducation.findByIdAndUpdate(
+                paymentId,
+                {
+                    totalFees,
+                    products: productIds,
+                    status: 'pending'
+                },
+                {
+                    new: true
+                }
+            );
+            return await renderPaymentRecord(req, paymentId, 'show', 'Payment successful');
+        } else if (method === 'approve') {
+            const { paymentId } = req.body;
+            const payment = await PaymentEducation.findByIdAndUpdate(
+                paymentId,
+                {
+                    status: 'paid'
+                },
+                {
+                    new: true
+                }
+            );
+            return await renderPaymentRecord(req, paymentId, 'show', 'Payment successful');
+        } else if (method === 'deny') {
+            const { paymentId } = req.body;
+            const payment = await PaymentEducation.findByIdAndUpdate(
+                paymentId,
+                {
+                    status: 'due'
+                },
+                {
+                    new: true
+                }
+            );
+            return await renderPaymentRecord(req, paymentId, 'show', 'Payment request denied');
+        }
+
     } catch {
         console.log(error);
         next(error);
     }
 });
-// });
+
+const renderPaymentRecord = async (req, paymentId, show, alert) => {
+    const { user, notifications } = req;
+    // find one documents education
+    const payment = await PaymentEducation.findOne({ _id: paymentId })
+        .populate({
+            path: 'child',
+            populate: [
+                { path: 'parent', model: 'Parents' },
+                { path: 'class', model: 'Classes' }
+            ]
+        })
+        .populate({
+            path: 'products',
+            model: 'Products' // Ensure this matches the actual model name
+        }).lean();
+
+    const products = await ProductEducation.find();
+    const paymentIds = JSON.stringify(payment.products.map(product => product._id));
+    const files = await File.find({ uuid: payment.fileId });
+
+    return res.render('education-payment-record', {
+        user,
+        notifications,
+        uuid: uuidv4(),
+        payment,
+        files,
+        products,
+        paymentIds,
+        show,
+        alert
+    });
+};
 
 // Payment: register student section route
 app.get('/education/register/student', isAuthenticated, async function (req, res) {
@@ -7863,7 +7939,7 @@ async function createYearlyPaymentsForChildren() {
                     child: child._id,
                     products: products.map(product => product._id),
                     isProduct: true,
-                    totalAmount: products.reduce((sum, product) => sum + product.price, 2),
+                    totalAmount: Number(products.reduce((sum, product) => sum + parseFloat(product.price.toFixed(2)), 0).toFixed(2)),
                     date: {
                         payment: paymentDate,
                         approval: null,
