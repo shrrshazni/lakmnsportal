@@ -36,326 +36,330 @@
   }
 </script>
 
-<div>
-  <div class="glow-1"></div>
-  <div class="glow-2"></div>
-  <div class="glow-3"></div>
-</div>
+<div class="z-1 position-absolute w-100 h-100 bg-dark">
 
-<div class="d-lg-flex d-block justify-content-center align-items-center z-2 row g-0 mt-n3 mt-xl-5" style="min-height: 90vh;">
-
-  <div class="py-0 py-xl-5 px-2 px-xl-5 mb-0 order-xl-1 order-md-1 col-12 col-md-6 z-5">
-
-    <div class="px-2 py-5">
-
-      <div class="mb-4 mb-xl-8">
-        <h1 class="fs-5 fs-md-3 fs-xxl-2 text-center">
-          <i class="fs-1" id="greeting-icon"></i>
-          <span id="greeting-message">Good Morning</span>
-        </h1>
-
-        <script>
-          function updateGreeting() {
-            // Create a new Date object to get the current time
-            const currentTime = new Date();
-            const hours = currentTime.getHours();
-
-            // Get the icon and message elements
-            const greetingIcon = document.getElementById('greeting-icon');
-            const greetingMessage = document.getElementById('greeting-message');
-
-            // Determine the greeting and icon based on the hour
-            if (hours < 12) {
-              greetingIcon.className = 'bi bi-brightness-alt-high-fill floating-icon'; // Morning icon
-              greetingMessage.textContent = 'Good Morning';
-            } else if (hours < 17) {
-              greetingIcon.className = 'bi bi-brightness-high-fill floating-icon'; // Afternoon icon (change this to your preferred icon)
-              greetingMessage.textContent = 'Good Afternoon';
-            } else {
-              greetingIcon.className = 'bi bi-moon-stars-fill floating-icon'; // Evening icon (change this to your preferred icon)
-              greetingMessage.textContent = 'Good Evening';
-            }
-          }
-
-          // Call the function to set the initial greeting
-          updateGreeting();
-
-          // Update the greeting every hour (3600000 milliseconds)
-          setInterval(updateGreeting, 3600000);
-
-          // Optional: To ensure it updates immediately if the page is loaded close to a time change
-          const currentTime = new Date();
-          const millisecondsUntilNextHour = (60 - currentTime.getMinutes()) * 60 * 1000 - currentTime.getSeconds() * 1000;
-          setTimeout(updateGreeting, millisecondsUntilNextHour);
-        </script>
-      </div>
-
-      <div>
-        <!-- Clock Container -->
-        <div class="clock mx-auto mb-4 mb-xl-8">
-          <div class="hand hour" id="hour"></div>
-          <div class="hand minute" id="minute"></div>
-          <div class="hand second" id="second"></div>
-          <div class="hour-number" style="top: 6%; left: 50%;">١٢</div>
-          <div class="hour-number" style="top: 12%; left: 73%;">١</div>
-          <div class="hour-number" style="top: 28%; left: 89%;">٢</div>
-          <div class="hour-number" style="top: 50%; left: 95%;">٣</div>
-          <div class="hour-number" style="top: 73%; left: 89%;">٤</div>
-          <div class="hour-number" style="top: 89%; left: 72%;">٥</div>
-          <div class="hour-number" style="top: 95%; left: 50%;">٦</div>
-          <div class="hour-number" style="top: 88%; left: 28%;">٧</div>
-          <div class="hour-number" style="top: 71%; left: 11%;">٨</div>
-          <div class="hour-number" style="top: 50%; left: 5%;">٩</div>
-          <div class="hour-number" style="top: 27%; left: 12%;">١٠</div>
-          <div class="hour-number" style="top: 12%; left: 28%;">١١</div>
-        </div>
-      </div>
-
-      <div class="text-center" style="min-width: 25vw;">
-        <h2 class="fs-4 fs-md-3 fs-xxl-1 fst-italic text-white" id="currentTime"></h2>
-
-        <script>
-          function updateClockHands(hours, minutes, seconds) {
-            // Calculate the rotation ratios
-            const hourRatio = (hours % 12) / 12 + (minutes / 60) / 12;
-            const minuteRatio = (minutes / 60) + (seconds / 3600); // Minute hand moves with seconds
-            const secondRatio = seconds / 60; // Second hand moves each second
-
-            // Update the hands' rotation based on the calculated ratios
-            document.getElementById('hour').style.transform = `rotate(${(hourRatio * 360) - 90}deg)`;
-            document.getElementById('minute').style.transform = `rotate(${(minuteRatio * 360) - 90}deg)`;
-            document.getElementById('second').style.transform = `rotate(${(secondRatio * 360) - 90}deg)`;
-          }
-
-          function updateTime() {
-            // Create a new Date object to get the current time
-            var currentTime = new Date();
-
-            // Get the hours, minutes, and seconds
-            var hours = currentTime.getUTCHours() + 8; // Adjust for UTC+8
-            var minutes = currentTime.getUTCMinutes();
-            var seconds = currentTime.getUTCSeconds();
-
-            // Make sure the hours stay within 24-hour format
-            if (hours >= 24) {
-              hours -= 24; // Wrap around if needed
-            }
-
-            // Add leading zeros if the numbers are less than 10
-            hours = (hours < 10) ? '0' + hours : hours;
-            minutes = (minutes < 10) ? '0' + minutes : minutes;
-            seconds = (seconds < 10) ? '0' + seconds : seconds;
-
-            // Construct the time string in HH:MM:SS format
-            var timeString = hours + ':' + minutes + ':' + seconds + ' UTC+8';
-
-            // Update the content of the <h3> element with the current time
-            document.getElementById('currentTime').textContent = timeString;
-
-            // Update the clock hands based on the time
-            updateClockHands(parseInt(hours), minutes, seconds);
-          }
-
-          // Call updateTime function initially to set the time immediately
-          updateTime();
-
-          // Update the time every second
-          setInterval(updateTime, 1000);
-        </script>
-      </div>
-
-      <div class="d-flex justify-content-center">
-
-        <div class="text-center fst-italic">
-          <h2 class="fs-7 fs-md-6 fs-xxl-6 text-white" id="current-date"></h2>
-          <h3 class="fs-7 fs-md-6 fs-xxl-6" id="hijri-date"></h3>
-
-          <script>
-            function getOrdinalSuffix(day) {
-              if (day > 3 && day < 21) return 'th'; // Special case for 11th to 19th
-              switch (day % 10) {
-                case 1:
-                  return 'st';
-                case 2:
-                  return 'nd';
-                case 3:
-                  return 'rd';
-                default:
-                  return 'th';
-              }
-            }
-
-            function updateDate() {
-              const now = new Date();
-
-              // Get Gregorian date
-              const day = now.getDate();
-              const ordinalSuffix = getOrdinalSuffix(day);
-              const formattedDay = `${day}${ordinalSuffix}`;
-
-              // Get month and year for Gregorian
-              const options = {
-                month: 'long',
-                year: 'numeric'
-              };
-              const formattedMonthYear = now.toLocaleDateString('en-US', options);
-
-              // Combine the formatted day with month and year
-              const formattedDate = `${formattedDay} ${formattedMonthYear}`;
-              document.getElementById('current-date').innerText = formattedDate;
-            }
-
-            async function fetchHijriDate() {
-              try {
-                const response = await fetch('/api/hijri-date');
-                const data = await response.json();
-
-                console.log(data);
-
-                // Update the Hijri date in the HTML
-                document.getElementById('hijri-date').textContent = data.hijriDate;
-              } catch (error) {
-                console.error('Error fetching the Hijri date:', error);
-              }
-            }
-
-            // Call the function to fetch and display the Hijri date
-            fetchHijriDate();
-
-            // Update the date initially
-            updateDate();
-
-            // Set an interval to update the date every hour
-            setInterval(updateDate, fetchHijriDate, 60 * 60 * 1000); // 60 minutes * 60 seconds * 1000 milliseconds
-          </script>
-
-
-          <script>
-            function updateIslamicDate() {
-              // Fetch the date from the server
-              fetch('/islamic-date')
-                .then(response => response.json())
-                .then(data => {
-                  console.log(data);
-                  document.getElementById('hijri-date').innerText = `${data.hijriDate}`;
-                })
-                .catch(error => console.error('Error fetching date:', error));
-            }
-
-            // Update the date on page load
-            updateIslamicDate();
-          </script>
-
-        </div>
-      </div>
-
-    </div>
-
+  <div>
+    <div class="glow-1"></div>
+    <div class="glow-2"></div>
+    <div class="glow-3"></div>
   </div>
 
-  <div class="px-3 px-xl-8 py-4 py-xl-5 col-12 col-md-6 mt-n5 z-5">
-    <div class="order-md-0">
-      <div class="bg-white rounded-5" style="min-height: 25vh;min-width: 45vw;" id="qrblock">
-        <div class="p-2">
+  <div class="d-lg-flex d-block justify-content-center align-items-center z-2 row g-0" style="height: 100vh; display: flex; align-items: center; justify-content: center;">
 
-          <div class="rounded-5" id="glow-card">
-            <div class="p-1 p">
-              <img id="qrCode" class="w-100 h-100">
-            </div>
-          </div>
+    <div class="py-0 py-xl-5 px-2 px-xl-5 mb-0 order-xl-1 order-md-1 col-12 col-md-6 z-5">
+
+      <div class="px-2 py-5">
+
+        <div class="mb-4 mb-xl-8">
+          <h1 class="fs-5 fs-md-3 fs-xxl-2 text-center">
+            <i class="fs-1 text-white" id="greeting-icon"></i>
+            <span class="text-white" id="greeting-message">Good Morning</span>
+          </h1>
 
           <script>
-            document.addEventListener('DOMContentLoaded', function() {
-              let previousQRData = null;
+            function updateGreeting() {
+              // Create a new Date object to get the current time
+              const currentTime = new Date();
+              const hours = currentTime.getHours();
 
-              async function updateQRCode() {
+              // Get the icon and message elements
+              const greetingIcon = document.getElementById('greeting-icon');
+              const greetingMessage = document.getElementById('greeting-message');
+
+              // Determine the greeting and icon based on the hour
+              if (hours < 12) {
+                greetingIcon.className = 'bi bi-brightness-alt-high-fill floating-icon text-white'; // Morning icon
+                greetingMessage.textContent = 'Good Morning';
+              } else if (hours < 17) {
+                greetingIcon.className = 'bi bi-brightness-high-fill floating-icon text-white'; // Afternoon icon (change this to your preferred icon)
+                greetingMessage.textContent = 'Good Afternoon';
+              } else {
+                greetingIcon.className = 'bi bi-moon-stars-fill floating-icon text-white'; // Evening icon (change this to your preferred icon)
+                greetingMessage.textContent = 'Good Evening';
+              }
+            }
+
+            // Call the function to set the initial greeting
+            updateGreeting();
+
+            // Update the greeting every hour (3600000 milliseconds)
+            setInterval(updateGreeting, 3600000);
+
+            // Optional: To ensure it updates immediately if the page is loaded close to a time change
+            const currentTime = new Date();
+            const millisecondsUntilNextHour = (60 - currentTime.getMinutes()) * 60 * 1000 - currentTime.getSeconds() * 1000;
+            setTimeout(updateGreeting, millisecondsUntilNextHour);
+          </script>
+        </div>
+
+        <div>
+          <!-- Clock Container -->
+          <div class="clock mx-auto mb-4 mb-xl-8">
+            <div class="hand hour" id="hour"></div>
+            <div class="hand minute" id="minute"></div>
+            <div class="hand second" id="second"></div>
+            <div class="hour-number" style="top: 6%; left: 50%;">١٢</div>
+            <div class="hour-number" style="top: 12%; left: 73%;">١</div>
+            <div class="hour-number" style="top: 28%; left: 89%;">٢</div>
+            <div class="hour-number" style="top: 50%; left: 95%;">٣</div>
+            <div class="hour-number" style="top: 73%; left: 89%;">٤</div>
+            <div class="hour-number" style="top: 89%; left: 72%;">٥</div>
+            <div class="hour-number" style="top: 95%; left: 50%;">٦</div>
+            <div class="hour-number" style="top: 88%; left: 28%;">٧</div>
+            <div class="hour-number" style="top: 71%; left: 11%;">٨</div>
+            <div class="hour-number" style="top: 50%; left: 5%;">٩</div>
+            <div class="hour-number" style="top: 27%; left: 12%;">١٠</div>
+            <div class="hour-number" style="top: 12%; left: 28%;">١١</div>
+          </div>
+        </div>
+
+        <div class="text-center" style="min-width: 25vw;">
+          <h2 class="fs-4 fs-md-3 fs-xxl-1 fst-italic text-white" id="currentTime"></h2>
+
+          <script>
+            function updateClockHands(hours, minutes, seconds) {
+              // Calculate the rotation ratios
+              const hourRatio = (hours % 12) / 12 + (minutes / 60) / 12;
+              const minuteRatio = (minutes / 60) + (seconds / 3600); // Minute hand moves with seconds
+              const secondRatio = seconds / 60; // Second hand moves each second
+
+              // Update the hands' rotation based on the calculated ratios
+              document.getElementById('hour').style.transform = `rotate(${(hourRatio * 360) - 90}deg)`;
+              document.getElementById('minute').style.transform = `rotate(${(minuteRatio * 360) - 90}deg)`;
+              document.getElementById('second').style.transform = `rotate(${(secondRatio * 360) - 90}deg)`;
+            }
+
+            function updateTime() {
+              // Create a new Date object to get the current time
+              var currentTime = new Date();
+
+              // Get the hours, minutes, and seconds
+              var hours = currentTime.getUTCHours() + 8; // Adjust for UTC+8
+              var minutes = currentTime.getUTCMinutes();
+              var seconds = currentTime.getUTCSeconds();
+
+              // Make sure the hours stay within 24-hour format
+              if (hours >= 24) {
+                hours -= 24; // Wrap around if needed
+              }
+
+              // Add leading zeros if the numbers are less than 10
+              hours = (hours < 10) ? '0' + hours : hours;
+              minutes = (minutes < 10) ? '0' + minutes : minutes;
+              seconds = (seconds < 10) ? '0' + seconds : seconds;
+
+              // Construct the time string in HH:MM:SS format
+              var timeString = hours + ':' + minutes + ':' + seconds + ' UTC+8';
+
+              // Update the content of the <h3> element with the current time
+              document.getElementById('currentTime').textContent = timeString;
+
+              // Update the clock hands based on the time
+              updateClockHands(parseInt(hours), minutes, seconds);
+            }
+
+            // Call updateTime function initially to set the time immediately
+            updateTime();
+
+            // Update the time every second
+            setInterval(updateTime, 1000);
+          </script>
+        </div>
+
+        <div class="d-flex justify-content-center">
+
+          <div class="text-center fst-italic">
+            <h2 class="fs-7 fs-md-6 fs-xxl-6 text-white" id="current-date"></h2>
+            <h3 class="fs-7 fs-md-6 fs-xxl-6 text-white" id="hijri-date"></h3>
+
+            <script>
+              function getOrdinalSuffix(day) {
+                if (day > 3 && day < 21) return 'th'; // Special case for 11th to 19th
+                switch (day % 10) {
+                  case 1:
+                    return 'st';
+                  case 2:
+                    return 'nd';
+                  case 3:
+                    return 'rd';
+                  default:
+                    return 'th';
+                }
+              }
+
+              function updateDate() {
+                const now = new Date();
+
+                // Get Gregorian date
+                const day = now.getDate();
+                const ordinalSuffix = getOrdinalSuffix(day);
+                const formattedDay = `${day}${ordinalSuffix}`;
+
+                // Get month and year for Gregorian
+                const options = {
+                  month: 'long',
+                  year: 'numeric'
+                };
+                const formattedMonthYear = now.toLocaleDateString('en-US', options);
+
+                // Combine the formatted day with month and year
+                const formattedDate = `${formattedDay} ${formattedMonthYear}`;
+                document.getElementById('current-date').innerText = formattedDate;
+              }
+
+              async function fetchHijriDate() {
                 try {
-                  // Generate a new QR code
-                  const response = await fetch('/api/qrcode/generate');
-                  if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                  }
+                  const response = await fetch('/api/hijri-date');
                   const data = await response.json();
 
-                  // Update the src attribute of the QR code image
-                  document.getElementById('qrCode').src = data.qrCodeImage;
+                  console.log(data);
 
-                  // Save the previous QR code data
-                  if (previousQRData) {
-                    await saveQRData(previousQRData);
-                  }
-
-                  // Update the previous QR data to the new one
-                  previousQRData = data.uniqueIdentifier;
-
-                  console.log('QR code updated successfully');
+                  // Update the Hijri date in the HTML
+                  document.getElementById('hijri-date').textContent = data.hijriDate;
                 } catch (error) {
-                  console.error('Error updating QR code:', error);
+                  console.error('Error fetching the Hijri date:', error);
                 }
               }
 
-              updateQRCode();
-              setInterval(updateQRCode, 15000);
+              // Call the function to fetch and display the Hijri date
+              fetchHijriDate();
 
-              async function saveQRData(qrData) {
-                try {
-                  // Perform any actions to save the QR code data here
-                  // console.log('Saving QR code data:', qrData);
+              // Update the date initially
+              updateDate();
 
-                  const response = await fetch('/api/qrcode/save-data', {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                      qrData: qrData
-                    })
-                  });
+              // Set an interval to update the date every hour
+              setInterval(updateDate, fetchHijriDate, 60 * 60 * 1000); // 60 minutes * 60 seconds * 1000 milliseconds
+            </script>
 
-                  if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                  }
 
-                  // console.log('QR code data successfully saved');
-                } catch (error) {
-                  console.error('Error saving QR code data:', error);
-                }
-              }
-
-              async function fetchLatestScannedData() {
-                fetch('/api/qrcode/get-latest') // Fetch attendance data for today within a specific time range
+            <script>
+              function updateIslamicDate() {
+                // Fetch the date from the server
+                fetch('/islamic-date')
                   .then(response => response.json())
                   .then(data => {
-                    // const glow = document.getElementById('bg-glow');
-
-                    if (data.temp === null) {
-                      console.log('No data found');
-                    } else {
-                      //   glow.classList.remove('d-none');
-
-                      //   // Keep the glow effect for 2 seconds, then remove it
-                      //   setTimeout(function() {
-                      //     glow.classList.add('d-none');
-                      //   }, 4000); // Glow for 2 seconds
-                    }
+                    console.log(data);
+                    document.getElementById('hijri-date').innerText = `${data.hijriDate}`;
                   })
-                  .catch(error => {
-                    console.error('Error fetching latest scanned data:', error);
-                  });
+                  .catch(error => console.error('Error fetching date:', error));
               }
 
-              // Call the function to fetch latest scanned data immediately
-              fetchLatestScannedData();
+              // Update the date on page load
+              updateIslamicDate();
+            </script>
 
-              // Set interval to fetch data every 4.5 seconds
-              //   setInterval(fetchLatestScannedData, 4500);
+          </div>
+        </div>
 
-            });
-          </script>
+      </div>
 
+    </div>
+
+    <div class="px-3 px-xl-8 py-4 py-xl-5 col-12 col-md-6 mt-n5 z-5">
+      <div class="order-md-0">
+        <div class="bg-white rounded-5" style="min-height: 25vh;min-width: 40vw;" id="qrblock">
+          <div class="p-2">
+
+            <div class="rounded-5" id="glow-card">
+              <div class="p-1 p">
+                <img id="qrCode" class="w-100 h-100">
+              </div>
+            </div>
+
+            <script>
+              document.addEventListener('DOMContentLoaded', function() {
+                let previousQRData = null;
+
+                async function updateQRCode() {
+                  try {
+                    // Generate a new QR code
+                    const response = await fetch('/api/qrcode/generate');
+                    if (!response.ok) {
+                      throw new Error('Network response was not ok');
+                    }
+                    const data = await response.json();
+
+                    // Update the src attribute of the QR code image
+                    document.getElementById('qrCode').src = data.qrCodeImage;
+
+                    // Save the previous QR code data
+                    if (previousQRData) {
+                      await saveQRData(previousQRData);
+                    }
+
+                    // Update the previous QR data to the new one
+                    previousQRData = data.uniqueIdentifier;
+
+                    console.log('QR code updated successfully');
+                  } catch (error) {
+                    console.error('Error updating QR code:', error);
+                  }
+                }
+
+                updateQRCode();
+                setInterval(updateQRCode, 15000);
+
+                async function saveQRData(qrData) {
+                  try {
+                    // Perform any actions to save the QR code data here
+                    // console.log('Saving QR code data:', qrData);
+
+                    const response = await fetch('/api/qrcode/save-data', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json'
+                      },
+                      body: JSON.stringify({
+                        qrData: qrData
+                      })
+                    });
+
+                    if (!response.ok) {
+                      throw new Error('Network response was not ok');
+                    }
+
+                    // console.log('QR code data successfully saved');
+                  } catch (error) {
+                    console.error('Error saving QR code data:', error);
+                  }
+                }
+
+                async function fetchLatestScannedData() {
+                  fetch('/api/qrcode/get-latest') // Fetch attendance data for today within a specific time range
+                    .then(response => response.json())
+                    .then(data => {
+                      // const glow = document.getElementById('bg-glow');
+
+                      if (data.temp === null) {
+                        console.log('No data found');
+                      } else {
+                        //   glow.classList.remove('d-none');
+
+                        //   // Keep the glow effect for 2 seconds, then remove it
+                        //   setTimeout(function() {
+                        //     glow.classList.add('d-none');
+                        //   }, 4000); // Glow for 2 seconds
+                      }
+                    })
+                    .catch(error => {
+                      console.error('Error fetching latest scanned data:', error);
+                    });
+                }
+
+                // Call the function to fetch latest scanned data immediately
+                fetchLatestScannedData();
+
+                // Set interval to fetch data every 4.5 seconds
+                //   setInterval(fetchLatestScannedData, 4500);
+
+              });
+            </script>
+
+          </div>
         </div>
       </div>
     </div>
+
   </div>
 
 </div>

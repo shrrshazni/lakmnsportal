@@ -3431,7 +3431,7 @@ app.post('/leave/comment/:id', isAuthenticated, async (req, res, next) => {
 // ============================
 
 // Main attendance route
-app.get('/attendance', restrictAccess, async function (req, res, next) {
+app.get('/attendance', async function (req, res, next) {
     const uniqueIdentifier = generateUniqueIdentifier();
     try {
         res.render('attendance', {
@@ -10637,8 +10637,8 @@ const getCustomHijriDate = async () => {
     momentHijri.locale('en'); // Set to English locale to avoid Arabic formatting
 
     const hijriMonths = [
-        'Muharram', 'Safar', 'Rabiʻ I', 'Rabiʻ II', 'Jumada I', 'Jumada II',
-        'Rajab', 'Shaʻban', 'Ramadan', 'Shawwal', 'Dhuʻl-Qiʻdah', 'Dhuʻl-Hijjah'
+        'Muharram', 'Safar', 'Rabiulawal', 'Rabiulakhir ', 'Jamadilawwal', 'Jamadilakhir',
+        'Rejab', 'Syaʻban', 'Ramadhan', 'Shawwal', 'Zulkaedah', 'Zulhijjah'
     ];
 
     const m = momentHijri(); // Use the current Hijri date
@@ -10650,8 +10650,8 @@ const getCustomHijriDate = async () => {
 };
 
 // * Helper function to get random colour
-const getRandomColor = () => {
-    const colors = ['Black', 'MidnightBlue', 'Indigo', 'Maroon'];
+const getRandomColor1 = () => {
+    const colors = ['Yellow', 'MidnightBlue', 'Indigo', 'Maroon', 'Olive'];
 
     // Get a random index from the colors array
     const randomIndex = Math.floor(Math.random() * colors.length);
@@ -10663,18 +10663,18 @@ const getRandomColor = () => {
 // * Helper function to generate qr code image
 const generateCustomQRCode = async (data) => {
     try {
-        const firstColour = getRandomColor();
-        const secondColour = getRandomColor();
+        let firstColour = getRandomColor1();
+        console.log(firstColour);
 
         // Create a new instance of QRCodeCanvas
         const qrCode = new QRCodeCanvas({
             data: data,
-            image: path.join(__dirname, 'public/assets/img/icons/logolakmns/', 'LOGO KEDUA.png'), // Path to the logo image
-            width: 400, // Width of the QR code
-            height: 400, // Height of the QR code
+            image: path.join(__dirname, 'public/assets/img/icons/logolakmns/', 'LOGO KEDUA BLACK II.png'), // Path to the logo image
+            width: 350, // Width of the QR code
+            height: 350, // Height of the QR code
             margin: 1,
             imageOptions: {
-                imageSize: 0.38,
+                imageSize: 0.30,
                 crossOrigin: 'anonymous',
             },
             qrOptions: {
@@ -10690,25 +10690,25 @@ const generateCustomQRCode = async (data) => {
                 gradient: {
                     type: 'linear',
                     rotation: 1,
-                    colorStops: [{ offset: 0, color: firstColour }, { offset: 1, color: secondColour }]
+                    colorStops: [{ offset: 0, color: '#111' }, { offset: 0.5, color: '#111' }, { offset: 1, color: firstColour }]
                 },
             },
             cornersSquareOptions: {
-                // color: "#111",
+                color: "#111",
+                // gradient: {
+                //     type: 'linear',
+                //     rotation: 1,
+                //     colorStops: [{ offset: 0, color: '#111'}, { offset: 1, color: firstColour  }]
+                // },
+                type: 'extra-rounded'
+            },
+            cornersDotOptions: {
+                color: "#111",
                 // gradient: {
                 //     type: 'linear',
                 //     rotation: 1,
                 //     colorStops: [{ offset: 0, color: firstColour }, { offset: 1, color: secondColour }]
                 // },
-                type: 'extra-rounded'
-            },
-            cornersDotOptions: {
-                // color: "#111",
-                gradient: {
-                    type: 'linear',
-                    rotation: 1,
-                    colorStops: [{ offset: 0, color: firstColour }, { offset: 1, color: secondColour }]
-                },
                 type: 'dot'
             }
         });
