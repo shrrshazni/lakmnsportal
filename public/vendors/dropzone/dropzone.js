@@ -5177,7 +5177,8 @@
           parallelChunkUploads: !1,
           retryChunks: !1,
           retryChunksLimit: 3,
-          maxFilesize: 1024,
+          // 204800 = 200MB
+          maxFilesize: 204800,
           paramName: 'file',
           createImageThumbnails: !0,
           maxThumbnailFilesize: 10,
