@@ -10419,7 +10419,7 @@ const calculateNumberOfDays = async (type, startDate, returnDate, isNonOfficeHou
                 ? (endMoment.diff(startMoment, 'days') + 1) / 2
                 : await calculateBusinessDays(startDate, returnDate) / 2;
         } else if (fullDayLeaves.includes(type)) {
-            if (type === 'Annual Leave') {
+            if (type === 'Annual Leave' || type === 'Emergency Leave') {
                 daysDifference = isNonOfficeHour
                     ? (endMoment.diff(startMoment, 'days') + 1)
                     : await calculateBusinessDays(startDate, returnDate, true);
