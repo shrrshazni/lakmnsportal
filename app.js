@@ -928,6 +928,7 @@ const paymentSchema = new mongoose.Schema({
     fileId: String,
     status: { type: String, enum: ['Due', 'Pending', 'Paid', 'Invalid'] }
 });
+
 paymentSchema.index({ child: 1 });
 paymentSchema.index({ date: 1 });
 paymentSchema.index({ status: 1 });
@@ -2270,6 +2271,8 @@ app.post('/files/upload', isAuthenticated, async (req, res, next) => {
         const { uuid, origin } = req.body;
         const files = req.files;
 
+        console.log('Files:', files);
+
         if (!files || Object.keys(files).length === 0) {
             console.log('No files selected');
             return res.status(400).send('No files selected');
@@ -3346,9 +3349,8 @@ app.get('/leave/details/:id', isAuthenticated, async (req, res, next) => {
         const userLeave = await UserLeave.findOne({ user: user._id });
 
         // Calculate the number of leave days
-        const startDate = leave.date.start;
-        const returnDate = leave.date.return;
         const daysDifference = Math.abs(await calculateNumberOfDays(leave.type, leave.date.start, leave.date.return, userReq.isNonOfficeHour));
+        console.log(daysDifference);
 
         // Find associated files for the leave
         const file = await File.find({ uuid: leave.fileId });
@@ -3431,7 +3433,7 @@ app.post('/leave/comment/:id', isAuthenticated, async (req, res, next) => {
 // ============================
 
 // Main attendance route
-app.get('/attendance', async function (req, res, next) {
+app.get('/attendance', restrictAccess, async function (req, res, next) {
     const uniqueIdentifier = generateUniqueIdentifier();
     try {
         res.render('attendance', {
@@ -6110,7 +6112,9 @@ app.get('/education/payment/record/:id', isAuthenticated, async (req, res, next)
             .populate({
                 path: 'products',
                 model: 'Products' // Ensure this matches the actual model name
-            }).lean();
+            });
+
+        console.log(payment);
 
         const products = await ProductEducation.find();
 
@@ -6125,9 +6129,7 @@ app.get('/education/payment/record/:id', isAuthenticated, async (req, res, next)
             payment,
             files,
             products,
-            productIds,
-            show: '',
-            alert: ''
+            productIds
         });
     } catch (error) {
         console.log(error);
@@ -6138,100 +6140,23 @@ app.get('/education/payment/record/:id', isAuthenticated, async (req, res, next)
 // Payment route - update payment
 app.post('/education/payment/record/:method', isAuthenticated, async (req, res, next) => {
     try {
+        const { user, notifications } = req;
         const method = req.params.method;
 
-        if (method === 'pay') {
-            const { totalFees, paymentId, products } = req.body;
-            console.log('update payment method:', method);
-            console.log('totalFees:', totalFees);
-            console.log('paymentId:', paymentId);
-            console.log('products:', products);
+        const { totalFees, paymentId, products } = req.body;
 
-            const productIds = await Promise.all(
-                products.map(async ({ sku }) => {
-                    const product = await ProductEducation.findOne({ sku });
-                    return product ? product._id : null;
-                })
-            ).then(ids => ids.filter(id => id !== null));
+        console.log('update payment method:', method);
+        console.log('totalFees:', totalFees);
+        console.log('paymentId:', paymentId);
+        console.log('products:', products);
 
-            console.log('productIds:', productIds);
-
-            const payment = await PaymentEducation.findByIdAndUpdate(
-                paymentId,
-                {
-                    totalFees,
-                    products: productIds,
-                    status: 'pending'
-                },
-                {
-                    new: true
-                }
-            );
-            return await renderPaymentRecord(req, paymentId, 'show', 'Payment successful');
-        } else if (method === 'approve') {
-            const { paymentId } = req.body;
-            const payment = await PaymentEducation.findByIdAndUpdate(
-                paymentId,
-                {
-                    status: 'paid'
-                },
-                {
-                    new: true
-                }
-            );
-            return await renderPaymentRecord(req, paymentId, 'show', 'Payment successful');
-        } else if (method === 'deny') {
-            const { paymentId } = req.body;
-            const payment = await PaymentEducation.findByIdAndUpdate(
-                paymentId,
-                {
-                    status: 'due'
-                },
-                {
-                    new: true
-                }
-            );
-            return await renderPaymentRecord(req, paymentId, 'show', 'Payment request denied');
-        }
-
+        res.redirect('/education/payment');
     } catch {
         console.log(error);
         next(error);
     }
 });
-
-const renderPaymentRecord = async (req, paymentId, show, alert) => {
-    const { user, notifications } = req;
-    // find one documents education
-    const payment = await PaymentEducation.findOne({ _id: paymentId })
-        .populate({
-            path: 'child',
-            populate: [
-                { path: 'parent', model: 'Parents' },
-                { path: 'class', model: 'Classes' }
-            ]
-        })
-        .populate({
-            path: 'products',
-            model: 'Products' // Ensure this matches the actual model name
-        }).lean();
-
-    const products = await ProductEducation.find();
-    const paymentIds = JSON.stringify(payment.products.map(product => product._id));
-    const files = await File.find({ uuid: payment.fileId });
-
-    return res.render('education-payment-record', {
-        user,
-        notifications,
-        uuid: uuidv4(),
-        payment,
-        files,
-        products,
-        paymentIds,
-        show,
-        alert
-    });
-};
+// });
 
 // Payment: register student section route
 app.get('/education/register/student', isAuthenticated, async function (req, res) {
@@ -7939,7 +7864,7 @@ async function createYearlyPaymentsForChildren() {
                     child: child._id,
                     products: products.map(product => product._id),
                     isProduct: true,
-                    totalAmount: Number(products.reduce((sum, product) => sum + parseFloat(product.price.toFixed(2)), 0).toFixed(2)),
+                    totalAmount: products.reduce((sum, product) => sum + product.price, 2),
                     date: {
                         payment: paymentDate,
                         approval: null,
@@ -9593,6 +9518,20 @@ const generateApprovals = (
                 estimated: ''
             });
 
+            if (assignee && assignee.length > 0) {
+                assignee.forEach(assigneeItem => {
+                    console.log('Adding Relief Staff:', assigneeItem);
+                    approvals.push({
+                        recipient: assigneeItem._id,
+                        role: 'Relief Staff',
+                        status: 'pending',
+                        comment: `Relief Staff for leave by ${assigneeItem.fullname}`,
+                        estimated: moment().utcOffset(8).add(1, 'day').toDate(),
+                        timestamp: ''
+                    });
+                });
+            }
+
             if (headOfSection) {
                 approvals.push({
                     recipient: headOfSection._id,
@@ -9713,6 +9652,11 @@ const generateApprovals = (
 // * Leave request
 // * Helper function to check leave balance and set errors if insufficient
 const checkLeaveBalance = (leaveBalance, numberOfDays, minDays = 0, renderDataError) => {
+    console.log('checkLeaveBalance');
+    console.log('leaveBalance:', leaveBalance);
+    console.log('numberOfDays:', numberOfDays);
+    console.log('minDays:', minDays);
+
     if (leaveBalance < numberOfDays || numberOfDays < minDays) {
         renderDataError.show = 'show';
         renderDataError.alert = 'Insufficient balance for the requested duration';
@@ -9764,7 +9708,7 @@ const processLeaveRequest = async (type, user, userLeave, startDate, returnDate,
 
     // * Handle special leave type
     const handleSpecialLeaveType = async (leaveType, balance, taken = 0, genderCheck = true) => {
-        if (checkLeaveBalance(balance, numberOfDays, 3, renderDataError) && genderCheck) {
+        if (checkLeaveBalance(balance, numberOfDays, 0, renderDataError) && genderCheck) {
             // Separate handling for "Special Leave" type
             if (leaveType === 'Special Leave' && amountDayRequest <= 1 && amountDayRequest >= -5) {
                 if (await checkFileAttachment(uuid, renderDataError, `There is no file attached for ${leaveType.toLowerCase()}!`)) {
@@ -10637,8 +10581,8 @@ const getCustomHijriDate = async () => {
     momentHijri.locale('en'); // Set to English locale to avoid Arabic formatting
 
     const hijriMonths = [
-        'Muharram', 'Safar', 'Rabiulawal', 'Rabiulakhir ', 'Jamadilawwal', 'Jamadilakhir',
-        'Rejab', 'Syaʻban', 'Ramadhan', 'Shawwal', 'Zulkaedah', 'Zulhijjah'
+        'Muharram', 'Safar', 'Rabiʻ I', 'Rabiʻ II', 'Jumada I', 'Jumada II',
+        'Rajab', 'Shaʻban', 'Ramadan', 'Shawwal', 'Dhuʻl-Qiʻdah', 'Dhuʻl-Hijjah'
     ];
 
     const m = momentHijri(); // Use the current Hijri date
@@ -10650,8 +10594,8 @@ const getCustomHijriDate = async () => {
 };
 
 // * Helper function to get random colour
-const getRandomColor1 = () => {
-    const colors = ['Yellow', 'MidnightBlue', 'Indigo', 'Maroon', 'Olive'];
+const getRandomColor = () => {
+    const colors = ['Black', 'MidnightBlue', 'Indigo', 'Maroon'];
 
     // Get a random index from the colors array
     const randomIndex = Math.floor(Math.random() * colors.length);
@@ -10663,18 +10607,18 @@ const getRandomColor1 = () => {
 // * Helper function to generate qr code image
 const generateCustomQRCode = async (data) => {
     try {
-        let firstColour = getRandomColor1();
-        console.log(firstColour);
+        const firstColour = getRandomColor();
+        const secondColour = getRandomColor();
 
         // Create a new instance of QRCodeCanvas
         const qrCode = new QRCodeCanvas({
             data: data,
-            image: path.join(__dirname, 'public/assets/img/icons/logolakmns/', 'LOGO KEDUA BLACK II.png'), // Path to the logo image
-            width: 350, // Width of the QR code
-            height: 350, // Height of the QR code
+            image: path.join(__dirname, 'public/assets/img/icons/logolakmns/', 'LOGO KEDUA.png'), // Path to the logo image
+            width: 400, // Width of the QR code
+            height: 400, // Height of the QR code
             margin: 1,
             imageOptions: {
-                imageSize: 0.30,
+                imageSize: 0.38,
                 crossOrigin: 'anonymous',
             },
             qrOptions: {
@@ -10690,25 +10634,25 @@ const generateCustomQRCode = async (data) => {
                 gradient: {
                     type: 'linear',
                     rotation: 1,
-                    colorStops: [{ offset: 0, color: '#111' }, { offset: 0.5, color: '#111' }, { offset: 1, color: firstColour }]
+                    colorStops: [{ offset: 0, color: firstColour }, { offset: 1, color: secondColour }]
                 },
             },
             cornersSquareOptions: {
-                color: "#111",
-                // gradient: {
-                //     type: 'linear',
-                //     rotation: 1,
-                //     colorStops: [{ offset: 0, color: '#111'}, { offset: 1, color: firstColour  }]
-                // },
-                type: 'extra-rounded'
-            },
-            cornersDotOptions: {
-                color: "#111",
+                // color: "#111",
                 // gradient: {
                 //     type: 'linear',
                 //     rotation: 1,
                 //     colorStops: [{ offset: 0, color: firstColour }, { offset: 1, color: secondColour }]
                 // },
+                type: 'extra-rounded'
+            },
+            cornersDotOptions: {
+                // color: "#111",
+                gradient: {
+                    type: 'linear',
+                    rotation: 1,
+                    colorStops: [{ offset: 0, color: firstColour }, { offset: 1, color: secondColour }]
+                },
                 type: 'dot'
             }
         });

@@ -25,7 +25,7 @@ let showAcknowledge = 'd-none';
 let showCancel = 'd-none';
 let showComment = 'd-none';
 
-// Determine user's position in the approval process
+// Determine user's position in the approval processgit s
 const userApprovals = approvals.filter(approval => approval.recipient.equals(user._id));
 
 if (userApprovals.length > 0) {
@@ -84,8 +84,8 @@ const anyApprovalIndex = [headDepartmentApprovalIndex, headSectionApprovalIndex,
 const leaveStartDate = new Date(leave.date.start);
 const leaveStartDateUTCPlus8 = new Date(leaveStartDate.getTime() + (32 * 60 * 60 * 1000));
 
-console.log(anyApprovalIndex);
-console.log(leaveStartDateUTCPlus8);
+// console.log(anyApprovalIndex);
+// console.log(leaveStartDateUTCPlus8);
 
 if (leave.status === 'approved' && leaveStartDateUTCPlus8 > new Date()) {
     if (leave.user.toString() === user._id.toString() || anyApprovalIndex !== -1) {
