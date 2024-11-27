@@ -9101,7 +9101,7 @@ const generateApprovals = (
                     role: 'Head of Department',
                     status: 'pending',
                     comment: 'Leave request needs approval',
-                    estimated: '',
+                    estimated: moment(startDate).utcOffset(8).subtract(2, 'days').toDate(),
                     timestamp: ''
                 });
             }
@@ -9549,7 +9549,7 @@ const generateApprovals = (
                     role: 'Head of Department',
                     status: 'pending',
                     comment: 'Leave request needs approval',
-                    estimated: '',
+                    estimated: moment(startDate).utcOffset(8).subtract(2, 'days').toDate(),
                     timestamp: ''
                 });
             }
