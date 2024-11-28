@@ -3433,7 +3433,7 @@ app.post('/leave/comment/:id', isAuthenticated, async (req, res, next) => {
 // ============================
 
 // Main attendance route
-app.get('/attendance', restrictAccess, async function (req, res, next) {
+app.get('/attendance', async function (req, res, next) {
     const uniqueIdentifier = generateUniqueIdentifier();
     try {
         res.render('attendance', {
@@ -10611,7 +10611,7 @@ const generateCustomQRCode = async (data) => {
 
         // Create a new instance of QRCodeCanvas
         const qrCode = new QRCodeCanvas({
-            data: data,
+            data: data.substring(0, 288), // Limit the data length to prevent overflow
             image: path.join(__dirname, 'public/assets/img/icons/logolakmns/', 'LOGO KEDUA BLACK.png'), // Path to the logo image
             width: 375, // Width of the QR code
             height: 375, // Height of the QR code
@@ -10668,6 +10668,7 @@ const generateCustomQRCode = async (data) => {
         throw error;
     }
 }
+
 
 // Global error handler middleware
 app.use((error, req, res, next) => {
