@@ -10595,7 +10595,7 @@ const getCustomHijriDate = async () => {
 
 // * Helper function to get random colour
 const getRandomColor = () => {
-    const colors = ['#27141D'];
+    const colors = ['#1a202c', '#2C1A20', '#202C1A'];
 
     // Get a random index from the colors array
     const randomIndex = Math.floor(Math.random() * colors.length);
