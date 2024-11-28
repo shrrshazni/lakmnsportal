@@ -2310,7 +2310,7 @@ app.post('/files/upload', isAuthenticated, async (req, res, next) => {
         }
 
         console.log('Files uploaded successfully');
-        res.redirect('/');
+        res.json({ message: 'File uploaded successfully.' });
     } catch (error) {
         next(error);  // Use global error handler
     }
