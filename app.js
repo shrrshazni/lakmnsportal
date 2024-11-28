@@ -3433,7 +3433,7 @@ app.post('/leave/comment/:id', isAuthenticated, async (req, res, next) => {
 // ============================
 
 // Main attendance route
-app.get('/attendance', async function (req, res, next) {
+app.get('/attendance', restrictAccess, async function (req, res, next) {
     const uniqueIdentifier = generateUniqueIdentifier();
     try {
         res.render('attendance', {
@@ -10633,7 +10633,7 @@ const generateCustomQRCode = async (data) => {
                 gradient: {
                     type: 'radial',
                     rotation: 1,
-                    colorStops: [{ offset: 0, color: '#111' },{ offset: 0.5, color: '#111' }, { offset: 1, color: secondColour }]
+                    colorStops: [{ offset: 0, color: '#111' }, { offset: 0.5, color: '#111' }, { offset: 1, color: secondColour }]
                 },
             },
             cornersSquareOptions: {
