@@ -10609,7 +10609,6 @@ const generateCustomQRCode = async (data) => {
     try {
         const secondColour = getRandomColor();
         const truncatedData = data.substring(0, 288);
-        console.log('Truncated Data Length:', truncatedData.length);
 
         // Create a new instance of QRCodeCanvas
         const qrCode = new QRCodeCanvas({
