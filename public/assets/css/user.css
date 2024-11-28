@@ -364,55 +364,39 @@ body {
 
 #qrblock {
   position: relative;
-  /* Set position relative for absolute positioning of glow elements */
   overflow: hidden;
-  /* Ensure glow doesn't overflow outside the block */
+}
+
+.glow-1, .glow-2, .glow-3 {
+  position: absolute;
+  width: 0.001vmin;
+  height: 0.001vmin;
+  border-radius: 50%;
+  z-index: -1; /* Ensure glow elements are behind other content */
 }
 
 .glow-1 {
-  position: absolute;
-  width: 0.001vmin;
-  height: 0.001vmin;
-  border-radius: 50%;
   opacity: 0.25;
   box-shadow: 0 0 var(--diameter) var(--diameter) magenta;
-  animation:
-    hue 10s 0s linear infinite,
-    move1 19s 0s linear infinite;
-  z-index: 1;
+  animation: hue 10s 0s linear infinite, move1 19s 0s linear infinite;
 }
 
 .glow-2 {
-  position: absolute;
-  width: 0.001vmin;
-  height: 0.001vmin;
-  border-radius: 50%;
   opacity: 0.25;
   box-shadow: 0 0 var(--diameter) var(--diameter) white;
-  animation:
-    hue 15s 0s linear infinite,
-    move2 25s 0s linear infinite;
-  z-index: 1;
+  animation: hue 15s 0s linear infinite, move2 25s 0s linear infinite;
 }
 
 .glow-3 {
-  position: absolute;
-  width: 0.001vmin;
-  height: 0.001vmin;
-  border-radius: 50%;
   opacity: 0.2;
   box-shadow: 0 0 var(--diameter) var(--diameter) cyan;
-  animation:
-    hue 20s 0s linear infinite,
-    move3 15s 0s linear infinite;
-  z-index: 1;
+  animation: hue 20s 0s linear infinite, move3 15s 0s linear infinite;
 }
 
 @keyframes hue {
   0% {
     filter: hue-rotate(0deg);
   }
-
   100% {
     filter: hue-rotate(360deg);
   }
@@ -423,19 +407,15 @@ body {
     top: 0vh;
     left: 50vw;
   }
-
   25% {
     left: 0vw;
   }
-
   50% {
     top: 100vh;
   }
-
   75% {
     left: 100vw;
   }
-
   100% {
     top: 0vh;
     left: 50vw;
@@ -447,19 +427,15 @@ body {
     top: 50vh;
     left: 100vw;
   }
-
   25% {
     top: 100vh;
   }
-
   50% {
     left: 0vw;
   }
-
   75% {
     top: 0vh;
   }
-
   100% {
     top: 50vh;
     left: 100vw;
@@ -471,22 +447,31 @@ body {
     top: 100vh;
     left: 50vw;
   }
-
   25% {
     left: 100vw;
   }
-
   50% {
     top: 0vh;
   }
-
   75% {
     left: 0vw;
   }
-
   100% {
     top: 100vh;
     left: 50vw;
+  }
+}
+
+/* Media Query for mobile devices */
+@media (max-width: 768px) {
+  .glow-1, .glow-2, .glow-3 {
+    opacity: 0.1; /* Lower opacity for mobile devices */
+  }
+
+  /* Ensure other elements like cards are not affected */
+  #qrblock, .card, .other-div {
+    position: relative; /* Ensure these are above the glow elements */
+    z-index: 1; /* Ensure these are above the glow elements */
   }
 }
 
