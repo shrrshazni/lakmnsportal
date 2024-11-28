@@ -10608,10 +10608,12 @@ const getRandomColor = () => {
 const generateCustomQRCode = async (data) => {
     try {
         const secondColour = getRandomColor();
+        const truncatedData = data.substring(0, 288);
+        console.log('Truncated Data Length:', truncatedData.length);
 
         // Create a new instance of QRCodeCanvas
         const qrCode = new QRCodeCanvas({
-            data: data.substring(0, 288), // Limit the data length to prevent overflow
+            data: truncatedData, // Limit the data length to prevent overflow
             image: path.join(__dirname, 'public/assets/img/icons/logolakmns/', 'LOGO KEDUA BLACK.png'), // Path to the logo image
             width: 375, // Width of the QR code
             height: 375, // Height of the QR code
@@ -10622,7 +10624,7 @@ const generateCustomQRCode = async (data) => {
             },
             qrOptions: {
                 errorCorrectionLevel: 'H',
-                typeNumber: 4
+                typeNumber: 5
             },
             backgroundOptions: {
                 color: '#ffffff00', // Background color
