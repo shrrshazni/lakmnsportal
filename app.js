@@ -3433,7 +3433,7 @@ app.post('/leave/comment/:id', isAuthenticated, async (req, res, next) => {
 // ============================
 
 // Main attendance route
-app.get('/attendance', restrictAccess, async function (req, res, next) {
+app.get('/attendance', async function (req, res, next) {
     const uniqueIdentifier = generateUniqueIdentifier();
     try {
         res.render('attendance', {
@@ -10581,8 +10581,8 @@ const getCustomHijriDate = async () => {
     momentHijri.locale('en'); // Set to English locale to avoid Arabic formatting
 
     const hijriMonths = [
-        'Muharram', 'Safar', 'Rabiʻ I', 'Rabiʻ II', 'Jumada I', 'Jumada II',
-        'Rajab', 'Shaʻban', 'Ramadan', 'Shawwal', 'Dhuʻl-Qiʻdah', 'Dhuʻl-Hijjah'
+        'Muharram', 'Safar', 'Rejab', 'Rabiulawal', 'Rabiulakhir', 'Jamadilawal', 'Jamadilakhir',
+        'Rejab', 'Syawal', 'Zulkaedah', 'Zulhijjah'
     ];
 
     const m = momentHijri(); // Use the current Hijri date
@@ -10590,12 +10590,12 @@ const getCustomHijriDate = async () => {
     const monthName = hijriMonths[hijriMonthIndex]; // Get the English Hijri month name
 
     // Return formatted Hijri date in English
-    return `${m.iDate()} ${monthName}, ${m.iYear()} AH`;
+    return `${m.iDate()} ${monthName} ${m.iYear()} AH`;
 };
 
 // * Helper function to get random colour
 const getRandomColor = () => {
-    const colors = ['Black', 'MidnightBlue', 'Indigo', 'Maroon'];
+    const colors = ['#27141D'];
 
     // Get a random index from the colors array
     const randomIndex = Math.floor(Math.random() * colors.length);
@@ -10607,22 +10607,21 @@ const getRandomColor = () => {
 // * Helper function to generate qr code image
 const generateCustomQRCode = async (data) => {
     try {
-        const firstColour = getRandomColor();
         const secondColour = getRandomColor();
 
         // Create a new instance of QRCodeCanvas
         const qrCode = new QRCodeCanvas({
             data: data,
-            image: path.join(__dirname, 'public/assets/img/icons/logolakmns/', 'LOGO KEDUA.png'), // Path to the logo image
-            width: 400, // Width of the QR code
-            height: 400, // Height of the QR code
-            margin: 1,
+            image: path.join(__dirname, 'public/assets/img/icons/logolakmns/', 'LOGO KEDUA BLACK.png'), // Path to the logo image
+            width: 375, // Width of the QR code
+            height: 375, // Height of the QR code
+            margin: 0.5,
             imageOptions: {
-                imageSize: 0.38,
+                imageSize: 0.30,
                 crossOrigin: 'anonymous',
             },
             qrOptions: {
-                errorCorrectionLevel: 'M',
+                errorCorrectionLevel: 'H',
                 typeNumber: 4
             },
             backgroundOptions: {
@@ -10630,11 +10629,11 @@ const generateCustomQRCode = async (data) => {
             },
             dotsOptions: {
                 // color: "#111",
-                type: "classy-rounded",
+                type: "dots",
                 gradient: {
-                    type: 'linear',
+                    type: 'radial',
                     rotation: 1,
-                    colorStops: [{ offset: 0, color: firstColour }, { offset: 1, color: secondColour }]
+                    colorStops: [{ offset: 0, color: '#111' },{ offset: 0.5, color: '#111' }, { offset: 1, color: secondColour }]
                 },
             },
             cornersSquareOptions: {
@@ -10644,15 +10643,15 @@ const generateCustomQRCode = async (data) => {
                 //     rotation: 1,
                 //     colorStops: [{ offset: 0, color: firstColour }, { offset: 1, color: secondColour }]
                 // },
-                type: 'extra-rounded'
+                type: 'dots'
             },
             cornersDotOptions: {
                 // color: "#111",
-                gradient: {
-                    type: 'linear',
-                    rotation: 1,
-                    colorStops: [{ offset: 0, color: firstColour }, { offset: 1, color: secondColour }]
-                },
+                // gradient: {
+                //     type: 'linear',
+                //     rotation: 1,
+                //     colorStops: [{ offset: 0, color: firstColour }, { offset: 1, color: secondColour }]
+                // },
                 type: 'dot'
             }
         });
