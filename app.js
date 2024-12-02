@@ -928,7 +928,6 @@ const paymentSchema = new mongoose.Schema({
     fileId: String,
     status: { type: String, enum: ['Due', 'Pending', 'Paid', 'Invalid'] }
 });
-
 paymentSchema.index({ child: 1 });
 paymentSchema.index({ date: 1 });
 paymentSchema.index({ status: 1 });
@@ -1210,7 +1209,7 @@ const renderHomePage = async (req, res, next, show = '', alert = '') => {
 const allowedIPs = [
     '175.140.45.73', '180.74.242.190', '180.75.77.36',
     '180.74.242.233', '210.186.48.186', '210.186.48.112',
-    '110.159.86.125'
+    '192.168.50.20', '192.168.51.11', '110.159.86.125'
 ];
 
 // Middleware to restrict access based on IP address
@@ -5555,10 +5554,15 @@ app.get('/fetch/visitors', async (req, res) => {
         const conditions = {};
         // Add conditions for search by name 
         if (search_name) {
-            conditions.$or = [
-                { firstName: new RegExp(search_name, 'i') },
-                { lastName: new RegExp(search_name, 'i') }
-            ];
+            // Split the search term by spaces into multiple words
+            const searchTerms = search_name.trim().split(/\s+/);
+            // Match each term to either firstName or lastName
+            conditions.$and = searchTerms.map(term => ({
+                $or: [
+                    { firstName: new RegExp(term, 'i') },
+                    { lastName: new RegExp(term, 'i') }
+                ]
+            }));
         }
         // Add conditions for filtering by date 
         if (selected_date) {
@@ -6100,45 +6104,13 @@ app.get('/education/payment/record/:id', isAuthenticated, async (req, res, next)
         const { user, notifications } = req;
         const id = req.params.id;
 
-        // find one documents education
-        const payment = await PaymentEducation.findOne({ _id: id })
-            .populate({
-                path: 'child',
-                populate: [
-                    { path: 'parent', model: 'Parents' },
-                    { path: 'class', model: 'Classes' }
-                ]
-            })
-            .populate({
-                path: 'products',
-                model: 'Products' // Ensure this matches the actual model name
-            });
+        await renderPaymentRecordPage(id, req, res, next, 'show', 'Try loading this page with toast, cheers');
 
-        console.log(payment);
-
-        const products = await ProductEducation.find();
-
-        const productIds = JSON.stringify(payment.products.map(product => product._id));
-
-        const files = await File.find({ uuid: payment.fileId });
-
-        res.render('education-payment-record', {
-            user: user,
-            notifications: notifications,
-            uuid: uuidv4(),
-            payment,
-            files,
-            products,
-            productIds
-        });
     } catch (error) {
         console.log(error);
         next(error);
     }
-});
-
-// Payment route - update payment
-app.post('/education/payment/record/:method', isAuthenticated, async (req, res, next) => {
+}).post('/education/payment/record/:method', isAuthenticated, async (req, res, next) => {
     try {
         const { user, notifications } = req;
         const method = req.params.method;
@@ -6150,12 +6122,55 @@ app.post('/education/payment/record/:method', isAuthenticated, async (req, res, 
         console.log('paymentId:', paymentId);
         console.log('products:', products);
 
-        res.redirect('/education/payment');
-    } catch {
+        if (method === 'pay') {
+            console.log('paymentId:', paymentId);
+            console.log('method:', method);
+        }
+
+        res.json({
+            show: 'show',
+            alert: 'Payment successful!'
+        });
+
+    } catch (error) {
         console.log(error);
         next(error);
     }
 });
+
+const renderPaymentRecordPage = async (id, req, res, next, show, alert) => {
+    const payment = await PaymentEducation.findOne({ _id: id })
+        .populate({
+            path: 'child',
+            populate: [
+                { path: 'parent', model: 'Parents' },
+                { path: 'class', model: 'Classes' }
+            ]
+        })
+        .populate({
+            path: 'products',
+            model: 'Products' // Ensure this matches the actual model name
+        });
+
+    const products = await ProductEducation.find();
+
+    const productIds = JSON.stringify(payment.products.map(product => product._id));
+
+    const files = await File.find({ uuid: payment.fileId });
+
+    return res.render('education-payment-record', {
+        user: req.user,
+        notifications: req.notifications,
+        uuid: uuidv4(),
+        payment,
+        files,
+        products,
+        productIds,
+        show: show,
+        alert: alert
+    });
+};
+
 // });
 
 // Payment: register student section route
@@ -6782,24 +6797,24 @@ app.post('/api/data/all-attendance/per-date/department-section', isAuthenticated
 //  * Route to get attendance data per selected date for department/section.
 //  * Fetches attendance data for a specific month for the department or section of the logged-in user.
 app.post('/api/data/all-attendance/per-month/department-section', isAuthenticated, async function (req, res, next) {
-    const { month, year } = req.body; // Month and year from request body
-    const searchQuery = req.query.search || '';
-    const page = parseInt(req.query.page) || 1;
-    const limit = 10;
-    const skip = (page - 1) * limit;
-
     try {
-        const user = req.user;
+        const { date: selectedDate } = req.body;
+        const { search: searchQuery = '', page = 1, limit = 10 } = req.query;
 
-        // Determine the first and last day of the month
-        const startDate = moment(`${year}-${month}-01`).startOf('month').toDate();
-        const endDate = moment(startDate).endOf('month').toDate();
+        if (!selectedDate || !selectedDate.includes('/')) {
+            throw new Error('Invalid date format. Expected MM/YYYY.');
+        }
 
-        // Query attendance records for the specified month
-        const attendanceData = await Attendance.find({
-            timestamp: { $gte: startDate, $lt: endDate }
-        });
+        const [month, year] = selectedDate.split('/').map(Number);
+        if (isNaN(month) || isNaN(year) || month < 1 || month > 12) {
+            throw new Error('Invalid month or year.');
+        }
 
+        const skip = (page - 1) * limit;
+
+        const allStatusTypes = ['Present', 'Absent', 'Late', 'Invalid', 'Leave', 'Non Working Day'];
+
+        const user = req.user; // Assuming req.user is the authenticated user
         let allUsers;
         if (user.isHeadOfDepartment) {
             allUsers = await User.find({ department: user.department });
@@ -6809,83 +6824,83 @@ app.post('/api/data/all-attendance/per-month/department-section', isAuthenticate
             return res.status(403).json({ error: 'Unauthorized access' });
         }
 
-        // Map users by ID
-        const userMap = allUsers.reduce((map, user) => {
-            map[user._id] = {
+        const publicHolidays = await updatePublicHolidays();
+        const isoPublicHolidays = publicHolidays.map(holiday => moment(holiday.date, 'DD/MM/YYYY').format('YYYY-MM-DD'));
+
+        console.log(isoPublicHolidays);
+
+        const attendanceData = await Attendance.aggregate([
+            {
+                $match: {
+                    timestamp: {
+                        $gte: moment([year, month - 1]).startOf('month').toDate(),
+                        $lt: moment([year, month]).startOf('month').toDate()
+                    }
+                }
+            },
+            {
+                $group: {
+                    _id: { user: '$user', status: '$status', type: '$type' },
+                    count: { $sum: 1 }
+                }
+            }
+        ]);
+
+        const userStatusCounts = {};
+        const publicHolidayCounts = {};
+
+        allUsers.forEach(user => {
+            userStatusCounts[user._id] = {};
+            allStatusTypes.forEach(statusType => {
+                userStatusCounts[user._id][statusType] = 0;
+            });
+            publicHolidayCounts[user._id] = isoPublicHolidays.length; // Initialize publicHolidayCounts with the total number of public holidays
+        });
+
+        attendanceData.forEach(({ _id, count }) => {
+            const { user, status, type } = _id;
+            if (status) {
+                userStatusCounts[user][status] = count;
+            }
+            if (type === 'public holiday') {
+                publicHolidayCounts[user] += count;
+            }
+        });
+
+        const combinedData = allUsers.map(user => ({
+            user: {
                 _id: user._id,
                 username: user.username,
                 fullname: user.fullname,
                 section: user.section,
                 department: user.department
-            };
-            return map;
-        }, {});
+            },
+            statusCounts: userStatusCounts[user._id],
+            publicHolidayCount: publicHolidayCounts[user._id]
+        }));
 
-        // Combine attendance records with user details
-        const combinedData = allUsers.map(user => {
-            const attendanceRecords = attendanceData.filter(record => record.user.equals(user._id));
-            const mergedRecord = attendanceRecords.reduce((acc, record) => {
-                acc.status = record.status;
-                acc.type = record.type;
-                acc.signInTime = record.date.signInTime;
-                acc.signOutTime = record.date.signOutTime;
-                acc.timestamp = record.timestamp;
-                acc.location = record.location;
-                acc.remarks = record.remarks;
-                acc.count = (acc.count || 0) + 1;
-                return acc;
-            }, {});
-            return mergedRecord ? {
-                _id: mergedRecord._id,
-                user: userMap[user._id],
-                status: mergedRecord.status,
-                type: mergedRecord.type,
-                signInTime: mergedRecord.signInTime,
-                signOutTime: mergedRecord.signOutTime,
-                timestamp: mergedRecord.timestamp,
-                location: mergedRecord.location,
-                remarks: mergedRecord.remarks,
-                count: mergedRecord.count
-            } : null;
-        }).filter(item => item !== null);
-
-        // Sort combined data by timestamp
-        combinedData.sort((a, b) => moment(b.timestamp).diff(moment(a.timestamp)));
-
-        // Filter data based on search query
         const filteredData = combinedData.filter(item => {
             const { fullname, section, department, username } = item.user;
-            const { status, type, signInTime, signOutTime, remarks, location } = item;
             const regex = new RegExp(searchQuery, 'i');
             return (
                 regex.test(fullname) ||
                 regex.test(section) ||
                 regex.test(department) ||
-                regex.test(username) ||
-                regex.test(status) ||
-                regex.test(type) ||
-                regex.test(location) ||
-                regex.test(remarks) ||
-                (signInTime && regex.test(moment(signInTime).utcOffset(8).format('h:mm A'))) ||
-                (signOutTime && regex.test(moment(signOutTime).utcOffset(8).format('h:mm A')))
+                regex.test(username)
             );
         });
 
-        // Paginate filtered data
         const paginatedData = filteredData.slice(skip, skip + limit);
 
-        if (paginatedData.length === 0) {
-            return res.status(404).json({ message: 'No paginated attendance data found' });
-        }
+        console.log(paginatedData);
 
-        const response = {
+        res.json({
             data1: paginatedData,
             data2: filteredData
-        };
-
-        res.json(response);
+        });
     } catch (error) {
-        next(error); // Pass error to global error handler
+        console.error(error);
+        next(error);
     }
 });
 
@@ -6962,6 +6977,8 @@ app.post('/api/qrcode/process-data', isAuthenticated, async (req, res) => {
         '180.74.242.233': 'RS',
         '210.186.48.186': 'CM',
         '210.186.48.112': 'CM',
+        '192.168.50.20': 'CM',
+        '192.168.51.11': 'CM',
     };
     const location = locationMap[clientIp] || 'Invalid';
 

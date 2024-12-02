@@ -704,12 +704,12 @@
             })
             .then(response => response.json())
             .then(data => {
-              // Update the table with the received attendance data
-              renderTable(data.data1, selectedDate);
-
-              // Update pagination
-              updatePagination(data.data2.length, 10);
-
+              if (data.data1.length === 0) {
+                renderEmptyTable();
+              } else {
+                renderTable(data.data1, selectedDate);
+                updatePagination(data.data2.length, 10); // Update pagination
+              }
 
             })
             .catch(error => {
@@ -806,6 +806,8 @@
 
           const [month, year] = date.split('/').map(Number); // Extract year and month from the selected date
           const daysInMonth = new Date(year, month, 0).getDate();
+
+          console.log()
 
           // Function to calculate the number of weekends in a month
           function countWeekends(year, month) {

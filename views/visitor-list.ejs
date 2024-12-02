@@ -25,30 +25,28 @@
         padding-left: 10px;
     }
     
-    /* Media query for responsive */
+    /* Responsive styling */
     @media (max-width: 768px) {
-        .visitors_card .card {
-            flex: 1 1 calc(50% - 20px);
-            max-width: calc(50% - 20px);
-        }
-
-        .status_checked_in,
-        .status_checked_out {
-            font-size: 0.75rem; 
-            padding: 4px 8px;
-        }
-
-        header {
-            flex-direction: column;
-            text-align: center;
-        }
-
-        .visitors_card .count {
-            flex: 100%;
-        }
-
         .filters {
             flex-direction: column;
+            align-items: stretch;
+        }
+
+        .left-filters,
+        .right-filters {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        .left-filters > div,
+        .right-filters > div,
+        .left-filters > select,
+        .right-filters > button {
+            width: 100%; /* Full width on mobile */
+            max-width: 300px; /* Optional: Limit max width */
+            margin-bottom: 8px;
         }
     }
 
@@ -113,35 +111,36 @@
                 <p class="text-body-tertiary lh-sm mb-0">The visitor list table in real-time updates, featuring a complete set of data on individuals currently visiting.</p>
             </div>
 
-            <div class="filters d-flex justify-content-between align-items-center mb-3 gap-3">
-                <!-- search visitor name -->
-                <div class="position-relative" style="width: auto;">
-                    <span class="fas fa-search search-box-icon" style="position: absolute; top: 50%; left: 10px; transform: translateY(-50%); color: #aaa;"></span>
-                    <input type="search" class="form-control ps-5" id="search-input" placeholder="Search visitors" style="width: auto; padding: 5px; font-size: 14px; border-radius: 8px;">
+            <div class="filters d-flex justify-content-between align-items-center mb-3 gap-3 flex-wrap">
+                <!-- Left filters (search, status, building location) -->
+                <div class="left-filters d-flex align-items-center gap-3">
+                    <div class="position-relative" style="width: auto;">
+                        <span class="fas fa-search search-box-icon" style="position: absolute; top: 50%; left: 10px; transform: translateY(-50%); color: #aaa;"></span>
+                        <input type="search" class="form-control ps-5" id="search-input" placeholder="Search visitors" style="width: auto; padding: 5px; font-size: 14px; border-radius: 8px;">
+                    </div>
+            
+                    <select id="statusFilter" name="statusFilter" class="form-select" style="width: 150px; padding: 5px; font-size: 14px; border-radius: 8px;">
+                        <option value="">All Status</option>
+                        <option value="checked_in">Checked-In</option>
+                        <option value="checked_out">Checked-Out</option>
+                    </select>
+            
+                    <select id="buildLoc" name="buildLoc" class="form-select" style="width: 150px; padding: 5px; font-size: 14px; border-radius: 8px;">
+                        <option value="">All Buildings</option>
+                        <option value="baitulmakmur 1">BaitulMakmur 1</option>
+                        <option value="baitulmakmur 2">BaitulMakmur 2</option>
+                    </select>
                 </div>
             
-                <!-- visitor status -->
-                <select id="statusFilter" name="statusFilter" class="form-select" style="width: 150px; padding: 5px; font-size: 14px; border-radius: 8px;">
-                    <option value="">All Status</option>
-                    <option value="checked_in">Checked-In</option>
-                    <option value="checked_out">Checked-Out</option>
-                </select>
+                <!-- Right filters (datepicker, print button) -->
+                <div class="right-filters d-flex align-items-center gap-3">
+                    <div class="date" style="width: 150px;">
+                        <input type="date" class="form-control" id="dateFilter" name="dateFilter" style="padding: 5px; font-size: 14px; border-radius: 8px;">
+                    </div>
             
-                <!-- building location -->
-                <select id="buildLoc" name="buildLoc" class="form-select" style="width: 150px; padding: 5px; font-size: 14px; border-radius: 8px;">
-                    <option value="">All Buildings</option>
-                    <option value="baitulmakmur 1">BaitulMakmur 1</option>
-                    <option value="baitulmakmur 2">BaitulMakmur 2</option>
-                </select>
-            
-                <!-- datepicker -->
-                <div class="date ms-auto" style="padding-right: 0;">
-                    <input type="date" class="form-control" id="dateFilter" name="dateFilter" style="padding: 5px; font-size: 14px; border-radius: 8px;">
-                </div>
-            
-                <!-- print visitor list -->
-                <div class="print-table">
-                    <button type="button" id="printTable" class="btn btn-primary" style="padding: 5px; font-size: 14px; border-radius: 8px;">Print</button>
+                    <button type="button" id="printTable" class="btn btn-primary">
+                        <i class="bi bi-printer"></i> Print
+                    </button>
                 </div>
             </div>
         </div>
@@ -151,66 +150,23 @@
                 <table id="vis-table" class="table fs-9 mb-0 border-top border-translucent">
                     <thead>
                         <tr>
-                        <th class="sort align-middle text-start" scope="col" style="width:5%;">No</th>
-                        <th class="sort align-middle text-center" scope="col" style="width:15%;">Visitor Name</th>
-                        <th class="sort align-middle text-center" scope="col" style="width:15%;">IC Number</th>
-                        <th class="sort align-middle text-center d-none" scope="col" style="width:15%;">Address</th>
-                        <th class="sort align-middle text-center d-none" scope="col" data-sort="level" style="width:15%;">Level</th>
-                        <th class="sort align-middle text-center d-none" scope="col" data-sort="pas" style="width:15%;">No Pas</th>
-                        <th class="sort align-middle text-center" scope="col" style="width:15%;">Phone Number</th>
-                        <th class="sort align-middle text-center d-none" scope="col" style="width:15%;">Purpose of Visit</th>
-                        <th class="sort align-middle text-center" scope="col" style="width:15%;">Status</th>
-                        <th class="sort align-middle text-center" scope="col" style="width:15%;">Time In</th>
-                        <th class="sort align-middle text-center" scope="col" style="width:15%;">Time Out</th>
-                        <th class="sort align-middle text-center d-none" scope="col" data-sort="buildloc" style="width:15%;">Building Location</th>
-                        <th class="sort align-middle text-end" scope="col" style="width:5%;">Action</th>
+                            <th class="sort align-middle text-start" scope="col" style="width:5%;">No</th>
+                            <th class="sort align-middle text-center" scope="col" style="width:15%;">Visitor Name</th>
+                            <th class="sort align-middle text-center" scope="col" style="width:15%;">IC Number</th>
+                            <th class="sort align-middle text-center d-none" scope="col" style="width:15%;">Address</th>
+                            <th class="sort align-middle text-center d-none" scope="col" data-sort="level" style="width:15%;">Level</th>
+                            <th class="sort align-middle text-center d-none" scope="col" data-sort="pas" style="width:15%;">No Pas</th>
+                            <th class="sort align-middle text-center" scope="col" style="width:15%;">Phone Number</th>
+                            <th class="sort align-middle text-center d-none" scope="col" style="width:15%;">Purpose of Visit</th>
+                            <th class="sort align-middle text-center" scope="col" style="width:15%;">Status</th>
+                            <th class="sort align-middle text-center" scope="col" style="width:15%;">Time In</th>
+                            <th class="sort align-middle text-center" scope="col" style="width:15%;">Time Out</th>
+                            <th class="sort align-middle text-center d-none" scope="col" data-sort="buildloc" style="width:15%;">Building Location</th>
+                            <th class="sort align-middle text-end" scope="col" style="width:5%;">Action</th>
                         </tr>
                     </thead>
                     <tbody id="visitorTableBody">
-                        <!-- <% if (visitors.length > 0) { %>
-                            <% visitors.forEach((visitor, index) => { %>
-                                <tr class="position-static">
-                                    <td class="align-middle text-start"><%= index + 1 %></td>
-                                    <td class="align-middle text-center"><a href="#" class="visitor-link" data-visitor='<%= JSON.stringify(visitor) %>'><%= visitor.firstName %> <%= visitor.lastName %></a></td>
-                                    <td class="align-middle text-center"><%= visitor.nric %></td>
-                                    <td class="align-middle text-center d-none"><%= visitor.address %></td>
-                                    <td class="align-middle text-center d-none"><%= visitor.level %></td>
-                                    <td class="align-middle text-center d-none"><%= visitor.pass %></td>
-                                    <td class="align-middle text-center"><%= visitor.phoneNum %></td>
-                                    <td class="align-middle text-center d-none"><%= visitor.purpose %></td>
-                                    <td class="align-middle text-center">
-                                        <span class="badge badge-phoenix <%= visitor.timeOut ? 'badge-phoenix-danger' : 'badge-phoenix-success' %> fs-10 align-items-center">
-                                            <%= visitor.timeOut ? 'Checked-Out' : 'Checked-In' %>
-                                        </span>
-                                    </td>
-                                    <td class="align-middle text-center"><%= visitor.timeIn %></td>
-                                    <td class="align-middle text-center"><%= visitor.timeOut ? visitor.timeOut : '-' %></td>
-                                    <td class="align-middle text-center d-none"><%= visitor.location %></td>
-                                    <td class="align-middle text-end">
-                                        <div class="d-flex justify-content-end align-items-center gap-1">
-                                            <% if (!visitor.timeOut) { %>
-                                                <form action="/toggle/status" method="POST" style="display:inline;" class="toggle-form">
-                                                    <input type="hidden" name="visitor_id" value="<%= visitor._id %>">
-                                                    <button type="submit" class="timeout_button btn p-0" style="background: none; border: none;">
-                                                        <i class="bi bi-clock-fill text-white bg-danger p-2 rounded" style="transition: background-color 0.3s, transform 0.3s; font-size: 1rem;"></i>
-                                                    </button>
-                                                </form>
-                                            <% } %>
-                                            <form action="/delete/visitor" method="POST" style="display:inline;" class="delete-form">
-                                                <input type="hidden" name="visitor_id" value="<%= visitor._id %>">
-                                                <button type="submit" class="delete_button btn p-0" style="background: none; border: none;">
-                                                    <i class="bi bi-trash text-white bg-secondary p-2 rounded" style="transition: background-color 0.3s, transform 0.3s; font-size: 1rem;"></i>
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </td>
-                                </tr>
-                            <% }) %>
-                        <% } else { %>
-                            <tr>
-                                <td colspan="12" style="text-align:center;">There is no visitor list found</td>
-                            </tr>
-                        <% } %> -->
+                        <!-- Visitor list will be added dynamically here -->
                     </tbody>  
                 </table>
             </div>
@@ -745,6 +701,15 @@
             $('#saveChanges').hide();
             $(this).hide();
             isEditing = false;
+        });
+
+        // Reset modal state when closed
+        $('#visitorModal').on('hide.bs.modal', function() {
+            $('#visitorDetails p').show();
+            $('#visitorDetails .form-control').hide();
+            $('#editVisitor').show();
+            $('#saveChanges').hide();
+            $('#cancel').hide();
         });
 
         // Handle Delete Visitor for modal

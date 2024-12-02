@@ -43,7 +43,7 @@
       <div class="card-body overflow-auto overflow-x-hidden scrollbar vh-50">
         <div class="p-3 pt-1">
 
-          <div class="row g-3 d-flex justify-content-between mb-0 px-1 py-2">
+          <div class="row g-3 d-flex justify-content-between mb-3 mt-n6 px-1 py-2">
 
             <div class="col-auto d-flex align-items-center">
               <span class="badge badge-phoenix badge-phoenix-warning fw-semibold fs-10 me-2 mt-n2"><%= payment.status %></span>
@@ -277,17 +277,6 @@
             var totalFees = parseFloat($('#total-fees').text()) + fees;
             $('#total-fees').text(totalFees.toFixed(2));
 
-            // Add the product details to the fee list
-            // $('#fees-list').append(`
-            //   <li class="list-group-item border-top-0 border-bottom border-start-0 border-end-0 border-2" 
-            //       data-id="${uniqueId}" 
-            //       data-sku="${sku}" 
-            //       data-product="${product}" 
-            //       data-fees="${fees}">
-            //     ${product}: RM ${fees}
-            //   </li>
-            // `);
-
             $('#fees-list').append(`
               <tr class="border-top border-bottom border-start-0 border-end-0 border-2" 
                   data-id="${uniqueId}" 
@@ -295,7 +284,7 @@
                   data-product="${product}" 
                   data-fees="${fees}">
                   <td class="text-start">${product} (${sku}) - ${size}</td>
-                  <td class="text-end">RM ${uniqueId}</td>
+                  <td class="text-end">RM ${price}</td>
               </tr>
             `);
 
@@ -339,8 +328,8 @@
           const paymentId = '<%= payment._id %>';
           const productDetails = [];
 
-          // Iterate over the fees list to collect SKUs and other details
-          $('#fees-list .list-group-item').each(function() {
+          // Iterate over the rows in the fees list to collect SKUs and other details
+          $('#fees-list tr').each(function() {
             const productSKU = $(this).data('sku');
             const productName = $(this).data('product');
             const productPrice = $(this).data('fees');
@@ -353,19 +342,28 @@
             }
           });
 
-          $.post('/education/payment/record/pay', {
-              totalFees: totalFees,
-              paymentId: paymentId,
-              products: productDetails
+          fetch('/education/payment/record/pay', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                totalFees: totalFees,
+                paymentId: paymentId,
+                products: productDetails
+              })
             })
-            .done(function(response) {
-              alert('Payment successful.');
-              setTimeout(function() {
-                location.reload();
-              }, 1000);
+            .then(response => response.json())
+            .then(data => {
+              console.log('Payment successful.');
+              // Update the show and alert variables
+              const show = data.show;
+              const alert = data.alert;
+              // Update the toast message
+              $('.toast').removeClass('hide').addClass(show);
+              $('.toast-body').html(`<code class="text-primary">${alert}</code>`);
             })
-            .fail(function(error) {
-              alert('Payment failed.');
+            .catch(error => {
               console.error('Payment error:', error);
             });
         });
