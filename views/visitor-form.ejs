@@ -189,7 +189,6 @@
                     <p>Here are your details:</p>
                     <ul class="visitor-details">
                         <li><strong>Name:</strong> <%= fields.firstName %> <%= fields.lastName %></li>
-                        <li><strong>IC Number:</strong> <%= fields.nric %></li>
                         <li><strong>Level:</strong> <%= fields.level %></li>
                         <li><strong>No Pass:</strong> <%= fields.pass %></li>
                     </ul>
@@ -279,6 +278,7 @@
                             </div>
                         </a>
                         <form method="POST" action="/visitor/form/submitted" onsubmit="return validateForm()" id="visitor-form-details">
+                            <!-- Visitor name -->
                             <div class="mb-3 text-start">
                                 <label class="form-label" for="vis_name">Visitor's Name<span class="required"> *</span></label>
                                 <div class="form-icon-container name-fields">
@@ -295,6 +295,7 @@
                                 </div>
                             </div>
 
+                            <!-- Visitor nric -->
                             <div class="mb-3 text-start">
                                 <label class="form-label" for="nric">Identification Card Number<span class="required"> *</span></label>
                                 <input class="form-control" type="text" id="nric" name="nric" placeholder="<%= fields.nric || 'Identification Card Number' %>" value="<%= fields.nric %>" required>
@@ -302,6 +303,15 @@
                                 <div id="valid_no_ic" class="valid-message"></div>
                             </div>
 
+                            <!-- Visitor phone number -->
+                            <div class="mb-3 text-start">
+                                <label class="form-label" for="phoneNum">Phone Number<span class="required"> *</span></label>
+                                <input class="form-control" type="text" id="phoneNum" name="phoneNum" placeholder="<%= fields.phoneNum || 'Phone Number' %>" value="<%= fields.phoneNum %>" required>
+                                <div id="error_no_telephone" class="error-message"><%= errors.phoneNum || '' %></div>
+                                <div id="valid_no_telephone" class="valid-message"></div>
+                            </div>
+
+                            <!-- Visitor address -->
                             <div class="mb-3 text-start">
                                 <label class="form-label" for="address">Address<span class="required"> *</span></label>
                                 <input class="form-control" type="text" id="address" name="address" placeholder="<%= fields.address || 'Address' %>" value="<%= fields.address %>" required>
@@ -309,6 +319,7 @@
                                 <div id="valid_address" class="valid-message"></div>
                             </div>
 
+                            <!-- Level -->
                             <div class="mb-3 text-start">
                                 <label class="form-label" for="level">Level<span class="required"> *</span></label>
                                 <select class="form-control" id="level" name="level" required>
@@ -318,6 +329,7 @@
                                 <div id="valid_level" class="valid-message"></div>
                             </div>
 
+                            <!-- Visitor number pass -->
                             <div class="mb-3 text-start">
                                 <label class="form-label" for="pass">No Pass<span class="required"> *</span></label>
                                 <input class="form-control" type="text" id="pass" name="pass" placeholder="<%= fields.pass || 'No Pass' %>" value="<%= fields.pass %>" required>
@@ -325,13 +337,7 @@
                                 <div id="valid_no_pas" class="valid-message"></div>
                             </div>
 
-                            <div class="mb-3 text-start">
-                                <label class="form-label" for="phoneNum">Phone Number<span class="required"> *</span></label>
-                                <input class="form-control" type="text" id="phoneNum" name="phoneNum" placeholder="<%= fields.phoneNum || 'Phone Number' %>" value="<%= fields.phoneNum %>" required>
-                                <div id="error_no_telephone" class="error-message"><%= errors.phoneNum || '' %></div>
-                                <div id="valid_no_telephone" class="valid-message"></div>
-                            </div>
-
+                            <!-- Purpose of visit -->
                             <div class="mb-3 text-start">
                                 <label class="form-label" for="purpose">Purpose Of Visit<span class="required"> *</span></label>
                                 <textarea class="form-control" id="purpose" name="purpose" rows="4" placeholder="<%= fields.purpose || 'Purpose of Visit' %>" required><%= fields.purpose %></textarea>
@@ -342,12 +348,12 @@
                             <!-- Hidden input for building location -->
                             <input type="hidden" name="location" id="location" value="">
 
-                            <div style="margin-top: 3rem;">
+                            <div class="mt-4 mb-5">
                                 <button class="btn btn-success w-100 mb-2 loading-button" type="submit" name="submit">
                                     <div class="content-button">Submit</div>
                                 </button>
-                                <button class="btn btn-secondary w-100 mb-2 loading-button" type="reset" name="reset">
-                                    <div class="content-button">Reset</div>
+                                <button class="btn btn-secondary w-100 mb-2" type="reset" name="reset">
+                                    <div class="">Reset</div>
                                 </button>
                             </div>
                         </form>
@@ -490,6 +496,19 @@
             document.getElementById('nric').style.border = '1px solid #09c372'; 
         }
 
+        // Validate phone number
+        let phoneNumber = document.getElementById('phoneNum').value;
+        if (!/^\d{10,15}$/.test(phoneNumber)) {
+            valid = false;
+            document.getElementById('error_no_telephone').textContent = "Phone number must be between 10 and 15 digits";
+            document.getElementById('phoneNum').classList.add('error');
+            document.getElementById('phoneNum').style.border = '1px solid #ff3860';
+        } else {
+            document.getElementById('valid_no_telephone').textContent = "Looks good!";
+            document.getElementById('phoneNum').classList.add('valid');
+            document.getElementById('phoneNum').style.border = '1px solid #09c372';
+        }
+
         // Validate address
         let address = document.getElementById('address').value;
         if (address.trim() === "") {
@@ -527,19 +546,6 @@
             document.getElementById('valid_no_pas').textContent = "Looks good!";
             document.getElementById('pass').classList.add('valid');
             document.getElementById('pass').style.border = '1px solid #09c372';
-        }
-
-        // Validate phone number
-        let phoneNumber = document.getElementById('phoneNum').value;
-        if (!/^\d{10,15}$/.test(phoneNumber)) {
-            valid = false;
-            document.getElementById('error_no_telephone').textContent = "Phone number must be between 10 and 15 digits";
-            document.getElementById('phoneNum').classList.add('error');
-            document.getElementById('phoneNum').style.border = '1px solid #ff3860';
-        } else {
-            document.getElementById('valid_no_telephone').textContent = "Looks good!";
-            document.getElementById('phoneNum').classList.add('valid');
-            document.getElementById('phoneNum').style.border = '1px solid #09c372';
         }
 
         // Validate purpose of visit

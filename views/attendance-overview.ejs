@@ -1,397 +1,501 @@
 <%- include('partials/private-header') %>
 
 <div class="mb-3 mt-n5 h-100">
-
-  <section class="px-0">
-
-    <div id="title">
-
-      <div class="row align-items-center justify-content-between g-3 mb-4">
-        <div class="col-auto">
-          <h2 class="mb-0">Attendance</h2>
-          <p class="text-body-tertiary lh-sm mb-0">Automated qr-based attendance.</p>
-        </div>
-        <div class="col-12 col-lg-auto">
-          <div class="row g-2 g-sm-3 d-lg-flex">
-            <div class="col-auto">
-              <button class="btn btn-primary px-5 loading-button" role="button" id="startButton"><span class="fa-solid fa-qrcode"></span>&nbsp;&nbsp;&nbsp;Scan</button>
+    <section class="px-0">
+        <div id="title">
+            <div class="row align-items-center justify-content-between g-3 mb-4">
+                <div class="col-auto">
+                    <h2 class="mb-0">Attendance</h2>
+                    <p class="text-body-tertiary lh-sm mb-0">Automated qr-based attendance.</p>
+                </div>
+                <div class="col-12 col-lg-auto">
+                    <div class="row g-2 g-sm-3 d-lg-flex">
+                        <div class="col-auto">
+                            <button class="btn btn-primary px-5 loading-button" role="button" id="startButton">
+                            <span class="fa-solid fa-qrcode"></span>&nbsp;&nbsp;&nbsp;Scan
+                            </button>
+                        </div>
+                        <div class="col-auto">
+                            <button class="btn btn-phoenix-primary px-5" data-bs-toggle="modal" data-bs-target="#outOfOfficeRequest" role="button">Out Of Office</button>
+                        </div>
+                        <div class="col-auto">
+                            <button class="btn px-3 btn-phoenix-secondary" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
+                            <span class="fa-solid fa-ellipsis"></span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end p-0" style="z-index: 9999;">
+                            <li><a class="dropdown-item" href="#!">Print</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="col-auto">
-              <button class="btn btn-phoenix-primary px-5" data-bs-toggle="modal" data-bs-target="#outOfOfficeRequest" role="button">Out Of Office</button>
-            </div>
-            <div class="col-auto">
-              <button class="btn px-3 btn-phoenix-secondary" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fa-solid fa-ellipsis"></span></button>
-              <ul class="dropdown-menu dropdown-menu-end p-0" style="z-index: 9999;">
-                <li><a class="dropdown-item" href="#!">Print</a></li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis pt-7 pb-3 border-y mb-6">
-        <div class="border-bottom border-translucent mt-3 mb-8" id="attendance" data-list='{"valueNames":["type","clockin","clockout","outofoffice", "remarks"],"page":10,"pagination":true}'>
-          <div class="row align-items-end justify-content-between pb-4 g-3">
-
-            <div class="col-12 col-md-auto">
-              <div class="search-box">
-                <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
-                  <input class="form-control search-input search form-control-sm" type="search" placeholder="Search team members" aria-label="Search" />
-                  <span class="fas fa-search search-box-icon"></span>
-                </form>
-              </div>
-            </div>
-
-          </div>
-
-          <div class="table-responsive ms-n1 ps-1 scrollbar">
-            <table class="table fs-9 mb-0 border-top border-translucent">
-              <thead>
-                <tr>
-                  <th class="align-middle ps-0 text-start text-uppercase" scope="col" data-sort="date" style="width:15%;min-width: 150px;">Date</th>
-                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="type" style="width:15%;min-width: 100px;">Status</th>
-                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="clockin" style="width:10%;min-width: 100px;">Clock In</th>
-                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="clockout" style="width:10%;min-width: 100px;">Clock Out</th>
-                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="outofoffice" style="width:10%;min-width: 100px;">Out Of Office</th>
-                  <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="remarks" style="width:20%;min-width: 100px;">Remarks</th>
-                  <th class="sort align-middle ps-0 text-end text-uppercase" scope="col" style="width:5%;min-width: 50px;"></th>
-                </tr>
-              </thead>
-
-              <tbody class="list" id="attendance-table-content">
-                <% if(attendance && attendance.length > 0){ %>
-                <% attendance.forEach((item, index) => { %>
-
-                <% 
-                    
-                    let signOutTime;
-                    if(item.date.signOutTime === null){
-                        signOutTime = '-';
-                    } else{
-                        signOutTime = item.date.signOutTime.toLocaleTimeString('en-MY', {hour: 'numeric',minute: 'numeric', hour12: true, timeZone : 'Asia/Kuala_Lumpur' });
-                    }
-                    
-                    let signInTime;
-                    if(item.date.signInTime === null){
-                        signInTime = '-';
-                    } else{
-                        signInTime = item.date.signInTime.toLocaleTimeString('en-MY', { hour: 'numeric',minute: 'numeric', hour12: true, timeZone : 'Asia/Kuala_Lumpur' });
-                    }
-
-                    let outOfOfficeEnabled;
-                    if(item.outOfOffice.enabled === false){
-                        outOfOfficeEnabled = 'primary';
-                    } else{
-                        outOfOfficeEnabled = 'success';
-                    }
     
-                    var badgeColour;
-                    if (item.status === 'Late' || item.status === 'Absent') {
-                      badgeColour = 'danger';
-                    } else if (item.status === 'Leave' || item.status === 'Non Working Day' ) {
-                      badgeColour = 'info';
-                    }else if (item.status === 'Invalid' ) {
-                      badgeColour = 'warning';
-                    } else {
-                      badgeColour = 'success';
-                    }
-                  %>
-                <tr class="position-static">
-                  <td class="date align-middle fw-blod text-start text-body-highlight fst-italic fw-bold py-2 ps-0 fs-9 fs-xxl-8"><%= item.timestamp.toLocaleDateString('en-MY', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %></td>
-                  <td class="type align-middle fw-semibold text-center py-2 ps-0 fs-9 fs-md-8 text-body-highlight"><span class="badge badge-phoenix fs-10 badge-phoenix-<%= badgeColour %>"><%= item.status %></span></td>
-                  <td class="clockin align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-success"><%= signInTime %></span><br><span class="fw-bold fst-italic fs-10 text-primary"><%= item.location.signIn || '' %></span></td>
-                  <td class="clockout align-middle text-center py-2 ps-0 fs-9"><span class="badge badge-phoenix fs-10 badge-phoenix-warning"><%= signOutTime %></span><br><span class="fw-bold fst-italic fs-10 text-primary"><%= item.location.signOut || '' %></span></td>
-                  <td class="outofoffice align-middle text-center py-2 ps-0 fs-9"><a href="#" data-bs-toggle="modal" data-bs-target="#outOfOffice<%= index %>" class="badge badge-phoenix badge-phoenix-<%= outOfOfficeEnabled %>"><%= item.outOfOffice.enabled %></a></td>
-                  <td class="remarks align-middle fst-italic text-center py-2 ps-0 fs-9"><%= item.remarks || 'No remarks added.' %></td>
-                  <td class="align-middle text-end white-space-nowrap ps-0 action">
-                    <div class="font-sans-serif btn-reveal-trigger position-static">
-                      <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs--2" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
-                        <span class="fas fa-ellipsis-h fs-9"></span>
-                      </button>
-                      <div class="dropdown-menu dropdown-menu-end py-2">
-                        <a class="dropdown-item no-loader" href="#" data-bs-toggle="modal" data-bs-target="#addRemark<%= index %>">Update Remarks</a>
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-
-                <div class="modal fade" id="outOfOfficeRequest" tabindex="-1">
-                  <div class="modal-dialog modal-lg">
-                    <div class="modal-content">
-
-                      <form action="/attendance/outofoffice/request" method="post">
-                        <div class="modal-header border-bottom-0">
-                          <h3>
-                            Request
-                          </h3>
+            <div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis pt-7 pb-3 border-y mb-6">
+                <div class="border-bottom border-translucent mt-3 mb-8" id="attendance" data-list='{"valueNames":["type","clockin","clockout","outofoffice", "remarks"],"page":10,"pagination":true}'>
+                    <div class="row align-items-end justify-content-between pb-4 g-3">
+                        <div class="col-12 col-md-auto">
+                            <div class="search-box">
+                                <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
+                                    <input class="form-control search-input search form-control-sm" type="search" placeholder="Search team members" aria-label="Search" />
+                                    <span class="fas fa-search search-box-icon"></span>
+                                </form>
+                            </div>
                         </div>
-
-                        <div class="modal-body">
-                          <div class="row g-3">
-                            <div class="col-12">
-                              <div class="form-floating">
-                                <input type="text" class="form-control datetimepicker flatpickr-input" id="date" placeholder="" name="date" data-options='{"disableMobile":true,"allowInput":true, "locale" : { "firstDayOfWeek" : 1}}'>
-                                <label for="date"><span class="fa-regular fa-calendar-xmark me-2"></span>Date</label>
-                              </div>
-                            </div>
-
-                            <div class="col-12 col-md-6">
-                              <div class="form-floating">
-                                <input type="text" class="form-control datetimepicker flatpickr-input" placeholder="" name="startTime" data-options='{"enableTime": true,"noCalendar": true, "dateFormat" : "H:i","disableMobile":true,"time_24hr": true, "defaultHour" : 12, "defaultMinute" : 0 ,"allowInput":true}'>
-                                <label for="startTime"><span class="fa-solid fa-hourglass-start me-2"></span>Start Time</label>
-                              </div>
-                            </div>
-
-
-                            <div class="col-12 col-md-6">
-                              <div class="form-floating">
-                                <input type="text" class="form-control datetimepicker flatpickr-input" placeholder="" name="returnTime" data-options='{"enableTime": true,"noCalendar": true, "dateFormat" : "H:i","disableMobile":true,"time_24hr": true, "defaultHour" : 12, "defaultMinute" : 0 ,"allowInput":true}'>
-                                <label for="returnTime"><span class="fa-solid fa-hourglass-end me-2"></span>Return Time</label>
-                              </div>
-                            </div>
-
-                            <div class="col-12">
-                              <div class="form-floating">
-                                <textarea class="form-control scrollbar" id="reason" name="reason" placeholder="State your reason here" style="height: 125px"></textarea>
-                                <label for="reason">Reason</label>
-                              </div>
-                            </div>
-
-                          </div>
-                        </div>
-
-                        <div class="modal-footer border-top-0">
-                          <button class="btn btn-primary loading-button" type="submit">
-                            <div class="content-button">
-                              <span>Update</span>
-                            </div>
-                          </button>
-                        </div>
-
-                      </form>
-
                     </div>
-
-                  </div>
-                </div>
-          </div>
-
-          <div class="modal fade" id="outOfOffice<%= index %>" tabindex="-1">
-            <div class="modal-dialog">
-              <div class="modal-content">
-
-                <div class="modal-body">
-                  <p><%= item.outOfOffice.reason %></p>
-                  <p><%= item.outOfOffice.signOutTime 
-                    ? item.outOfOffice.signInTime.toLocaleTimeString('en-MY', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        hour12: true
-                      })
-                    : ''; %></p>
-                  <p><%= item.outOfOffice.signOutTime 
-                    ? item.outOfOffice.signOutTime.toLocaleTimeString('en-MY', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        hour12: true
-                      })
-                    : ''; %></p>
-                  <p><%= item.outOfOffice.status %></p>
-                </div>
-
-                <div class="modal-footer border-top-0">
-                  <button class="btn btn-primary loading-button" type="submit">
-                    <div class="content-button">
-                      <span>Update</span>
+        
+                    <div class="table-responsive ms-n1 ps-1 scrollbar">
+                        <table class="table fs-9 mb-0 border-top border-translucent">
+                            <thead>
+                                <tr>
+                                    <th class="align-middle ps-0 text-start text-uppercase" scope="col" data-sort="date" style="width:15%;min-width: 150px;">Date</th>
+                                    <th class="sort align-middle ps-0 text-center text-uppercase" scope="col" data-sort="type" style="width:15%;min-width: 100px;">Status</th>
+                                    <th class="align-middle ps-0 text-center text-uppercase" scope="col" data-sort="clockin" style="width:10%;min-width: 100px;">Clock In</th>
+                                    <th class="align-middle ps-0 text-center text-uppercase" scope="col" data-sort="clockout" style="width:10%;min-width: 100px;">Clock Out</th>
+                                    <th class="align-middle ps-0 text-center text-uppercase" scope="col" data-sort="outofoffice" style="width:10%;min-width: 100px;">Out Of Office</th>
+                                    <th class="align-middle ps-0 text-center text-uppercase" scope="col" data-sort="remarks" style="width:20%;min-width: 100px;">Remarks</th>
+                                    <th class="sort align-middle ps-0 text-end text-uppercase" scope="col" style="width:5%;min-width: 50px;"></th>
+                                </tr>
+                            </thead>
+                    
+                            <tbody class="list" id="attendance-table-content">
+                                <% if(attendance && attendance.length > 0){ %>
+                                    <% attendance.forEach((item, index) => { %>
+                                        <%
+                                            let signOutTime;
+                                            if(item.date.signOutTime === null){
+                                                signOutTime = '-';
+                                            } else {
+                                                signOutTime = item.date.signOutTime.toLocaleTimeString('en-MY', {hour: 'numeric', minute: 'numeric', hour12: true, timeZone : 'Asia/Kuala_Lumpur' });
+                                            }
+                    
+                                            let signInTime;
+                                            if(item.date.signInTime === null){
+                                                signInTime = '-';
+                                            } else {
+                                                signInTime = item.date.signInTime.toLocaleTimeString('en-MY', { hour: 'numeric', minute: 'numeric', hour12: true, timeZone : 'Asia/Kuala_Lumpur' });
+                                            }
+                    
+                                            let outOfOfficeEnabled;
+                                            if(item.outOfOffice.enabled === false){
+                                                outOfOfficeEnabled = 'primary';
+                                            } else {
+                                                outOfOfficeEnabled = 'success';
+                                            }
+                    
+                                            var badgeColour;
+                                            if (item.status === 'Late' || item.status === 'Absent') {
+                                                badgeColour = 'danger';
+                                            } else if (item.status === 'Leave' || item.status === 'Non Working Day' ) {
+                                                badgeColour = 'info';
+                                            } else if (item.status === 'Invalid' ) {
+                                                badgeColour = 'warning';
+                                            } else {
+                                                badgeColour = 'success';
+                                            }
+                                        %>
+                                        <tr class="position-static">
+                                            <td class="date align-middle fw-blod text-start text-body-highlight fst-italic fw-bold py-2 ps-0 fs-9 fs-xxl-8">
+                                                <%= item.timestamp.toLocaleDateString('en-MY', { day: '2-digit', month: 'long', year: 'numeric', timeZone : 'Asia/Kuala_Lumpur' }) %>
+                                            </td>
+                    
+                                            <td class="type align-middle fw-semibold text-center py-2 ps-0 fs-9 fs-md-8 text-body-highlight">
+                                                <span class="badge badge-phoenix fs-10 badge-phoenix-<%= badgeColour %>"><%= item.status %></span>
+                                            </td>
+                    
+                                            <td class="clockin align-middle text-center py-2 ps-0 fs-9">
+                                                <span class="badge badge-phoenix fs-10 badge-phoenix-success"><%= signInTime %></span><br>
+                                                <span class="fw-bold fst-italic fs-10 text-primary"><%= item.location.signIn || '' %></span>
+                                            </td>
+                    
+                                            <td class="clockout align-middle text-center py-2 ps-0 fs-9">
+                                                <span class="badge badge-phoenix fs-10 badge-phoenix-warning"><%= signOutTime %></span><br>
+                                                <span class="fw-bold fst-italic fs-10 text-primary"><%= item.location.signOut || '' %></span>
+                                            </td>
+                    
+                                            <td class="outofoffice align-middle text-center py-2 ps-0 fs-9">
+                                                <a href="#" data-bs-toggle="modal" data-bs-target="#outOfOffice<%= index %>" class="badge badge-phoenix badge-phoenix-<%= outOfOfficeEnabled %>"><%= item.outOfOffice.enabled %></a>
+                                            </td>
+                    
+                                            <td class="remarks align-middle fst-italic text-center py-2 ps-0 fs-9"><%= item.remarks || 'No remarks added.' %></td>
+                    
+                                            <td class="align-middle text-end white-space-nowrap ps-0 action">
+                                                <div class="font-sans-serif btn-reveal-trigger position-static">
+                                                    <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs--2" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
+                                                        <span class="fas fa-ellipsis-h fs-9"></span>
+                                                    </button>
+                                                    <div class="dropdown-menu dropdown-menu-end py-2">
+                                                        <a class="dropdown-item no-loader" href="#" data-bs-toggle="modal" data-bs-target="#addRemark<%= index %>">Update Remarks</a>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                    
+                                        <!-- Modal for out of office request -->
+                                        <div class="modal fade" id="outOfOfficeRequest" tabindex="-1">
+                                            <div class="modal-dialog modal-lg">
+                                                <div class="modal-content">
+                                                    <form action="/attendance/outofoffice/request" method="post">
+                                                        <div class="modal-header border-bottom-0">
+                                                            <h3>Request</h3>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <div class="row g-3">
+                                                                <div class="col-12">
+                                                                    <div class="form-floating">
+                                                                        <input type="text" class="form-control datetimepicker flatpickr-input" id="date" placeholder="" name="date" data-options='{"disableMobile":true,"allowInput":true, "locale" : { "firstDayOfWeek" : 1}}'>
+                                                                        <label for="date"><span class="fa-regular fa-calendar-xmark me-2"></span>Date</label>
+                                                                    </div>
+                                                                </div>
+                    
+                                                                <div class="col-12 col-md-6">
+                                                                    <div class="form-floating">
+                                                                        <input type="text" class="form-control datetimepicker flatpickr-input" placeholder="" name="startTime" data-options='{"enableTime": true,"noCalendar": true, "dateFormat" : "H:i","disableMobile":true,"time_24hr": true, "defaultHour" : 12, "defaultMinute" : 0 ,"allowInput":true}'>
+                                                                        <label for="startTime"><span class="fa-solid fa-hourglass-start me-2"></span>Start Time</label>
+                                                                    </div>
+                                                                </div>
+                    
+                                                                <div class="col-12 col-md-6">
+                                                                    <div class="form-floating">
+                                                                        <input type="text" class="form-control datetimepicker flatpickr-input" placeholder="" name="returnTime" data-options='{"enableTime": true,"noCalendar": true, "dateFormat" : "H:i","disableMobile":true,"time_24hr": true, "defaultHour" : 12, "defaultMinute" : 0 ,"allowInput":true}'>
+                                                                        <label for="returnTime"><span class="fa-solid fa-hourglass-end me-2"></span>Return Time</label>
+                                                                    </div>
+                                                                </div>
+                    
+                                                                <div class="col-12">
+                                                                    <div class="form-floating">
+                                                                        <textarea class="form-control scrollbar" id="reason" name="reason" placeholder="State your reason here" style="height: 125px"></textarea>
+                                                                        <label for="reason">Reason</label>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                    
+                                                        <div class="modal-footer border-top-0">
+                                                            <button class="btn btn-primary loading-button" type="submit">
+                                                                <div class="content-button">
+                                                                    <span>Update</span>
+                                                                </div>
+                                                            </button>
+                                                        </div>
+                    
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                    
+                                        <!-- Modal for out of office details -->
+                                        <div class="modal fade" id="outOfOffice<%= index %>" tabindex="-1">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <div class="modal-body">
+                                                        <p><%= item.outOfOffice.reason %></p>
+                                                        <p><%= item.outOfOffice.signOutTime ? item.outOfOffice.signInTime.toLocaleTimeString('en-MY', {hour: '2-digit', minute: '2-digit', hour12: true}) : ''; %></p>
+                                                        <p><%= item.outOfOffice.signOutTime ? item.outOfOffice.signOutTime.toLocaleTimeString('en-MY', {hour: '2-digit', minute: '2-digit', hour12: true}) : ''; %></p>
+                                                        <p><%= item.outOfOffice.status %></p>
+                                                    </div>
+                    
+                                                    <div class="modal-footer border-top-0">
+                                                        <button class="btn btn-primary loading-button" type="submit">
+                                                            <div class="content-button">
+                                                                <span>Update</span>
+                                                            </div>
+                                                        </button>
+                                                    </div>
+                    
+                                                </div>
+                                            </div>
+                                        </div>
+                    
+                                        <!-- Modal for updating remarks -->
+                                        <div class="modal fade" id="addRemark<%= index %>" tabindex="-1">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <form action="/attendance/update/remarks/<%= item._id %>" method="post">
+                                                        <div class="modal-body">
+                                                            <label class="form-label" for="udpateDescription">Remarks</label>
+                                                            <textarea class="form-control scrollbar-overlay" placeholder="Leave a attendance remark here" style="height: 100px" name="remarks"></textarea>
+                                                        </div>
+                                                        <div class="modal-footer border-top-0">
+                                                            <button class="btn btn-primary loading-button" type="submit">
+                                                                <div class="content-button">
+                                                                    <span>Update</span>
+                                                                </div>
+                                                            </button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    <% }); %>
+                                <% } else { %>
+                                    <tr>
+                                        <td colspan="7" class="text-center fw-bold fs-9">
+                                            No attendance detected from <span class="fw-bold text-primary notranslate"><%= user.fullname %></span>
+                                        </td>
+                                    </tr>
+                                <% } %>
+                            </tbody>
+                        </table>
                     </div>
-                  </button>
+                    
+                    <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
+                        <div class="col-auto d-flex">
+                            <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p>
+                            <a class="fw-semibold" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
+                            <a class="fw-semibold d-none" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
+                        </div>
+                        <div class="col-auto d-flex">
+                            <button class="page-link" data-list-pagination="prev"><span class="fas fa-chevron-left"></span></button>
+                            <ul class="mb-0 pagination"></ul>
+                            <button class="page-link pe-0" data-list-pagination="next"><span class="fas fa-chevron-right"></span></button>
+                        </div>
+                    </div>
                 </div>
-
-              </div>
             </div>
-          </div>
-
-          <div class="modal fade" id="addRemark<%= index %>" tabindex="-1">
-            <div class="modal-dialog">
-              <div class="modal-content">
-                <form action="/attendance/update/remarks/<%= item._id %>" method="post">
-                  <div class="modal-body">
-                    <label class="form-label" for="udpateDescription">Remarks</label>
-                    <textarea class="form-control scrollbar-overlay" placeholder="Leave a attendance remark here" style="height: 100px" name="remarks"></textarea>
-                  </div>
-                  <div class="modal-footer border-top-0">
-                    <button class="btn btn-primary loading-button" type="submit">
-                      <div class="content-button">
-                        <span>Update</span>
-                      </div>
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
-          <% }); %>
-          <% }else{ %>
-          <tr>
-            <td colspan="7" class="text-center fw-bold fs-9">No attendance detected from <span class="fw-bold text-primary notranslate"><%= user.fullname %></span></td>
-          </tr>
-          <% } %>
-          </tbody>
-          </table>
         </div>
-        <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
-          <div class="col-auto d-flex">
-            <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p><a class="fw-semibold" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semibold d-none" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
-          </div>
-          <div class="col-auto d-flex">
-            <button class="page-link" data-list-pagination="prev"><span class="fas fa-chevron-left"></span></button>
-            <ul class="mb-0 pagination"></ul>
-            <button class="page-link pe-0" data-list-pagination="next"><span class="fas fa-chevron-right"></span></button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-  </section>
-
+    </section>
 </div>
-
+  
 <div class="mb-3 row g-3">
-
-  <div class="col-12 col-md-12 z-1 text-center" id="scanner">
-    <div class="p-4 mb-3 d-none" id="videoContainer">
-      <!-- Initially hide video container with 'd-none' -->
-      <video id="video" class="w-100"></video>
+    <div class="col-12 col-md-12 z-1 text-center" id="scanner">
+        <div class="p-4 mb-3 d-none" id="videoContainer">
+            <!-- Initially hide video container with 'd-none' -->
+            <video id="video" class="w-100"></video>
+        </div>
     </div>
 
-  </div>
+    <div class="col-12 col-md-6 mt-n3" id="afterScan">
+        <p id="userData"></p>
 
-  <div class="col-12 col-md-6 mt-n3" id="afterScan">
-    <p id="userData"></p>
+        <style>
+            .card-container {
+                perspective: 1000px;
+                z-index: 0;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                margin: auto;
+            }
 
-    <div class="card-container d-none mb-3">
-      <div class="card mx-auto w-100 w-lg-50 mb-0" id="card">
-        <div class="card-body text-center front">
-          <div class="avatar avatar-4xl mb-3 mx-auto"><img class="rounded-circle border border-primary" src="/assets/img/team/avatar.webp" alt="" /></div>
-          <p class="fw-bold fs-7 mb-0"><%= user.fullname %></p>
-          <p class="fw-bold fst-italic mb-3"><%= user.username %></p>
-          <p class="mb-3"><%= user.position %></p>
-          <p class="mb-0"><%= user.department %></p>
-          <p class=""><%= user.section %></p>
+            .card {
+                position: relative;
+                transition: transform 0.8s;
+                transform-style: preserve-3d;
+            }
+
+            .card.flip {
+                transform: rotateY(180deg);
+            }
+
+            .front,
+            .back {
+                backface-visibility: hidden;
+            }
+
+            .back {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                transform: rotateY(180deg);
+            }
+
+            /* Fade in animation */
+            @keyframes fadeIn {
+                from {
+                    opacity: 0;
+                }
+                to {
+                    opacity: 1;
+                }
+            }
+
+            .fade-in {
+                animation: fadeIn 2s ease forwards;
+            }
+
+            /* Fade out animation */
+            @keyframes fadeOut {
+                from {
+                    opacity: 1;
+                }
+                to {
+                    opacity: 0;
+                }
+            }
+
+            .fade-out {
+                animation: fadeOut 2s ease forwards;
+            }
+
+            @media screen and (max-width: 768px) {
+                .card-container {
+                    /* margin-top: -45vh; */
+                    width: 80vw;
+                }
+            }
+        </style>
+
+        <div class="card-container d-none mb-3">
+            <div class="card mx-auto w-100 w-lg-50 mb-0" id="card">
+                <div class="card-body text-center front">
+                    <div class="avatar avatar-4xl mb-3 mx-auto">
+                        <img class="rounded-circle border border-primary" src="/assets/img/team/avatar.webp" alt="" />
+                    </div>
+                    <p class="fw-bold fs-7 mb-0"><%= user.fullname %></p>
+                    <p class="fw-bold fst-italic mb-3"><%= user.username %></p>
+                    <p class="mb-3"><%= user.position %></p>
+                    <p class="mb-0"><%= user.department %></p>
+                    <p class=""><%= user.section %></p>
+                </div>
+                <div class="card-body back text-center">
+                    <h4 class="mb-0 mt-2" id="message"></h4>
+                    <div class="d-flex justify-content-center align-items-center">
+                        <!-- Success lottie animation -->
+                        <lottie-player id="success-icon" class="mx-auto mt-n5 d-none" src="https://lottie.host/9286c4fc-dca4-4d7f-b918-85480656a0cf/bLVZCz5laC.json" speed="1" style="width: 300px; height: 300px" loop autoplay direction="1" mode="normal"></lottie-player>
+                        <!-- Invalid lottie animation -->
+                        <lottie-player id="invalid-icon" class="mx-auto mt-n5 d-none p-8" src="https://lottie.host/db0d7ca0-01a8-4493-b227-2ee358131559/NQN635kqLG.json" speed="1" style="width: 250px; height: 250px" loop autoplay direction="1" mode="normal"></lottie-player>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="card-body back text-center">
-          <h4 class="mb-0 mt-2" id="message"></h4>
-          <div class="d-flex justify-content-center align-items-center">
-            <lottie-player class="mx-auto mt-n5" src="https://lottie.host/9286c4fc-dca4-4d7f-b918-85480656a0cf/bLVZCz5laC.json" speed="1" style="width: 300px; height: 300px" loop autoplay direction="1" mode="normal"></lottie-player>
-          </div>
-        </div>
-      </div>
     </div>
-  </div>
-
 </div>
 
 <script>
-  function decodeOnce(codeReader, selectedDeviceId) {
-    codeReader.decodeFromInputVideoDevice(selectedDeviceId, 'video').then((result) => {
-
-      sendScannedDataToServer(result.text);
-    }).catch((err) => {
-      console.error(err);
-    });
-  }
-
-  function sendScannedDataToServer(data) {
-    fetch('/api/qrcode/process-data', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          scannedData: data,
-          id: '<%= user._id %>',
+    function decodeOnce(codeReader, selectedDeviceId) {
+      codeReader.decodeFromInputVideoDevice(selectedDeviceId, 'video')
+        .then((result) => {
+          sendScannedDataToServer(result.text);
         })
-      })
-      .then(response => response.json()) // Parse response JSON
-      .then(userResponse => {
-
-        const cardContainer = document.querySelector('.card-container');
-        const scanner = document.getElementById('scanner');
-        const message = document.getElementById('message');
-
-        message.textContent = userResponse.message;
-        scanner.classList.add('d-none');
-        cardContainer.classList.remove('d-none');
-        setTimeout(() => {
-          document.getElementById('card').classList.toggle('flip');
-        }, 500);
-
-      })
-      .catch(error => {
-        console.error('Error processing scanned data:', error);
-      });
-  }
-
-  window.addEventListener('load', function() {
-    let codeReader;
-    let selectedDeviceId;
-
-    function startScan() {
-      codeReader = new ZXing.BrowserQRCodeReader();
-      console.log('ZXing code reader initialized');
-
-      // Always decode once, no need for changing video source
-      codeReader.getVideoInputDevices().then((videoInputDevices) => {
-        if (videoInputDevices.length > 1) {
-          // Find the environment camera if available
-          const environmentCamera = videoInputDevices.find(device => device.label.toLowerCase().includes('environment') || device.label.toLowerCase().includes('rear'));
-          if (environmentCamera) {
-            selectedDeviceId = environmentCamera.deviceId;
-          }
-        } else {
-          selectedDeviceId = videoInputDevices[0].deviceId;
-        }
-
-        decodeOnce(codeReader, selectedDeviceId);
-      }).catch((err) => {
-        console.error(err);
-      });
+        .catch((err) => {
+          console.error(err);
+        });
     }
+  
+    function sendScannedDataToServer(data) {
+        fetch('/api/qrcode/process-data', {
+            method: 'POST',
+            headers: {
+            'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+            scannedData: data,
+            id: '<%= user._id %>',
+            })
+        })
+        .then(response => response.json()) // Parse response JSON
+        .then(userResponse => {
+        
+            const cardContainer = document.querySelector('.card-container');
+            const scanner = document.getElementById('scanner');
+            const message = document.getElementById('message');
+            const successIcon = document.getElementById('success-icon');
+            const invalidIcon = document.getElementById('invalid-icon');
 
-    document.getElementById('startButton').addEventListener('click', () => {
-      const button = document.getElementById('startButton');
-      const title = document.getElementById('title');
-      const videoContainer = document.getElementById('videoContainer');
+            // Set the message from the server response
+            message.textContent = userResponse.message;
 
-      button.classList.add('d-none');
-      title.classList.add('d-none');
-      videoContainer.classList.remove('d-none'); // Show video container on start
+            // Hide the scanner and show the card container
+            scanner.classList.add('d-none');
+            cardContainer.classList.remove('d-none');
 
-      if (codeReader) {
-        codeReader.reset();
-        document.getElementById('result').textContent = '';
-        startScan();
-      } else {
-        startScan();
+            // Display the correct icon based on the server response
+            if (userResponse.message.includes('Successfully signed') || userResponse.message.includes('thank you')) {
+                // Display success icon for valid scans (sign in or sign out)
+                successIcon.classList.remove('d-none');
+                invalidIcon.classList.add('d-none');
+            } else if (userResponse.message.includes('invalid')) {
+                // Display invalid icon for invalid scans
+                successIcon.classList.add('d-none');
+                invalidIcon.classList.remove('d-none');
+            } else {
+                // Handle any other unexpected cases
+                successIcon.classList.add('d-none');
+                invalidIcon.classList.add('d-none');
+            }
+
+            // Flip the card after a short delay
+            setTimeout(() => {
+            document.getElementById('card').classList.toggle('flip');
+            }, 500);
+        })
+        .catch(error => {
+            console.error('Error processing scanned data:', error);
+        });
+    }
+  
+    window.addEventListener('load', function() {
+      let codeReader;
+      let selectedDeviceId;
+  
+      function startScan() {
+        codeReader = new ZXing.BrowserQRCodeReader();
+        console.log('ZXing code reader initialized');
+  
+        // Always decode once, no need for changing video source
+        codeReader.getVideoInputDevices()
+          .then((videoInputDevices) => {
+            if (videoInputDevices.length > 1) {
+              // Find the environment camera if available
+              const environmentCamera = videoInputDevices.find(device => 
+                device.label.toLowerCase().includes('environment') || 
+                device.label.toLowerCase().includes('rear')
+              );
+              if (environmentCamera) {
+                selectedDeviceId = environmentCamera.deviceId;
+              }
+            } else {
+              selectedDeviceId = videoInputDevices[0].deviceId;
+            }
+  
+            decodeOnce(codeReader, selectedDeviceId);
+          })
+          .catch((err) => {
+            console.error(err);
+          });
       }
+  
+      document.getElementById('startButton').addEventListener('click', () => {
+        const button = document.getElementById('startButton');
+        const title = document.getElementById('title');
+        const videoContainer = document.getElementById('videoContainer');
+  
+        button.classList.add('d-none');
+        title.classList.add('d-none');
+        videoContainer.classList.remove('d-none'); // Show video container on start
+  
+        if (codeReader) {
+          codeReader.reset();
+          document.getElementById('result').textContent = '';
+          startScan();
+        } else {
+          startScan();
+        }
+      });
     });
-  });
 </script>
-
+  
 <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 5">
-  <div class="d-flex">
-    <div class="toast <%= show %> align-items-center text-white border-0" role="alert" data-bs-autohide="false" aria-live="assertive" aria-atomic="true">
-      <div class="d-flex justify-content-between">
-        <div class="toast-body px-0 py-3">
-          <code class="text-primary"><%= alert %></code>
+    <div class="d-flex">
+        <div class="toast <%= show %> align-items-center text-white border-0" role="alert" data-bs-autohide="false" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex justify-content-between">
+                <div class="toast-body px-0 py-3">
+                    <code class="text-primary"><%= alert %></code>
+                </div>
+        
+                <button class="btn ms-2 p-0" type="button" data-bs-dismiss="toast" aria-label="Close">
+                    <span class="uil uil-times fs-7"></span>
+                </button>
+            </div>
         </div>
-
-        <button class="btn ms-2 p-0" type="button" data-bs-dismiss="toast" aria-label="Close">
-          <span class="uil uil-times fs-7"></span>
-        </button>
-      </div>
     </div>
-  </div>
 </div>
-
+  
 <%- include('partials/private-footer.ejs') %>
