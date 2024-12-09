@@ -2429,7 +2429,7 @@ app.get('/search/staff/assignee-relief', isAuthenticated, async (req, res, next)
             } else if (user.isHeadOfDepartment) {
                 queries.push({ department: user.department });
             } else if (user.isPersonalAssistant) {
-                queries.push({ department: user.department }, { isPersonalAssistant: true });
+                queries.push({ department: user.department }, { isPersonalAssistant: true }, { section: 'Human Resource Management Division' });
             } else if (user.isDriver) {
                 queries.push({ department: user.department }, { isDriver: true });
             } else if (user.isTeaLady) {
