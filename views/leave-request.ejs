@@ -73,7 +73,6 @@
 
       <!-- leave form -->
       <form class="row g-3 mb-6 has-validation" action="/leave/request" method="post" id="leaveForm">
-
         <div class="col-sm-6 col-md-12">
           <%
                 var defaultOptions = '';
@@ -158,7 +157,7 @@
 
         <div class="col-6 col-md-4 mb-3">
           <div class="form-floating">
-            <input type="text" name="query" id="queryInput" class="form-control" placeholder="Search staff name" />
+            <input type="text" name="query" id="queryInput" class="form-control" placeholder="Search staff name" required/>
             <label class="form-label" for="queryInput">Search Relief Staff</label>
             <div class="invalid-feedback">
               Please select relief staff
