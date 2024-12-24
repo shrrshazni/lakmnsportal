@@ -98,18 +98,18 @@
             <div class="hand hour" id="hour"></div>
             <div class="hand minute" id="minute"></div>
             <div class="hand second" id="second"></div>
-            <div class="hour-number" style="top: 6%; left: 50%;">١٢</div>
-            <div class="hour-number" style="top: 12%; left: 73%;">١</div>
-            <div class="hour-number" style="top: 28%; left: 89%;">٢</div>
-            <div class="hour-number" style="top: 50%; left: 95%;">٣</div>
-            <div class="hour-number" style="top: 73%; left: 89%;">٤</div>
-            <div class="hour-number" style="top: 89%; left: 72%;">٥</div>
-            <div class="hour-number" style="top: 95%; left: 50%;">٦</div>
-            <div class="hour-number" style="top: 88%; left: 28%;">٧</div>
-            <div class="hour-number" style="top: 71%; left: 11%;">٨</div>
-            <div class="hour-number" style="top: 50%; left: 5%;">٩</div>
-            <div class="hour-number" style="top: 27%; left: 12%;">١٠</div>
-            <div class="hour-number" style="top: 12%; left: 28%;">١١</div>
+            <div class="hour-number" style="top: 6%; left: 50%;">12</div>
+            <div class="hour-number" style="top: 12%; left: 73%;">1</div>
+            <div class="hour-number" style="top: 28%; left: 89%;">2</div>
+            <div class="hour-number" style="top: 50%; left: 95%;">3</div>
+            <div class="hour-number" style="top: 73%; left: 89%;">4</div>
+            <div class="hour-number" style="top: 89%; left: 72%;">5</div>
+            <div class="hour-number" style="top: 95%; left: 50%;">6</div>
+            <div class="hour-number" style="top: 88%; left: 28%;">7</div>
+            <div class="hour-number" style="top: 71%; left: 11%;">8</div>
+            <div class="hour-number" style="top: 50%; left: 5%;">9</div>
+            <div class="hour-number" style="top: 27%; left: 12%;">10</div>
+            <div class="hour-number" style="top: 12%; left: 28%;">11</div>
           </div>
         </div>
 
@@ -138,18 +138,22 @@
               var minutes = currentTime.getUTCMinutes();
               var seconds = currentTime.getUTCSeconds();
 
+              // Adjust for 12-hour format
+              const period = hours >= 12 ? 'PM' : 'AM';
+              hours = hours % 12 || 12; // Convert 0 to 12 for 12-hour format
+
               // Make sure the hours stay within 24-hour format
-              if (hours >= 24) {
-                hours -= 24; // Wrap around if needed
-              }
+              // if (hours >= 24) {
+              //   hours -= 24; // Wrap around if needed
+              // }
 
               // Add leading zeros if the numbers are less than 10
-              hours = (hours < 10) ? '0' + hours : hours;
-              minutes = (minutes < 10) ? '0' + minutes : minutes;
-              seconds = (seconds < 10) ? '0' + seconds : seconds;
+              const formattedHours = (hours < 10) ? '0' + hours : hours;
+              const formattedMinutes = (minutes < 10) ? '0' + minutes : minutes;
+              const formattedSeconds = (seconds < 10) ? '0' + seconds : seconds;
 
-              // Construct the time string in HH:MM:SS format
-              var timeString = hours + ':' + minutes + ':' + seconds + ' UTC+8';
+              // construct the time string in HH:MM:SS AM/PM format
+              var timeString = `${formattedHours}:${formattedMinutes}:${formattedSeconds} ${period}`;
 
               // Update the content of the <h3> element with the current time
               document.getElementById('currentTime').textContent = timeString;
