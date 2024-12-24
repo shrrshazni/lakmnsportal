@@ -37,7 +37,6 @@
 </script>
 
 <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgb(20, 24, 36);" class="z-1">
-
   <div>
     <div class="glow-1"></div>
     <div class="glow-2"></div>
@@ -45,11 +44,9 @@
   </div>
 
   <div class="d-lg-flex d-block justify-content-center align-items-center z-5 row g-0 px-xl-10" style="height: 100vh; display: flex; align-items: center; justify-content: center;">
-
     <div class="py-0 py-xl-5 px-2 px-xl-5 mb-0 order-xl-1 order-md-1 col-12 col-md-6 z-2">
-
       <div class="px-2 py-5">
-
+        <!-- greetings message -->
         <div class="mb-4 mb-xl-8">
           <h1 class="fs-5 fs-md-3 fs-xxl-2 text-center">
             <i class="fs-1 text-white" id="greeting-icon"></i>
@@ -171,7 +168,6 @@
         </div>
 
         <div class="d-flex justify-content-center">
-
           <div class="text-center fst-italic">
             <h2 class="fs-7 fs-md-6 fs-xxl-5 text-white" id="current-date"></h2>
             <h3 class="fs-7 fs-md-6 fs-xxl-5 text-white" id="hijri-date"></h3>
@@ -235,7 +231,6 @@
               setInterval(updateDate, fetchHijriDate, 60 * 60 * 1000); // 60 minutes * 60 seconds * 1000 milliseconds
             </script>
 
-
             <script>
               function updateIslamicDate() {
                 // Fetch the date from the server
@@ -251,19 +246,15 @@
               // Update the date on page load
               updateIslamicDate();
             </script>
-
           </div>
         </div>
-
       </div>
-
     </div>
 
     <div class="px-5 px-xl-8 py-4 py-xl-5 col-12 col-md-6 mt-n6 z-5">
       <div class="order-md-0">
         <div class="bg-white rounded-5" style="min-height: 25vh;min-width: 40vw;" id="qrblock">
           <div class="p-2">
-
             <div class="rounded-5" id="glow-card">
               <div class="p-1">
                 <img id="qrCode" class="w-100 h-100">
@@ -358,14 +349,11 @@
 
               });
             </script>
-
           </div>
         </div>
       </div>
     </div>
-
   </div>
-
 </div>
 
 <%- include('partials/public-footer') %>

@@ -20,9 +20,8 @@
   </div>
 
   <div class="row">
-
     <div class="col-12 col-xxl-9 order-1 order-xxl-0">
-
+      <!-- files upload -->
       <div class="border p-3 mb-3 rounded-3 d-none" id="dropzoneContainer">
         <form class="dropzone dropzone-multiple p-3 mb-4 bg-subtle" id="dropzone" data-dropzone="data-dropzone" action="/files/upload" data-options='{"url":"/files/upload","paramName": "file", "method": "POST"}' >
           <div class="dz-message" data-dz-message="data-dz-message">
@@ -75,28 +74,28 @@
       <form class="row g-3 mb-6 has-validation" action="/leave/request" method="post" id="leaveForm">
         <div class="col-sm-6 col-md-12">
           <%
-                var defaultOptions = '';
-                if(type === ''){
-                  defaultOptions = 'Select leave type';
-                }else {
-                  defaultOptions = type;
-                }
-                
-                let showMale;
+          var defaultOptions = '';
+          if(type === ''){
+            defaultOptions = 'Select leave type';
+          }else {
+            defaultOptions = type;
+          }
+          
+          let showMale;
 
-                if(user.gender === 'Male'){
-                    showMale = '';
-                }else{
-                    showMale = 'd-none';
-                }
+          if(user.gender === 'Male'){
+              showMale = '';
+          }else{
+              showMale = 'd-none';
+          }
 
-                let showFemale;
+          let showFemale;
 
-                if(user.gender === 'Female'){
-                    showFemale = '';
-                }else{
-                    showFemale = 'd-none';
-                }
+          if(user.gender === 'Female'){
+              showFemale = '';
+          }else{
+              showFemale = 'd-none';
+          }
           %>
           <div class="form-floating">
             <select class="form-select" id="floatingSelectTask" required aria-label="leave selection" name="type">
@@ -115,6 +114,8 @@
               <option value="Attend Exam Leave">Attend Exam Leave</option>
               <option value="Unpaid Leave">Unpaid Leave</option>
               <option value="Special Leave">Special Leave</option>
+              <option value="Time Off Leave" disabled>Time Off Leave</option>
+              <option value="Unrecorded Leave" disabled>Unrecorded Leave</option>
             </select>
             <div class="invalid-feedback">Please select a leave type</div>
             <label for="floatingSelectTask">Leave Type</label>
@@ -123,8 +124,22 @@
 
         <div class="col-sm-6 col-md-6 mb-3">
           <div class="form-floating">
-            <input type="text" class="form-control datetimepicker flatpickr-input <%= validationStartDate %>" id="floatingInputStartDate" placeholder="" name="startDate" data-options='{"disableMobile":true,"allowInput":true, "locale" : { "firstDayOfWeek" : 1}}' value="<%= startDate %>" required>
-            <label for="floatingInputStartDate"><span class="fa-regular fa-calendar-xmark me-2"></span>Start date</label>
+            <input type="text" 
+                   class="form-control datetimepicker flatpickr-input <%= validationStartDate %>" 
+                   id="floatingInputStartDate" 
+                   placeholder="" 
+                   name="startDate" 
+                   data-options='{
+                     "disableMobile": true, 
+                     "allowInput": true, 
+                     "locale": { "firstDayOfWeek": 1 }, 
+                     "minDate": "today"
+                   }' 
+                   value="<%= startDate %>" 
+                   required>
+            <label for="floatingInputStartDate">
+              <span class="fa-regular fa-calendar-xmark me-2"></span>Start date
+            </label>
             <div class="invalid-feedback">
               <%= startDateFeedback %>
             </div>
@@ -133,8 +148,22 @@
 
         <div class="col-sm-6 col-md-6 mb-3">
           <div class="form-floating">
-            <input type="text" class="form-control datetimepicker flatpickr-input <%= validationReturnDate %>" id="floatingInputReturnDate" placeholder="" name="returnDate" data-options='{"disableMobile":true,"allowInput":true, "locale" : { "firstDayOfWeek" : 1}}' value="<%= returnDate %>" required>
-            <label for="floatingInputReturnDate"><span class="fa-regular fa-calendar-check me-2"></span>End date</label>
+            <input type="text" 
+                   class="form-control datetimepicker flatpickr-input <%= validationReturnDate %>" 
+                   id="floatingInputReturnDate" 
+                   placeholder="" 
+                   name="returnDate" 
+                   data-options='{
+                     "disableMobile": true, 
+                     "allowInput": true, 
+                     "locale": { "firstDayOfWeek": 1 }, 
+                     "minDate": "today"
+                   }' 
+                   value="<%= returnDate %>" 
+                   required>
+            <label for="floatingInputReturnDate">
+              <span class="fa-regular fa-calendar-check me-2"></span>End date
+            </label>
             <div class="invalid-feedback">
               <%= returnDateFeedback %>
             </div>
@@ -200,9 +229,7 @@
             </div>
           </div>
         </div>
-
         <input type="hidden" name="uuid" value="<%= uuid %>">
-
       </form>
 
       <script>
@@ -432,9 +459,7 @@
     </div>
 
     <div class="col-12 col-xxl-3 mb-2 mb-lg-6 order-0 order-xxl-1">
-
       <div class="mb-5">
-
         <div class="card mb-3">
           <div class="card-body">
             <h5 class="mb-3 text-center">Leave Entitlements</h5>
@@ -620,68 +645,67 @@
                 window.addEventListener('resize', function() {
                   leaveTypeChart.resize();
                 });
-
               }
             </script>
 
-            <% 
-                    let annual = ((userLeave.annual.leave - userLeave.annual.taken) / userLeave.annual.leave) * 100;
-                    annual = annual > 0 ? annual : 0;
-        
-                    let sick = ((userLeave.sick.leave - userLeave.sick.taken) / userLeave.sick.leave) * 100;
-                    sick = sick > 0 ? sick : 0;
-        
-                    let sickExtended = ((userLeave.sickExtended.leave - userLeave.sickExtended.taken) / userLeave.sickExtended.leave) * 100;
-                    sickExtended = sickExtended > 0 ? sickExtended : 0;
-        
-                    let attendExam = ((userLeave.attendExam.leave - userLeave.attendExam.taken) / userLeave.attendExam.leave) * 100;
-                    attendExam = attendExam > 0 ? attendExam : 0;
-        
-                    var showMarriage = '';
-                    var showPaternity = '';
-                    var showMaternity = '';
-                    var showHajj = '';
-                    var showSpecial = '';
-        
-                    if(userLeave.user.gender === 'Male'){
-                     showMaternity = 'd-none';
-                    }else{
-                     showMaternity = '';
-                    }
-        
-                    if(userLeave.user.gender == 'Female' || userLeave.paternity.taken > 6){
-                     showPaternity = 'd-none';
-                    }else{
-                     showPaternity = '';
-                    }
-        
-                    if(userLeave.marriage.taken > 0){
-                     showMarriage = 'd-none';
-                    }else{
-                     showMarriage = '';
-                    }
-        
-                    if(userLeave.hajj.taken > 0){
-                     showHajj = 'd-none';
-                    }else{
-                     showHajj = '';
-                    }
-        
-                    if(userLeave.umrah.taken > 0){
-                     showUmrah = 'd-none';
-                    }else{
-                     showUmrah = '';
-                    }
-        
-                    if(userLeave.special.taken > 7){
-                     showSpecial = 'd-none';
-                    }else{
-                     showSpecial = '';
-                    }
-                   %>
+            <%
+            let annual = ((userLeave.annual.leave - userLeave.annual.taken) / userLeave.annual.leave) * 100;
+            annual = annual > 0 ? annual : 0;
 
+            let sick = ((userLeave.sick.leave - userLeave.sick.taken) / userLeave.sick.leave) * 100;
+            sick = sick > 0 ? sick : 0;
+
+            let sickExtended = ((userLeave.sickExtended.leave - userLeave.sickExtended.taken) / userLeave.sickExtended.leave) * 100;
+            sickExtended = sickExtended > 0 ? sickExtended : 0;
+
+            let attendExam = ((userLeave.attendExam.leave - userLeave.attendExam.taken) / userLeave.attendExam.leave) * 100;
+            attendExam = attendExam > 0 ? attendExam : 0;
+
+            var showMarriage = '';
+            var showPaternity = '';
+            var showMaternity = '';
+            var showHajj = '';
+            var showSpecial = '';
+
+            if(userLeave.user.gender === 'Male'){
+              showMaternity = 'd-none';
+            }else{
+              showMaternity = '';
+            }
+
+            if(userLeave.user.gender == 'Female' || userLeave.paternity.taken > 6){
+              showPaternity = 'd-none';
+            }else{
+              showPaternity = '';
+            }
+
+            if(userLeave.marriage.taken > 0){
+              showMarriage = 'd-none';
+            }else{
+              showMarriage = '';
+            }
+
+            if(userLeave.hajj.taken > 0){
+              showHajj = 'd-none';
+            }else{
+              showHajj = '';
+            }
+
+            if(userLeave.umrah.taken > 0){
+              showUmrah = 'd-none';
+            }else{
+              showUmrah = '';
+            }
+
+            if(userLeave.special.taken > 7){
+              showSpecial = 'd-none';
+            }else{
+              showSpecial = '';
+            }
+            %>
+
+            <!-- annual leave -->
             <div class="align-items-center justify-content-between d-flex mb-0">
-
               <div class="d-flex align-items-center mb-1">
                 <span class="d-inline-block bg-info-light bullet-item me-2"></span>
                 <p class="mb-0 fw-semibold text-body lh-sm flex-1">Annual Leave</p>
@@ -698,11 +722,10 @@
                   <%= userLeave.annual.leave - userLeave.annual.taken %>
                 </span>
               </div>
-
             </div>
 
+            <!-- sick leave -->
             <div class="align-items-center justify-content-between d-flex mb-0 mt-n2">
-
               <div class="d-flex align-items-center mb-1">
                 <span class="d-inline-block bg-warning-darker bullet-item me-2"></span>
                 <p class="mb-0 fw-semibold text-body lh-sm flex-1">Sick Leave</p>
@@ -719,14 +742,13 @@
                   <%= userLeave.sick.leave - userLeave.sick.taken %>
                 </span>
               </div>
-
             </div>
 
+            <!-- sick extended leave -->
             <div class="align-items-center justify-content-between d-flex mb-0 mt-n2">
-
               <div class="d-flex align-items-center mb-1">
                 <span class="d-inline-block bg-warning-light bullet-item me-2"></span>
-                <p class="mb-0 fw-semibold text-body lh-sm flex-1">Sick Extended Leave</p>
+                <p class="mb-0 fw-semibold text-body lh-sm flex-1">Extended Sick Leave</p>
               </div>
 
               <div style="position: relative;">
@@ -740,11 +762,10 @@
                   <%= userLeave.sickExtended.leave - userLeave.sickExtended.taken %>
                 </span>
               </div>
-
             </div>
 
+            <!-- marriage leave -->
             <div class="align-items-center justify-content-between d-flex mb-0 mt-n2 <%= showMarriage %>">
-
               <div class="d-flex align-items-center mb-1">
                 <span class="d-inline-block bg-danger-dark bullet-item me-2"></span>
                 <p class="mb-0 fw-semibold text-body lh-sm flex-1">Marriage Leave</p>
@@ -759,11 +780,10 @@
                 </div>
                 <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.marriage.leave %></span>
               </div>
-
             </div>
 
+            <!-- paternity leave -->
             <div class="align-items-center justify-content-between d-flex mb-0 mt-n2 <%= showPaternity %>">
-
               <div class="d-flex align-items-center mb-1">
                 <span class="d-inline-block bg-success-light bullet-item me-2"></span>
                 <p class="mb-0 fw-semibold text-body lh-sm flex-1">Paternity Leave</p>
@@ -778,11 +798,10 @@
                 </div>
                 <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.paternity.leave %></span>
               </div>
-
             </div>
 
+            <!-- maternity leave -->
             <div class="align-items-center justify-content-between d-flex mb-0 mt-n2 <%= showMaternity %>">
-
               <div class="d-flex align-items-center mb-1">
                 <span class="d-inline-block bg-success-dark bullet-item me-2"></span>
                 <p class="mb-0 fw-semibold text-body lh-sm flex-1">Maternity Leave</p>
@@ -797,11 +816,10 @@
                 </div>
                 <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(-10%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.maternity.leave %></span>
               </div>
-
             </div>
 
+            <!-- attend exam leave -->
             <div class="align-items-center justify-content-between d-flex mb-0 mt-n2">
-
               <div class="d-flex align-items-center mb-1">
                 <span class="d-inline-block bg-info-dark bullet-item me-2"></span>
                 <p class="mb-0 fw-semibold text-body lh-sm flex-1">Attend Exam Leave</p>
@@ -818,11 +836,10 @@
                   <%= userLeave.attendExam.leave - userLeave.attendExam.taken %>
                 </span>
               </div>
-
             </div>
 
+            <!-- hajj leave -->
             <div class="align-items-center justify-content-between d-flex mb-0 mt-n2 <%= showHajj %>">
-
               <div class="d-flex align-items-center mb-1">
                 <span class="d-inline-block bg-info-lighter bullet-item me-2"></span>
                 <p class="mb-0 fw-semibold text-body lh-sm flex-1">Hajj Leave</p>
@@ -837,11 +854,10 @@
                 </div>
                 <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(-10%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.hajj.leave %></span>
               </div>
-
             </div>
 
+            <!-- umrah leave -->
             <div class="align-items-center justify-content-between d-flex mb-0 mt-n2 <%= showUmrah %>">
-
               <div class="d-flex align-items-center mb-1">
                 <span class="d-inline-block bg-success-lighter bullet-item me-2"></span>
                 <p class="mb-0 fw-semibold text-body lh-sm flex-1">Umrah Leave</p>
@@ -856,49 +872,10 @@
                 </div>
                 <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.umrah.leave %></span>
               </div>
-
             </div>
 
-            <div class="align-items-center justify-content-between d-flex mb-0 mt-n2">
-
-              <div class="d-flex align-items-center mb-1">
-                <span class="d-inline-block bg-danger-light bullet-item me-2"></span>
-                <p class="mb-0 fw-semibold text-body lh-sm flex-1">Emergency Leave Taken</p>
-              </div>
-
-              <div style="position: relative;">
-                <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:100">
-                  <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
-                    <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
-                    <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
-                  </svg>
-                </div>
-                <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.emergency.taken %></span>
-              </div>
-
-            </div>
-
-            <div class="align-items-center justify-content-between d-flex mb-0">
-
-              <div class="d-flex align-items-center mb-1">
-                <span class="d-inline-block bg-primary bullet-item me-2"></span>
-                <p class="mb-0 fw-semibold text-body lh-sm flex-1">Unpaid Leave Taken</p>
-              </div>
-
-              <div style="position: relative;">
-                <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:100">
-                  <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
-                    <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
-                    <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
-                  </svg>
-                </div>
-                <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.unpaid.taken %></span>
-              </div>
-
-            </div>
-
+            <!-- special leave -->
             <div class="align-items-center justify-content-between d-flex mb-0 <%= showSpecial %>">
-
               <div class="d-flex align-items-center mb-1">
                 <span class="d-inline-block bg-warning-lighter bullet-item me-2"></span>
                 <p class="mb-0 fw-semibold text-body lh-sm flex-1">Special Leave</p>
@@ -913,18 +890,68 @@
                 </div>
                 <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.special.leave %></span>
               </div>
-
             </div>
 
+            <!-- annual leave taken -->
+            <div class="align-items-center justify-content-between d-flex mb-0">
+              <div class="d-flex align-items-center mb-1">
+                <span class="d-inline-block bg-info-light bullet-item me-2"></span>
+                <p class="mb-0 fw-semibold text-body lh-sm flex-1">Annual Leave Taken</p>
+              </div>
+
+              <div style="position: relative;">
+                <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:<%= annual %>">
+                  <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
+                    <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
+                    <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
+                  </svg>
+                </div>
+                <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;">
+                  <%= userLeave.annual.taken %>
+                </span>
+              </div>
+            </div>
+
+            <!-- emergency leave taken -->
+            <div class="align-items-center justify-content-between d-flex mb-0 mt-n2">
+              <div class="d-flex align-items-center mb-1">
+                <span class="d-inline-block bg-danger-light bullet-item me-2"></span>
+                <p class="mb-0 fw-semibold text-body lh-sm flex-1">Emergency Leave Taken</p>
+              </div>
+
+              <div style="position: relative;">
+                <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:100">
+                  <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
+                    <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
+                    <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
+                  </svg>
+                </div>
+                <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.emergency.taken %></span>
+              </div>
+            </div>
+
+            <!-- unpaid leave taken -->
+            <div class="align-items-center justify-content-between d-flex mb-0">
+              <div class="d-flex align-items-center mb-1">
+                <span class="d-inline-block bg-primary bullet-item me-2"></span>
+                <p class="mb-0 fw-semibold text-body lh-sm flex-1">Unpaid Leave Taken</p>
+              </div>
+
+              <div style="position: relative;">
+                <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:100">
+                  <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
+                    <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
+                    <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
+                  </svg>
+                </div>
+                <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.unpaid.taken %></span>
+              </div>
+            </div>
           </div>
         </div>
-
       </div>
-
     </div>
-
   </div>
-
 </div>
 
 <!-- toast alert file upload -->
