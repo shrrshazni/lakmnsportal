@@ -8,9 +8,7 @@
 
   <div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis pt-7 pb-3 border-y mb-6">
     <div id="all-staff" data-list='{"valueNames":["staff", "department", "section", "annual", "sick", "sickextended", "emergency", "marriage", "paternity", "maternity", "attendexam", "hajj", "umrah", "special", "unpaid"],"page":10,"pagination":true}'>
-
       <div class="row align-items-end justify-content-between pb-4 g-3">
-
         <div class="col-12 col-md-auto">
           <div class="search-box">
             <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
@@ -28,120 +26,120 @@
       <div class="table-responsive ms-n1 ps-1 scrollbar">
         <table class="table fs-9 mb-0 border-top border-translucent">
             <thead>
-                <tr>
-                <th class="sort white-space-nowrap align-middle ps-0" scope="col" data-sort="staff" style="width:25%;">STAFF</th>
-                <th class="sort align-middle ps-3 text-center" scope="col" data-sort="department" style="width:auto;">DEPARTMENT</th>
-                <th class="sort align-middle ps-3 text-center" scope="col" data-sort="section" style="width:auto;">SECTION</th>
-                <th class="sort align-middle ps-3 text-center" scope="col" data-sort="annual" style="width:auto;">ANNUAL BALANCES</th>
-                <th class="sort align-middle ps-3 text-center" scope="col" data-sort="sick" style="width:auto;">SICK BALANCES</th>
-                <th class="sort align-middle ps-3 text-center" scope="col" data-sort="sickextended" style="width:auto;">SICK EXTENDED BALANCES</th>
-                <th class="sort align-middle ps-3 text-center" scope="col" data-sort="emergency" style="width:auto;">EMERGENCY</th>
-                <th class="sort align-middle ps-3 text-center" scope="col" data-sort="marriage" style="width:auto;">MARRIAGE</th>
-                <th class="sort align-middle ps-3 text-center" scope="col" data-sort="paternity" style="width:auto;">PATERNITY</th>
-                <th class="sort align-middle ps-3 text-center" scope="col" data-sort="maternity" style="width:auto;">MATERNITY</th>
-                <th class="sort align-middle ps-3 text-center" scope="col" data-sort="attendexam" style="width:auto;">ATTEND EXAM</th>
-                <th class="sort align-middle ps-3 text-center" scope="col" data-sort="hajj" style="width:auto;">HAJJ</th>
-                <th class="sort align-middle ps-3 text-center" scope="col" data-sort="umrah" style="width:auto;">UMRAH</th>
-                <th class="sort align-middle ps-3 text-center" scope="col" data-sort="special" style="width:auto;">SPECIAL</th>
-                <th class="sort align-middle ps-3 text-center" scope="col" data-sort="unpaid" style="width:auto;">UNPAID</th>
-                <th class="sort align-middle text-end" scope="col" style="width:5%;"></th>
-                </tr>
+              <tr>
+                <th class="sort align-middle text-start ps-3" scope="col" data-sort="staff" style="width:20%;">STAFF</th>
+                <th class="sort align-middle ps-8" scope="col" data-sort="department" style="width:20%;">DEPARTMENT</th>
+                <th class="sort align-middle ps-8" scope="col" data-sort="section" style="width:20%;">SECTION</th> 
+                <th class="align-middle ps-3" scope="col" data-sort="annual" style="width:20%;">ANNUAL BALANCES</th>
+                <th class="align-middle ps-3" scope="col" data-sort="sick" style="width:20%;">SICK BALANCES</th>
+                <th class="align-middle ps-3" scope="col" data-sort="sickextended" style="width:20%;">SICK EXTENDED BALANCES</th>
+                <th class="align-middle ps-3" scope="col" data-sort="emergency" style="width:20%;">EMERGENCY</th>
+                <th class="align-middle ps-3" scope="col" data-sort="marriage" style="width:20%;">MARRIAGE</th>
+                <th class="align-middle ps-3" scope="col" data-sort="paternity" style="width:20%;">PATERNITY</th>
+                <th class="align-middle ps-3" scope="col" data-sort="maternity" style="width:20%;">MATERNITY</th>
+                <th class="align-middle ps-3" scope="col" data-sort="attendexam" style="width:20%;">ATTEND EXAM</th>
+                <th class="align-middle ps-3" scope="col" data-sort="hajj" style="width:20%;">HAJJ</th>
+                <th class="align-middle ps-3" scope="col" data-sort="umrah" style="width:20%;">UMRAH</th>
+                <th class="align-middle ps-3" scope="col" data-sort="special" style="width:20%;">SPECIAL</th>
+                <th class="align-middle ps-3" scope="col" data-sort="unpaid" style="width:20%;">UNPAID</th>
+                <th class="align-middle text-end" scope="col" style="width:5%;"></th>
+              </tr>
             </thead>
+
             <tbody class="list" id="project-summary-table-body">
                 <% if(allUserLeave && allUserLeave.length>0){ %>
                 <% allUserLeave.forEach(leave => { %>
 
                 <tr class="position-static">
+                  <td class="align-middle text-body ps-0">
+                    <%
+                    const checkUser = allUser.find(check => check._id.toString() === leave.user.toString());
+                    %>
+                    <% if (checkUser) { %>
+                    <a class="align-middle white-space-nowrap ps-3 py-4 staff" href="/staff/details/<%= checkUser._id %>"><%= checkUser.fullname %></a>
+                    <% } else { %>
+                    <p class="mb-0 fw-bold fs-8">User not found</p>
+                    <% } %>
+                  </td>
+              
+                  <td class="align-middle white-space-nowrap ps-8 py-4 department">
+                    <p class="mb-0 fs-9 text-body-highlight">
+                      <% if (checkUser && checkUser.department) { %>
+                          <%= checkUser.department || "No department assigned" %>
+                      <% } else { %>
+                          -
+                      <% } %>
+                    </p>
+                  </td>
 
-                    <td class="align-middle text-body ps-0">
-                        <%
-                        const checkUser = allUser.find(check => check._id.toString() === leave.user.toString());
-                        %>
-                        <% if (checkUser) { %>
-                        <a class="mb-0 fw-bold white-space-nowrap notranslate fs-8 staff" href="/staff/details/<%= checkUser._id %>"><%= checkUser.fullname %></a>
-                        <% } else { %>
-                        <p class="mb-0 fw-bold fs-8">User not found</p>
-                        <% } %>
-                    </td>
-                
-                    <td class="align-middle text-body text-center white-space-nowrap ps-0 department">
-                        <p class="mb-0 fs-9 text-body-highlight">
-                            <% if (checkUser && checkUser.department) { %>
-                                <%= checkUser.department || "No department assigned" %>
-                            <% } else { %>
-                                -
-                            <% } %>
-                        </p>
-                    </td>
+                  <td class="align-middle white-space-nowrap ps-8 py-4 section">
+                    <p class="mb-0 fs-9 text-body-highlight">
+                      <% if (checkUser && checkUser.department) { %>
+                          <%= checkUser.section || "No section assigned" %>
+                      <% } else { %>
+                          -
+                      <% } %>
+                    </p>
+                  </td>
 
-                    <td class="align-middle text-body text-center white-space-nowrap ps-0 section">
-                        <p class="mb-0 fs-9 text-body-highlight">
-                            <% if (checkUser && checkUser.department) { %>
-                                <%= checkUser.section || "No section assigned" %>
-                            <% } else { %>
-                                -
-                            <% } %>
-                        </p>
-                    </td>
+                  <td class="align-middle text-center white-space-nowrap ps-3 py-4 annual">
+                    <p class="mb-0 fs-8 fw-bold"><%= leave.annual.leave - leave.annual.taken %></p>
+                  </td>
 
-                    <td class="align-middle text-body text-center white-space-nowrap ps-0 annual">
-                        <p class="mb-0 fs-8 fw-bold"><%= leave.annual.leave - leave.annual.taken %></p>
-                    </td>
+                  <td class="align-middle text-center white-space-nowrap ps-3 py-4 sick">
+                    <p class="mb-0 fs-8 fw-bold"><%= leave.sick.leave - leave.sick.taken %></p>
+                  </td>
 
-                    <td class="align-middle text-body text-center white-space-nowrap ps-0 sick">
-                        <p class="mb-0 fs-8 fw-bold"><%= leave.sick.leave - leave.sick.taken %></p>
-                    </td>
+                  <td class="align-middle text-center white-space-nowrap ps-3 py-4 sickextended">
+                    <p class="mb-0 fs-8 fw-bold"><%= leave.sickExtended.leave - leave.sickExtended.taken %></p>
+                  </td>
 
-                    <td class="align-middle text-body text-center white-space-nowrap ps-0 sickextended">
-                        <p class="mb-0 fs-8 fw-bold"><%= leave.sickExtended.leave - leave.sickExtended.taken %></p>
-                    </td>
+                  <td class="align-middle text-center white-space-nowrap ps-3 py-4 emergency">
+                    <p class="mb-0 fs-8 fw-bold"><%= leave.emergency.taken %></p>
+                  </td>
 
-                    <td class="align-middle text-body text-center white-space-nowrap ps-0 emergency">
-                        <p class="mb-0 fs-8 fw-bold"><%= leave.emergency.taken %></p>
-                    </td>
+                  <td class="align-middle text-center white-space-nowrap ps-3 py-4 marriage">
+                    <p class="mb-0 fs-8 fw-bold"><%= leave.marriage.taken %></p>
+                  </td>
 
-                    <td class="align-middle text-body text-center white-space-nowrap ps-0 marriage">
-                        <p class="mb-0 fs-8 fw-bold"><%= leave.marriage.taken %></p>
-                    </td>
+                  <td class="align-middle text-center white-space-nowrap ps-3 py-4 paternity">
+                    <p class="mb-0 fs-8 fw-bold"><%= leave.paternity.taken %></p>
+                  </td>
 
-                    <td class="align-middle text-body text-center white-space-nowrap ps-0 paternity">
-                        <p class="mb-0 fs-8 fw-bold"><%= leave.paternity.taken %></p>
-                    </td>
+                  <td class="align-middle text-center white-space-nowrap ps-3 py-4 maternity">
+                    <p class="mb-0 fs-8 fw-bold"><%= leave.maternity.taken %></p>
+                  </td>
 
-                    <td class="align-middle text-body text-center white-space-nowrap ps-0 maternity">
-                        <p class="mb-0 fs-8 fw-bold"><%= leave.maternity.taken %></p>
-                    </td>
+                  <td class="align-middle text-center white-space-nowrap ps-3 py-4 attendexam">
+                    <p class="mb-0 fs-8 fw-bold"><%= leave.attendExam.leave - leave.attendExam.taken %></p>
+                  </td>
 
-                    <td class="align-middle text-body text-center white-space-nowrap ps-0 attendexam">
-                        <p class="mb-0 fs-8 fw-bold"><%= leave.attendExam.leave - leave.attendExam.taken %></p>
-                    </td>
+                  <td class="align-middle text-center white-space-nowrap ps-3 py-4 hajj">
+                    <p class="mb-0 fs-8 fw-bold"><%= leave.hajj.leave - leave.hajj.taken %></p>
+                  </td>
 
-                    <td class="align-middle text-body text-center white-space-nowrap ps-0 hajj">
-                        <p class="mb-0 fs-8 fw-bold"><%= leave.hajj.leave - leave.hajj.taken %></p>
-                    </td>
+                  <td class="align-middle text-center white-space-nowrap ps-3 py-4 umrah">
+                    <p class="mb-0 fs-8 fw-bold"><%=leave.umrah.leave - leave.umrah.taken %></p>
+                  </td>
 
-                    <td class="align-middle text-body text-center white-space-nowrap ps-0 hajj">
-                        <p class="mb-0 fs-8 fw-bold"><%=leave.umrah.leave - leave.umrah.taken %></p>
-                    </td>
+                  <td class="align-middle text-center white-space-nowrap ps-3 py-4 special">
+                    <p class="mb-0 fs-8 fw-bold"><%= leave.special.taken %></p>
+                  </td>
 
-                    <td class="align-middle text-body text-center white-space-nowrap ps-0 special">
-                        <p class="mb-0 fs-8 fw-bold"><%= leave.special.taken %></p>
-                    </td>
+                  <td class="align-middle text-center white-space-nowrap ps-3 py-4 unpaid">
+                    <p class="mb-0 fs-8 fw-bold"><%= leave.unpaid.taken %></p>
+                  </td>
 
-                    <td class="align-middle text-body text-center white-space-nowrap ps-0 unpaid">
-                        <p class="mb-0 fs-8 fw-bold"><%= leave.unpaid.taken %></p>
-                    </td>
-
-                    <td class="align-middle text-end white-space-nowrap pe-0">
-                        <div class="btn-reveal-trigger position-static">
-                        <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs-10" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fas fa-ellipsis-h fs-10"></span></button>
-                        <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item" href="/staff/details/<%= leave.user %>">View</a><a class="dropdown-item d-none" href="#!">Export</a>
-                            <div class="dropdown-divider d-none"></div><a class="dropdown-item" href="/human-resource/leave/balances/update/<%= leave.user %>">Update</a>
-                            <div class="dropdown-divider d-none"></div><a class="dropdown-item" href="/human-resource/leave/add/<%= leave.user %>">Add</a>
-                            <div class="dropdown-divider d-none"></div><a class="dropdown-item d-none text-danger" href="#!">Remove</a>
-                        </div>
-                        </div>
-                    </td>
+                  <td class="align-middle text-end white-space-nowrap pe-0">
+                    <div class="btn-reveal-trigger position-static">
+                      <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs-10" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fas fa-ellipsis-h fs-10"></span></button>
+                      <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item" href="/staff/details/<%= leave.user %>">View</a><a class="dropdown-item d-none" href="#!">Export</a>
+                        <div class="dropdown-divider d-none"></div><a class="dropdown-item" href="/human-resource/leave/balances/update/<%= leave.user %>">Update</a>
+                        <div class="dropdown-divider d-none"></div><a class="dropdown-item" href="/human-resource/leave/add/<%= leave.user %>">Add</a>
+                        <div class="dropdown-divider d-none"></div><a class="dropdown-item d-none text-danger" href="#!">Remove</a>
+                      </div>
+                    </div>
+                  </td>
                 </tr>
                 <% }); %>
                 <% }else { %>

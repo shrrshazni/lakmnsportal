@@ -10451,14 +10451,14 @@ const calculateNumberOfDays = async (type, startDate, returnDate, isNonOfficeHou
     return daysDifference;
 };
 
-// * Check if a date is a public holiday
-const isPublicHoliday = (date, holidays) => holidays.some(holiday => moment(date).isSame(moment(holiday), 'day'));
-
-// * Default public holidays for the year
+// Default public holidays for the year
 let defaultPublicHolidays = [];
 
-// * Function to scrape public holidays from a website
-// * Returns an array of objects containing the date and holiday
+// Check if a date is a public holiday
+const isPublicHoliday = (date, holidays) => holidays.some(holiday => moment(date).isSame(moment(holiday), 'day'));
+
+// Function to scrape public holidays from a website
+// Returns an array of objects containing the date and holiday
 const scrapePublicHolidays = async () => {
     const url = 'https://sarawak.gov.my/web/home/article_view/198/374/198?id=198';
     const response = await axios.get(url);

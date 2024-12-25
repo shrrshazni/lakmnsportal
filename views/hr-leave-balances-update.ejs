@@ -11,7 +11,6 @@ function formatDate(inputDate) {
 %>
 
 <div class="mb-6">
-
   <nav class="mb-2" aria-label="breadcrumb">
     <ol class="breadcrumb mb-0">
       <li class="breadcrumb-item"><a href="#!">Human Resources</a></li>
@@ -26,10 +25,12 @@ function formatDate(inputDate) {
   </div>
 
   <div class="mb-3 row g-3">
-
     <div class="col-12 col-xxl-9 order-1 order-xxl-0">
-
       <form class="row g-3 mb-6 has-validation" action="/human-resource/leave/balances/update/<%= userLeave.user._id %>" method="post" id="leaveForm">
+
+        <!-- <div class="col-12">
+          <button type="button" class="btn btn-success" id="addAnnualLeave">Add New Annual Leave</button>
+        </div> -->
 
         <div class="col-12 col-md-6">
           <div class="form-floating">
@@ -40,6 +41,16 @@ function formatDate(inputDate) {
             </div>
           </div>
         </div>
+
+        <!-- <div class="col-3 col-md-3">
+          <div class="form-floating">
+            <input type="text" name="annualtotal" class="form-control" placeholder="" />
+            <label class="form-label" for="annualtotal">Add New Annual Leave</label>
+            <div class="invalid-feedback">
+              Please enter new annual leave
+            </div>
+          </div>
+        </div> -->
 
         <div class="col-12 col-md-6">
           <div class="form-floating">
@@ -74,9 +85,9 @@ function formatDate(inputDate) {
         <div class="col-12 col-md-6">
           <div class="form-floating">
             <input type="text" name="sickExtendedTotal" class="form-control" placeholder="" />
-            <label class="form-label" for="sickExtendedTotal">Sick Extended Leave Total</label>
+            <label class="form-label" for="sickExtendedTotal">Extended Sick Leave Total</label>
             <div class="invalid-feedback">
-              Please enter sick extended total
+              Please enter extended sick leave total
             </div>
           </div>
         </div>
@@ -84,19 +95,49 @@ function formatDate(inputDate) {
         <div class="col-12 col-md-6">
           <div class="form-floating">
             <input type="text" name="sickExtendedTaken" class="form-control" placeholder="" />
-            <label class="form-label" for="sickExtendedTaken">Sick Extended Leave Taken</label>
+            <label class="form-label" for="sickExtendedTaken">Extended Sick Leave Taken</label>
             <div class="invalid-feedback">
-              Please enter sick extended taken
+              Please enter extended sick leave taken
             </div>
           </div>
         </div>
 
-        <div class="col-12 col-md-4">
+        <div class="col-12 col-md-6">
           <div class="form-floating">
-            <input type="text" name="emergency" class="form-control" placeholder="" />
-            <label class="form-label" for="emergency">Emergency Leave Taken</label>
+            <input type="text" name="" class="form-control" placeholder="" />
+            <label class="form-label" for="">Time Off Leave Total</label>
             <div class="invalid-feedback">
-              Please enter emergency leave taken
+              Please enter time off leave total
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+          <div class="form-floating">
+            <input type="text" name="" class="form-control" placeholder="" />
+            <label class="form-label" for="">Time Off Leave Taken</label>
+            <div class="invalid-feedback">
+              Please enter time off leave taken
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+          <div class="form-floating">
+            <input type="text" name="" class="form-control" placeholder="" />
+            <label class="form-label" for="">Unrecorded Leave Total</label>
+            <div class="invalid-feedback">
+              Please enter unrecorded leave total
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+          <div class="form-floating">
+            <input type="text" name="" class="form-control" placeholder="" />
+            <label class="form-label" for="">Unrecorded Leave Taken</label>
+            <div class="invalid-feedback">
+              Please enter unrecorded leave taken
             </div>
           </div>
         </div>
@@ -113,50 +154,10 @@ function formatDate(inputDate) {
 
         <div class="col-12 col-md-4">
           <div class="form-floating">
-            <input type="text" name="marriage" class="form-control" placeholder="" />
-            <label class="form-label" for="marriage">Marriage Leave Taken</label>
+            <input type="text" name="emergency" class="form-control" placeholder="" />
+            <label class="form-label" for="emergency">Emergency Leave Taken</label>
             <div class="invalid-feedback">
-              Please enter marriage leave taken
-            </div>
-          </div>
-        </div>
-
-        <div class="col-12 col-md-4">
-          <div class="form-floating">
-            <input type="text" name="paternity" class="form-control" placeholder="" />
-            <label class="form-label" for="paternity">Paternity Leave Taken</label>
-            <div class="invalid-feedback">
-              Please enter paternity leave taken
-            </div>
-          </div>
-        </div>
-
-        <div class="col-12 col-md-4">
-            <div class="form-floating">
-              <input type="text" name="maternity" class="form-control" placeholder="" />
-              <label class="form-label" for="maternity">Maternity Leave Taken</label>
-              <div class="invalid-feedback">
-                Please enter maternity leave taken
-              </div>
-            </div>
-        </div>
-
-        <div class="col-12 col-md-4">
-          <div class="form-floating">
-            <input type="text" name="hajj" class="form-control" placeholder="" />
-            <label class="form-label" for="hajj">Hajj Leave Taken</label>
-            <div class="invalid-feedback">
-              Please enter hajj leave taken
-            </div>
-          </div>
-        </div>
-
-        <div class="col-12 col-md-4">
-          <div class="form-floating">
-            <input type="text" name="umrah" class="form-control" placeholder="" />
-            <label class="form-label" for="umrah">Umrah Leave Taken</label>
-            <div class="invalid-feedback">
-              Please enter umrah leave taken
+              Please enter emergency leave taken
             </div>
           </div>
         </div>
@@ -173,10 +174,60 @@ function formatDate(inputDate) {
 
         <div class="col-12 col-md-4">
           <div class="form-floating">
+            <input type="text" name="umrah" class="form-control" placeholder="" />
+            <label class="form-label" for="umrah">Umrah Leave Taken</label>
+            <div class="invalid-feedback">
+              Please enter umrah leave taken
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-4">
+          <div class="form-floating">
+            <input type="text" name="paternity" class="form-control" placeholder="" />
+            <label class="form-label" for="paternity">Paternity Leave Taken</label>
+            <div class="invalid-feedback">
+              Please enter paternity leave taken
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-4">
+          <div class="form-floating">
             <input type="text" name="special" class="form-control" placeholder="" />
             <label class="form-label" for="special">Special Leave Taken</label>
             <div class="invalid-feedback">
               Please enter special leave taken
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-4">
+          <div class="form-floating">
+            <input type="text" name="hajj" class="form-control" placeholder="" />
+            <label class="form-label" for="hajj">Hajj Leave Taken</label>
+            <div class="invalid-feedback">
+              Please enter hajj leave taken
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-4">
+          <div class="form-floating">
+            <input type="text" name="maternity" class="form-control" placeholder="" />
+            <label class="form-label" for="maternity">Maternity Leave Taken</label>
+            <div class="invalid-feedback">
+              Please enter maternity leave taken
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-4">
+          <div class="form-floating">
+            <input type="text" name="marriage" class="form-control" placeholder="" />
+            <label class="form-label" for="marriage">Marriage Leave Taken</label>
+            <div class="invalid-feedback">
+              Please enter marriage leave taken
             </div>
           </div>
         </div>
@@ -193,13 +244,11 @@ function formatDate(inputDate) {
             </div>
           </div>
         </div>
-
       </form>
-
     </div>
 
+    <!-- leave entitlements -->
     <div class="col-12 col-xxl-3 mb-6 order-0 order-xxl-1">
-
       <div class="card mb-3">
         <div class="card-body">
           <h5 class="mb-3 text-center">Leave Entitlements</h5>
@@ -222,7 +271,7 @@ function formatDate(inputDate) {
               dark: style.getPropertyValue('--phoenix-dark')
             };
 
-            //   take css class color based on their property color/bg-colour for echarts
+            // take css class color based on their property color/bg-colour for echarts
             function getColor(className, property) {
               var element = document.createElement('div');
               element.className = className;
@@ -312,7 +361,7 @@ function formatDate(inputDate) {
                   fetchLeaveTypeData.special.leave - special,
                 ],
               };
-              // Initialize ECharts instance
+              // initialize ECharts instance
               var leaveTypeChart = echarts.init(document.getElementById(echartsId), null, {
                 devicePixelRatio: window.devicePixelRatio > 1 ? 2 : 1,
                 renderer: 'canvas',
@@ -385,70 +434,69 @@ function formatDate(inputDate) {
               window.addEventListener('resize', function() {
                 leaveTypeChart.resize();
               });
-
             }
           </script>
 
           <% 
-            let annual = ((userLeave.annual.leave - userLeave.annual.taken) / userLeave.annual.leave) * 100;
-            annual = annual > 0 ? annual : 0;
+          let annual = ((userLeave.annual.leave - userLeave.annual.taken) / userLeave.annual.leave) * 100;
+          annual = annual > 0 ? annual : 0;
 
-            let sick = ((userLeave.sick.leave - userLeave.sick.taken) / userLeave.sick.leave) * 100;
-            sick = sick > 0 ? sick : 0;
+          let sick = ((userLeave.sick.leave - userLeave.sick.taken) / userLeave.sick.leave) * 100;
+          sick = sick > 0 ? sick : 0;
 
-            let sickExtended = ((userLeave.sickExtended.leave - userLeave.sickExtended.taken) / userLeave.sickExtended.leave) * 100;
-            sickExtended = sickExtended > 0 ? sickExtended : 0;
+          let sickExtended = ((userLeave.sickExtended.leave - userLeave.sickExtended.taken) / userLeave.sickExtended.leave) * 100;
+          sickExtended = sickExtended > 0 ? sickExtended : 0;
 
-            let attendExam = ((userLeave.attendExam.leave - userLeave.attendExam.taken) / userLeave.attendExam.leave) * 100;
-            attendExam = attendExam > 0 ? attendExam : 0;
+          let attendExam = ((userLeave.attendExam.leave - userLeave.attendExam.taken) / userLeave.attendExam.leave) * 100;
+          attendExam = attendExam > 0 ? attendExam : 0;
 
-            console.log(sick);
+          console.log(sick);
 
-            var showMarriage = '';
-            var showPaternity = '';
-            var showMaternity = '';
-            var showHajj = '';
-            var showSpecial = '';
+          var showMarriage = '';
+          var showPaternity = '';
+          var showMaternity = '';
+          var showHajj = '';
+          var showSpecial = '';
 
-            if(userLeave.user.gender === 'Male'){
-             showMaternity = 'd-none';
-            }else{
-             showMaternity = '';
-            }
+          if(userLeave.user.gender === 'Male'){
+            showMaternity = 'd-none';
+          }else{
+            showMaternity = '';
+          }
 
-            if(userLeave.user.gender == 'Female' || userLeave.paternity.taken > 6){
-             showPaternity = 'd-none';
-            }else{
-             showPaternity = '';
-            }
+          if(userLeave.user.gender == 'Female' || userLeave.paternity.taken > 6){
+            showPaternity = 'd-none';
+          }else{
+            showPaternity = '';
+          }
 
-            if(userLeave.marriage.taken > 0){
-             showMarriage = 'd-none';
-            }else{
-             showMarriage = '';
-            }
+          if(userLeave.marriage.taken > 0){
+            showMarriage = 'd-none';
+          }else{
+            showMarriage = '';
+          }
 
-            if(userLeave.hajj.taken > 0){
-             showHajj = 'd-none';
-            }else{
-             showHajj = '';
-            }
+          if(userLeave.hajj.taken > 0){
+            showHajj = 'd-none';
+          }else{
+            showHajj = '';
+          }
 
-            if(userLeave.umrah.taken > 0){
-             showUmrah = 'd-none';
-            }else{
-             showUmrah = '';
-            }
+          if(userLeave.umrah.taken > 0){
+            showUmrah = 'd-none';
+          }else{
+            showUmrah = '';
+          }
 
-            if(userLeave.special.taken > 7){
-             showSpecial = 'd-none';
-            }else{
-             showSpecial = '';
-            }
-           %>
+          if(userLeave.special.taken > 7){
+            showSpecial = 'd-none';
+          }else{
+            showSpecial = '';
+          }
+          %>
 
+          <!-- annual leave -->
           <div class="align-items-center justify-content-between d-flex mb-0">
-
             <div class="d-flex align-items-center mb-1">
               <span class="d-inline-block bg-info-light bullet-item me-2"></span>
               <p class="mb-0 fw-semibold text-body lh-sm flex-1">Annual Leave</p>
@@ -465,11 +513,10 @@ function formatDate(inputDate) {
                 <%= userLeave.annual.leave - userLeave.annual.taken %>
               </span>
             </div>
-
           </div>
 
+          <!-- sick leave -->
           <div class="align-items-center justify-content-between d-flex mb-0 mt-n2">
-
             <div class="d-flex align-items-center mb-1">
               <span class="d-inline-block bg-warning-darker bullet-item me-2"></span>
               <p class="mb-0 fw-semibold text-body lh-sm flex-1">Sick Leave</p>
@@ -486,14 +533,13 @@ function formatDate(inputDate) {
                 <%= userLeave.sick.leave - userLeave.sick.taken %>
               </span>
             </div>
-
           </div>
 
+          <!-- sick extended leave -->
           <div class="align-items-center justify-content-between d-flex mb-0 mt-n2">
-
             <div class="d-flex align-items-center mb-1">
               <span class="d-inline-block bg-warning-light bullet-item me-2"></span>
-              <p class="mb-0 fw-semibold text-body lh-sm flex-1">Sick Extended Leave</p>
+              <p class="mb-0 fw-semibold text-body lh-sm flex-1">Extended Sick Leave</p>
             </div>
 
             <div style="position: relative;">
@@ -507,11 +553,10 @@ function formatDate(inputDate) {
                 <%= userLeave.sickExtended.leave - userLeave.sickExtended.taken %>
               </span>
             </div>
-
           </div>
 
+          <!-- marriage leave -->
           <div class="align-items-center justify-content-between d-flex mb-0 mt-n2 <%= showMarriage %>">
-
             <div class="d-flex align-items-center mb-1">
               <span class="d-inline-block bg-danger-dark bullet-item me-2"></span>
               <p class="mb-0 fw-semibold text-body lh-sm flex-1">Marriage Leave</p>
@@ -526,11 +571,10 @@ function formatDate(inputDate) {
               </div>
               <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.marriage.leave %></span>
             </div>
-
           </div>
 
+          <!-- paternity leave -->
           <div class="align-items-center justify-content-between d-flex mb-0 mt-n2 <%= showPaternity %>">
-
             <div class="d-flex align-items-center mb-1">
               <span class="d-inline-block bg-success-light bullet-item me-2"></span>
               <p class="mb-0 fw-semibold text-body lh-sm flex-1">Paternity Leave</p>
@@ -545,11 +589,10 @@ function formatDate(inputDate) {
               </div>
               <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.paternity.leave %></span>
             </div>
-
           </div>
 
+          <!-- maternity leave -->
           <div class="align-items-center justify-content-between d-flex mb-0 mt-n2 <%= showMaternity %>">
-
             <div class="d-flex align-items-center mb-1">
               <span class="d-inline-block bg-success-dark bullet-item me-2"></span>
               <p class="mb-0 fw-semibold text-body lh-sm flex-1">Maternity Leave</p>
@@ -564,11 +607,10 @@ function formatDate(inputDate) {
               </div>
               <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(-10%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.maternity.leave %></span>
             </div>
-
           </div>
 
+          <!-- attend exam leave -->
           <div class="align-items-center justify-content-between d-flex mb-0 mt-n2">
-
             <div class="d-flex align-items-center mb-1">
               <span class="d-inline-block bg-info-dark bullet-item me-2"></span>
               <p class="mb-0 fw-semibold text-body lh-sm flex-1">Attend Exam Leave</p>
@@ -585,11 +627,10 @@ function formatDate(inputDate) {
                 <%= userLeave.attendExam.leave - userLeave.attendExam.taken %>
               </span>
             </div>
-
           </div>
 
+          <!-- hajj leave -->
           <div class="align-items-center justify-content-between d-flex mb-0 mt-n2 <%= showHajj %>">
-
             <div class="d-flex align-items-center mb-1">
               <span class="d-inline-block bg-info-lighter bullet-item me-2"></span>
               <p class="mb-0 fw-semibold text-body lh-sm flex-1">Hajj Leave</p>
@@ -604,11 +645,10 @@ function formatDate(inputDate) {
               </div>
               <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(-10%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.hajj.leave %></span>
             </div>
-
           </div>
 
+          <!-- umrah leave -->
           <div class="align-items-center justify-content-between d-flex mb-0 mt-n2 <%= showUmrah %>">
-
             <div class="d-flex align-items-center mb-1">
               <span class="d-inline-block bg-success-lighter bullet-item me-2"></span>
               <p class="mb-0 fw-semibold text-body lh-sm flex-1">Umrah Leave</p>
@@ -623,11 +663,50 @@ function formatDate(inputDate) {
               </div>
               <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.umrah.leave %></span>
             </div>
-
           </div>
 
-          <div class="align-items-center justify-content-between d-flex mb-0 mt-n2">
+          <!-- special leave -->
+          <div class="align-items-center justify-content-between d-flex mb-0 <%= showSpecial %>">
+            <div class="d-flex align-items-center mb-1">
+              <span class="d-inline-block bg-warning-lighter bullet-item me-2"></span>
+              <p class="mb-0 fw-semibold text-body lh-sm flex-1">Special Leave</p>
+            </div>
 
+            <div style="position: relative;">
+              <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:100">
+                <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
+                  <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
+                  <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
+                </svg>
+              </div>
+              <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;">
+                <%= userLeave.special.leave %>
+              </span>
+            </div>
+          </div>
+
+          <!-- annual leave taken -->
+          <div class="align-items-center justify-content-between d-flex mb-0">
+            <div class="d-flex align-items-center mb-1">
+              <span class="d-inline-block bg-info-light bullet-item me-2"></span>
+              <p class="mb-0 fw-semibold text-body lh-sm flex-1">Annual Leave Taken</p>
+            </div>
+
+            <div style="position: relative;">
+              <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:<%= annual %>">
+                <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
+                  <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
+                  <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
+                </svg>
+              </div>
+              <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;">
+                <%= userLeave.annual.taken %>
+              </span>
+            </div>
+          </div>
+
+          <!-- emergency leave taken -->
+          <div class="align-items-center justify-content-between d-flex mb-0 mt-n2">
             <div class="d-flex align-items-center mb-1">
               <span class="d-inline-block bg-danger-light bullet-item me-2"></span>
               <p class="mb-0 fw-semibold text-body lh-sm flex-1">Emergency Leave Taken</p>
@@ -642,11 +721,10 @@ function formatDate(inputDate) {
               </div>
               <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.emergency.taken %></span>
             </div>
-
           </div>
 
+          <!-- unpaid leave taken -->
           <div class="align-items-center justify-content-between d-flex mb-0">
-
             <div class="d-flex align-items-center mb-1">
               <span class="d-inline-block bg-primary bullet-item me-2"></span>
               <p class="mb-0 fw-semibold text-body lh-sm flex-1">Unpaid Leave Taken</p>
@@ -661,35 +739,11 @@ function formatDate(inputDate) {
               </div>
               <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.unpaid.taken %></span>
             </div>
-
           </div>
-
-          <div class="align-items-center justify-content-between d-flex mb-0 <%= showSpecial %>">
-
-            <div class="d-flex align-items-center mb-1">
-              <span class="d-inline-block bg-warning-lighter bullet-item me-2"></span>
-              <p class="mb-0 fw-semibold text-body lh-sm flex-1">Special Leave</p>
-            </div>
-
-            <div style="position: relative;">
-              <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:100">
-                <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
-                  <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
-                  <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
-                </svg>
-              </div>
-              <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.special.leave %></span>
-            </div>
-
-          </div>
-
         </div>
       </div>
-
     </div>
-
   </div>
-
 </div>
 
 <%- include('partials/private-footer.ejs') %>
