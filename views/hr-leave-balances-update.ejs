@@ -28,29 +28,44 @@ function formatDate(inputDate) {
     <div class="col-12 col-xxl-9 order-1 order-xxl-0">
       <form class="row g-3 mb-6 has-validation" action="/human-resource/leave/balances/update/<%= userLeave.user._id %>" method="post" id="leaveForm">
 
-        <!-- <div class="col-12">
-          <button type="button" class="btn btn-success" id="addAnnualLeave">Add New Annual Leave</button>
-        </div> -->
-
-        <div class="col-12 col-md-6">
-          <div class="form-floating">
-            <input type="text" name="annualtotal" class="form-control" placeholder="" />
-            <label class="form-label" for="annualtotal">Annual Leave Total</label>
-            <div class="invalid-feedback">
-              Please enter annual leave total
-            </div>
-          </div>
+        <div class="col-12">
+          <button id="updateLeave" class="btn btn-primary mt-3">Update Annual Total</button>
         </div>
 
-        <!-- <div class="col-3 col-md-3">
+        <div class="col-6 col-md-3">
           <div class="form-floating">
-            <input type="text" name="annualtotal" class="form-control" placeholder="" />
-            <label class="form-label" for="annualtotal">Add New Annual Leave</label>
-            <div class="invalid-feedback">
-              Please enter new annual leave
-            </div>
+            <input id="annualtotal" type="text" name="annualtotal" class="form-control" value="<%= userLeave.annual.leave %>" placeholder="" />
+            <label class="form-label" for="annualtotal">Annual Leave Total</label>
+            <div class="invalid-feedback">Please enter annual leave total</div>
           </div>
-        </div> -->
+        </div>
+        
+        <div class="col-6 col-md-3">
+          <div class="form-floating">
+            <input id="newleave" type="text" name="newleave" class="form-control" placeholder="" />
+            <label class="form-label" for="newleave">Add New Annual Leave</label>
+            <div class="invalid-feedback">Please enter new annual leave</div>
+          </div>
+        </div>
+        
+        <script>
+          const annualTotalInput = document.getElementById("annualtotal");
+          const newLeaveInput = document.getElementById("newleave");
+          const updateButton = document.getElementById("updateLeave");
+        
+          // function to update the total leave
+          function updateAnnualTotal() {
+            const annualTotal = parseInt(annualTotalInput.value) || 0; // get the current total
+            const newLeave = parseInt(newLeaveInput.value) || 0;       // get the new leave value
+        
+            const updatedTotal = annualTotal + newLeave;              // add new leave to the total
+            annualTotalInput.value = updatedTotal;                    // update the total in the input
+            newLeaveInput.value = "";                                 // clear the new leave input
+          }
+        
+          // add event listener to the button
+          updateButton.addEventListener("click", updateAnnualTotal);
+        </script>
 
         <div class="col-12 col-md-6">
           <div class="form-floating">
@@ -104,7 +119,7 @@ function formatDate(inputDate) {
 
         <div class="col-12 col-md-6">
           <div class="form-floating">
-            <input type="text" name="" class="form-control" placeholder="" />
+            <input type="text" name="" class="form-control" placeholder="" disabled />
             <label class="form-label" for="">Time Off Leave Total</label>
             <div class="invalid-feedback">
               Please enter time off leave total
@@ -114,7 +129,7 @@ function formatDate(inputDate) {
 
         <div class="col-12 col-md-6">
           <div class="form-floating">
-            <input type="text" name="" class="form-control" placeholder="" />
+            <input type="text" name="" class="form-control" placeholder="" disabled />
             <label class="form-label" for="">Time Off Leave Taken</label>
             <div class="invalid-feedback">
               Please enter time off leave taken
@@ -124,7 +139,7 @@ function formatDate(inputDate) {
 
         <div class="col-12 col-md-6">
           <div class="form-floating">
-            <input type="text" name="" class="form-control" placeholder="" />
+            <input type="text" name="" class="form-control" placeholder="" disabled />
             <label class="form-label" for="">Unrecorded Leave Total</label>
             <div class="invalid-feedback">
               Please enter unrecorded leave total
@@ -134,7 +149,7 @@ function formatDate(inputDate) {
 
         <div class="col-12 col-md-6">
           <div class="form-floating">
-            <input type="text" name="" class="form-control" placeholder="" />
+            <input type="text" name="" class="form-control" placeholder="" disabled />
             <label class="form-label" for="">Unrecorded Leave Taken</label>
             <div class="invalid-feedback">
               Please enter unrecorded leave taken
