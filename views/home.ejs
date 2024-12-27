@@ -271,11 +271,9 @@ if(user.isSuperAdmin){
         </div>
 
         <div class="carousel-item false">
-
           <div class="card" style="height: 375px;">
             <div class="card-body">
-
-              <h5 class="text-body-emphasis text-nowrap">Leave Entitlements</h5>
+              <h5 class="text-body-emphasis text-nowrap">Leave Entitlements</span></h5>
               <div class="mx-auto mt-n7" id="leave-type-chart-carousel" style="height:400px; width: 250px;"></div>
 
               <script>
@@ -290,9 +288,9 @@ if(user.isSuperAdmin){
                     console.error('Error fetching user leave data:', error);
                   });
               </script>
+
             </div>
           </div>
-
         </div>
 
       </div>
@@ -1318,7 +1316,7 @@ if(user.isSuperAdmin){
 
     <div class="row g-3 mb-3">
       <div class="col-12 col-md-6">
-        <h3 class="text-body-emphasis text-nowrap">Leave Entitlements</h3>
+        <h3 class="text-body-emphasis text-nowrap">Leave Entitlements <span>(<%= userLeave.annual.leave %>)</span></h3>
         <p class="text-body-tertiary mb-md-7"></p>
         <div class="d-flex align-items-center justify-content-between">
           <p class="mb-0 fw-bold">Leave Type </p>

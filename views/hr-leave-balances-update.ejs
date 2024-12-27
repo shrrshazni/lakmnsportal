@@ -266,7 +266,7 @@ function formatDate(inputDate) {
     <div class="col-12 col-xxl-3 mb-6 order-0 order-xxl-1">
       <div class="card mb-3">
         <div class="card-body">
-          <h5 class="mb-3 text-center">Leave Entitlements</h5>
+          <h5 class="mb-3 text-center">Leave Entitlements (<%= userLeave.annual.leave %>)</h5>
 
           <div class="mx-auto mt-n5" id="leave-type-chart-carousel" style="height:300px; width: 250px;"></div>
 
@@ -509,7 +509,10 @@ function formatDate(inputDate) {
             showSpecial = '';
           }
           %>
-
+          <div class="d-flex align-items-center justify-content-between">
+            <p class="mb-0 fw-bold">Leave Types</p>
+          </div>
+          <hr class="bg-body-secondary mb-2 mt-2" />
           <!-- annual leave -->
           <div class="align-items-center justify-content-between d-flex mb-0">
             <div class="d-flex align-items-center mb-1">
