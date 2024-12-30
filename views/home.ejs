@@ -1321,7 +1321,9 @@ if(user.isSuperAdmin){
         <div class="d-flex align-items-center justify-content-between">
           <p class="mb-0 fw-bold">Leave Type </p>
         </div>
+        
         <hr class="bg-body-secondary mb-2 mt-2" />
+        
         <div class="d-flex align-items-center mb-1"><span class="d-inline-block bg-info-light bullet-item me-2"></span>
           <p class="mb-0 fw-semibold text-body lh-sm flex-1">Annual Leave</p>
           <h5 class="mb-0 text-body"><%= userLeave.annual.leave - userLeave.annual.taken %></h5>
@@ -1331,7 +1333,7 @@ if(user.isSuperAdmin){
           <h5 class="mb-0 text-body"><%= userLeave.sick.leave - userLeave.sick.taken %></h5>
         </div>
         <div class="d-flex align-items-center mb-1"><span class="d-inline-block bg-warning-light bullet-item me-2"></span>
-          <p class="mb-0 fw-semibold text-body lh-sm flex-1">Sick Extended Leave</p>
+          <p class="mb-0 fw-semibold text-body lh-sm flex-1">Extended Sick Leave</p>
           <h5 class="mb-0 text-body"><%= userLeave.sickExtended.leave %></h5>
         </div>
         <div class="d-flex align-items-center mb-1 <%= marriage %>"><span class="d-inline-block bg-danger-dark bullet-item me-2"></span>
@@ -1362,13 +1364,17 @@ if(user.isSuperAdmin){
           <p class="mb-0 fw-semibold text-body lh-sm flex-1">Special Leave</p>
           <h5 class="mb-0 text-body"><%= userLeave.special.leave %></h5>
         </div>
-        <div class="d-flex align-items-center mb-1"><span class="d-inline-block bg-primary bullet-item me-2"></span>
-          <p class="mb-0 fw-semibold text-body lh-sm flex-1">Unpaid Leave Taken</p>
-          <h5 class="mb-0 text-body"><%= userLeave.unpaid.taken %></h5>
+        <div class="d-flex align-items-center mb-1"><span class="d-inline-block bg-info-light bullet-item me-2"></span>
+          <p class="mb-0 fw-semibold text-body lh-sm flex-1">Annual Leave Taken</p>
+          <h5 class="mb-0 text-body"><%= userLeave.annual.taken %></h5>
         </div>
         <div class="d-flex align-items-center mb-1"><span class="d-inline-block bg-danger-light bullet-item me-2"></span>
           <p class="mb-0 fw-semibold text-body lh-sm flex-1">Emergency Leave Taken</p>
           <h5 class="mb-0 text-body"><%= userLeave.emergency.taken %></h5>
+        </div>
+        <div class="d-flex align-items-center mb-1"><span class="d-inline-block bg-primary bullet-item me-2"></span>
+          <p class="mb-0 fw-semibold text-body lh-sm flex-1">Unpaid Leave Taken</p>
+          <h5 class="mb-0 text-body"><%= userLeave.unpaid.taken %></h5>
         </div>
         <a class="btn btn-outline-primary mt-5" href="/leave/history">See History<span class="fas fa-angle-right ms-2 fs-10 text-center"></span></a>
       </div>
