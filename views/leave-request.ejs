@@ -132,8 +132,7 @@
                    data-options='{
                      "disableMobile": true, 
                      "allowInput": true, 
-                     "locale": { "firstDayOfWeek": 1 }, 
-                     "minDate": "today"
+                     "locale": { "firstDayOfWeek": 1 }
                    }' 
                    value="<%= startDate %>" 
                    required>
@@ -156,8 +155,7 @@
                    data-options='{
                      "disableMobile": true, 
                      "allowInput": true, 
-                     "locale": { "firstDayOfWeek": 1 }, 
-                     "minDate": "today"
+                     "locale": { "firstDayOfWeek": 1 }
                    }' 
                    value="<%= returnDate %>" 
                    required>
@@ -235,43 +233,69 @@
       <script>
         document.getElementById('floatingSelectTask').addEventListener('change', function() {
           var selectedLeaveType = this.value;
-
-          // Clear all toasts
+      
+          // clear all toasts
           var toasts = document.querySelectorAll('.toast');
           toasts.forEach(function(toast) {
             var bsToast = bootstrap.Toast.getInstance(toast);
             if (bsToast) bsToast.hide();
           });
-
-          // Dropzone and upload button containers
+      
+          // dropzone and file upload button logic
           var dropzoneContainer = document.getElementById('dropzoneContainer');
           var uploadButtonContainer = document.getElementById('uploadButtonContainer');
-
-          if (selectedLeaveType === 'Annual Leave' || selectedLeaveType === 'Half Day Leave') {
+      
+          if (selectedLeaveType === 'Annual Leave' || selectedLeaveType === 'Half Day Leave' || selectedLeaveType === 'Time Off Leave' || selectedLeaveType === 'Unrecorded Leave') {
             dropzoneContainer.classList.add('d-none');
             uploadButtonContainer.classList.add('d-none');
           } else {
             dropzoneContainer.classList.remove('d-none');
             uploadButtonContainer.classList.remove('d-none');
-
+      
             var otherToast = new bootstrap.Toast(document.getElementById('attachAlert'));
             otherToast.show();
           }
-
-          // Handle Emergency Leave case
-          if (selectedLeaveType === 'Emergency Leave' || selectedLeaveType === 'Sick Leave' || selectedLeaveType === 'Extended Sick Leave') {
+      
+          // relief staff logic
+          if (selectedLeaveType === 'Emergency Leave' || selectedLeaveType === 'Sick Leave' || selectedLeaveType === 'Extended Sick Leave' || selectedLeaveType === 'Time Off Leave' || selectedLeaveType === 'Unrecorded Leave') {
             document.getElementById('queryInput').value = 'Relief staff not required';
             document.getElementById('queryInput').disabled = true;
           } else {
             document.getElementById('queryInput').disabled = false;
             document.getElementById('queryInput').value = '';
           }
+      
+          // reset the start date field
+          var startDateInput = document.getElementById('floatingInputStartDate');
+          var returnDateInput = document.getElementById('floatingInputReturnDate');
+          startDateInput.value = '';
+          returnDateInput.value = '';
+      
+          // backdate logic
+          var today = new Date().toISOString().split('T')[0]; // get today's date in YYYY-MM-DD format
+          var startDatePicker = startDateInput._flatpickr; // get the flatpickr instance for start date
+          var returnDatePicker = returnDateInput._flatpickr; // get the flatpickr instance for return date
+      
+          if (selectedLeaveType === 'Sick Leave' || selectedLeaveType === 'Extended Sick Leave') {
+            // allow backdating for Sick Leave and Extended Sick Leave (no min date)
+            startDatePicker.set('minDate', null);  // remove minDate for start date
+            returnDatePicker.set('minDate', null);  // remove minDate for return date
+            document.getElementById('floatingInputReturnDate').disabled = false;  // enable return date
+          } else {
+            // disable backdating for other leave types (set min date to today)
+            startDatePicker.set('minDate', today);  // set minDate to today for start date
+            returnDatePicker.set('minDate', today);  // set minDate to today for return date
+            document.getElementById('floatingInputReturnDate').disabled = false;  // enable return date
+          }
+      
+          // trigger the change event initially to set the correct min date
+          document.getElementById('floatingSelectTask').dispatchEvent(new Event('change'));
         });
-
+      
         document.getElementById('leaveForm').addEventListener('click', function(event) {
           this.classList.add('was-validated');
           this.classList.remove('has-validated');
-
+      
           if (!this.checkValidity()) {
             event.preventDefault();
             event.stopPropagation();
