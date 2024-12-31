@@ -35,12 +35,10 @@ function formatDate(inputDate) {
   </div>
 
   <div class="row g-3">
-
     <div class="col-12 col-xxl-8">
-
       <div class="card">
         <div class="card-body">
-          <h5 class="mb-3">Leave Entitlements</h5>
+          <h5 class="mb-3">Leave Entitlements <span>(<%= userLeave.annual.leave %>)</span></h5>
 
           <div class="row g-3">
             <div class="col-xxl-4 col-12">
@@ -104,11 +102,16 @@ function formatDate(inputDate) {
                  showSpecial = '';
                 }
                %>
+              
+              <div class="d-flex align-items-center justify-content-between">
+                <p class="mb-0 fw-bold">Leave Types</p>
+              </div>
+              
+              <hr class="bg-body-secondary mb-2 mt-2" />
 
               <div class="col-xxl-6 col-12">
-
+                <!-- annual leave -->
                 <div class="align-items-center justify-content-between d-flex mb-0">
-
                   <div class="d-flex align-items-center mb-1">
                     <span class="d-inline-block bg-info-light bullet-item me-2"></span>
                     <p class="mb-0 fw-semibold text-body lh-sm flex-1">Annual Leave</p>
@@ -125,11 +128,10 @@ function formatDate(inputDate) {
                       <%= userLeave.annual.leave - userLeave.annual.taken %>
                     </span>
                   </div>
-
                 </div>
 
+                <!-- sick leave -->
                 <div class="align-items-center justify-content-between d-flex mb-0 mt-n2">
-
                   <div class="d-flex align-items-center mb-1">
                     <span class="d-inline-block bg-warning-darker bullet-item me-2"></span>
                     <p class="mb-0 fw-semibold text-body lh-sm flex-1">Sick Leave</p>
@@ -146,14 +148,13 @@ function formatDate(inputDate) {
                       <%= userLeave.sick.leave - userLeave.sick.taken %>
                     </span>
                   </div>
-
                 </div>
 
+                <!-- extended sick leave -->
                 <div class="align-items-center justify-content-between d-flex mb-0 mt-n2">
-
                   <div class="d-flex align-items-center mb-1">
                     <span class="d-inline-block bg-warning-light bullet-item me-2"></span>
-                    <p class="mb-0 fw-semibold text-body lh-sm flex-1">Sick Extended Leave</p>
+                    <p class="mb-0 fw-semibold text-body lh-sm flex-1">Extended Sick Leave</p>
                   </div>
 
                   <div style="position: relative;">
@@ -167,11 +168,10 @@ function formatDate(inputDate) {
                       <%= userLeave.sickExtended.leave - userLeave.sickExtended.taken %>
                     </span>
                   </div>
-
                 </div>
 
+                <!-- marriage leave -->
                 <div class="align-items-center justify-content-between d-flex mb-0 mt-n2 <%= showMarriage %>">
-
                   <div class="d-flex align-items-center mb-1">
                     <span class="d-inline-block bg-danger-dark bullet-item me-2"></span>
                     <p class="mb-0 fw-semibold text-body lh-sm flex-1">Marriage Leave</p>
@@ -186,11 +186,10 @@ function formatDate(inputDate) {
                     </div>
                     <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.marriage.leave %></span>
                   </div>
-
                 </div>
 
+                <!-- paternity leave -->
                 <div class="align-items-center justify-content-between d-flex mb-0 mt-n2 <%= showPaternity %>">
-
                   <div class="d-flex align-items-center mb-1">
                     <span class="d-inline-block bg-success-light bullet-item me-2"></span>
                     <p class="mb-0 fw-semibold text-body lh-sm flex-1">Paternity Leave</p>
@@ -205,11 +204,10 @@ function formatDate(inputDate) {
                     </div>
                     <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.paternity.leave %></span>
                   </div>
-
                 </div>
 
+                <!-- maternity leave -->
                 <div class="align-items-center justify-content-between d-flex mb-0 mt-n2 <%= showMaternity %>">
-
                   <div class="d-flex align-items-center mb-1">
                     <span class="d-inline-block bg-success-dark bullet-item me-2"></span>
                     <p class="mb-0 fw-semibold text-body lh-sm flex-1">Maternity Leave</p>
@@ -224,11 +222,10 @@ function formatDate(inputDate) {
                     </div>
                     <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(-10%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.maternity.leave %></span>
                   </div>
-
                 </div>
 
+                <!-- attend exam leave -->
                 <div class="align-items-center justify-content-between d-flex mb-0 mt-n2">
-
                   <div class="d-flex align-items-center mb-1">
                     <span class="d-inline-block bg-info-dark bullet-item me-2"></span>
                     <p class="mb-0 fw-semibold text-body lh-sm flex-1">Attend Exam Leave</p>
@@ -245,13 +242,12 @@ function formatDate(inputDate) {
                       <%= userLeave.attendExam.leave - userLeave.attendExam.taken %>
                     </span>
                   </div>
-
                 </div>
               </div>
-
+              
               <div class="col-xxl-6 col-12">
+                <!-- hajj leave -->
                 <div class="align-items-center justify-content-between d-flex mb-0 mt-n2 <%= showHajj %>">
-
                   <div class="d-flex align-items-center mb-1">
                     <span class="d-inline-block bg-info-lighter bullet-item me-2"></span>
                     <p class="mb-0 fw-semibold text-body lh-sm flex-1">Hajj Leave</p>
@@ -266,11 +262,10 @@ function formatDate(inputDate) {
                     </div>
                     <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(-10%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.hajj.leave %></span>
                   </div>
-
                 </div>
 
+                <!-- umrah leave -->
                 <div class="align-items-center justify-content-between d-flex mb-0 mt-n2 <%= showUmrah %>">
-
                   <div class="d-flex align-items-center mb-1">
                     <span class="d-inline-block bg-success-lighter bullet-item me-2"></span>
                     <p class="mb-0 fw-semibold text-body lh-sm flex-1">Umrah Leave</p>
@@ -285,49 +280,10 @@ function formatDate(inputDate) {
                     </div>
                     <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.umrah.leave %></span>
                   </div>
-
                 </div>
 
-                <div class="align-items-center justify-content-between d-flex mb-0 mt-n2">
-
-                  <div class="d-flex align-items-center mb-1">
-                    <span class="d-inline-block bg-danger-light bullet-item me-2"></span>
-                    <p class="mb-0 fw-semibold text-body lh-sm flex-1">Emergency Leave Taken</p>
-                  </div>
-
-                  <div style="position: relative;">
-                    <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:100">
-                      <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
-                        <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
-                        <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
-                      </svg>
-                    </div>
-                    <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.emergency.taken %></span>
-                  </div>
-
-                </div>
-
-                <div class="align-items-center justify-content-between d-flex mb-0">
-
-                  <div class="d-flex align-items-center mb-1">
-                    <span class="d-inline-block bg-primary bullet-item me-2"></span>
-                    <p class="mb-0 fw-semibold text-body lh-sm flex-1">Unpaid Leave Taken</p>
-                  </div>
-
-                  <div style="position: relative;">
-                    <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:100">
-                      <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
-                        <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
-                        <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
-                      </svg>
-                    </div>
-                    <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.unpaid.taken %></span>
-                  </div>
-
-                </div>
-
+                <!-- special leave -->
                 <div class="align-items-center justify-content-between d-flex mb-0 <%= showSpecial %>">
-
                   <div class="d-flex align-items-center mb-1">
                     <span class="d-inline-block bg-warning-lighter bullet-item me-2"></span>
                     <p class="mb-0 fw-semibold text-body lh-sm flex-1">Special Leave</p>
@@ -342,13 +298,66 @@ function formatDate(inputDate) {
                     </div>
                     <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.special.leave %></span>
                   </div>
+                </div>
 
+                <!-- annual leave taken -->
+                <div class="align-items-center justify-content-between d-flex mb-0">
+                  <div class="d-flex align-items-center mb-1">
+                    <span class="d-inline-block bg-info-light bullet-item me-2"></span>
+                    <p class="mb-0 fw-semibold text-body lh-sm flex-1">Annual Leave Taken</p>
+                  </div>
+
+                  <div style="position: relative;">
+                    <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:<%= annual %>">
+                      <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
+                        <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
+                        <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
+                      </svg>
+                    </div>
+                    <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;">
+                      <%= userLeave.annual.taken %>
+                    </span>
+                  </div>
+                </div>
+
+                <!-- emergency leave taken -->
+                <div class="align-items-center justify-content-between d-flex mb-0 mt-n2">
+                  <div class="d-flex align-items-center mb-1">
+                    <span class="d-inline-block bg-danger-light bullet-item me-2"></span>
+                    <p class="mb-0 fw-semibold text-body lh-sm flex-1">Emergency Leave Taken</p>
+                  </div>
+
+                  <div style="position: relative;">
+                    <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:100">
+                      <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
+                        <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
+                        <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
+                      </svg>
+                    </div>
+                    <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.emergency.taken %></span>
+                  </div>
+                </div>
+
+                <!-- unpaid leave taken -->
+                <div class="align-items-center justify-content-between d-flex mb-0">
+                  <div class="d-flex align-items-center mb-1">
+                    <span class="d-inline-block bg-primary bullet-item me-2"></span>
+                    <p class="mb-0 fw-semibold text-body lh-sm flex-1">Unpaid Leave Taken</p>
+                  </div>
+
+                  <div style="position: relative;">
+                    <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:100">
+                      <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
+                        <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
+                        <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
+                      </svg>
+                    </div>
+                    <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.unpaid.taken %></span>
+                  </div>
                 </div>
               </div>
-
             </div>
           </div>
-
         </div>
 
         <script>
