@@ -250,11 +250,11 @@ function formatDate(inputDate) {
     
       // function to update the total leave
       function updateAnnualTotal() {
-        const annualTotal = parseInt(annualTotalInput.value) || 0; // get the current total
-        const newLeave = parseInt(newLeaveInput.value) || 0; // get the new leave value
+        const annualTotal = parseFloat(annualTotalInput.value) || 0; // get the current total
+        const newLeave = parseFloat(newLeaveInput.value) || 0; // get the new leave value
     
         const updatedTotal = annualTotal + newLeave; // add new leave to the total
-        annualTotalInput.value = updatedTotal; // update the total in the input
+        annualTotalInput.value = updatedTotal.toFixed(1); // update the total in the input
         newLeaveInput.value = ""; // clear the new leave input
       }
     
