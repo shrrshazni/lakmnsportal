@@ -10452,70 +10452,104 @@ const calculateNumberOfDays = async (type, startDate, returnDate, isNonOfficeHou
 };
 
 // Default public holidays for the year
-let defaultPublicHolidays = [];
+// let defaultPublicHolidays = [];
+let defaultPublicHolidays = [
+    '2025-01-01', // New Year's Day
+    '2025-01-29', // Chinese New Year
+    '2025-01-30', // Chinese New Year (2nd Day)
+    '2025-03-31',
+    '2025-04-01',
+    '2025-04-18',
+    '2025-05-01',
+    '2025-05-12',
+    '2025-06-01',
+    '2025-06-02',
+    '2025-06-03',
+    '2025-06-07',
+    '2025-06-27',
+    '2025-07-22',
+    '2025-08-31',
+    '2025-09-01',
+    '2025-09-05',
+    '2025-09-16',
+    '2025-10-11',
+    '2025-12-25',
+];
+
+// convert the dates to the proper format for use
+const allPublicHolidays = defaultPublicHolidays.map(date => moment(date).startOf('day').toDate());
+
+// check if a date is a public holiday
+const isPublicHoliday = (date, holidays) => holidays.some(holiday => moment(date).isSame(moment(holiday), 'day'));
+
+// function to update the public holidays array (though it's no longer needed, since it's static)
+const updatePublicHolidays = async () => {
+    console.log('Public holidays updated (manual list used).');
+    return allPublicHolidays;
+};
 
 // Check if a date is a public holiday
-const isPublicHoliday = (date, holidays) => holidays.some(holiday => moment(date).isSame(moment(holiday), 'day'));
+// const isPublicHoliday = (date, holidays) => holidays.some(holiday => moment(date).isSame(moment(holiday), 'day'));
 
 // Function to scrape public holidays from a website
 // Returns an array of objects containing the date and holiday
-const scrapePublicHolidays = async () => {
-    const url = 'https://sarawak.gov.my/web/home/article_view/198/374/198?id=198';
-    const response = await axios.get(url);
-    const $ = cheerio.load(response.data);
+// const scrapePublicHolidays = async () => {
+//     const url = 'https://sarawak.gov.my/web/home/article_view/198/374/198?id=198';
+//     const response = await axios.get(url);
+//     const $ = cheerio.load(response.data);
 
-    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+//     const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
-    const publicHolidays = $('table tr').map((_, element) => {
-        const tds = $(element).find('td');
-        const dateStr = tds.eq(0).text().trim();
+//     const publicHolidays = $('table tr').map((_, element) => {
+//         const tds = $(element).find('td');
+//         const dateStr = tds.eq(0).text().trim();
 
-        const [day, month, year] = dateStr.split(' '); // Split the string into 3 parts
+//         const [day, month, year] = dateStr.split(' '); // Split the string into 3 parts
 
-        if (isNaN(day) || isNaN(year) || !monthNames.includes(month)) {
-            return;
-        }
+//         if (isNaN(day) || isNaN(year) || !monthNames.includes(month)) {
+//             return;
+//         }
 
-        const monthNumber = monthNames.indexOf(month) + 1; // Get the month number from the month name
+//         const monthNumber = monthNames.indexOf(month) + 1; // Get the month number from the month name
 
-        const formattedDate = `${day}/${monthNumber}/${year}`; // Format the date string to DD/MM/YYYYf
+//         const formattedDate = `${day}/${monthNumber}/${year}`; // Format the date string to DD/MM/YYYYf
 
-        // Add new event to defaultPublicHolidays
-        defaultPublicHolidays.push({ date: formattedDate });
-    }).get();
-    return publicHolidays;
-};
+//         // Add new event to defaultPublicHolidays
+//         defaultPublicHolidays.push({ date: formattedDate });
+//     }).get();
+//     return publicHolidays;
+// };
 
 // * Update public holidays
 // * Function to update the array of public holidays
 // * Calls the scrapePublicHolidays function and updates the defaultPublicHolidays array
-const updatePublicHolidays = async () => {
-    console.log('Updating public holidays...');
-    await scrapePublicHolidays();
-    return defaultPublicHolidays;
-}
+// const updatePublicHolidays = async () => {
+//     console.log('Updating public holidays...');
+//     await scrapePublicHolidays();
+//     return defaultPublicHolidays;
+// }
 
-// * Calculate business days between two dates
+// calculate business days between two dates
 const calculateBusinessDays = async (startDateString, endDateString) => {
     const publicHolidays = await updatePublicHolidays();
 
-    // Convert public holidays to ISO datetime format
-    const isoPublicHolidays = publicHolidays.map(holiday => moment(holiday.date, 'DD/MM/YYYY').format('YYYY-MM-DD'));
+    // convert public holidays to ISO datetime format (YYYY-MM-DD)
+    const isoPublicHolidays = publicHolidays.map(holiday => moment(holiday).format('YYYY-MM-DD'));
 
     let start = moment(startDateString).startOf('day');
     let end = moment(endDateString).startOf('day');
 
-    // If start and end are the same day
+    // if start and end are the same day
     if (start.isSame(end, 'day')) {
-        // Check if it's a business day (Mon-Fri) and not a public holiday
+        // check if it's a business day (Mon-Fri) and not a public holiday
         if (start.day() >= 1 && start.day() <= 5 && !isoPublicHolidays.some(holiday => moment(holiday).isSame(start))) {
             return 1; // 1 business day
         } else {
-            return 0; // Not a business day
+            return 0; // not a business day
         }
     }
 
-    // Determine the increment direction based on whether start is before or after end
+    // determine the increment direction based on whether start is before or after end
     const increment = start.isBefore(end) ? 1 : -1;
 
     let earlier = increment === 1 ? start : end;
@@ -10523,7 +10557,7 @@ const calculateBusinessDays = async (startDateString, endDateString) => {
 
     let count = 0;
 
-    // Iterate through the days between earlier and later dates
+    // iterate through the days between earlier and later dates
     while (earlier.isBefore(later)) {
         if (earlier.day() >= 1 && earlier.day() <= 5 && !isoPublicHolidays.some(holiday => moment(holiday).isSame(earlier))) {
             count++;
@@ -10531,12 +10565,12 @@ const calculateBusinessDays = async (startDateString, endDateString) => {
         earlier.add(1, 'days');
     }
 
-    // Include the later day in the calculation if it's a business day
+    // include the later day in the calculation if it's a business day
     if (later.day() >= 1 && later.day() <= 5 && !isoPublicHolidays.some(holiday => moment(holiday).isSame(later))) {
         count++;
     }
 
-    // Return the correct sign for the difference
+    // return the correct sign for the difference
     return increment === 1 ? count : -count;
 };
 
