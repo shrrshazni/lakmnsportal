@@ -3129,7 +3129,6 @@ app.get('/leave/request', isAuthenticated, async (req, res, next) => {
                 });
             }
         } else {
-
             const nextRecipient = checkProcess.approvals[1].recipient;
             sendNoti.push(nextRecipient);
 
@@ -10177,7 +10176,7 @@ const handleCancelled = async (checkLeave, user, res) => {
             {
                 $set: {
                     status: 'cancelled',
-                    comment: `The request has been cancelled by the ${checkLeave.approvals[0].role} ${user.username}`
+                    comment: `The request has been cancelled by ${checkLeave.approvals[0].role} ${user.username}`
                 }
             },
             { new: true }
