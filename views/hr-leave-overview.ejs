@@ -4,7 +4,7 @@
 
   <div class="mb-6">
     <h2 class="mb-2">Leave Overview</h2>
-    <h5 class="text-body-tertiary fw-semibold">Temporary absence for personal reasons</h5>
+    <h5 class="text-body-tertiary fw-semibold">Temporary absence for personal reasons.</h5>
   </div>
 
   <!-- colour script for echarts -->
@@ -43,7 +43,7 @@
   </script>
 
   <div class="px-0 px-md-4 mb-6">
-
+    <!-- leave status -->
     <div class="row justify-content-between mb-6">
       <div class="col-6 col-md-4 col-xxl-2 text-center border-translucent border-start-xxl border-end-xxl-0 border-bottom-xxl-0 border-end border-bottom pb-4 pb-xxl-0 "><span class="uil fs-5 lh-1 fa-solid fa-calendar text-primary"></span>
         <h1 class="fs-5 pt-3"><%= allLeave.length %></h1>
@@ -69,11 +69,9 @@
         <h1 class="fs-5 pt-3"><%= allLeave.filter(leave => leave.status === 'denied').length %> %></h1>
         <p class="fs-9 mb-0">Total Denied</p>
       </div>
-
     </div>
 
     <div class="row g-4">
-
       <div class="col-12 d-none">
         <div class="row g-3">
           <div class="col-12 col-md-6">
@@ -553,16 +551,13 @@
                     </div>
                   </div>
                 </div>
-
               </div>
-
             </div>
           </div>
         </div>
       </div>
 
       <div class="col-12 d-none">
-
         <div class="row flex-between-center mb-4 g-3">
           <div class="col-auto">
             <h3>Leaves per month</h3>
@@ -809,11 +804,10 @@
     <div id="all-staff" data-list='{"valueNames":["staff","type","startdate","returndate","department","reliefstaff","status"],"page":10,"pagination":true}'>
       <div class="mb-3">
         <h3 id="selected-month-label">Leave listed for all month</h3>
-        <p class="text-body-tertiary lh-sm mb-0">Displaying all approved staff members time-off records monthly</p>
+        <p class="text-body-tertiary lh-sm mb-0">Displaying all approved staff members time-off records monthly.</p>
       </div>
 
       <div class="row align-items-end justify-content-between pb-4 g-3">
-
         <div class="col-12 col-md-auto">
           <div class="search-box">
             <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
@@ -826,7 +820,6 @@
         <div class="col-12 col-md-auto d-none">
           <a class="btn btn-primary my-auto me-2" role="button" href="/"><span class="fa-solid fa-plus me-2"></span>Add new staff</a>
         </div>
-
       </div>
 
       <div class="table-responsive ms-n1 ps-1 scrollbar">

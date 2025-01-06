@@ -4344,7 +4344,7 @@ app.get('/human-resource/leave/add/:id', isAuthenticated, async function (req, r
                 case 'Sick Leave':
                     userLeave.sick.taken += daysDifference;
                     break;
-                case 'Sick Extended Leave':
+                case 'Extended Sick Leave':
                     userLeave.sickExtended.taken += daysDifference;
                     break;
                 case 'Emergency Leave':
@@ -10127,7 +10127,7 @@ const handleCancelled = async (checkLeave, user, res) => {
                     userLeave.sick.taken -= daysDifference;
                     userLeave.sick.taken = Math.max(0, userLeave.sick.taken);
                     break;
-                case 'Sick Extended Leave':
+                case 'Extended Sick Leave':
                     userLeave.sickExtended.taken -= daysDifference;
                     userLeave.sickExtended.taken = Math.max(0, userLeave.sickExtended.taken);
                     break;
@@ -10285,7 +10285,7 @@ const handleAcknowledged = async (checkLeave, user, res) => {
                 case 'Sick Leave':
                     userLeave.sick.taken += daysDifference;
                     break;
-                case 'Sick Extended Leave':
+                case 'Extended Sick Leave':
                     userLeave.sickExtended.taken += daysDifference;
                     break;
                 case 'Emergency Leave':
