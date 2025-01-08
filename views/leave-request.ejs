@@ -104,16 +104,16 @@
               <option value="Half Day Leave">Half Day Leave</option>
               <option value="Sick Leave">Sick Leave</option>
               <option value="Extended Sick Leave">Extended Sick Leave</option>
-              <option value="Emergency Leave">Emergency Leave</option>
-              <option value="Half Day Emergency Leave">Half Day Emergency Leave</option>
-              <option value="Marriage Leave">Marriage Leave</option>
-              <option value="Hajj Leave">Hajj Leave</option>
-              <option value="Umrah Leave">Umrah Leave</option>
+              <option value="Attend Exam Leave">Attend Exam Leave</option>
               <option class="<%= showMale %>" value="Paternity Leave">Paternity Leave</option>
               <option class="<%= showFemale %>" value="Maternity Leave">Maternity Leave</option>
-              <option value="Attend Exam Leave">Attend Exam Leave</option>
-              <option value="Unpaid Leave">Unpaid Leave</option>
+              <option value="Hajj Leave">Hajj Leave</option>
+              <option value="Umrah Leave">Umrah Leave</option>
+              <option value="Marriage Leave">Marriage Leave</option>
               <option value="Special Leave">Special Leave</option>
+              <option value="Emergency Leave">Emergency Leave</option>
+              <option value="Half Day Emergency Leave">Half Day Emergency Leave</option>
+              <option value="Unpaid Leave">Unpaid Leave</option>
               <option value="Time Off Leave" disabled>Time Off Leave</option>
               <option value="Unrecorded Leave" disabled>Unrecorded Leave</option>
             </select>
@@ -485,7 +485,7 @@
       <div class="mb-5">
         <div class="card mb-3">
           <div class="card-body">
-            <h5 class="mb-3 text-center">Leave Entitlements (<%= userLeave.annual.leave %>)</h5>
+            <h5 class="mb-3 text-center">Leave Entitlements</h5>
 
             <div class="mx-auto mt-n5" id="leave-type-chart-carousel" style="height:300px; width: 250px;"></div>
 
@@ -792,21 +792,23 @@
               </div>
             </div>
 
-            <!-- marriage leave -->
-            <div class="align-items-center justify-content-between d-flex mb-0 <%= showMarriage %>">
+            <!-- attend exam leave -->
+            <div class="align-items-center justify-content-between d-flex mb-0">
               <div class="d-flex align-items-center mb-1">
-                <span class="d-inline-block bg-danger-dark bullet-item me-2"></span>
-                <p class="mb-0 fw-semibold text-body lh-sm flex-1">Marriage Leave</p>
+                <span class="d-inline-block bg-info-dark bullet-item me-2"></span>
+                <p class="mb-0 fw-semibold text-body lh-sm flex-1">Attend Exam Leave</p>
               </div>
 
               <div style="position: relative;">
-                <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:100">
+                <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:<%= attendExam %>">
                   <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
                     <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
                     <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
                   </svg>
                 </div>
-                <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.marriage.leave %></span>
+                <span <% /* eslint-disable css-propertyvalueexpected */ %> class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(<%= (userLeave.attendExam.leave - userLeave.attendExam.taken).toString().length === 1 ? '30%' : '-10%' %>, -25%); z-index: 1; font-size: 20px; color: #3874ff;">
+                  <%= userLeave.attendExam.leave - userLeave.attendExam.taken %>
+                </span>
               </div>
             </div>
 
@@ -846,26 +848,6 @@
               </div>
             </div>
 
-            <!-- attend exam leave -->
-            <div class="align-items-center justify-content-between d-flex mb-0">
-              <div class="d-flex align-items-center mb-1">
-                <span class="d-inline-block bg-info-dark bullet-item me-2"></span>
-                <p class="mb-0 fw-semibold text-body lh-sm flex-1">Attend Exam Leave</p>
-              </div>
-
-              <div style="position: relative;">
-                <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:<%= attendExam %>">
-                  <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
-                    <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
-                    <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
-                  </svg>
-                </div>
-                <span <% /* eslint-disable css-propertyvalueexpected */ %> class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(<%= (userLeave.attendExam.leave - userLeave.attendExam.taken).toString().length === 1 ? '30%' : '-10%' %>, -25%); z-index: 1; font-size: 20px; color: #3874ff;">
-                  <%= userLeave.attendExam.leave - userLeave.attendExam.taken %>
-                </span>
-              </div>
-            </div>
-
             <!-- hajj leave -->
             <div class="align-items-center justify-content-between d-flex mb-0 <%= showHajj %>">
               <div class="d-flex align-items-center mb-1">
@@ -899,6 +881,24 @@
                   </svg>
                 </div>
                 <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.umrah.leave %></span>
+              </div>
+            </div>
+
+            <!-- marriage leave -->
+            <div class="align-items-center justify-content-between d-flex mb-0 <%= showMarriage %>">
+              <div class="d-flex align-items-center mb-1">
+                <span class="d-inline-block bg-danger-dark bullet-item me-2"></span>
+                <p class="mb-0 fw-semibold text-body lh-sm flex-1">Marriage Leave</p>
+              </div>
+
+              <div style="position: relative;">
+                <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:100">
+                  <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
+                    <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
+                    <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
+                  </svg>
+                </div>
+                <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.marriage.leave %></span>
               </div>
             </div>
 

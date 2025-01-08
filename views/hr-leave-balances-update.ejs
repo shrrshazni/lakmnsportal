@@ -60,7 +60,7 @@ function formatDate(inputDate) {
 
         <div class="col-12 col-md-6">
           <div class="form-floating">
-            <input type="text" name="sicktotal" class="form-control" placeholder="" />
+            <input type="text" name="sicktotal" class="form-control" value="<%= userLeave.sick.leave %>" placeholder="" />
             <label class="form-label" for="sicktotal">Sick Leave Total</label>
             <div class="invalid-feedback">
               Please enter sick leave total
@@ -80,7 +80,7 @@ function formatDate(inputDate) {
 
         <div class="col-12 col-md-6">
           <div class="form-floating">
-            <input type="text" name="sickExtendedTotal" class="form-control" placeholder="" />
+            <input type="text" name="sickExtendedTotal" class="form-control" value="<%= userLeave.sickExtended.leave %>" placeholder="" />
             <label class="form-label" for="sickExtendedTotal">Extended Sick Leave Total</label>
             <div class="invalid-feedback">
               Please enter extended sick leave total
@@ -94,6 +94,128 @@ function formatDate(inputDate) {
             <label class="form-label" for="sickExtendedTaken">Extended Sick Leave Taken</label>
             <div class="invalid-feedback">
               Please enter extended sick leave taken
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6 position-relative">
+          <div class="form-floating">
+            <input type="text" name="attendexamtotal" class="form-control" value="<%= userLeave.attendExam.leave %>" placeholder="" />
+            <label class="form-label" for="attendexamtotal">Attend Exam Leave Total</label>
+            <div class="invalid-feedback">
+              Please enter attend exam total
+            </div>
+          </div>
+          <!-- add icon -->
+          <!-- <i id="refreshIcon" class="fa fa-refresh position-absolute top-50 end-0 translate-middle-y me-4 text-secondary" style="cursor: pointer;" title="Refresh"></i> -->
+        </div>
+
+        <div class="col-12 col-md-6 position-relative">
+          <div class="form-floating">
+            <input type="text" name="attendexamtaken" class="form-control" placeholder="" />
+            <label class="form-label" for="attendexamtaken">Attend Exam Leave Taken</label>
+            <div class="invalid-feedback">
+              Please enter attend exam taken
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+          <div class="form-floating">
+            <input type="text" name="paternitytotal" class="form-control" value="<%= userLeave.paternity.leave %>" placeholder="" />
+            <label class="form-label" for="paternitytotal">Paternity Leave Total</label>
+            <div class="invalid-feedback">
+              Please enter paternity leave total
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+          <div class="form-floating">
+            <input type="text" name="paternitytaken" class="form-control" placeholder="" />
+            <label class="form-label" for="paternitytaken">Paternity Leave Taken</label>
+            <div class="invalid-feedback">
+              Please enter paternity leave taken
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+          <div class="form-floating">
+            <input type="text" name="maternitytotal" class="form-control" value="<%= userLeave.maternity.leave %>" placeholder="" />
+            <label class="form-label" for="maternitytotal">Maternity Leave Total</label>
+            <div class="invalid-feedback">
+              Please enter maternity leave total
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+          <div class="form-floating">
+            <input type="text" name="maternitytaken" class="form-control" placeholder="" />
+            <label class="form-label" for="maternitytaken">Maternity Leave Taken</label>
+            <div class="invalid-feedback">
+              Please enter maternity leave taken
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+          <div class="form-floating">
+            <input type="text" name="hajjtotal" class="form-control" value="<%= userLeave.hajj.leave %>" placeholder="" />
+            <label class="form-label" for="hajjtotal">Hajj Leave Total</label>
+            <div class="invalid-feedback">
+              Please enter hajj leave total
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+          <div class="form-floating">
+            <input type="text" name="hajjtaken" class="form-control" placeholder="" />
+            <label class="form-label" for="hajjtaken">Hajj Leave Taken</label>
+            <div class="invalid-feedback">
+              Please enter hajj leave taken
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+          <div class="form-floating">
+            <input type="text" name="umrahtotal" class="form-control" value="<%= userLeave.umrah.leave %>" placeholder="" />
+            <label class="form-label" for="umrahtotal">Umrah Leave Total</label>
+            <div class="invalid-feedback">
+              Please enter umrah leave total
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+          <div class="form-floating">
+            <input type="text" name="umrahtaken" class="form-control" placeholder="" />
+            <label class="form-label" for="umrahtaken">Umrah Leave Taken</label>
+            <div class="invalid-feedback">
+              Please enter umrah leave taken
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+          <div class="form-floating">
+            <input type="text" name="marriagetotal" class="form-control" value="<%= userLeave.marriage.leave %>" placeholder="" />
+            <label class="form-label" for="marriagetotal">Marriage Leave Total</label>
+            <div class="invalid-feedback">
+              Please enter marriage leave total
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+          <div class="form-floating">
+            <input type="text" name="marriagetaken" class="form-control" placeholder="" />
+            <label class="form-label" for="marriagetaken">Marriage Leave Taken</label>
+            <div class="invalid-feedback">
+              Please enter marriage leave taken
             </div>
           </div>
         </div>
@@ -137,13 +259,13 @@ function formatDate(inputDate) {
             </div>
           </div>
         </div>
-
+        
         <div class="col-12 col-md-4">
           <div class="form-floating">
-            <input type="text" name="attendexam" class="form-control" placeholder="" />
-            <label class="form-label" for="attendexam">Attend Exam Leave Taken</label>
+            <input type="text" name="special" class="form-control" placeholder="" />
+            <label class="form-label" for="special">Special Leave Taken</label>
             <div class="invalid-feedback">
-              Please enter attend exam taken
+              Please enter special leave taken
             </div>
           </div>
         </div>
@@ -164,66 +286,6 @@ function formatDate(inputDate) {
             <label class="form-label" for="unpaid">Unpaid Leave Taken</label>
             <div class="invalid-feedback">
               Please enter unpaid leave taken
-            </div>
-          </div>
-        </div>
-
-        <div class="col-12 col-md-4">
-          <div class="form-floating">
-            <input type="text" name="umrah" class="form-control" placeholder="" />
-            <label class="form-label" for="umrah">Umrah Leave Taken</label>
-            <div class="invalid-feedback">
-              Please enter umrah leave taken
-            </div>
-          </div>
-        </div>
-
-        <div class="col-12 col-md-4">
-          <div class="form-floating">
-            <input type="text" name="paternity" class="form-control" placeholder="" />
-            <label class="form-label" for="paternity">Paternity Leave Taken</label>
-            <div class="invalid-feedback">
-              Please enter paternity leave taken
-            </div>
-          </div>
-        </div>
-
-        <div class="col-12 col-md-4">
-          <div class="form-floating">
-            <input type="text" name="special" class="form-control" placeholder="" />
-            <label class="form-label" for="special">Special Leave Taken</label>
-            <div class="invalid-feedback">
-              Please enter special leave taken
-            </div>
-          </div>
-        </div>
-
-        <div class="col-12 col-md-4">
-          <div class="form-floating">
-            <input type="text" name="hajj" class="form-control" placeholder="" />
-            <label class="form-label" for="hajj">Hajj Leave Taken</label>
-            <div class="invalid-feedback">
-              Please enter hajj leave taken
-            </div>
-          </div>
-        </div>
-
-        <div class="col-12 col-md-4">
-          <div class="form-floating">
-            <input type="text" name="maternity" class="form-control" placeholder="" />
-            <label class="form-label" for="maternity">Maternity Leave Taken</label>
-            <div class="invalid-feedback">
-              Please enter maternity leave taken
-            </div>
-          </div>
-        </div>
-
-        <div class="col-12 col-md-4">
-          <div class="form-floating">
-            <input type="text" name="marriage" class="form-control" placeholder="" />
-            <label class="form-label" for="marriage">Marriage Leave Taken</label>
-            <div class="invalid-feedback">
-              Please enter marriage leave taken
             </div>
           </div>
         </div>
@@ -266,7 +328,7 @@ function formatDate(inputDate) {
     <div class="col-12 col-xxl-3 mb-6 order-0 order-xxl-1">
       <div class="card mb-3">
         <div class="card-body">
-          <h5 class="mb-3 text-center">Leave Entitlements (<%= userLeave.annual.leave %>)</h5>
+          <h5 class="mb-3 text-center">Leave Entitlements</h5>
 
           <div class="mx-auto mt-n5" id="leave-type-chart-carousel" style="height:300px; width: 250px;"></div>
 
@@ -575,21 +637,23 @@ function formatDate(inputDate) {
             </div>
           </div>
 
-          <!-- marriage leave -->
-          <div class="align-items-center justify-content-between d-flex mb-0 <%= showMarriage %>">
+          <!-- attend exam leave -->
+          <div class="align-items-center justify-content-between d-flex mb-0">
             <div class="d-flex align-items-center mb-1">
-              <span class="d-inline-block bg-danger-dark bullet-item me-2"></span>
-              <p class="mb-0 fw-semibold text-body lh-sm flex-1">Marriage Leave</p>
+              <span class="d-inline-block bg-info-dark bullet-item me-2"></span>
+              <p class="mb-0 fw-semibold text-body lh-sm flex-1">Attend Exam Leave</p>
             </div>
 
             <div style="position: relative;">
-              <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:100">
+              <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:<%= attendExam %>">
                 <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
                   <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
                   <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
                 </svg>
               </div>
-              <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.marriage.leave %></span>
+              <span <% /* eslint-disable css-propertyvalueexpected */ %> class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(<%= (userLeave.attendExam.leave - userLeave.attendExam.taken).toString().length === 1 ? '30%' : '-10%' %>, -25%); z-index: 1; font-size: 20px; color: #3874ff;">
+                <%= userLeave.attendExam.leave - userLeave.attendExam.taken %>
+              </span>
             </div>
           </div>
 
@@ -629,26 +693,6 @@ function formatDate(inputDate) {
             </div>
           </div>
 
-          <!-- attend exam leave -->
-          <div class="align-items-center justify-content-between d-flex mb-0">
-            <div class="d-flex align-items-center mb-1">
-              <span class="d-inline-block bg-info-dark bullet-item me-2"></span>
-              <p class="mb-0 fw-semibold text-body lh-sm flex-1">Attend Exam Leave</p>
-            </div>
-
-            <div style="position: relative;">
-              <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:<%= attendExam %>">
-                <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
-                  <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
-                  <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
-                </svg>
-              </div>
-              <span <% /* eslint-disable css-propertyvalueexpected */ %> class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(<%= (userLeave.attendExam.leave - userLeave.attendExam.taken).toString().length === 1 ? '30%' : '-10%' %>, -25%); z-index: 1; font-size: 20px; color: #3874ff;">
-                <%= userLeave.attendExam.leave - userLeave.attendExam.taken %>
-              </span>
-            </div>
-          </div>
-
           <!-- hajj leave -->
           <div class="align-items-center justify-content-between d-flex mb-0 <%= showHajj %>">
             <div class="d-flex align-items-center mb-1">
@@ -682,6 +726,24 @@ function formatDate(inputDate) {
                 </svg>
               </div>
               <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.umrah.leave %></span>
+            </div>
+          </div>
+
+          <!-- marriage leave -->
+          <div class="align-items-center justify-content-between d-flex mb-0 <%= showMarriage %>">
+            <div class="d-flex align-items-center mb-1">
+              <span class="d-inline-block bg-danger-dark bullet-item me-2"></span>
+              <p class="mb-0 fw-semibold text-body lh-sm flex-1">Marriage Leave</p>
+            </div>
+
+            <div style="position: relative;">
+              <div <% /* eslint-disable css-propertyvalueexpected */ %> style="--phoenix-circle-progress-bar:100">
+                <svg class="circle-progress-svg" width="54" height="54" viewBox="0 0 170 170">
+                  <circle class="progress-bar-rail" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke-width="12"></circle>
+                  <circle class="progress-bar-top" cx="60" cy="60" r="54" fill="none" stroke-linecap="round" stroke="#3874ff" stroke-width="12"></circle>
+                </svg>
+              </div>
+              <span class="position-absolute fs-8 fw-bold" style="top: 50%; left: 50%; transform: translate(30%, -25%); z-index: 1; font-size: 20px; color: #3874ff;"><%= userLeave.marriage.leave %></span>
             </div>
           </div>
 

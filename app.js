@@ -3907,7 +3907,7 @@ app.get('/human-resource/staff-members/remove/:id', isAuthenticated, async funct
         console.error('Error:', error);
         next(error);
     }
-})
+});
 
 // Staff members route - add employees 
 app.get('/human-resource/staff-members/add-staff', isAuthenticated, async function (req, res, next) {
@@ -4139,8 +4139,10 @@ app.get('/human-resource/leave/balances/update/:id', isAuthenticated, async func
     const userId = req.params.id;
     const {
         annualtotal, annualtaken, sicktotal, sicktaken,
-        sickExtendedTotal, sickExtendedTaken, emergency,
-        attendexam, marriage, paternity, unpaid, special, hajj
+        sickExtendedTotal, sickExtendedTaken, attendexamtotal, attendexamtaken, 
+        paternitytotal, paternitytaken, maternitytotal, maternitytaken,
+        hajjtotal, hajjtaken, umrahtotal, umrahtaken, 
+        marriagetotal, marriagetaken, special, emergency, unpaid
     } = req.body;
 
     const allUserLeave = await UserLeave.find();
@@ -4161,13 +4163,21 @@ app.get('/human-resource/leave/balances/update/:id', isAuthenticated, async func
     addFieldIfExists('sick.taken', sicktaken);
     addFieldIfExists('sickExtended.leave', sickExtendedTotal);
     addFieldIfExists('sickExtended.taken', sickExtendedTaken);
-    addFieldIfExists('emergency.taken', emergency);
-    addFieldIfExists('attendExam.taken', attendexam);
-    addFieldIfExists('marriage.taken', marriage);
-    addFieldIfExists('paternity.taken', paternity);
-    addFieldIfExists('unpaid.taken', unpaid);
+    addFieldIfExists('attendExam.leave', attendexamtotal);
+    addFieldIfExists('attendExam.taken', attendexamtaken);
+    addFieldIfExists('paternity.leave', paternitytotal);
+    addFieldIfExists('paternity.taken', paternitytaken);
+    addFieldIfExists('maternity.leave', maternitytotal);
+    addFieldIfExists('maternity.taken', maternitytaken);
+    addFieldIfExists('hajj.leave', hajjtotal);
+    addFieldIfExists('hajj.taken', hajjtaken);
+    addFieldIfExists('umrah.leave', umrahtotal);
+    addFieldIfExists('umrah.taken', umrahtaken);
+    addFieldIfExists('marriage.leave', marriagetotal);
+    addFieldIfExists('marriage.taken', marriagetaken);
     addFieldIfExists('special.taken', special);
-    addFieldIfExists('hajj.taken', hajj);
+    addFieldIfExists('emergency.taken', emergency);
+    addFieldIfExists('unpaid.taken', unpaid);
 
     try {
         const updatedLeave = await UserLeave.findOneAndUpdate(
